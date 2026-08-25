@@ -1,0 +1,26 @@
+name: Build & Validate HyperSaveInstance
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build Standalone Bundle
+        run: node scripts/bundle.js
+
+      - name: Run Test & Validation Suite
+        run: node scripts/test_parser.js

@@ -1,0 +1,26 @@
+{
+  "name": "hypersaveinstance",
+  "version": "2.0.0",
+  "description": "Universal Roblox Game Cloner & SaveInstance Engine combining USSI, UltraSmartSaveInstance, and rbx-dom with an in-game HUD and script decompiler.",
+  "main": "dist/HyperSaveInstance.luau",
+  "scripts": {
+    "build": "node scripts/bundle.js",
+    "test": "node scripts/test_parser.js"
+  },
+  "keywords": [
+    "roblox",
+    "saveinstance",
+    "game-cloner",
+    "luau",
+    "decompiler",
+    "terrain-saver",
+    "rbxlx",
+    "rbxl"
+  ],
+  "author": "theopadilha2009-hash",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theopadilha2009-hash/HyperSaveInstance.git"
+  }
+}
