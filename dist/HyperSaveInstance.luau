@@ -2682,6 +2682,7 @@ end)
 __define__("UI/Interface", function()
 --[[
     HyperSaveInstance - Modern Glassmorphic HUD & In-Game GUI
+    Includes complete built-in tutorial, 1-click clone, copy buttons and floating toggle.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -2722,11 +2723,27 @@ function Interface:BuildUI()
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.ScreenGui = screenGui
 
+    -- Floating Mini Toggle Button (Always accessible if minimized)
+    local floatingBtn = Instance.new("TextButton")
+    floatingBtn.Name = "FloatingToggle"
+    floatingBtn.Text = "⚡ HYPERSAVE"
+    floatingBtn.Font = Theme.FontTitle
+    floatingBtn.TextSize = 11
+    floatingBtn.TextColor3 = Theme.TextPrimary
+    floatingBtn.BackgroundColor3 = Theme.CardBg
+    floatingBtn.Size = UDim2.new(0, 110, 0, 32)
+    floatingBtn.Position = UDim2.new(0, 20, 0, 20)
+    floatingBtn.Visible = false
+    Theme.AddCorner(floatingBtn, Theme.CornerPill)
+    Theme.AddStroke(floatingBtn, Theme.AccentCyan, 1.5)
+    floatingBtn.Parent = screenGui
+    self.FloatingToggle = floatingBtn
+
     -- Main Container
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
-    main.Size = UDim2.new(0, 580, 0, 420)
-    main.Position = UDim2.new(0.5, -290, 0.5, -210)
+    main.Size = UDim2.new(0, 600, 0, 440)
+    main.Position = UDim2.new(0.5, -300, 0.5, -220)
     main.BackgroundColor3 = Theme.Background
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -2734,6 +2751,11 @@ function Interface:BuildUI()
     Theme.AddStroke(main, Theme.Border, 1.5)
     main.Parent = screenGui
     self.MainFrame = main
+
+    floatingBtn.MouseButton1Click:Connect(function()
+        main.Visible = true
+        floatingBtn.Visible = false
+    end)
 
     -- Dragging logic
     local dragging, dragInput, dragStart, startPos
@@ -2801,6 +2823,22 @@ function Interface:BuildUI()
     Theme.AddStroke(badge, Color3.fromRGB(15, 80, 100), 1)
     badge.Parent = header
 
+    -- Minimize Button
+    local minBtn = Instance.new("TextButton")
+    minBtn.Text = "–"
+    minBtn.Font = Theme.FontTitle
+    minBtn.TextSize = 14
+    minBtn.TextColor3 = Theme.TextSecondary
+    minBtn.BackgroundColor3 = Theme.CardHover
+    minBtn.Size = UDim2.new(0, 28, 0, 28)
+    minBtn.Position = UDim2.new(1, -70, 0.5, -14)
+    Theme.AddCorner(minBtn, Theme.CornerSmall)
+    minBtn.Parent = header
+    minBtn.MouseButton1Click:Connect(function()
+        main.Visible = false
+        floatingBtn.Visible = true
+    end)
+
     -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Text = "✕"
@@ -2819,7 +2857,7 @@ function Interface:BuildUI()
     -- Tab Navigation Bar
     local navBar = Instance.new("Frame")
     navBar.Name = "NavBar"
-    navBar.Size = UDim2.new(0, 130, 1, -48)
+    navBar.Size = UDim2.new(0, 136, 1, -48)
     navBar.Position = UDim2.new(0, 0, 0, 48)
     navBar.BackgroundColor3 = Theme.CardBg
     navBar.BorderSizePixel = 0
@@ -2835,18 +2873,19 @@ function Interface:BuildUI()
     -- Content Area
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -130, 1, -48)
-    contentArea.Position = UDim2.new(0, 130, 0, 48)
+    contentArea.Size = UDim2.new(1, -136, 1, -48)
+    contentArea.Position = UDim2.new(0, 136, 0, 48)
     contentArea.BackgroundTransparency = 1
     contentArea.Parent = main
     self.ContentArea = contentArea
 
     -- Navigation buttons
     local tabs = {
-        {"Dashboard", "🚀 Dashboard"},
+        {"Dashboard", "🚀 Clonar Tudo"},
+        {"Tutorial", "📖 Como Usar"},
         {"Settings", "⚙️ Configurações"},
         {"Console", "📜 Console"},
-        {"About", "ℹ️ Sobre"}
+        {"About", "ℹ️ Informações"}
     }
 
     self.TabFrames = {}
@@ -2858,11 +2897,11 @@ function Interface:BuildUI()
         local navBtn = Instance.new("TextButton")
         navBtn.Text = tabLabel
         navBtn.Font = Theme.FontSemiBold
-        navBtn.TextSize = 12
+        navBtn.TextSize = 11
         navBtn.TextColor3 = (i == 1) and Theme.TextPrimary or Theme.TextSecondary
         navBtn.BackgroundColor3 = (i == 1) and Theme.CardHover or Theme.CardBg
-        navBtn.Size = UDim2.new(1, -12, 0, 36)
-        navBtn.Position = UDim2.new(0, 6, 0, 12 + (i - 1) * 44)
+        navBtn.Size = UDim2.new(1, -12, 0, 34)
+        navBtn.Position = UDim2.new(0, 6, 0, 10 + (i - 1) * 40)
         Theme.AddCorner(navBtn, Theme.CornerSmall)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
@@ -2882,6 +2921,7 @@ function Interface:BuildUI()
 
     -- Build Individual Tab Pages
     self:BuildDashboardTab()
+    self:BuildTutorialTab()
     self:BuildSettingsTab()
     self:BuildConsoleTab()
     self:BuildAboutTab()
@@ -2912,13 +2952,13 @@ function Interface:BuildDashboardTab()
     -- Big Action Clone Button (1-Click)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = "CLONAR JOGO INTEIRO (1-CLIQUE)"
+    cloneBtn.Text = "🚀 CLONAR JOGO INTEIRO (1-CLIQUE)"
     cloneBtn.Font = Theme.FontTitle
     cloneBtn.TextSize = 14
     cloneBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     cloneBtn.BackgroundColor3 = Theme.AccentPrimary
     cloneBtn.Size = UDim2.new(1, -32, 0, 52)
-    cloneBtn.Position = UDim2.new(0, 16, 0, 16)
+    cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
     Theme.AddGradient(cloneBtn, Theme.AccentPrimary, Theme.AccentSecondary, 90)
     cloneBtn.Parent = parent
@@ -2930,25 +2970,25 @@ function Interface:BuildDashboardTab()
 
     -- Preset Selection Container
     local presetLabel = Instance.new("TextLabel")
-    presetLabel.Text = "PRESETS DE CLONAGEM:"
+    presetLabel.Text = "MODO DE CLONAGEM:"
     presetLabel.Font = Theme.FontSemiBold
     presetLabel.TextSize = 11
     presetLabel.TextColor3 = Theme.TextMuted
     presetLabel.TextXAlignment = Enum.TextXAlignment.Left
     presetLabel.Size = UDim2.new(1, -32, 0, 18)
-    presetLabel.Position = UDim2.new(0, 16, 0, 80)
+    presetLabel.Position = UDim2.new(0, 16, 0, 76)
     presetLabel.BackgroundTransparency = 1
     presetLabel.Parent = parent
 
     local presetContainer = Instance.new("Frame")
-    presetContainer.Size = UDim2.new(1, -32, 0, 36)
-    presetContainer.Position = UDim2.new(0, 16, 0, 102)
+    presetContainer.Size = UDim2.new(1, -32, 0, 34)
+    presetContainer.Position = UDim2.new(0, 16, 0, 96)
     presetContainer.BackgroundTransparency = 1
     presetContainer.Parent = parent
 
     local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
     local presetDisplay = {
-        Full = "🌟 Completo (10/10)",
+        Full = "🌟 Completo 10/10",
         Fast = "⚡ Rápido",
         VisualsOnly = "🎨 Apenas Visual",
         ScriptsOnly = "📜 Apenas Scripts"
@@ -2962,7 +3002,7 @@ function Interface:BuildDashboardTab()
         btn.TextSize = 11
         btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentCyan or Theme.TextSecondary
         btn.BackgroundColor3 = Theme.CardBg
-        btn.Size = UDim2.new(0.23, 0, 1, 0)
+        btn.Size = UDim2.new(0.235, 0, 1, 0)
         btn.Position = UDim2.new((i - 1) * 0.255, 0, 0, 0)
         Theme.AddCorner(btn, Theme.CornerSmall)
         Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.AccentCyan or Theme.Border, 1)
@@ -2975,25 +3015,25 @@ function Interface:BuildDashboardTab()
                 b.TextColor3 = (k == pKey) and Theme.AccentCyan or Theme.TextSecondary
                 b:FindFirstChildOfClass("UIStroke").Color = (k == pKey) and Theme.AccentCyan or Theme.Border
             end
-            self:Log("Preset aplicado: " .. pKey)
+            self:Log("Modo selecionado: " .. pKey)
         end)
     end
 
     -- Format Selector Container
     local formatLabel = Instance.new("TextLabel")
-    formatLabel.Text = "FORMATO DO ARQUIVO:"
+    formatLabel.Text = "FORMATO DE ARQUIVO:"
     formatLabel.Font = Theme.FontSemiBold
     formatLabel.TextSize = 11
     formatLabel.TextColor3 = Theme.TextMuted
     formatLabel.TextXAlignment = Enum.TextXAlignment.Left
     formatLabel.Size = UDim2.new(1, -32, 0, 18)
-    formatLabel.Position = UDim2.new(0, 16, 0, 150)
+    formatLabel.Position = UDim2.new(0, 16, 0, 140)
     formatLabel.BackgroundTransparency = 1
     formatLabel.Parent = parent
 
     local formatContainer = Instance.new("Frame")
-    formatContainer.Size = UDim2.new(1, -32, 0, 32)
-    formatContainer.Position = UDim2.new(0, 16, 0, 172)
+    formatContainer.Size = UDim2.new(1, -32, 0, 30)
+    formatContainer.Position = UDim2.new(0, 16, 0, 160)
     formatContainer.BackgroundTransparency = 1
     formatContainer.Parent = parent
 
@@ -3031,8 +3071,8 @@ function Interface:BuildDashboardTab()
 
     -- Progress Container
     local progressCard = Instance.new("Frame")
-    progressCard.Size = UDim2.new(1, -32, 0, 100)
-    progressCard.Position = UDim2.new(0, 16, 0, 218)
+    progressCard.Size = UDim2.new(1, -32, 0, 106)
+    progressCard.Position = UDim2.new(0, 16, 0, 204)
     progressCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(progressCard, Theme.CornerMedium)
     Theme.AddStroke(progressCard, Theme.Border, 1)
@@ -3067,7 +3107,7 @@ function Interface:BuildDashboardTab()
     -- Progress Bar Track & Fill
     local barTrack = Instance.new("Frame")
     barTrack.Size = UDim2.new(1, -32, 0, 8)
-    barTrack.Position = UDim2.new(0, 16, 0, 42)
+    barTrack.Position = UDim2.new(0, 16, 0, 40)
     barTrack.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
     Theme.AddCorner(barTrack, Theme.CornerPill)
     barTrack.Parent = progressCard
@@ -3082,19 +3122,140 @@ function Interface:BuildDashboardTab()
 
     local statusDetail = Instance.new("TextLabel")
     statusDetail.Name = "StatusDetail"
-    statusDetail.Text = "Clique no botão acima para iniciar a cópia completa."
+    statusDetail.Text = "Basta dar 1 clique no botão roxo acima para salvar o jogo inteiro."
     statusDetail.Font = Theme.FontRegular
     statusDetail.TextSize = 11
     statusDetail.TextColor3 = Theme.TextMuted
     statusDetail.TextXAlignment = Enum.TextXAlignment.Left
     statusDetail.Size = UDim2.new(1, -32, 0, 20)
-    statusDetail.Position = UDim2.new(0, 16, 0, 62)
+    statusDetail.Position = UDim2.new(0, 16, 0, 58)
     statusDetail.BackgroundTransparency = 1
     statusDetail.Parent = progressCard
     self.StatusDetail = statusDetail
+
+    -- Quick Action Copy Buttons
+    local copyBar = Instance.new("Frame")
+    copyBar.Size = UDim2.new(1, -32, 0, 24)
+    copyBar.Position = UDim2.new(0, 16, 0, 78)
+    copyBar.BackgroundTransparency = 1
+    copyBar.Parent = progressCard
+
+    local copyFilePathBtn = Instance.new("TextButton")
+    copyFilePathBtn.Text = "📋 Copiar Nome do Arquivo"
+    copyFilePathBtn.Font = Theme.FontSemiBold
+    copyFilePathBtn.TextSize = 10
+    copyFilePathBtn.TextColor3 = Theme.TextSecondary
+    copyFilePathBtn.BackgroundColor3 = Theme.CardHover
+    copyFilePathBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    copyFilePathBtn.Position = UDim2.new(0, 0, 0, 0)
+    Theme.AddCorner(copyFilePathBtn, Theme.CornerSmall)
+    copyFilePathBtn.Parent = copyBar
+
+    copyFilePathBtn.MouseButton1Click:Connect(function()
+        local name = self.SavedFilePath
+        if #name == 0 then name = self.Engine:GetDefaultFileName() end
+        Environment.SetClipboard(name)
+        copyFilePathBtn.Text = "✓ Nome Copiado!"
+        task.delay(2, function() copyFilePathBtn.Text = "📋 Copiar Nome do Arquivo" end)
+    end)
+
+    local copyAssetsPathBtn = Instance.new("TextButton")
+    copyAssetsPathBtn.Text = "📁 Copiar Pasta de Assets"
+    copyAssetsPathBtn.Font = Theme.FontSemiBold
+    copyAssetsPathBtn.TextSize = 10
+    copyAssetsPathBtn.TextColor3 = Theme.TextSecondary
+    copyAssetsPathBtn.BackgroundColor3 = Theme.CardHover
+    copyAssetsPathBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    copyAssetsPathBtn.Position = UDim2.new(0.52, 0, 0, 0)
+    Theme.AddCorner(copyAssetsPathBtn, Theme.CornerSmall)
+    copyAssetsPathBtn.Parent = copyBar
+
+    copyAssetsPathBtn.MouseButton1Click:Connect(function()
+        local name = self.SavedAssetPath
+        if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
+        Environment.SetClipboard(name)
+        copyAssetsPathBtn.Text = "✓ Pasta Copiada!"
+        task.delay(2, function() copyAssetsPathBtn.Text = "📁 Copiar Pasta de Assets" end)
+    end)
 end
 
--- 2. Settings Tab
+-- 2. Tutorial Tab (Built-in Step-by-Step Guide)
+function Interface:BuildTutorialTab()
+    local parent = self.TabFrames["Tutorial"]
+
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, -24, 1, -24)
+    scroll.Position = UDim2.new(0, 12, 0, 12)
+    scroll.BackgroundTransparency = 1
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Theme.Border
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 480)
+    scroll.Parent = parent
+
+    local steps = {
+        {"1️⃣ Passo 1: Iniciar a Cópia", "Basta ir na aba '🚀 Clonar Tudo' e clicar no botão roxo 'CLONAR JOGO INTEIRO'. O HyperSaveInstance vai começar a varrer o mapa."},
+        {"2️⃣ Passo 2: Aguardar o Progresso", "A barra de progresso vai indicar o que está sendo salvo em tempo real: áudios, texturas, meshes 3D, terreno e scripts descompilados."},
+        {"3️⃣ Passo 3: Onde o Arquivo Fica?", "O arquivo .rbxlx e a pasta de assets são salvos automaticamente dentro da pasta 'workspace' do seu executor no seu computador."},
+        {"4️⃣ Passo 4: Como Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' (Arquivo) -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. Pronto! O jogo inteiro abrirá 100% editável!"},
+    }
+
+    for i, step in ipairs(steps) do
+        local card = Instance.new("Frame")
+        card.Size = UDim2.new(1, -12, 0, 80)
+        card.Position = UDim2.new(0, 0, 0, (i - 1) * 88)
+        card.BackgroundColor3 = Theme.CardBg
+        Theme.AddCorner(card, Theme.CornerMedium)
+        Theme.AddStroke(card, Theme.Border, 1)
+        card.Parent = scroll
+
+        local title = Instance.new("TextLabel")
+        title.Text = step[1]
+        title.Font = Theme.FontSemiBold
+        title.TextSize = 12
+        title.TextColor3 = Theme.AccentCyan
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.Size = UDim2.new(1, -20, 0, 20)
+        title.Position = UDim2.new(0, 10, 0, 8)
+        title.BackgroundTransparency = 1
+        title.Parent = card
+
+        local desc = Instance.new("TextLabel")
+        desc.Text = step[2]
+        desc.Font = Theme.FontRegular
+        desc.TextSize = 10
+        desc.TextColor3 = Theme.TextSecondary
+        desc.TextXAlignment = Enum.TextXAlignment.Left
+        desc.TextYAlignment = Enum.TextYAlignment.Top
+        desc.TextWrapped = true
+        desc.Size = UDim2.new(1, -20, 0, 46)
+        desc.Position = UDim2.new(0, 10, 0, 30)
+        desc.BackgroundTransparency = 1
+        desc.Parent = card
+    end
+
+    -- Copy Universal Command Button
+    local copyScriptCard = Instance.new("TextButton")
+    copyScriptCard.Text = "📋 Copiar Comando de Execução (loadstring) para a Área de Transferência"
+    copyScriptCard.Font = Theme.FontSemiBold
+    copyScriptCard.TextSize = 11
+    copyScriptCard.TextColor3 = Theme.TextPrimary
+    copyScriptCard.BackgroundColor3 = Theme.CardHover
+    copyScriptCard.Size = UDim2.new(1, -12, 0, 36)
+    copyScriptCard.Position = UDim2.new(0, 0, 0, 360)
+    Theme.AddCorner(copyScriptCard, Theme.CornerSmall)
+    Theme.AddStroke(copyScriptCard, Theme.AccentPrimary, 1)
+    copyScriptCard.Parent = scroll
+
+    copyScriptCard.MouseButton1Click:Connect(function()
+        Environment.SetClipboard('loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()')
+        copyScriptCard.Text = "✓ Comando Copiado!"
+        task.delay(2, function()
+            copyScriptCard.Text = "📋 Copiar Comando de Execução (loadstring) para a Área de Transferência"
+        end)
+    end)
+end
+
+-- 3. Settings Tab
 function Interface:BuildSettingsTab()
     local parent = self.TabFrames["Settings"]
 
@@ -3169,7 +3330,7 @@ function Interface:BuildSettingsTab()
     end
 end
 
--- 3. Console Tab
+-- 4. Console Tab
 function Interface:BuildConsoleTab()
     local parent = self.TabFrames["Console"]
 
@@ -3212,7 +3373,7 @@ function Interface:BuildConsoleTab()
     end)
 end
 
--- 4. About Tab
+-- 5. About Tab
 function Interface:BuildAboutTab()
     local parent = self.TabFrames["About"]
 
@@ -3298,8 +3459,12 @@ function Interface:BindEngineEvents()
             if prog.AssetsFolder then self.SavedAssetPath = prog.AssetsFolder end
 
             if self.CloneButton then
-                self.CloneButton.Text = "✓ CLONADO! COPIAR CAMINHO"
+                self.CloneButton.Text = "✓ CLONADO COM SUCESSO!"
                 Theme.AddGradient(self.CloneButton, Theme.AccentSuccess, Color3.fromRGB(16, 185, 129), 90)
+                task.delay(4, function()
+                    self.CloneButton.Text = "🚀 CLONAR JOGO INTEIRO (1-CLIQUE)"
+                    Theme.AddGradient(self.CloneButton, Theme.AccentPrimary, Theme.AccentSecondary, 90)
+                end)
             end
         elseif prog.Stage == "Error" then
             color = Theme.AccentDanger
@@ -3314,19 +3479,6 @@ function Interface:BindEngineEvents()
 end
 
 function Interface:StartClone()
-    if self.SavedFilePath and #self.SavedFilePath > 0 then
-        Environment.SetClipboard(self.SavedFilePath)
-        if self.CloneButton then
-            self.CloneButton.Text = "📋 CAMINHO COPIADO!"
-            task.delay(2, function()
-                self.CloneButton.Text = "CLONAR JOGO INTEIRO (1-CLIQUE)"
-                Theme.AddGradient(self.CloneButton, Theme.AccentPrimary, Theme.AccentSecondary, 90)
-                self.SavedFilePath = ""
-            end)
-        end
-        return
-    end
-
     if self.Engine.IsRunning then
         return
     end
