@@ -47,7 +47,21 @@ function HyperSaveInstance.SaveScripts(customConfig: table?)
     return HyperSaveInstance.Save(cfg)
 end
 
--- Auto-initialize if executed directly
+-- Global environment injection (Universal compatibility with script hubs and legacy saveinstance calls)
+local function injectGlobals()
+    local genv = (getgenv and getgenv()) or _G
+    if genv then
+        genv.saveinstance = HyperSaveInstance.Save
+        genv.saveplace = HyperSaveInstance.Save
+        genv.SynSaveInstance = HyperSaveInstance
+        genv.HyperSaveInstance = HyperSaveInstance
+        genv.UltraSmartSaveInstance = HyperSaveInstance
+    end
+end
+
+pcall(injectGlobals)
+
+-- Auto-initialize HUD if ShowUI is enabled
 if Defaults.ShowUI then
     task.spawn(function()
         HyperSaveInstance.OpenUI()

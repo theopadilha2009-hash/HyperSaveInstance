@@ -1,9 +1,10 @@
 --[[
     HyperSaveInstance - Roblox XML Serializer (.rbxlx / .rbxmx)
-    Generates 100% compliant, readable and Studio-loadable Roblox XML files.
+    Generates 100% compliant, readable and Studio-loadable Roblox XML files with CSG buffers and SharedStrings.
 ]]
 
 local Reflection = require(script.Parent.Reflection)
+local AssetHandler = require(script.Parent.AssetHandler)
 local Base64 = require(script.Parent.Parent.Utils.Base64)
 
 local SerializerXml = {}
@@ -57,7 +58,6 @@ end
 -- Serialize instance attributes into binary/base64 XML format
 local function serializeAttributes(attrs: {[string]: any}): string
     if not attrs or next(attrs) == nil then return "" end
-    -- Simple JSON/string representation encoded in Base64 for Studio compatibility
     local str = ""
     for k, v in pairs(attrs) do
         str = str .. tostring(k) .. "=" .. tostring(v) .. ";"
@@ -104,6 +104,28 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
         if inst:IsA("LuaSourceContainer") then
             local source = scriptSources[inst] or ""
             append(string.format('%s\t\t<ProtectedString name="Source">%s</ProtectedString>\n', indent, escapeCDataOrText(source)))
+        end
+
+        -- CSG Union Deep Data if applicable
+        if inst:IsA("UnionOperation") or inst:IsA("NegateOperation") then
+            local unionData = AssetHandler.ExtractUnionData(inst :: any)
+            if unionData.PhysicsData then
+                append(string.format('%s\t\t<BinaryString name="PhysicsData">%s</BinaryString>\n', indent, unionData.PhysicsData))
+            end
+            if unionData.ChildData then
+                append(string.format('%s\t\t<BinaryString name="ChildData">%s</BinaryString>\n', indent, unionData.ChildData))
+            end
+            if unionData.InitialSize then
+                append(string.format('%s\t\t<Vector3 name="InitialSize"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n', indent, unionData.InitialSize.X, unionData.InitialSize.Y, unionData.InitialSize.Z))
+            end
+        end
+
+        -- Terrain SmoothVoxels if Terrain
+        if inst:IsA("Terrain") and terrainData and terrainData.HasVoxels then
+            for idx, chunk in ipairs(terrainData.VoxelChunks) do
+                append(string.format('%s\t\t<BinaryString name="MaterialChunk_%d">%s</BinaryString>\n', indent, idx, chunk.Materials))
+                append(string.format('%s\t\t<BinaryString name="OccupancyChunk_%d">%s</BinaryString>\n', indent, idx, chunk.Occupancies))
+            end
         end
 
         -- Dynamic reflection properties

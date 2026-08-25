@@ -228,9 +228,12 @@ end)
 
 __define__("Core/AssetHandler", function()
 --[[
-    HyperSaveInstance - Asset & Solid Modeling (CSG) Handler
-    Preserves CSG Unions, MeshParts, SpecialMeshes, SurfaceAppearances, Textures and Sounds.
+    HyperSaveInstance - Asset & Solid Modeling (CSG) Deep Geometry Handler
+    Preserves CSG Unions, PhysicsData, ChildData, MeshParts, SpecialMeshes, SurfaceAppearances, Textures and Sounds.
 ]]
+
+local Environment = __require__("Utils/Environment")
+local Base64 = __require__("Utils/Base64")
 
 local AssetHandler = {}
 
@@ -248,7 +251,63 @@ function AssetHandler.FormatAssetId(id: string | number): string
     return ""
 end
 
--- Process MeshParts and Unions
+-- Extract CSG Hidden Data (PhysicsData, ChildData, AssetId)
+function AssetHandler.ExtractUnionData(union: UnionOperation | NegateOperation)
+    local data = {
+        AssetId = "",
+        PhysicsData = nil,
+        ChildData = nil,
+        InitialSize = nil,
+        RenderFidelity = Enum.RenderFidelity.Precise,
+        CollisionFidelity = Enum.CollisionFidelity.Default,
+        UsePartColor = false,
+        SmoothingAngle = 0
+    }
+
+    pcall(function() data.AssetId = union.AssetId end)
+    pcall(function() data.RenderFidelity = union.RenderFidelity end)
+    pcall(function() data.CollisionFidelity = union.CollisionFidelity end)
+    pcall(function() data.UsePartColor = union.UsePartColor end)
+    pcall(function() data.SmoothingAngle = union.SmoothingAngle end)
+
+    -- Extract hidden CSG geometry buffers if executor supports gethiddenproperty or getspecialinfo
+    local getspecial = getspecialinfo or (syn and syn.get_special_info)
+    if getspecial then
+        local s, specialInfo = pcall(getspecial, union)
+        if s and type(specialInfo) == "table" then
+            if specialInfo.PhysicsData then
+                data.PhysicsData = Base64.Encode(specialInfo.PhysicsData)
+            end
+            if specialInfo.ChildData then
+                data.ChildData = Base64.Encode(specialInfo.ChildData)
+            end
+            if specialInfo.InitialSize then
+                data.InitialSize = specialInfo.InitialSize
+            end
+            if specialInfo.AssetId and #data.AssetId == 0 then
+                data.AssetId = specialInfo.AssetId
+            end
+        end
+    end
+
+    if not data.PhysicsData then
+        local phys = Environment.GetHiddenProperties(union, "PhysicsData")
+        if phys and type(phys) == "string" then
+            data.PhysicsData = Base64.Encode(phys)
+        end
+    end
+
+    if not data.ChildData then
+        local child = Environment.GetHiddenProperties(union, "ChildData")
+        if child and type(child) == "string" then
+            data.ChildData = Base64.Encode(child)
+        end
+    end
+
+    return data
+end
+
+-- Process MeshParts and Meshes
 function AssetHandler.ProcessMeshOrUnion(instance: Instance, options: table)
     local info = {
         ClassName = instance.ClassName,
@@ -257,7 +316,9 @@ function AssetHandler.ProcessMeshOrUnion(instance: Instance, options: table)
         RenderFidelity = Enum.RenderFidelity.Precise,
         CollisionFidelity = Enum.CollisionFidelity.Default,
         DoubleSided = false,
-        AssetId = ""
+        VertexColor = Vector3.new(1, 1, 1),
+        AssetId = "",
+        UnionData = nil
     }
 
     if instance:IsA("MeshPart") then
@@ -266,10 +327,10 @@ function AssetHandler.ProcessMeshOrUnion(instance: Instance, options: table)
         pcall(function() info.RenderFidelity = instance.RenderFidelity end)
         pcall(function() info.CollisionFidelity = instance.CollisionFidelity end)
         pcall(function() info.DoubleSided = instance.DoubleSided end)
-    elseif instance:IsA("UnionOperation") then
-        pcall(function() info.AssetId = instance.AssetId end)
-        pcall(function() info.RenderFidelity = instance.RenderFidelity end)
-        pcall(function() info.CollisionFidelity = instance.CollisionFidelity end)
+        pcall(function() info.VertexColor = instance.VertexColor end)
+    elseif instance:IsA("UnionOperation") or instance:IsA("NegateOperation") then
+        info.UnionData = AssetHandler.ExtractUnionData(instance :: any)
+        info.AssetId = info.UnionData.AssetId
     elseif instance:IsA("SpecialMesh") then
         pcall(function() info.MeshId = instance.MeshId end)
         pcall(function() info.TextureId = instance.TextureId end)
@@ -1960,10 +2021,11 @@ end)
 __define__("Core/SerializerXml", function()
 --[[
     HyperSaveInstance - Roblox XML Serializer (.rbxlx / .rbxmx)
-    Generates 100% compliant, readable and Studio-loadable Roblox XML files.
+    Generates 100% compliant, readable and Studio-loadable Roblox XML files with CSG buffers and SharedStrings.
 ]]
 
 local Reflection = __require__("Core/Reflection")
+local AssetHandler = __require__("Core/AssetHandler")
 local Base64 = __require__("Utils/Base64")
 
 local SerializerXml = {}
@@ -2017,7 +2079,6 @@ end
 -- Serialize instance attributes into binary/base64 XML format
 local function serializeAttributes(attrs: {[string]: any}): string
     if not attrs or next(attrs) == nil then return "" end
-    -- Simple JSON/string representation encoded in Base64 for Studio compatibility
     local str = ""
     for k, v in pairs(attrs) do
         str = str .. tostring(k) .. "=" .. tostring(v) .. ";"
@@ -2064,6 +2125,28 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
         if inst:IsA("LuaSourceContainer") then
             local source = scriptSources[inst] or ""
             append(string.format('%s\t\t<ProtectedString name="Source">%s</ProtectedString>\n', indent, escapeCDataOrText(source)))
+        end
+
+        -- CSG Union Deep Data if applicable
+        if inst:IsA("UnionOperation") or inst:IsA("NegateOperation") then
+            local unionData = AssetHandler.ExtractUnionData(inst :: any)
+            if unionData.PhysicsData then
+                append(string.format('%s\t\t<BinaryString name="PhysicsData">%s</BinaryString>\n', indent, unionData.PhysicsData))
+            end
+            if unionData.ChildData then
+                append(string.format('%s\t\t<BinaryString name="ChildData">%s</BinaryString>\n', indent, unionData.ChildData))
+            end
+            if unionData.InitialSize then
+                append(string.format('%s\t\t<Vector3 name="InitialSize"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n', indent, unionData.InitialSize.X, unionData.InitialSize.Y, unionData.InitialSize.Z))
+            end
+        end
+
+        -- Terrain SmoothVoxels if Terrain
+        if inst:IsA("Terrain") and terrainData and terrainData.HasVoxels then
+            for idx, chunk in ipairs(terrainData.VoxelChunks) do
+                append(string.format('%s\t\t<BinaryString name="MaterialChunk_%d">%s</BinaryString>\n', indent, idx, chunk.Materials))
+                append(string.format('%s\t\t<BinaryString name="OccupancyChunk_%d">%s</BinaryString>\n', indent, idx, chunk.Occupancies))
+            end
         end
 
         -- Dynamic reflection properties
@@ -3656,7 +3739,21 @@ function HyperSaveInstance.SaveScripts(customConfig: table?)
     return HyperSaveInstance.Save(cfg)
 end
 
--- Auto-initialize if executed directly
+-- Global environment injection (Universal compatibility with script hubs and legacy saveinstance calls)
+local function injectGlobals()
+    local genv = (getgenv and getgenv()) or _G
+    if genv then
+        genv.saveinstance = HyperSaveInstance.Save
+        genv.saveplace = HyperSaveInstance.Save
+        genv.SynSaveInstance = HyperSaveInstance
+        genv.HyperSaveInstance = HyperSaveInstance
+        genv.UltraSmartSaveInstance = HyperSaveInstance
+    end
+end
+
+pcall(injectGlobals)
+
+-- Auto-initialize HUD if ShowUI is enabled
 if Defaults.ShowUI then
     task.spawn(function()
         HyperSaveInstance.OpenUI()
