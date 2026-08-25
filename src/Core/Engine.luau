@@ -1,14 +1,17 @@
 --[[
     HyperSaveInstance - Master Engine Orchestrator
-    Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation and file export.
+    Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation, Anti-AFK and file export.
 ]]
 
 local SoundService = game:GetService("SoundService")
 
 local Environment = require(script.Parent.Parent.Utils.Environment)
+local AntiAFK = require(script.Parent.Parent.Utils.AntiAFK)
+local Stealth = require(script.Parent.Parent.Utils.Stealth)
 local Defaults = require(script.Parent.Parent.Config.Defaults)
 local ClassBlacklist = require(script.Parent.Parent.Config.ClassBlacklist)
 local TerrainSerializer = require(script.Parent.TerrainSerializer)
+local StreamExplorer = require(script.Parent.StreamExplorer)
 local Decompiler = require(script.Parent.Decompiler)
 local AssetDownloader = require(script.Parent.AssetDownloader)
 local SerializerXml = require(script.Parent.SerializerXml)
@@ -20,7 +23,7 @@ Engine.__index = Engine
 
 -- Status types
 export type SaveProgress = {
-    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
+    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Exploring" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
     Current: number,
     Total: number,
     Percentage: number,
@@ -40,6 +43,12 @@ function Engine.new(customConfig: table?)
     self.ProgressListeners = {}
     self.IsRunning = false
     self.CancelRequested = false
+
+    -- Enable Anti-AFK automatically if configured
+    if self.Config.AutoAntiAFK then
+        AntiAFK.Enable()
+    end
+
     return self
 end
 
@@ -75,7 +84,7 @@ function Engine:PlayChime()
     if not self.Config.PlaySoundOnComplete then return end
     pcall(function()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://9069609200" -- Pleasant success bell
+        sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
         sound.Volume = 0.6
         sound.Parent = SoundService
         sound:Play()
@@ -89,27 +98,51 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
     if ClassBlacklist.Classes[cName] then return false end
     if ClassBlacklist.Names[inst.Name] then return false end
 
-    -- Check if it's our own UI
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
 
     return true
 end
 
--- Preload chunks around map if StreamingEnabled is active
-function Engine:PreloadStreaming()
-    if not workspace.StreamingEnabled or not self.Config.PreloadStreaming then
-        return
+-- Save specific isolated model/folder
+function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, string)
+    if not target or not target:IsA("Instance") then
+        return false, "Invalid target instance specified!"
     end
 
-    self:EmitProgress({
-        Stage = "Preloading",
-        Current = 0,
-        Total = 100,
-        Percentage = 5,
-        Message = "StreamingEnabled active: Preloading map chunks...",
-    })
+    local cfg = table.clone(self.Config)
+    if customConfig then
+        for k, v in pairs(customConfig) do cfg[k] = v end
+    end
 
-    task.wait(0.5)
+    local cleanName = string.gsub(target.Name, "[^%w_%-]", "_")
+    local fileName = string.format("HyperSave_Model_%s_%d.%s", cleanName, os.time(), cfg.Format or "rbxm")
+
+    local allInstances = {target}
+    local scriptInstances = {}
+
+    local function scan(inst: Instance)
+        if not self:ShouldSaveInstance(inst) then return end
+        table.insert(allInstances, inst)
+        if inst:IsA("LuaSourceContainer") then
+            table.insert(scriptInstances, inst)
+        end
+        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+    end
+    scan(target)
+
+    local scriptSources = {}
+    if cfg.DecompileScripts and #scriptInstances > 0 then
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, cfg)
+    end
+
+    local output = SerializerXml.Serialize({target}, scriptSources, nil, cfg)
+    local writeOk = Environment.WriteFile(fileName, output)
+
+    if writeOk then
+        self:PlayChime()
+        return true, fileName
+    end
+    return false, "Failed to write model file."
 end
 
 -- Main Save Process
@@ -122,18 +155,40 @@ function Engine:Start(): (boolean, string)
     self.CancelRequested = false
     local startTime = os.clock()
 
+    if self.Config.StealthMode then
+        Stealth.ElevateThread()
+    end
+
     self:EmitProgress({
         Stage = "Scanning",
         Current = 0,
         Total = 100,
         Percentage = 0,
-        Message = "Initializing HyperSaveInstance...",
+        Message = "Initializing HyperSaveInstance with Anti-AFK protection...",
     })
 
-    -- Step 1: Preload Streaming if needed
-    self:PreloadStreaming()
+    -- Optional: Auto-Map Explorer sweep for StreamingEnabled
+    if self.Config.AutoExploreStreaming and workspace.StreamingEnabled then
+        self:EmitProgress({
+            Stage = "Exploring",
+            Current = 0,
+            Total = 100,
+            Percentage = 4,
+            Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
+        })
+        StreamExplorer.ExploreMap(512, function(cur, tot, pos)
+            local pct = 4 + math.floor((cur / tot) * 6)
+            self:EmitProgress({
+                Stage = "Exploring",
+                Current = cur,
+                Total = tot,
+                Percentage = pct,
+                Message = string.format("Streaming Sweep: %d/%d chunks loaded", cur, tot),
+            })
+        end)
+    end
 
-    -- Step 2: Collect Root Services to save
+    -- Step 1: Collect Root Services to save
     local rootInstances: {Instance} = {}
     local allInstances: {Instance} = {}
     local scriptInstances: {LuaSourceContainer} = {}
@@ -168,7 +223,7 @@ function Engine:Start(): (boolean, string)
         Stage = "Scanning",
         Current = 0,
         Total = #rootInstances,
-        Percentage = 8,
+        Percentage = 10,
         Message = "Scanning place hierarchy & all instances...",
     })
 
@@ -192,7 +247,7 @@ function Engine:Start(): (boolean, string)
     local totalInstances = #allInstances
     local totalScripts = #scriptInstances
 
-    -- Step 3: Raw Asset Downloader (Audio, Textures, Meshes, Animations to local folder)
+    -- Step 2: Raw Asset Downloader
     local assetFolder = self.Config.AssetFolderName
     if not assetFolder or #assetFolder == 0 then
         assetFolder = self:GetDefaultAssetFolder()
@@ -227,7 +282,7 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 4: Extract Terrain
+    -- Step 3: Extract Terrain
     local terrainData = nil
     if self.Config.SaveTerrain then
         self:EmitProgress({
@@ -244,7 +299,7 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 5: Decompile Scripts
+    -- Step 4: Decompile Scripts
     local scriptSources: {[LuaSourceContainer]: string} = {}
     if self.Config.DecompileScripts and totalScripts > 0 then
         self:EmitProgress({
@@ -271,7 +326,7 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 6: Serialize Output
+    -- Step 5: Serialize Output
     self:EmitProgress({
         Stage = "Serializing",
         Current = 0,
@@ -293,7 +348,7 @@ function Engine:Start(): (boolean, string)
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     end
 
-    -- Step 7: Write to disk
+    -- Step 6: Write to disk
     self:EmitProgress({
         Stage = "Writing",
         Current = 0,

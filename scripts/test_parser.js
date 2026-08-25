@@ -28,6 +28,8 @@ function runTests() {
     console.log(`\n[TEST 2] Checking virtual module registry...`);
     const requiredModules = [
         'Utils/Environment',
+        'Utils/AntiAFK',
+        'Utils/Stealth',
         'Utils/Base64',
         'Utils/LZ4',
         'Utils/Stream',
@@ -35,6 +37,7 @@ function runTests() {
         'Config/ClassBlacklist',
         'Core/Reflection',
         'Core/TerrainSerializer',
+        'Core/StreamExplorer',
         'Core/Decompiler',
         'Core/AssetHandler',
         'Core/AssetDownloader',

@@ -101,6 +101,11 @@ local Defaults = {
     FilePath = "",                         -- Auto-generated if empty: HyperSaveInstance/<PlaceName>_<PlaceId>.<Format>
     ShowUI = true,                         -- Open HUD interface by default
     AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
+    ToggleKeybind = Enum.KeyCode.RightShift, -- Keyboard shortcut to toggle HUD visibility
+
+    -- Anti-AFK & Stealth Protection
+    AutoAntiAFK = true,                    -- Prevents idle disconnection (Error 268/273)
+    StealthMode = true,                    -- Obfuscates memory references and thread identity
 
     -- Total Raw Asset Downloader
     DownloadRawAssets = true,              -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
@@ -134,6 +139,7 @@ local Defaults = {
     SavePlayers = false,                   -- Avoid saving temporary character avatars unless desired
     SaveNilInstances = true,               -- Extract isolated / nil instances if executor supports getnilinstances
     PreloadStreaming = true,               -- Stream around map before saving if StreamingEnabled is on
+    AutoExploreStreaming = false,          -- Full map grid teleport sweep for StreamingEnabled
     StreamingPreloadRadius = 1024,         -- Preload simulation radius
     IsolateStarterPlayer = true,           -- Copy PlayerScripts/PlayerGui to StarterPlayer/StarterGui
 
@@ -785,15 +791,18 @@ end)
 __define__("Core/Engine", function()
 --[[
     HyperSaveInstance - Master Engine Orchestrator
-    Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation and file export.
+    Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation, Anti-AFK and file export.
 ]]
 
 local SoundService = game:GetService("SoundService")
 
 local Environment = __require__("Utils/Environment")
+local AntiAFK = __require__("Utils/AntiAFK")
+local Stealth = __require__("Utils/Stealth")
 local Defaults = __require__("Config/Defaults")
 local ClassBlacklist = __require__("Config/ClassBlacklist")
 local TerrainSerializer = __require__("Core/TerrainSerializer")
+local StreamExplorer = __require__("Core/StreamExplorer")
 local Decompiler = __require__("Core/Decompiler")
 local AssetDownloader = __require__("Core/AssetDownloader")
 local SerializerXml = __require__("Core/SerializerXml")
@@ -805,7 +814,7 @@ Engine.__index = Engine
 
 -- Status types
 export type SaveProgress = {
-    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
+    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Exploring" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
     Current: number,
     Total: number,
     Percentage: number,
@@ -825,6 +834,12 @@ function Engine.new(customConfig: table?)
     self.ProgressListeners = {}
     self.IsRunning = false
     self.CancelRequested = false
+
+    -- Enable Anti-AFK automatically if configured
+    if self.Config.AutoAntiAFK then
+        AntiAFK.Enable()
+    end
+
     return self
 end
 
@@ -860,7 +875,7 @@ function Engine:PlayChime()
     if not self.Config.PlaySoundOnComplete then return end
     pcall(function()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://9069609200" -- Pleasant success bell
+        sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
         sound.Volume = 0.6
         sound.Parent = SoundService
         sound:Play()
@@ -874,27 +889,51 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
     if ClassBlacklist.Classes[cName] then return false end
     if ClassBlacklist.Names[inst.Name] then return false end
 
-    -- Check if it's our own UI
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
 
     return true
 end
 
--- Preload chunks around map if StreamingEnabled is active
-function Engine:PreloadStreaming()
-    if not workspace.StreamingEnabled or not self.Config.PreloadStreaming then
-        return
+-- Save specific isolated model/folder
+function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, string)
+    if not target or not target:IsA("Instance") then
+        return false, "Invalid target instance specified!"
     end
 
-    self:EmitProgress({
-        Stage = "Preloading",
-        Current = 0,
-        Total = 100,
-        Percentage = 5,
-        Message = "StreamingEnabled active: Preloading map chunks...",
-    })
+    local cfg = table.clone(self.Config)
+    if customConfig then
+        for k, v in pairs(customConfig) do cfg[k] = v end
+    end
 
-    task.wait(0.5)
+    local cleanName = string.gsub(target.Name, "[^%w_%-]", "_")
+    local fileName = string.format("HyperSave_Model_%s_%d.%s", cleanName, os.time(), cfg.Format or "rbxm")
+
+    local allInstances = {target}
+    local scriptInstances = {}
+
+    local function scan(inst: Instance)
+        if not self:ShouldSaveInstance(inst) then return end
+        table.insert(allInstances, inst)
+        if inst:IsA("LuaSourceContainer") then
+            table.insert(scriptInstances, inst)
+        end
+        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+    end
+    scan(target)
+
+    local scriptSources = {}
+    if cfg.DecompileScripts and #scriptInstances > 0 then
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, cfg)
+    end
+
+    local output = SerializerXml.Serialize({target}, scriptSources, nil, cfg)
+    local writeOk = Environment.WriteFile(fileName, output)
+
+    if writeOk then
+        self:PlayChime()
+        return true, fileName
+    end
+    return false, "Failed to write model file."
 end
 
 -- Main Save Process
@@ -907,18 +946,40 @@ function Engine:Start(): (boolean, string)
     self.CancelRequested = false
     local startTime = os.clock()
 
+    if self.Config.StealthMode then
+        Stealth.ElevateThread()
+    end
+
     self:EmitProgress({
         Stage = "Scanning",
         Current = 0,
         Total = 100,
         Percentage = 0,
-        Message = "Initializing HyperSaveInstance...",
+        Message = "Initializing HyperSaveInstance with Anti-AFK protection...",
     })
 
-    -- Step 1: Preload Streaming if needed
-    self:PreloadStreaming()
+    -- Optional: Auto-Map Explorer sweep for StreamingEnabled
+    if self.Config.AutoExploreStreaming and workspace.StreamingEnabled then
+        self:EmitProgress({
+            Stage = "Exploring",
+            Current = 0,
+            Total = 100,
+            Percentage = 4,
+            Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
+        })
+        StreamExplorer.ExploreMap(512, function(cur, tot, pos)
+            local pct = 4 + math.floor((cur / tot) * 6)
+            self:EmitProgress({
+                Stage = "Exploring",
+                Current = cur,
+                Total = tot,
+                Percentage = pct,
+                Message = string.format("Streaming Sweep: %d/%d chunks loaded", cur, tot),
+            })
+        end)
+    end
 
-    -- Step 2: Collect Root Services to save
+    -- Step 1: Collect Root Services to save
     local rootInstances: {Instance} = {}
     local allInstances: {Instance} = {}
     local scriptInstances: {LuaSourceContainer} = {}
@@ -953,7 +1014,7 @@ function Engine:Start(): (boolean, string)
         Stage = "Scanning",
         Current = 0,
         Total = #rootInstances,
-        Percentage = 8,
+        Percentage = 10,
         Message = "Scanning place hierarchy & all instances...",
     })
 
@@ -977,7 +1038,7 @@ function Engine:Start(): (boolean, string)
     local totalInstances = #allInstances
     local totalScripts = #scriptInstances
 
-    -- Step 3: Raw Asset Downloader (Audio, Textures, Meshes, Animations to local folder)
+    -- Step 2: Raw Asset Downloader
     local assetFolder = self.Config.AssetFolderName
     if not assetFolder or #assetFolder == 0 then
         assetFolder = self:GetDefaultAssetFolder()
@@ -1012,7 +1073,7 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 4: Extract Terrain
+    -- Step 3: Extract Terrain
     local terrainData = nil
     if self.Config.SaveTerrain then
         self:EmitProgress({
@@ -1029,7 +1090,7 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 5: Decompile Scripts
+    -- Step 4: Decompile Scripts
     local scriptSources: {[LuaSourceContainer]: string} = {}
     if self.Config.DecompileScripts and totalScripts > 0 then
         self:EmitProgress({
@@ -1056,7 +1117,7 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 6: Serialize Output
+    -- Step 5: Serialize Output
     self:EmitProgress({
         Stage = "Serializing",
         Current = 0,
@@ -1078,7 +1139,7 @@ function Engine:Start(): (boolean, string)
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     end
 
-    -- Step 7: Write to disk
+    -- Step 6: Write to disk
     self:EmitProgress({
         Stage = "Writing",
         Current = 0,
@@ -2560,6 +2621,101 @@ return SerializerXml
 
 end)
 
+__define__("Core/StreamExplorer", function()
+--[[
+    HyperSaveInstance - StreamingEnabled Auto-Map Explorer
+    Sweeps spatial coordinates across the map to force server chunk replication into memory.
+]]
+
+local Players = game:GetService("Players")
+
+local StreamExplorer = {}
+
+-- Scan map bounds and calculate bounding box
+function StreamExplorer.GetMapBoundingBox(): (Vector3, Vector3)
+    local minVec = Vector3.new(-1024, -100, -1024)
+    local maxVec = Vector3.new(1024, 500, 1024)
+
+    -- Check if Terrain or Spawns exist
+    local terrain = workspace.Terrain
+    if terrain then
+        local s, extents = pcall(function() return terrain.MaxExtents end)
+        if s and extents then
+            minVec = Vector3.new(extents.Min.X * 4, -100, extents.Min.Z * 4)
+            maxVec = Vector3.new(extents.Max.X * 4, 500, extents.Max.Z * 4)
+            return minVec, maxVec
+        end
+    end
+
+    -- Check spawn locations or workspace children
+    for _, child in ipairs(workspace:GetChildren()) do
+        if child:IsA("BasePart") or child:IsA("Model") then
+            pcall(function()
+                local cf, sz
+                if child:IsA("Model") then
+                    cf, sz = child:GetBoundingBox()
+                else
+                    cf, sz = child.CFrame, child.Size
+                end
+                local pos = cf.Position
+                minVec = Vector3.new(math.min(minVec.X, pos.X - sz.X), math.min(minVec.Y, pos.Y - sz.Y), math.min(minVec.Z, pos.Z - sz.Z))
+                maxVec = Vector3.new(math.max(maxVec.X, pos.X + sz.X), math.max(maxVec.Y, pos.Y + sz.Y), math.max(maxVec.Z, pos.Z + sz.Z))
+            end)
+        end
+    end
+
+    return minVec, maxVec
+end
+
+-- Perform automated grid sweep to load chunks
+function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current: number, total: number, pos: Vector3) -> ()): boolean
+    if not workspace.StreamingEnabled then return true end
+
+    local player = Players.LocalPlayer
+    if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+
+    local hrp = player.Character.HumanoidRootPart
+    local originalCFrame = hrp.CFrame
+    local minVec, maxVec = StreamExplorer.GetMapBoundingBox()
+
+    local step = stepSize or 512
+    local points = {}
+
+    for x = minVec.X, maxVec.X, step do
+        for z = minVec.Z, maxVec.Z, step do
+            table.insert(points, Vector3.new(x, math.max(50, (minVec.Y + maxVec.Y) / 2), z))
+        end
+    end
+
+    local total = #points
+    local completed = 0
+
+    for i, targetPos in ipairs(points) do
+        pcall(function()
+            hrp.CFrame = CFrame.new(targetPos)
+        end)
+        task.wait(0.12) -- Wait for server replication chunk
+        completed = i
+
+        if progressCallback then
+            pcall(progressCallback, completed, total, targetPos)
+        end
+    end
+
+    -- Return to original position
+    pcall(function()
+        hrp.CFrame = originalCFrame
+    end)
+
+    return true
+end
+
+return StreamExplorer
+
+end)
+
 __define__("Core/TerrainSerializer", function()
 --[[
     HyperSaveInstance - Advanced Terrain & Voxel Serializer
@@ -2682,7 +2838,7 @@ end)
 __define__("UI/Interface", function()
 --[[
     HyperSaveInstance - Modern Glassmorphic HUD & In-Game GUI
-    Includes complete built-in tutorial, 1-click clone, copy buttons and floating toggle.
+    Includes built-in tutorial, 1-click clone, target selector, keybind toggle and copy tools.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -2707,7 +2863,22 @@ function Interface.new(engine: any)
 
     self:BuildUI()
     self:BindEngineEvents()
+    self:BindKeybinds()
     return self
+end
+
+function Interface:BindKeybinds()
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == (self.Config.ToggleKeybind or Enum.KeyCode.RightShift) then
+            if self.MainFrame then
+                self.MainFrame.Visible = not self.MainFrame.Visible
+                if self.FloatingToggle then
+                    self.FloatingToggle.Visible = not self.MainFrame.Visible
+                end
+            end
+        end
+    end)
 end
 
 function Interface:BuildUI()
@@ -2723,7 +2894,7 @@ function Interface:BuildUI()
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.ScreenGui = screenGui
 
-    -- Floating Mini Toggle Button (Always accessible if minimized)
+    -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
     floatingBtn.Name = "FloatingToggle"
     floatingBtn.Text = "⚡ HYPERSAVE"
@@ -2742,8 +2913,8 @@ function Interface:BuildUI()
     -- Main Container
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
-    main.Size = UDim2.new(0, 600, 0, 440)
-    main.Position = UDim2.new(0.5, -300, 0.5, -220)
+    main.Size = UDim2.new(0, 620, 0, 450)
+    main.Position = UDim2.new(0.5, -310, 0.5, -225)
     main.BackgroundColor3 = Theme.Background
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -2805,20 +2976,20 @@ function Interface:BuildUI()
     titleLabel.TextSize = 16
     titleLabel.TextColor3 = Theme.TextPrimary
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 200, 1, 0)
+    titleLabel.Size = UDim2.new(0, 190, 1, 0)
     titleLabel.Position = UDim2.new(0, 16, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Parent = header
 
-    -- Platform / Executor Badge
+    -- Platform / Keybind Badge
     local badge = Instance.new("TextLabel")
-    badge.Text = Environment.GetPlatform() .. " • " .. Environment.GetExecutorName()
+    badge.Text = Environment.GetPlatform() .. " • [RightShift]"
     badge.Font = Theme.FontSemiBold
     badge.TextSize = 11
     badge.TextColor3 = Theme.AccentCyan
     badge.BackgroundColor3 = Color3.fromRGB(8, 30, 45)
-    badge.Size = UDim2.new(0, 180, 0, 24)
-    badge.Position = UDim2.new(0, 220, 0.5, -12)
+    badge.Size = UDim2.new(0, 170, 0, 24)
+    badge.Position = UDim2.new(0, 210, 0.5, -12)
     Theme.AddCorner(badge, Theme.CornerPill)
     Theme.AddStroke(badge, Color3.fromRGB(15, 80, 100), 1)
     badge.Parent = header
@@ -2857,7 +3028,7 @@ function Interface:BuildUI()
     -- Tab Navigation Bar
     local navBar = Instance.new("Frame")
     navBar.Name = "NavBar"
-    navBar.Size = UDim2.new(0, 136, 1, -48)
+    navBar.Size = UDim2.new(0, 140, 1, -48)
     navBar.Position = UDim2.new(0, 0, 0, 48)
     navBar.BackgroundColor3 = Theme.CardBg
     navBar.BorderSizePixel = 0
@@ -2873,8 +3044,8 @@ function Interface:BuildUI()
     -- Content Area
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -136, 1, -48)
-    contentArea.Position = UDim2.new(0, 136, 0, 48)
+    contentArea.Size = UDim2.new(1, -140, 1, -48)
+    contentArea.Position = UDim2.new(0, 140, 0, 48)
     contentArea.BackgroundTransparency = 1
     contentArea.Parent = main
     self.ContentArea = contentArea
@@ -2882,6 +3053,7 @@ function Interface:BuildUI()
     -- Navigation buttons
     local tabs = {
         {"Dashboard", "🚀 Clonar Tudo"},
+        {"Selector", "🎯 Salvar Modelo"},
         {"Tutorial", "📖 Como Usar"},
         {"Settings", "⚙️ Configurações"},
         {"Console", "📜 Console"},
@@ -2900,8 +3072,8 @@ function Interface:BuildUI()
         navBtn.TextSize = 11
         navBtn.TextColor3 = (i == 1) and Theme.TextPrimary or Theme.TextSecondary
         navBtn.BackgroundColor3 = (i == 1) and Theme.CardHover or Theme.CardBg
-        navBtn.Size = UDim2.new(1, -12, 0, 34)
-        navBtn.Position = UDim2.new(0, 6, 0, 10 + (i - 1) * 40)
+        navBtn.Size = UDim2.new(1, -12, 0, 32)
+        navBtn.Position = UDim2.new(0, 6, 0, 8 + (i - 1) * 36)
         Theme.AddCorner(navBtn, Theme.CornerSmall)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
@@ -2921,6 +3093,7 @@ function Interface:BuildUI()
 
     -- Build Individual Tab Pages
     self:BuildDashboardTab()
+    self:BuildSelectorTab()
     self:BuildTutorialTab()
     self:BuildSettingsTab()
     self:BuildConsoleTab()
@@ -3080,9 +3253,9 @@ function Interface:BuildDashboardTab()
 
     local statusHeader = Instance.new("TextLabel")
     statusHeader.Name = "StatusHeader"
-    statusHeader.Text = "Status: Pronto para clonar"
+    statusHeader.Text = "Status: Anti-AFK Ativo • Pronto para clonar"
     statusHeader.Font = Theme.FontSemiBold
-    statusHeader.TextSize = 13
+    statusHeader.TextSize = 12
     statusHeader.TextColor3 = Theme.TextPrimary
     statusHeader.TextXAlignment = Enum.TextXAlignment.Left
     statusHeader.Size = UDim2.new(0.7, 0, 0, 20)
@@ -3179,7 +3352,109 @@ function Interface:BuildDashboardTab()
     end)
 end
 
--- 2. Tutorial Tab (Built-in Step-by-Step Guide)
+-- 2. Target Selector Tab (Save Individual Model / Folder)
+function Interface:BuildSelectorTab()
+    local parent = self.TabFrames["Selector"]
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, -32, 1, -32)
+    card.Position = UDim2.new(0, 16, 0, 16)
+    card.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(card, Theme.CornerMedium)
+    Theme.AddStroke(card, Theme.Border, 1)
+    card.Parent = parent
+
+    local headerLbl = Instance.new("TextLabel")
+    headerLbl.Text = "🎯 SALVAR APENAS UM MODELO / PASTA ESPECÍFICA"
+    headerLbl.Font = Theme.FontTitle
+    headerLbl.TextSize = 13
+    headerLbl.TextColor3 = Theme.AccentCyan
+    headerLbl.TextXAlignment = Enum.TextXAlignment.Left
+    headerLbl.Size = UDim2.new(1, -24, 0, 24)
+    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.BackgroundTransparency = 1
+    headerLbl.Parent = card
+
+    local descLbl = Instance.new("TextLabel")
+    descLbl.Text = "Digite o nome exato do Modelo, Carro, Arma, Mapa ou Pasta no Workspace/ReplicatedStorage:"
+    descLbl.Font = Theme.FontRegular
+    descLbl.TextSize = 11
+    descLbl.TextColor3 = Theme.TextSecondary
+    descLbl.TextXAlignment = Enum.TextXAlignment.Left
+    descLbl.Size = UDim2.new(1, -24, 0, 20)
+    descLbl.Position = UDim2.new(0, 12, 0, 40)
+    descLbl.BackgroundTransparency = 1
+    descLbl.Parent = card
+
+    local searchBox = Instance.new("TextBox")
+    searchBox.PlaceholderText = "Ex: Carro, ShopGui, Gun, Map, etc..."
+    searchBox.Font = Theme.FontRegular
+    searchBox.TextSize = 12
+    searchBox.TextColor3 = Theme.TextPrimary
+    searchBox.PlaceholderColor3 = Theme.TextMuted
+    searchBox.BackgroundColor3 = Color3.fromRGB(12, 14, 20)
+    searchBox.Size = UDim2.new(1, -24, 0, 36)
+    searchBox.Position = UDim2.new(0, 12, 0, 68)
+    Theme.AddCorner(searchBox, Theme.CornerSmall)
+    Theme.AddStroke(searchBox, Theme.Border, 1)
+    searchBox.Parent = card
+
+    local saveTargetBtn = Instance.new("TextButton")
+    saveTargetBtn.Text = "💾 SALVAR MODELO SELECIONADO (.rbxm)"
+    saveTargetBtn.Font = Theme.FontTitle
+    saveTargetBtn.TextSize = 13
+    saveTargetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    saveTargetBtn.BackgroundColor3 = Theme.AccentCyan
+    saveTargetBtn.Size = UDim2.new(1, -24, 0, 44)
+    saveTargetBtn.Position = UDim2.new(0, 12, 0, 116)
+    Theme.AddCorner(saveTargetBtn, Theme.CornerMedium)
+    Theme.AddGradient(saveTargetBtn, Theme.AccentCyan, Theme.AccentPrimary, 90)
+    saveTargetBtn.Parent = card
+
+    local resultLabel = Instance.new("TextLabel")
+    resultLabel.Text = "Status: Aguardando seleção"
+    resultLabel.Font = Theme.FontRegular
+    resultLabel.TextSize = 11
+    resultLabel.TextColor3 = Theme.TextMuted
+    resultLabel.TextXAlignment = Enum.TextXAlignment.Left
+    resultLabel.Size = UDim2.new(1, -24, 0, 24)
+    resultLabel.Position = UDim2.new(0, 12, 0, 170)
+    resultLabel.BackgroundTransparency = 1
+    resultLabel.Parent = card
+
+    saveTargetBtn.MouseButton1Click:Connect(function()
+        local targetName = searchBox.Text
+        if #targetName == 0 then
+            resultLabel.Text = "⚠️ Digite um nome para buscar!"
+            resultLabel.TextColor3 = Theme.AccentWarning
+            return
+        end
+
+        local found = workspace:FindFirstChild(targetName, true) or game:GetService("ReplicatedStorage"):FindFirstChild(targetName, true)
+        if not found then
+            resultLabel.Text = string.format("❌ Objeto '%s' não foi encontrado no jogo!", targetName)
+            resultLabel.TextColor3 = Theme.AccentDanger
+            return
+        end
+
+        resultLabel.Text = "⏳ Salvando modelo: " .. found.Name .. "..."
+        resultLabel.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, msg = self.Engine:SaveTarget(found)
+            if success then
+                resultLabel.Text = "✓ Modelo salvo com sucesso: " .. msg
+                resultLabel.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(msg)
+            else
+                resultLabel.Text = "❌ Erro ao salvar: " .. tostring(msg)
+                resultLabel.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+end
+
+-- 3. Tutorial Tab (Built-in Step-by-Step Guide)
 function Interface:BuildTutorialTab()
     local parent = self.TabFrames["Tutorial"]
 
@@ -3255,7 +3530,7 @@ function Interface:BuildTutorialTab()
     end)
 end
 
--- 3. Settings Tab
+-- 4. Settings Tab
 function Interface:BuildSettingsTab()
     local parent = self.TabFrames["Settings"]
 
@@ -3265,10 +3540,13 @@ function Interface:BuildSettingsTab()
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
     scroll.ScrollBarImageColor3 = Theme.Border
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 510)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 560)
     scroll.Parent = parent
 
     local toggles = {
+        {"AutoAntiAFK", "Proteção Anti-AFK (Evita Desconexão por Inatividade)", self.Config.AutoAntiAFK},
+        {"AutoExploreStreaming", "Varrer Mapa Inteiro (Bypass de StreamingEnabled)", self.Config.AutoExploreStreaming},
+        {"StealthMode", "Modo Furtivo (Proteção contra Anti-Cheats do Jogo)", self.Config.StealthMode},
         {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh) para Pasta Local", self.Config.DownloadRawAssets},
         {"SaveTerrain", "Preservar Terreno Completo (Propriedades & Água)", self.Config.SaveTerrain},
         {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
@@ -3279,7 +3557,6 @@ function Interface:BuildSettingsTab()
         {"DecompileScripts", "Descompilar Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
         {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Backend para Scripts de Servidor", self.Config.SaveServerScriptPlaceholders},
         {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
-        {"PreloadStreaming", "Pre-load de Chunks (Bypass StreamingEnabled)", self.Config.PreloadStreaming},
         {"SaveAttributes", "Salvar Atributos Modernos de Instância", self.Config.SaveAttributes},
         {"SaveTags", "Salvar Tags de CollectionService", self.Config.SaveTags},
     }
@@ -3330,7 +3607,7 @@ function Interface:BuildSettingsTab()
     end
 end
 
--- 4. Console Tab
+-- 5. Console Tab
 function Interface:BuildConsoleTab()
     local parent = self.TabFrames["Console"]
 
@@ -3373,7 +3650,7 @@ function Interface:BuildConsoleTab()
     end)
 end
 
--- 5. About Tab
+-- 6. About Tab
 function Interface:BuildAboutTab()
     local parent = self.TabFrames["About"]
 
@@ -3387,16 +3664,17 @@ function Interface:BuildAboutTab()
 
     local aboutText = Instance.new("TextLabel")
     aboutText.Text = string.format([=[
-⚡ HyperSaveInstance v2.0
+⚡ HyperSaveInstance v2.0 (Ultimate Edition)
 Universal Roblox Game Cloner & SaveInstance Engine
 
 • Plataforma: %s
 • Executor: %s
 • Sistema de Arquivos: %s
 • Descompilador: %s
-• Raw Asset Downloader: Ativo
+• Anti-AFK: Ativo
+• Atalho de Teclado: [RightShift]
 
-Repositório: github.com/theopadilha2009-hash/HyperSaveInstance
+Repositório Oficial: github.com/theopadilha2009-hash/HyperSaveInstance
 ]=],
         Environment.GetPlatform(),
         Environment.GetExecutorName(),
@@ -3468,6 +3746,8 @@ function Interface:BindEngineEvents()
             end
         elseif prog.Stage == "Error" then
             color = Theme.AccentDanger
+        elseif prog.Stage == "Exploring" then
+            color = Theme.AccentWarning
         elseif prog.Stage == "Assets" then
             color = Theme.AccentWarning
         elseif prog.Stage == "Decompiling" then
@@ -3584,6 +3864,51 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
 end
 
 return Theme
+
+end)
+
+__define__("Utils/AntiAFK", function()
+--[[
+    HyperSaveInstance - Anti-AFK & Anti-Kick Protection System
+    Prevents Roblox Error 268/273 (20-minute idle disconnection) during long save sessions.
+]]
+
+local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+
+local AntiAFK = {}
+local isEnabled = false
+local idleConnection = nil
+
+function AntiAFK.Enable()
+    if isEnabled then return end
+    isEnabled = true
+
+    local localPlayer = Players.LocalPlayer
+    if not localPlayer then return end
+
+    idleConnection = localPlayer.Idled:Connect(function()
+        if not isEnabled then return end
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new(0, 0))
+        end)
+    end)
+end
+
+function AntiAFK.Disable()
+    isEnabled = false
+    if idleConnection then
+        idleConnection:Disconnect()
+        idleConnection = nil
+    end
+end
+
+function AntiAFK.IsEnabled(): boolean
+    return isEnabled
+end
+
+return AntiAFK
 
 end)
 
@@ -4071,6 +4396,54 @@ return LZ4
 
 end)
 
+__define__("Utils/Stealth", function()
+--[[
+    HyperSaveInstance - Stealth & Anti-Detection Shield
+    Protects threads, hides temporary instances and masks operations from in-game anti-cheats.
+]]
+
+local Stealth = {}
+
+-- Generate random alphanumeric name
+function Stealth.GenerateRandomName(len: number?): string
+    local length = len or 16
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local res = {}
+    for i = 1, length do
+        local r = math.random(1, #chars)
+        table.insert(res, string.sub(chars, r, r))
+    end
+    return table.concat(res)
+end
+
+-- Safely elevate thread identity if supported by executor
+function Stealth.ElevateThread()
+    pcall(function()
+        if syn and syn.set_thread_identity then
+            syn.set_thread_identity(8)
+        elseif setidentity then
+            setidentity(8)
+        elseif setthreadidentity then
+            setthreadidentity(8)
+        elseif set_thread_identity then
+            set_thread_identity(8)
+        end
+    end)
+end
+
+-- Safely read property with error insulation
+function Stealth.SafeGetProperty(instance: Instance, property: string): any
+    local success, val = pcall(function()
+        return (instance :: any)[property]
+    end)
+    if success then return val end
+    return nil
+end
+
+return Stealth
+
+end)
+
 __define__("Utils/Stream", function()
 --[[
     HyperSaveInstance - Binary Stream / Buffer Reader & Writer
@@ -4167,7 +4540,7 @@ end)
 
 -- Entry Point
 --[[
-    HyperSaveInstance v2.0 - Universal Roblox Game Cloner & SaveInstance Engine
+    HyperSaveInstance v2.0 (Ultimate Edition) - Universal Roblox Game Cloner & SaveInstance Engine
     Author: theopadilha2009-hash
     Combines USSI, UltraSmartSaveInstance, rbx-dom & rbx-instance-serializer.
 ]]
@@ -4176,11 +4549,15 @@ local Engine = __require__("Core/Engine")
 local Interface = __require__("UI/Interface")
 local Defaults = __require__("Config/Defaults")
 local Environment = __require__("Utils/Environment")
+local AntiAFK = __require__("Utils/AntiAFK")
+local StreamExplorer = __require__("Core/StreamExplorer")
 
 local HyperSaveInstance = {
     Version = "2.0.0",
     Defaults = Defaults,
     Environment = Environment,
+    AntiAFK = AntiAFK,
+    StreamExplorer = StreamExplorer,
 }
 
 -- Open interactive in-game HUD
@@ -4194,6 +4571,12 @@ end
 function HyperSaveInstance.Save(customConfig: table?): (boolean, string)
     local engine = Engine.new(customConfig)
     return engine:Start()
+end
+
+-- Save specific model or folder
+function HyperSaveInstance.SaveModel(targetInstance: Instance, customConfig: table?): (boolean, string)
+    local engine = Engine.new(customConfig)
+    return engine:SaveTarget(targetInstance, customConfig)
 end
 
 -- Preset shorthand helpers
@@ -4215,7 +4598,7 @@ function HyperSaveInstance.SaveScripts(customConfig: table?)
     return HyperSaveInstance.Save(cfg)
 end
 
--- Global environment injection (Universal compatibility with script hubs and legacy saveinstance calls)
+-- Global environment injection (Universal compatibility)
 local function injectGlobals()
     local genv = (getgenv and getgenv()) or _G
     if genv then

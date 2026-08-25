@@ -1,5 +1,5 @@
 --[[
-    HyperSaveInstance v2.0 - Universal Roblox Game Cloner & SaveInstance Engine
+    HyperSaveInstance v2.0 (Ultimate Edition) - Universal Roblox Game Cloner & SaveInstance Engine
     Author: theopadilha2009-hash
     Combines USSI, UltraSmartSaveInstance, rbx-dom & rbx-instance-serializer.
 ]]
@@ -8,11 +8,15 @@ local Engine = require(script.Core.Engine)
 local Interface = require(script.UI.Interface)
 local Defaults = require(script.Config.Defaults)
 local Environment = require(script.Utils.Environment)
+local AntiAFK = require(script.Utils.AntiAFK)
+local StreamExplorer = require(script.Core.StreamExplorer)
 
 local HyperSaveInstance = {
     Version = "2.0.0",
     Defaults = Defaults,
     Environment = Environment,
+    AntiAFK = AntiAFK,
+    StreamExplorer = StreamExplorer,
 }
 
 -- Open interactive in-game HUD
@@ -26,6 +30,12 @@ end
 function HyperSaveInstance.Save(customConfig: table?): (boolean, string)
     local engine = Engine.new(customConfig)
     return engine:Start()
+end
+
+-- Save specific model or folder
+function HyperSaveInstance.SaveModel(targetInstance: Instance, customConfig: table?): (boolean, string)
+    local engine = Engine.new(customConfig)
+    return engine:SaveTarget(targetInstance, customConfig)
 end
 
 -- Preset shorthand helpers
@@ -47,7 +57,7 @@ function HyperSaveInstance.SaveScripts(customConfig: table?)
     return HyperSaveInstance.Save(cfg)
 end
 
--- Global environment injection (Universal compatibility with script hubs and legacy saveinstance calls)
+-- Global environment injection (Universal compatibility)
 local function injectGlobals()
     local genv = (getgenv and getgenv()) or _G
     if genv then

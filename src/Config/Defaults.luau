@@ -9,6 +9,11 @@ local Defaults = {
     FilePath = "",                         -- Auto-generated if empty: HyperSaveInstance/<PlaceName>_<PlaceId>.<Format>
     ShowUI = true,                         -- Open HUD interface by default
     AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
+    ToggleKeybind = Enum.KeyCode.RightShift, -- Keyboard shortcut to toggle HUD visibility
+
+    -- Anti-AFK & Stealth Protection
+    AutoAntiAFK = true,                    -- Prevents idle disconnection (Error 268/273)
+    StealthMode = true,                    -- Obfuscates memory references and thread identity
 
     -- Total Raw Asset Downloader
     DownloadRawAssets = true,              -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
@@ -42,6 +47,7 @@ local Defaults = {
     SavePlayers = false,                   -- Avoid saving temporary character avatars unless desired
     SaveNilInstances = true,               -- Extract isolated / nil instances if executor supports getnilinstances
     PreloadStreaming = true,               -- Stream around map before saving if StreamingEnabled is on
+    AutoExploreStreaming = false,          -- Full map grid teleport sweep for StreamingEnabled
     StreamingPreloadRadius = 1024,         -- Preload simulation radius
     IsolateStarterPlayer = true,           -- Copy PlayerScripts/PlayerGui to StarterPlayer/StarterGui
 
