@@ -37,6 +37,7 @@ function runTests() {
         'Core/TerrainSerializer',
         'Core/Decompiler',
         'Core/AssetHandler',
+        'Core/AssetDownloader',
         'Core/SerializerXml',
         'Core/SerializerBinary',
         'Core/SerializerScript',

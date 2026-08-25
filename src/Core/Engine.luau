@@ -1,13 +1,16 @@
 --[[
     HyperSaveInstance - Master Engine Orchestrator
-    Coordinates instance scanning, terrain extraction, script decompilation and file export.
+    Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation and file export.
 ]]
+
+local SoundService = game:GetService("SoundService")
 
 local Environment = require(script.Parent.Parent.Utils.Environment)
 local Defaults = require(script.Parent.Parent.Config.Defaults)
 local ClassBlacklist = require(script.Parent.Parent.Config.ClassBlacklist)
 local TerrainSerializer = require(script.Parent.TerrainSerializer)
 local Decompiler = require(script.Parent.Decompiler)
+local AssetDownloader = require(script.Parent.AssetDownloader)
 local SerializerXml = require(script.Parent.SerializerXml)
 local SerializerBinary = require(script.Parent.SerializerBinary)
 local SerializerScript = require(script.Parent.SerializerScript)
@@ -17,12 +20,13 @@ Engine.__index = Engine
 
 -- Status types
 export type SaveProgress = {
-    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
+    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
     Current: number,
     Total: number,
     Percentage: number,
     Message: string,
     SavedFile: string?,
+    AssetsFolder: string?,
 }
 
 function Engine.new(customConfig: table?)
@@ -61,6 +65,24 @@ function Engine:GetDefaultFileName(): string
     return string.format("HyperSave_%s_%d.%s", placeName, placeId, ext)
 end
 
+function Engine:GetDefaultAssetFolder(): string
+    local placeId = game.PlaceId or 0
+    return string.format("HyperSave_Assets_%d", placeId)
+end
+
+-- Play completion audio chime
+function Engine:PlayChime()
+    if not self.Config.PlaySoundOnComplete then return end
+    pcall(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://9069609200" -- Pleasant success bell
+        sound.Volume = 0.6
+        sound.Parent = SoundService
+        sound:Play()
+        sound.Ended:Connect(function() sound:Destroy() end)
+    end)
+end
+
 -- Check if instance should be saved
 function Engine:ShouldSaveInstance(inst: Instance): boolean
     local cName = inst.ClassName
@@ -87,13 +109,7 @@ function Engine:PreloadStreaming()
         Message = "StreamingEnabled active: Preloading map chunks...",
     })
 
-    local player = game:GetService("Players").LocalPlayer
-    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local originalPos = hrp.CFrame
-        -- Wait small interval for stream in
-        task.wait(0.5)
-    end
+    task.wait(0.5)
 end
 
 -- Main Save Process
@@ -152,8 +168,8 @@ function Engine:Start(): (boolean, string)
         Stage = "Scanning",
         Current = 0,
         Total = #rootInstances,
-        Percentage = 10,
-        Message = "Scanning place hierarchy...",
+        Percentage = 8,
+        Message = "Scanning place hierarchy & all instances...",
     })
 
     local function scan(inst: Instance)
@@ -176,14 +192,49 @@ function Engine:Start(): (boolean, string)
     local totalInstances = #allInstances
     local totalScripts = #scriptInstances
 
-    -- Step 3: Extract Terrain
+    -- Step 3: Raw Asset Downloader (Audio, Textures, Meshes, Animations to local folder)
+    local assetFolder = self.Config.AssetFolderName
+    if not assetFolder or #assetFolder == 0 then
+        assetFolder = self:GetDefaultAssetFolder()
+    end
+
+    local downloadedCount = 0
+    if self.Config.DownloadRawAssets then
+        local assets = AssetDownloader.CollectAssets(allInstances)
+        local totalAssets = 0
+        for _ in pairs(assets) do totalAssets = totalAssets + 1 end
+
+        if totalAssets > 0 then
+            self:EmitProgress({
+                Stage = "Assets",
+                Current = 0,
+                Total = totalAssets,
+                Percentage = 15,
+                Message = string.format("Downloading %d raw assets (.mp3, .png, .mesh)...", totalAssets),
+            })
+
+            local dlOk, dlFail = AssetDownloader.DownloadAll(assets, assetFolder, self.Config, function(cur, tot, item)
+                local pct = 15 + math.floor((cur / tot) * 20)
+                self:EmitProgress({
+                    Stage = "Assets",
+                    Current = cur,
+                    Total = tot,
+                    Percentage = pct,
+                    Message = string.format("Downloading raw assets: %d/%d (%s: %s)", cur, tot, item.Type, item.SourceName),
+                })
+            end)
+            downloadedCount = dlOk
+        end
+    end
+
+    -- Step 4: Extract Terrain
     local terrainData = nil
     if self.Config.SaveTerrain then
         self:EmitProgress({
             Stage = "Terrain",
             Current = 0,
             Total = 1,
-            Percentage = 25,
+            Percentage = 38,
             Message = "Extracting terrain voxels & materials...",
         })
 
@@ -193,19 +244,19 @@ function Engine:Start(): (boolean, string)
         end
     end
 
-    -- Step 4: Decompile Scripts
+    -- Step 5: Decompile Scripts
     local scriptSources: {[LuaSourceContainer]: string} = {}
     if self.Config.DecompileScripts and totalScripts > 0 then
         self:EmitProgress({
             Stage = "Decompiling",
             Current = 0,
             Total = totalScripts,
-            Percentage = 35,
+            Percentage = 45,
             Message = string.format("Decompiling %d scripts with parallel workers...", totalScripts),
         })
 
         scriptSources = Decompiler.DecompileBatch(scriptInstances, self.Config, function(cur, tot, sInst)
-            local pct = 35 + math.floor((cur / tot) * 45)
+            local pct = 45 + math.floor((cur / tot) * 40)
             self:EmitProgress({
                 Stage = "Decompiling",
                 Current = cur,
@@ -215,18 +266,17 @@ function Engine:Start(): (boolean, string)
             })
         end)
     else
-        -- Provide fallback headers/stubs for scripts
         for _, sInst in ipairs(scriptInstances) do
             scriptSources[sInst] = Decompiler.DecompileSingle(sInst, self.Config)
         end
     end
 
-    -- Step 5: Serialize Output
+    -- Step 6: Serialize Output
     self:EmitProgress({
         Stage = "Serializing",
         Current = 0,
         Total = totalInstances,
-        Percentage = 85,
+        Percentage = 88,
         Message = string.format("Serializing %d instances to .%s format...", totalInstances, self.Config.Format),
     })
 
@@ -243,13 +293,13 @@ function Engine:Start(): (boolean, string)
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     end
 
-    -- Step 6: Write to disk
+    -- Step 7: Write to disk
     self:EmitProgress({
         Stage = "Writing",
         Current = 0,
         Total = 1,
-        Percentage = 95,
-        Message = "Saving file to disk...",
+        Percentage = 96,
+        Message = "Saving place file to disk...",
     })
 
     local targetFileName = self.Config.FilePath
@@ -261,8 +311,8 @@ function Engine:Start(): (boolean, string)
     local elapsed = os.clock() - startTime
 
     if writeSuccess then
-        local successMsg = string.format("Done! Successfully saved %d instances & %d scripts in %.2fs to: %s",
-            totalInstances, totalScripts, elapsed, targetFileName)
+        local successMsg = string.format("Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
+            totalInstances, totalScripts, downloadedCount, elapsed, targetFileName)
 
         self:EmitProgress({
             Stage = "Done",
@@ -271,12 +321,14 @@ function Engine:Start(): (boolean, string)
             Percentage = 100,
             Message = successMsg,
             SavedFile = targetFileName,
+            AssetsFolder = assetFolder,
         })
 
         if self.Config.CopyToClipboardOnComplete then
             Environment.SetClipboard(targetFileName)
         end
 
+        self:PlayChime()
         self.IsRunning = false
         return true, successMsg
     else

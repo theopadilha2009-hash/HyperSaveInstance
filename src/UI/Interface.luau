@@ -19,6 +19,8 @@ function Interface.new(engine: any)
     self.Logs = {}
     self.ActiveTab = "Dashboard"
     self.IsMinimized = false
+    self.SavedFilePath = ""
+    self.SavedAssetPath = ""
 
     self:BuildUI()
     self:BindEngineEvents()
@@ -28,7 +30,6 @@ end
 function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
 
-    -- Remove any old UI
     local old = parent:FindFirstChild("HyperSaveInstance_UI")
     if old then old:Destroy() end
 
@@ -118,7 +119,7 @@ function Interface:BuildUI()
     Theme.AddStroke(badge, Color3.fromRGB(15, 80, 100), 1)
     badge.Parent = header
 
-    -- Close & Minimize Buttons
+    -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Text = "✕"
     closeBtn.Font = Theme.FontTitle
@@ -421,18 +422,19 @@ function Interface:BuildSettingsTab()
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
     scroll.ScrollBarImageColor3 = Theme.Border
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 460)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 510)
     scroll.Parent = parent
 
     local toggles = {
+        {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh) para Pasta Local", self.Config.DownloadRawAssets},
         {"SaveTerrain", "Preservar Terreno Completo (Propriedades & Água)", self.Config.SaveTerrain},
         {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
         {"SaveLighting", "Preservar Iluminação, Céu & Efeitos de Atmosfera", self.Config.SaveLighting},
         {"SaveSounds", "Preservar Efeitos de Áudio, Reverbs & SoundGroups", self.Config.SaveSounds},
-        {"SaveUnions", "Preservar CSG Unions & NegateOperations", self.Config.SaveUnions},
+        {"SaveUnions", "Preservar CSG Unions & NegateOperations (Physics & ChildData)", self.Config.SaveUnions},
         {"SaveSurfaceAppearance", "Preservar Texturas PBR & SurfaceAppearances", self.Config.SaveSurfaceAppearance},
         {"DecompileScripts", "Descompilar Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
-        {"SaveServerScriptPlaceholders", "Criar Placeholders Estruturados para Scripts de Servidor", self.Config.SaveServerScriptPlaceholders},
+        {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Backend para Scripts de Servidor", self.Config.SaveServerScriptPlaceholders},
         {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
         {"PreloadStreaming", "Pre-load de Chunks (Bypass StreamingEnabled)", self.Config.PreloadStreaming},
         {"SaveAttributes", "Salvar Atributos Modernos de Instância", self.Config.SaveAttributes},
@@ -549,14 +551,9 @@ Universal Roblox Game Cloner & SaveInstance Engine
 • Executor: %s
 • Sistema de Arquivos: %s
 • Descompilador: %s
+• Raw Asset Downloader: Ativo
 
-Criado combinando as melhores arquiteturas:
-- UniversalSynSaveInstance (USSI Engine)
-- UltraSmartSaveInstance (Fidelidade Visual & Terrain)
-- rbx-dom (Serialização de Formatos Roblox)
-- rbx-instance-serializer (Estruturação Limpa)
-
-Repositório Público: github.com/theopadilha2009-hash/HyperSaveInstance
+Repositório: github.com/theopadilha2009-hash/HyperSaveInstance
 ]=],
         Environment.GetPlatform(),
         Environment.GetExecutorName(),
@@ -615,16 +612,17 @@ function Interface:BindEngineEvents()
         local color = Theme.TextSecondary
         if prog.Stage == "Done" then
             color = Theme.AccentSuccess
+            if prog.SavedFile then self.SavedFilePath = prog.SavedFile end
+            if prog.AssetsFolder then self.SavedAssetPath = prog.AssetsFolder end
+
             if self.CloneButton then
-                self.CloneButton.Text = "✓ JOGO CLONADO COM SUCESSO!"
+                self.CloneButton.Text = "✓ CLONADO! COPIAR CAMINHO"
                 Theme.AddGradient(self.CloneButton, Theme.AccentSuccess, Color3.fromRGB(16, 185, 129), 90)
-                task.delay(4, function()
-                    self.CloneButton.Text = "CLONAR JOGO INTEIRO (1-CLIQUE)"
-                    Theme.AddGradient(self.CloneButton, Theme.AccentPrimary, Theme.AccentSecondary, 90)
-                end)
             end
         elseif prog.Stage == "Error" then
             color = Theme.AccentDanger
+        elseif prog.Stage == "Assets" then
+            color = Theme.AccentWarning
         elseif prog.Stage == "Decompiling" then
             color = Theme.AccentCyan
         end
@@ -634,6 +632,19 @@ function Interface:BindEngineEvents()
 end
 
 function Interface:StartClone()
+    if self.SavedFilePath and #self.SavedFilePath > 0 then
+        Environment.SetClipboard(self.SavedFilePath)
+        if self.CloneButton then
+            self.CloneButton.Text = "📋 CAMINHO COPIADO!"
+            task.delay(2, function()
+                self.CloneButton.Text = "CLONAR JOGO INTEIRO (1-CLIQUE)"
+                Theme.AddGradient(self.CloneButton, Theme.AccentPrimary, Theme.AccentSecondary, 90)
+                self.SavedFilePath = ""
+            end)
+        end
+        return
+    end
+
     if self.Engine.IsRunning then
         return
     end

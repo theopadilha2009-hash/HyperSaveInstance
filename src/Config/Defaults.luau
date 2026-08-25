@@ -10,6 +10,11 @@ local Defaults = {
     ShowUI = true,                         -- Open HUD interface by default
     AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
 
+    -- Total Raw Asset Downloader
+    DownloadRawAssets = true,              -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
+    AssetDownloadWorkers = 6,              -- Parallel threads for raw asset downloading
+    AssetFolderName = "",                  -- Auto-generated if empty: HyperSave_Assets_<PlaceId>
+
     -- Visual & Asset Fidelity (10/10)
     SaveTerrain = true,                    -- Save Terrain properties & decorations
     SaveTerrainVoxels = true,              -- Extract voxel occupancy & materials (SmoothTerrain)
@@ -30,7 +35,7 @@ local Defaults = {
     DecompileMaxRetries = 2,               -- Retries on failure/timeout
     DecompileParallelWorkers = 8,          -- Concurrent workers for fast decompilation
     DecompileIgnoreCore = true,            -- Ignore CoreGui / internal scripts
-    SaveServerScriptPlaceholders = true,   -- Generate placeholder Script objects with full hierarchy & network stubs
+    SaveServerScriptPlaceholders = true,   -- Generate RemoteSpy dispatcher stubs for server scripts
     ExtractBytecodeFallback = true,        -- Extract bytecode dump if decompiler is unavailable
 
     -- Services & Hierarchy
@@ -47,13 +52,14 @@ local Defaults = {
 
     -- Logging & Notifications
     VerboseLogs = true,                    -- Detailed console logs
-    PlaySoundOnComplete = true,            -- Ding audio when save completes
-    CopyToClipboardOnComplete = false,     -- Copy file path or lua script to clipboard
+    PlaySoundOnComplete = true,            -- Play audio chime when save completes
+    CopyToClipboardOnComplete = true,      -- Copy file path to clipboard on complete
 }
 
 -- Preset configurations
 local Presets = {
     Full = {
+        DownloadRawAssets = true,
         SaveTerrain = true,
         SaveTerrainVoxels = true,
         SaveLighting = true,
@@ -70,6 +76,7 @@ local Presets = {
         SaveNilInstances = true,
     },
     Fast = {
+        DownloadRawAssets = false,
         SaveTerrain = true,
         SaveTerrainVoxels = false,
         SaveLighting = true,
@@ -86,6 +93,7 @@ local Presets = {
         SaveNilInstances = false,
     },
     VisualsOnly = {
+        DownloadRawAssets = true,
         SaveTerrain = true,
         SaveTerrainVoxels = true,
         SaveLighting = true,
@@ -102,6 +110,7 @@ local Presets = {
         SaveNilInstances = false,
     },
     ScriptsOnly = {
+        DownloadRawAssets = false,
         SaveTerrain = false,
         SaveTerrainVoxels = false,
         SaveLighting = false,
