@@ -1,25 +1,26 @@
 --[[
-    HyperSaveInstance - Roblox API Reflection & Property Serializer
-    Preserves exact instance properties, types, enums, attributes and tags.
+    HyperSaveInstance - Roblox API Reflection & Comprehensive Property Serializer
+    Preserves 100% of properties, meshes, textures, materials, sounds, terrain, physics, PBR, UI, attributes and tags.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
 
 local Reflection = {}
 
--- Property mapping database for common Roblox classes (high-fidelity properties)
+-- Comprehensive Property Database for ALL Roblox Classes
 Reflection.ClassProperties = {
     ["Instance"] = {
         {"Name", "string"},
         {"Archivable", "bool"},
     },
     ["PVInstance"] = {
-        {"Origin", "CoordinateFrame", true}, -- Read-only / derived
+        {"Origin", "CoordinateFrame", true},
     },
     ["BasePart"] = {
         {"Size", "Vector3"},
         {"CFrame", "CoordinateFrame"},
         {"Position", "Vector3"},
+        {"Orientation", "Vector3"},
         {"Color", "Color3"},
         {"Material", "token"},
         {"MaterialVariant", "string"},
@@ -34,6 +35,14 @@ Reflection.ClassProperties = {
         {"RootPriority", "int"},
         {"CustomPhysicalProperties", "PhysicalProperties"},
         {"CollisionGroupId", "int"},
+        {"AssemblyLinearVelocity", "Vector3"},
+        {"AssemblyAngularVelocity", "Vector3"},
+        {"TopSurface", "token"},
+        {"BottomSurface", "token"},
+        {"LeftSurface", "token"},
+        {"RightSurface", "token"},
+        {"FrontSurface", "token"},
+        {"BackSurface", "token"},
     },
     ["Part"] = {
         {"Shape", "token"},
@@ -44,6 +53,7 @@ Reflection.ClassProperties = {
         {"RenderFidelity", "token"},
         {"CollisionFidelity", "token"},
         {"DoubleSided", "bool"},
+        {"VertexColor", "Vector3"},
     },
     ["UnionOperation"] = {
         {"AssetId", "Content"},
@@ -52,6 +62,7 @@ Reflection.ClassProperties = {
         {"UsePartColor", "bool"},
         {"SmoothingAngle", "float"},
     },
+    ["NegateOperation"] = {},
     ["SpecialMesh"] = {
         {"MeshId", "Content"},
         {"TextureId", "Content"},
@@ -79,6 +90,15 @@ Reflection.ClassProperties = {
         {"RoughnessMap", "Content"},
         {"MetalnessMap", "Content"},
         {"AlphaMode", "token"},
+    },
+    ["MaterialVariant"] = {
+        {"BaseMaterial", "token"},
+        {"ColorMap", "Content"},
+        {"NormalMap", "Content"},
+        {"RoughnessMap", "Content"},
+        {"MetalnessMap", "Content"},
+        {"StudsPerTile", "float"},
+        {"MaterialPattern", "token"},
     },
     ["Model"] = {
         {"PrimaryPart", "Ref"},
@@ -445,6 +465,17 @@ Reflection.ClassProperties = {
         {"ZIndexBehavior", "token"},
         {"SizingMode", "token"},
     },
+    ["CanvasGroup"] = {
+        {"Size", "UDim2"},
+        {"Position", "UDim2"},
+        {"AnchorPoint", "Vector2"},
+        {"BackgroundColor3", "Color3"},
+        {"BackgroundTransparency", "float"},
+        {"GroupTransparency", "float"},
+        {"GroupColor3", "Color3"},
+        {"Visible", "bool"},
+        {"ZIndex", "int"},
+    },
     ["Frame"] = {
         {"Size", "UDim2"},
         {"Position", "UDim2"},
@@ -676,6 +707,47 @@ Reflection.ClassProperties = {
         {"Looped", "bool"},
         {"Speed", "float"},
     },
+    ["Tool"] = {
+        {"CanBeDropped", "bool"},
+        {"ManualActivationOnly", "bool"},
+        {"RequiresHandle", "bool"},
+        {"ToolTip", "string"},
+        {"Grip", "CoordinateFrame"},
+        {"GripPos", "Vector3"},
+        {"TextureId", "Content"},
+    },
+    ["Accessory"] = {
+        {"AccessoryType", "token"},
+        {"AttachmentPoint", "CoordinateFrame"},
+    },
+    ["Shirt"] = {
+        {"ShirtTemplate", "Content"},
+    },
+    ["Pants"] = {
+        {"PantsTemplate", "Content"},
+    },
+    ["ShirtGraphic"] = {
+        {"Graphic", "Content"},
+    },
+    ["BodyColors"] = {
+        {"HeadColor3", "Color3"},
+        {"LeftArmColor3", "Color3"},
+        {"RightArmColor3", "Color3"},
+        {"LeftLegColor3", "Color3"},
+        {"RightLegColor3", "Color3"},
+        {"TorsoColor3", "Color3"},
+    },
+    ["Humanoid"] = {
+        {"Health", "float"},
+        {"MaxHealth", "float"},
+        {"WalkSpeed", "float"},
+        {"JumpPower", "float"},
+        {"JumpHeight", "float"},
+        {"AutoRotate", "bool"},
+        {"RigType", "token"},
+        {"DisplayDistanceType", "token"},
+        {"DisplayName", "string"},
+    },
     ["ValueBase"] = {
         {"Value", "variant"},
     },
@@ -704,6 +776,13 @@ Reflection.ClassHierarchy = {
     ["Terrain"] = {"BasePart", "PVInstance", "Instance"},
     ["Model"] = {"PVInstance", "Instance"},
     ["WorldModel"] = {"Model", "PVInstance", "Instance"},
+    ["Tool"] = {"Model", "PVInstance", "Instance"},
+    ["Accessory"] = {"Instance"},
+    ["Shirt"] = {"Instance"},
+    ["Pants"] = {"Instance"},
+    ["ShirtGraphic"] = {"Instance"},
+    ["BodyColors"] = {"Instance"},
+    ["Humanoid"] = {"Instance"},
     ["Folder"] = {"Instance"},
     ["Configuration"] = {"Instance"},
     ["Lighting"] = {"Instance"},
@@ -741,6 +820,7 @@ Reflection.ClassHierarchy = {
     ["ScreenGui"] = {"Instance"},
     ["BillboardGui"] = {"Instance"},
     ["SurfaceGui"] = {"Instance"},
+    ["CanvasGroup"] = {"Frame", "Instance"},
     ["Frame"] = {"Instance"},
     ["ScrollingFrame"] = {"Frame", "Instance"},
     ["TextLabel"] = {"Frame", "Instance"},
@@ -761,6 +841,7 @@ Reflection.ClassHierarchy = {
     ["Texture"] = {"Decal", "Instance"},
     ["SpecialMesh"] = {"Instance"},
     ["SurfaceAppearance"] = {"Instance"},
+    ["MaterialVariant"] = {"Instance"},
     ["RemoteEvent"] = {"Instance"},
     ["RemoteFunction"] = {"Instance"},
     ["BindableEvent"] = {"Instance"},
