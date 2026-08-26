@@ -88,7 +88,12 @@ local function buildGame()
 
             -- Script source
             if inst:IsA("LuaSourceContainer") and scriptSources[inst] then
-                append(string.format('    pcall(function() %s.Source = %q end)\n', varName, scriptSources[inst]))
+                local src = scriptSources[inst]
+                if #src > 0 then
+                    -- Safely escape any matching closing bracket if present
+                    local safeSrc = string.gsub(src, "%]%===%]", "]=== ]")
+                    append(string.format('    pcall(function() %s.Source = [===[%s]===] end)\n', varName, safeSrc))
+                end
             end
 
             -- Attributes

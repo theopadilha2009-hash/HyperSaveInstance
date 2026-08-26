@@ -219,6 +219,99 @@ function Engine:Start(): (boolean, string)
         end
     end
 
+    -- Harvest active client scripts, GUIs and tools from LocalPlayer into Starter containers
+    if self.Config.IsolateStarterPlayer then
+        pcall(function()
+            local Players = game:GetService("Players")
+            local localPlayer = Players.LocalPlayer
+            if localPlayer then
+                local starterPlayer = game:GetService("StarterPlayer")
+                local starterPlayerScripts = starterPlayer:FindFirstChild("StarterPlayerScripts")
+                if not starterPlayerScripts then
+                    starterPlayerScripts = Instance.new("Folder")
+                    starterPlayerScripts.Name = "StarterPlayerScripts"
+                    starterPlayerScripts.Parent = starterPlayer
+                end
+
+                local starterCharacterScripts = starterPlayer:FindFirstChild("StarterCharacterScripts")
+                if not starterCharacterScripts then
+                    starterCharacterScripts = Instance.new("Folder")
+                    starterCharacterScripts.Name = "StarterCharacterScripts"
+                    starterCharacterScripts.Parent = starterPlayer
+                end
+
+                local starterGui = game:GetService("StarterGui")
+                local starterPack = game:GetService("StarterPack")
+
+                -- 1. Harvest active LocalScripts and ModuleScripts from PlayerScripts
+                local playerScripts = localPlayer:FindFirstChild("PlayerScripts")
+                if playerScripts then
+                    for _, child in ipairs(playerScripts:GetChildren()) do
+                        if self:ShouldSaveInstance(child) and not starterPlayerScripts:FindFirstChild(child.Name) then
+                            pcall(function()
+                                local clone = child:Clone()
+                                if clone then
+                                    clone.Parent = starterPlayerScripts
+                                end
+                            end)
+                        end
+                    end
+                end
+
+                -- 2. Harvest active GUIs from PlayerGui into StarterGui
+                local playerGui = localPlayer:FindFirstChild("PlayerGui")
+                if playerGui then
+                    for _, child in ipairs(playerGui:GetChildren()) do
+                        if self:ShouldSaveInstance(child) and child:IsA("LayerCollector") and not starterGui:FindFirstChild(child.Name) then
+                            pcall(function()
+                                local clone = child:Clone()
+                                if clone then
+                                    clone.Parent = starterGui
+                                end
+                            end)
+                        end
+                    end
+                end
+
+                -- 3. Harvest tools from Backpack and Character into StarterPack
+                local backpack = localPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and not starterPack:FindFirstChild(tool.Name) then
+                            pcall(function()
+                                local clone = tool:Clone()
+                                if clone then
+                                    clone.Parent = starterPack
+                                end
+                            end)
+                        end
+                    end
+                end
+
+                local char = localPlayer.Character
+                if char then
+                    for _, item in ipairs(char:GetChildren()) do
+                        if item:IsA("Tool") and not starterPack:FindFirstChild(item.Name) then
+                            pcall(function()
+                                local clone = item:Clone()
+                                if clone then
+                                    clone.Parent = starterPack
+                                end
+                            end)
+                        elseif item:IsA("LocalScript") and not starterCharacterScripts:FindFirstChild(item.Name) then
+                            pcall(function()
+                                local clone = item:Clone()
+                                if clone then
+                                    clone.Parent = starterCharacterScripts
+                                end
+                            end)
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
     -- Scan hierarchy & scripts
     self:EmitProgress({
         Stage = "Scanning",

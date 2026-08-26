@@ -930,12 +930,29 @@ end
 
 -- Decompile single script safely with timeout & retries
 function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options: table): string
-    local decompileFn = Environment.GetDecompilerFunction()
-    local bytecodeFn = Environment.GetBytecodeFunction()
-    local timeout = options.DecompileTimeout or 12
+    -- 1. Check if source is directly readable (e.g. Studio, Mock, or unprotected environment)
+    local directSource = nil
+    pcall(function()
+        local s = (scriptInstance :: any).Source
+        if type(s) == "string" and #s > 0 then
+            directSource = s
+        end
+    end)
+    if directSource then
+        return directSource
+    end
 
-    -- Server Scripts (Protected by FilteringEnabled -> Generate RemoteSpy Dispatcher)
-    if scriptInstance:IsA("Script") then
+    local isServerScript = scriptInstance:IsA("Script")
+    if isServerScript then
+        pcall(function()
+            if (scriptInstance :: any).RunContext == Enum.RunContext.Client then
+                isServerScript = false
+            end
+        end)
+    end
+
+    -- Server Scripts with server execution (Protected by FilteringEnabled -> Generate RemoteSpy Dispatcher)
+    if isServerScript then
         if options.SaveServerScriptPlaceholders then
             return generateHeader(scriptInstance, "Reconstructed Server Backend (RemoteSpy Dispatcher)") ..
                 generateServerDispatcher(scriptInstance)
@@ -944,24 +961,32 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         end
     end
 
-    -- Attempt decompiler function
+    local decompileFn = Environment.GetDecompilerFunction()
+    local bytecodeFn = Environment.GetBytecodeFunction()
+    local timeout = options.DecompileTimeout or 12
+
+    -- 2. Attempt decompiler function
     if decompileFn then
         for attempt = 1, (options.DecompileMaxRetries or 2) + 1 do
             local result = nil
             local finished = false
 
-            local thread = task.spawn(function()
+            task.spawn(function()
                 local success, output = pcall(decompileFn, scriptInstance)
                 if success and type(output) == "string" and #output > 0 then
-                    result = output
+                    -- Filter out common tiny decompiler error stubs
+                    local lower = string.lower(output)
+                    if not (string.find(lower, "decompilation failed") or string.find(lower, "decompiler error")) or #output > 100 then
+                        result = output
+                    end
                 end
                 finished = true
             end)
 
             local elapsed = 0
             while not finished and elapsed < timeout do
-                task.wait(0.1)
-                elapsed = elapsed + 0.1
+                task.wait(0.05)
+                elapsed = elapsed + 0.05
             end
 
             if finished and result then
@@ -970,7 +995,7 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         end
     end
 
-    -- Fallback: Bytecode dump
+    -- 3. Fallback: Bytecode dump
     if bytecodeFn and options.ExtractBytecodeFallback then
         local success, bytecode = pcall(bytecodeFn, scriptInstance)
         if success and bytecode and #bytecode > 0 then
@@ -1255,6 +1280,99 @@ function Engine:Start(): (boolean, string)
         if #nilFolder:GetChildren() > 0 then
             table.insert(rootInstances, nilFolder)
         end
+    end
+
+    -- Harvest active client scripts, GUIs and tools from LocalPlayer into Starter containers
+    if self.Config.IsolateStarterPlayer then
+        pcall(function()
+            local Players = game:GetService("Players")
+            local localPlayer = Players.LocalPlayer
+            if localPlayer then
+                local starterPlayer = game:GetService("StarterPlayer")
+                local starterPlayerScripts = starterPlayer:FindFirstChild("StarterPlayerScripts")
+                if not starterPlayerScripts then
+                    starterPlayerScripts = Instance.new("Folder")
+                    starterPlayerScripts.Name = "StarterPlayerScripts"
+                    starterPlayerScripts.Parent = starterPlayer
+                end
+
+                local starterCharacterScripts = starterPlayer:FindFirstChild("StarterCharacterScripts")
+                if not starterCharacterScripts then
+                    starterCharacterScripts = Instance.new("Folder")
+                    starterCharacterScripts.Name = "StarterCharacterScripts"
+                    starterCharacterScripts.Parent = starterPlayer
+                end
+
+                local starterGui = game:GetService("StarterGui")
+                local starterPack = game:GetService("StarterPack")
+
+                -- 1. Harvest active LocalScripts and ModuleScripts from PlayerScripts
+                local playerScripts = localPlayer:FindFirstChild("PlayerScripts")
+                if playerScripts then
+                    for _, child in ipairs(playerScripts:GetChildren()) do
+                        if self:ShouldSaveInstance(child) and not starterPlayerScripts:FindFirstChild(child.Name) then
+                            pcall(function()
+                                local clone = child:Clone()
+                                if clone then
+                                    clone.Parent = starterPlayerScripts
+                                end
+                            end)
+                        end
+                    end
+                end
+
+                -- 2. Harvest active GUIs from PlayerGui into StarterGui
+                local playerGui = localPlayer:FindFirstChild("PlayerGui")
+                if playerGui then
+                    for _, child in ipairs(playerGui:GetChildren()) do
+                        if self:ShouldSaveInstance(child) and child:IsA("LayerCollector") and not starterGui:FindFirstChild(child.Name) then
+                            pcall(function()
+                                local clone = child:Clone()
+                                if clone then
+                                    clone.Parent = starterGui
+                                end
+                            end)
+                        end
+                    end
+                end
+
+                -- 3. Harvest tools from Backpack and Character into StarterPack
+                local backpack = localPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if tool:IsA("Tool") and not starterPack:FindFirstChild(tool.Name) then
+                            pcall(function()
+                                local clone = tool:Clone()
+                                if clone then
+                                    clone.Parent = starterPack
+                                end
+                            end)
+                        end
+                    end
+                end
+
+                local char = localPlayer.Character
+                if char then
+                    for _, item in ipairs(char:GetChildren()) do
+                        if item:IsA("Tool") and not starterPack:FindFirstChild(item.Name) then
+                            pcall(function()
+                                local clone = item:Clone()
+                                if clone then
+                                    clone.Parent = starterPack
+                                end
+                            end)
+                        elseif item:IsA("LocalScript") and not starterCharacterScripts:FindFirstChild(item.Name) then
+                            pcall(function()
+                                local clone = item:Clone()
+                                if clone then
+                                    clone.Parent = starterCharacterScripts
+                                end
+                            end)
+                        end
+                    end
+                end
+            end
+        end)
     end
 
     -- Scan hierarchy & scripts
@@ -2993,7 +3111,12 @@ local function buildGame()
 
             -- Script source
             if inst:IsA("LuaSourceContainer") and scriptSources[inst] then
-                append(string.format('    pcall(function() %s.Source = %q end)\n', varName, scriptSources[inst]))
+                local src = scriptSources[inst]
+                if #src > 0 then
+                    -- Safely escape any matching closing bracket if present
+                    local safeSrc = string.gsub(src, "%]%===%]", "]=== ]")
+                    append(string.format('    pcall(function() %s.Source = [===[%s]===] end)\n', varName, safeSrc))
+                end
             end
 
             -- Attributes
@@ -3067,6 +3190,11 @@ end
 
 -- Escape string content for ProtectedString or general text
 local function escapeCDataOrText(str: string): string
+    if not str or #str == 0 then return "" end
+    if string.find(str, "[<>&\"']") or string.find(str, "\n") or string.find(str, "\r") then
+        local safe = string.gsub(str, "%]%]>", "]]]]><![CDATA[>")
+        return "<![CDATA[" .. safe .. "]]>"
+    end
     return escapeXml(str)
 end
 
@@ -5658,26 +5786,57 @@ function Environment.IsFile(path: string): boolean
     return false
 end
 
--- Decompiler capability detection
-local _decompile = decompile or (syn and syn.decompile) or (getscriptclosure and function(s) return "-- [Fallback Closure Extracted]\n" end) or disassemble
-local _getscriptbytecode = getscriptbytecode or (syn and syn.getscriptbytecode) or (get_script_bytecode) or dumpstring
-
-function Environment.HasDecompiler(): boolean
-    return type(_decompile) == "function" or type(_getscriptbytecode) == "function"
-end
-
+-- Decompiler capability detection (Dynamic lookup supporting MacSploit, Hydrogen, Synapse Z, Wave, Delta, Codex, etc.)
 function Environment.GetDecompilerFunction()
-    if type(_decompile) == "function" then
-        return _decompile
+    local genv = (getgenv and getgenv()) or {}
+    local renv = (getrenv and getrenv()) or {}
+    
+    -- Check functions in order of fidelity
+    local candidates = {
+        genv.decompile,
+        decompile,
+        renv.decompile,
+        (syn and syn.decompile),
+        genv.custom_decompile,
+        custom_decompile,
+        (syn and syn.custom_decompile),
+        genv.disassemble,
+        disassemble,
+    }
+    
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            return fn
+        end
     end
     return nil
 end
 
 function Environment.GetBytecodeFunction()
-    if type(_getscriptbytecode) == "function" then
-        return _getscriptbytecode
+    local genv = (getgenv and getgenv()) or {}
+    local renv = (getrenv and getrenv()) or {}
+    
+    local candidates = {
+        genv.getscriptbytecode,
+        getscriptbytecode,
+        genv.get_script_bytecode,
+        get_script_bytecode,
+        renv.getscriptbytecode,
+        (syn and syn.getscriptbytecode),
+        genv.dumpstring,
+        dumpstring,
+    }
+    
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            return fn
+        end
     end
     return nil
+end
+
+function Environment.HasDecompiler(): boolean
+    return Environment.GetDecompilerFunction() ~= nil or Environment.GetBytecodeFunction() ~= nil
 end
 
 -- Safe UI Parent (Protects GUI from detection/detection hooks)

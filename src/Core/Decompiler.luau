@@ -115,12 +115,29 @@ end
 
 -- Decompile single script safely with timeout & retries
 function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options: table): string
-    local decompileFn = Environment.GetDecompilerFunction()
-    local bytecodeFn = Environment.GetBytecodeFunction()
-    local timeout = options.DecompileTimeout or 12
+    -- 1. Check if source is directly readable (e.g. Studio, Mock, or unprotected environment)
+    local directSource = nil
+    pcall(function()
+        local s = (scriptInstance :: any).Source
+        if type(s) == "string" and #s > 0 then
+            directSource = s
+        end
+    end)
+    if directSource then
+        return directSource
+    end
 
-    -- Server Scripts (Protected by FilteringEnabled -> Generate RemoteSpy Dispatcher)
-    if scriptInstance:IsA("Script") then
+    local isServerScript = scriptInstance:IsA("Script")
+    if isServerScript then
+        pcall(function()
+            if (scriptInstance :: any).RunContext == Enum.RunContext.Client then
+                isServerScript = false
+            end
+        end)
+    end
+
+    -- Server Scripts with server execution (Protected by FilteringEnabled -> Generate RemoteSpy Dispatcher)
+    if isServerScript then
         if options.SaveServerScriptPlaceholders then
             return generateHeader(scriptInstance, "Reconstructed Server Backend (RemoteSpy Dispatcher)") ..
                 generateServerDispatcher(scriptInstance)
@@ -129,24 +146,32 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         end
     end
 
-    -- Attempt decompiler function
+    local decompileFn = Environment.GetDecompilerFunction()
+    local bytecodeFn = Environment.GetBytecodeFunction()
+    local timeout = options.DecompileTimeout or 12
+
+    -- 2. Attempt decompiler function
     if decompileFn then
         for attempt = 1, (options.DecompileMaxRetries or 2) + 1 do
             local result = nil
             local finished = false
 
-            local thread = task.spawn(function()
+            task.spawn(function()
                 local success, output = pcall(decompileFn, scriptInstance)
                 if success and type(output) == "string" and #output > 0 then
-                    result = output
+                    -- Filter out common tiny decompiler error stubs
+                    local lower = string.lower(output)
+                    if not (string.find(lower, "decompilation failed") or string.find(lower, "decompiler error")) or #output > 100 then
+                        result = output
+                    end
                 end
                 finished = true
             end)
 
             local elapsed = 0
             while not finished and elapsed < timeout do
-                task.wait(0.1)
-                elapsed = elapsed + 0.1
+                task.wait(0.05)
+                elapsed = elapsed + 0.05
             end
 
             if finished and result then
@@ -155,7 +180,7 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         end
     end
 
-    -- Fallback: Bytecode dump
+    -- 3. Fallback: Bytecode dump
     if bytecodeFn and options.ExtractBytecodeFallback then
         local success, bytecode = pcall(bytecodeFn, scriptInstance)
         if success and bytecode and #bytecode > 0 then

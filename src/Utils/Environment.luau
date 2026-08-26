@@ -127,26 +127,57 @@ function Environment.IsFile(path: string): boolean
     return false
 end
 
--- Decompiler capability detection
-local _decompile = decompile or (syn and syn.decompile) or (getscriptclosure and function(s) return "-- [Fallback Closure Extracted]\n" end) or disassemble
-local _getscriptbytecode = getscriptbytecode or (syn and syn.getscriptbytecode) or (get_script_bytecode) or dumpstring
-
-function Environment.HasDecompiler(): boolean
-    return type(_decompile) == "function" or type(_getscriptbytecode) == "function"
-end
-
+-- Decompiler capability detection (Dynamic lookup supporting MacSploit, Hydrogen, Synapse Z, Wave, Delta, Codex, etc.)
 function Environment.GetDecompilerFunction()
-    if type(_decompile) == "function" then
-        return _decompile
+    local genv = (getgenv and getgenv()) or {}
+    local renv = (getrenv and getrenv()) or {}
+    
+    -- Check functions in order of fidelity
+    local candidates = {
+        genv.decompile,
+        decompile,
+        renv.decompile,
+        (syn and syn.decompile),
+        genv.custom_decompile,
+        custom_decompile,
+        (syn and syn.custom_decompile),
+        genv.disassemble,
+        disassemble,
+    }
+    
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            return fn
+        end
     end
     return nil
 end
 
 function Environment.GetBytecodeFunction()
-    if type(_getscriptbytecode) == "function" then
-        return _getscriptbytecode
+    local genv = (getgenv and getgenv()) or {}
+    local renv = (getrenv and getrenv()) or {}
+    
+    local candidates = {
+        genv.getscriptbytecode,
+        getscriptbytecode,
+        genv.get_script_bytecode,
+        get_script_bytecode,
+        renv.getscriptbytecode,
+        (syn and syn.getscriptbytecode),
+        genv.dumpstring,
+        dumpstring,
+    }
+    
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            return fn
+        end
     end
     return nil
+end
+
+function Environment.HasDecompiler(): boolean
+    return Environment.GetDecompilerFunction() ~= nil or Environment.GetBytecodeFunction() ~= nil
 end
 
 -- Safe UI Parent (Protects GUI from detection/detection hooks)

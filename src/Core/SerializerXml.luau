@@ -23,6 +23,11 @@ end
 
 -- Escape string content for ProtectedString or general text
 local function escapeCDataOrText(str: string): string
+    if not str or #str == 0 then return "" end
+    if string.find(str, "[<>&\"']") or string.find(str, "\n") or string.find(str, "\r") then
+        local safe = string.gsub(str, "%]%]>", "]]]]><![CDATA[>")
+        return "<![CDATA[" .. safe .. "]]>"
+    end
     return escapeXml(str)
 end
 
