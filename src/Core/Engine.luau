@@ -469,8 +469,21 @@ function Engine:Start(): (boolean, string)
     local elapsed = os.clock() - startTime
 
     if writeSuccess then
+        local fullPathHint = targetFileName
+        local isMac = (Environment.GetPlatform() == "macOS")
+        local exec = string.lower(Environment.GetExecutorName())
+        if isMac then
+            if string.find(exec, "macsploit") then
+                fullPathHint = "~/Library/Application Support/MacSploit/workspace/" .. targetFileName
+            elseif string.find(exec, "hydrogen") then
+                fullPathHint = "~/Library/Application Support/Hydrogen/workspace/" .. targetFileName
+            else
+                fullPathHint = "~/Library/Application Support/[SeuExecutor]/workspace/" .. targetFileName
+            end
+        end
+
         local successMsg = string.format("Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
-            totalInstances, totalScripts, downloadedCount, elapsed, targetFileName)
+            totalInstances, totalScripts, downloadedCount, elapsed, fullPathHint)
 
         self:EmitProgress({
             Stage = "Done",
@@ -478,12 +491,12 @@ function Engine:Start(): (boolean, string)
             Total = totalInstances,
             Percentage = 100,
             Message = successMsg,
-            SavedFile = targetFileName,
+            SavedFile = fullPathHint,
             AssetsFolder = assetFolder,
         })
 
         if self.Config.CopyToClipboardOnComplete then
-            Environment.SetClipboard(targetFileName)
+            Environment.SetClipboard(fullPathHint)
         end
 
         self:PlayChime()

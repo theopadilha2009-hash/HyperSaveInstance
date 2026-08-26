@@ -1,4 +1,4 @@
-﻿--[[
+--[[
     ================================================================================
     HyperSave Studio Importer & Repair Suite - Official Roblox Studio Plugin
     ================================================================================
@@ -356,12 +356,49 @@ btnScripts.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================================
--- FEATURE 4: INJETOR RÁPIDO DE CÓDIGO LUA
+-- FEATURE 4: DESTRAVAR PERMISSÕES E REMOVER BLOQUEIOS DE PACOTES (PackageLink)
+-- ============================================================================
+local cardUnlock = createCard(
+    "4. Destravar Permissões (Eliminar 'Sem Permissão' & Desvincular Packages)",
+    "Remove PackageLinks de terceiros que bloqueiam o mapa no Studio, desbloqueia peças travadas (Locked=false) e limpa restrições de permissão do criador original.",
+    4
+)
+cardUnlock.Parent = scroll
+
+local btnUnlock = createButton(cardUnlock, "🔓 DESTRAVAR TODAS AS PERMISSÕES DO MAPA", Color3.fromRGB(16, 185, 129))
+
+btnUnlock.MouseButton1Click:Connect(function()
+    ChangeHistoryService:SetWaypoint("Before HyperSave Permission Unlock")
+    setStatus("Destravando modelos e removendo PackageLinks...", Color3.fromRGB(6, 182, 212))
+
+    local unlockedPackages = 0
+    local unlockedParts = 0
+
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("PackageLink") then
+            pcall(function()
+                desc:Destroy()
+                unlockedPackages = unlockedPackages + 1
+            end)
+        elseif desc:IsA("BasePart") then
+            if desc.Locked then
+                desc.Locked = false
+                unlockedParts = unlockedParts + 1
+            end
+        end
+    end
+
+    ChangeHistoryService:SetWaypoint("After HyperSave Permission Unlock")
+    setStatus(string.format("✓ Concluído! %d pacotes desvinculados e %d peças destravadas!", unlockedPackages, unlockedParts), Color3.fromRGB(34, 197, 94))
+end)
+
+-- ============================================================================
+-- FEATURE 5: INJETOR RÁPIDO DE CÓDIGO LUA
 -- ============================================================================
 local cardCode = createCard(
-    "4. Executar Reconstrução Manual de Código .lua",
+    "5. Executar Reconstrução Manual de Código .lua",
     "Caso você tenha exportado no formato '.lua' em vez de '.rbxlx', você pode colar pequenos blocos aqui para reconstruir instâncias.",
-    4
+    5
 )
 cardCode.Size = UDim2.new(1, 0, 0, 170)
 cardCode.Parent = scroll

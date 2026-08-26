@@ -43,6 +43,9 @@ local ClassBlacklist = {
         ["NetworkClient"] = true,
         ["NetworkServer"] = true,
         ["NetworkReplicator"] = true,
+        ["PackageLink"] = true, -- Removes permission lock & reveals hidden package models in Studio
+        ["PackageService"] = true,
+        ["Player"] = true, -- Prevent player avatar session locks
         ["PlayerGui"] = false, -- Filtered dynamically (keep StarterGui)
         ["PlayerScripts"] = false,
         ["PluginGuiService"] = true,
@@ -1532,8 +1535,21 @@ function Engine:Start(): (boolean, string)
     local elapsed = os.clock() - startTime
 
     if writeSuccess then
+        local fullPathHint = targetFileName
+        local isMac = (Environment.GetPlatform() == "macOS")
+        local exec = string.lower(Environment.GetExecutorName())
+        if isMac then
+            if string.find(exec, "macsploit") then
+                fullPathHint = "~/Library/Application Support/MacSploit/workspace/" .. targetFileName
+            elseif string.find(exec, "hydrogen") then
+                fullPathHint = "~/Library/Application Support/Hydrogen/workspace/" .. targetFileName
+            else
+                fullPathHint = "~/Library/Application Support/[SeuExecutor]/workspace/" .. targetFileName
+            end
+        end
+
         local successMsg = string.format("Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
-            totalInstances, totalScripts, downloadedCount, elapsed, targetFileName)
+            totalInstances, totalScripts, downloadedCount, elapsed, fullPathHint)
 
         self:EmitProgress({
             Stage = "Done",
@@ -1541,12 +1557,12 @@ function Engine:Start(): (boolean, string)
             Total = totalInstances,
             Percentage = 100,
             Message = successMsg,
-            SavedFile = targetFileName,
+            SavedFile = fullPathHint,
             AssetsFolder = assetFolder,
         })
 
         if self.Config.CopyToClipboardOnComplete then
-            Environment.SetClipboard(targetFileName)
+            Environment.SetClipboard(fullPathHint)
         end
 
         self:PlayChime()
@@ -3357,17 +3373,6 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
                     elseif propType == "Rect" and typeof(val) == "Rect" then
                         append(string.format('%s\t\t<Rect2D name="%s"><min><X>%.7g</X><Y>%.7g</Y></min><max><X>%.7g</X><Y>%.7g</Y></max></Rect2D>\n', indent, propName, val.Min.X, val.Min.Y, val.Max.X, val.Max.Y))
                     end
-                end
-            end
-        end
-
-        -- Attributes
-        if options.SaveAttributes then
-            local attrs = Reflection.GetAttributes(inst)
-            if next(attrs) ~= nil then
-                local b64Attr = serializeAttributes(attrs)
-                if #b64Attr > 0 then
-                    append(string.format('%s\t\t<BinaryString name="AttributesSerialize">%s</BinaryString>\n', indent, b64Attr))
                 end
             end
         end

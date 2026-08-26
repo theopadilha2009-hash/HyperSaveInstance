@@ -194,17 +194,6 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
             end
         end
 
-        -- Attributes
-        if options.SaveAttributes then
-            local attrs = Reflection.GetAttributes(inst)
-            if next(attrs) ~= nil then
-                local b64Attr = serializeAttributes(attrs)
-                if #b64Attr > 0 then
-                    append(string.format('%s\t\t<BinaryString name="AttributesSerialize">%s</BinaryString>\n', indent, b64Attr))
-                end
-            end
-        end
-
         -- CollectionService Tags
         if options.SaveTags then
             local tags = Reflection.GetTags(inst)
