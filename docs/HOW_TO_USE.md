@@ -1,10 +1,10 @@
-# 🕹️ Como Usar o HyperSaveInstance (Guia Passo a Passo para Iniciantes)
+#  Como Usar o HyperSaveInstance (Guia Passo a Passo para Iniciantes)
 
 Este guia explica exatamente como clonar qualquer jogo do Roblox usando o **HyperSaveInstance**, seja no **Mac**, **Windows** ou **Celular**.
 
 ---
 
-## ❓ Como funciona a clonagem do Roblox? (Entenda em 1 Minuto)
+##  Como funciona a clonagem do Roblox? (Entenda em 1 Minuto)
 
 > [!NOTE]
 > Você **não** usa o F12 do navegador nem cola o link da web.
@@ -13,7 +13,7 @@ Este guia explica exatamente como clonar qualquer jogo do Roblox usando o **Hype
 
 ---
 
-## 🖥️ 1. Qual programa você precisa no seu Computador?
+##  1. Qual programa você precisa no seu Computador?
 
 Para rodar o script dentro do Roblox, você precisa de um **Executor de Scripts** compatível com o seu sistema:
 
@@ -35,7 +35,7 @@ Para rodar o script dentro do Roblox, você precisa de um **Executor de Scripts*
 
 ---
 
-## 🚀 2. Passo a Passo para Clonar um Jogo
+##  2. Passo a Passo para Clonar um Jogo
 
 ### Passo 1: Abrir o Executor
 Abra o seu executor instalado no Mac ou Windows.
@@ -68,7 +68,7 @@ Basta dar 1 clique! O HyperSaveInstance vai:
 
 ---
 
-## 📂 3. Como abrir o jogo clonado no Roblox Studio
+##  3. Como abrir o jogo clonado no Roblox Studio
 
 1. Abra o **Roblox Studio** no seu computador.
 2. No menu superior, clique em **File (Arquivo)** -> **Open from File... (Abrir do Arquivo...)**.

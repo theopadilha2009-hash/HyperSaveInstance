@@ -1,4 +1,4 @@
-# 🌟 HyperSaveInstance - Feature Architecture & Comparison
+#  HyperSaveInstance - Feature Architecture & Comparison
 
 HyperSaveInstance was designed from the ground up by analyzing and combining the best qualities of the leading Roblox reverse-engineering and serialization projects:
 - **UniversalSynSaveInstance (USSI)**: Robust traversal, service coverage, and file structuring.
@@ -8,30 +8,30 @@ HyperSaveInstance was designed from the ground up by analyzing and combining the
 
 ---
 
-## 📊 Comprehensive Comparison
+##  Comprehensive Comparison
 
 | Feature | Legacy Synapse (2019) | USSI Standard | UltraSmart | **HyperSaveInstance v2.0** |
 | :--- | :---: | :---: | :---: | :---: |
-| **In-Game GUI (1-Click)** | ❌ None | ❌ None | ⚠️ Basic UI | ✅ **Modern Glassmorphic HUD** |
-| **Multi-Worker Decompiler** | ❌ Single Thread | ⚠️ Slow / Blocking | ⚠️ Basic | ✅ **Multi-Worker Pool (8+ Workers)** |
-| **Timeout & Auto-Retry** | ❌ Hangs forever | ⚠️ Partial | ⚠️ Partial | ✅ **Safe Timeout + Auto-Retry** |
-| **SmoothTerrain Voxel Extraction** | ❌ No | ⚠️ Basic | ✅ Good | ✅ **Full 3D Voxel Chunks + Water + Materials** |
-| **CSG Unions & MeshParts** | ⚠️ Partial | ⚠️ Partial | ✅ Good | ✅ **Full AssetId & RenderFidelity Preservation** |
-| **PBR SurfaceAppearance** | ❌ No | ⚠️ Partial | ✅ Good | ✅ **ColorMap, NormalMap, Metalness, Roughness** |
-| **Lighting & Atmosphere** | ⚠️ Basic | ✅ Good | ✅ Good | ✅ **Atmosphere, Sky, SunRays, PostEffects** |
-| **Audio & SoundGroups** | ⚠️ Basic | ⚠️ Basic | ⚠️ Basic | ✅ **Equalizer, Reverb, Distortion, PitchShift** |
-| **Constraints & Bones** | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ✅ **Attachments, Bones, Motors, Welds, Align** |
-| **CollectionService Tags** | ❌ No | ⚠️ Partial | ⚠️ Partial | ✅ **100% Preserved via CollectionService** |
-| **Modern Attributes** | ❌ No | ⚠️ Partial | ⚠️ Partial | ✅ **100% Preserved via GetAttributes()** |
-| **Export: Roblox XML (.rbxlx)** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ **Standard Compliant v4 XML** |
-| **Export: Roblox Binary (.rbxl)** | ❌ No | ❌ No | ❌ No | ✅ **LZ4-Compressed Binary Format** |
-| **Export: Studio Lua Script (.lua)** | ❌ No | ❌ No | ❌ No | ✅ **Standalone Recreation Script** |
-| **Bypass StreamingEnabled** | ❌ No | ❌ No | ⚠️ Partial | ✅ **Pre-loader Simulation** |
-| **Cross-Platform Support** | ❌ Windows only | ⚠️ Windows | ⚠️ Windows | ✅ **macOS, Windows & Mobile** |
+| **In-Game GUI (1-Click)** |  None |  None |  Basic UI |  **Modern Glassmorphic HUD** |
+| **Multi-Worker Decompiler** |  Single Thread |  Slow / Blocking |  Basic |  **Multi-Worker Pool (8+ Workers)** |
+| **Timeout & Auto-Retry** |  Hangs forever |  Partial |  Partial |  **Safe Timeout + Auto-Retry** |
+| **SmoothTerrain Voxel Extraction** |  No |  Basic |  Good |  **Full 3D Voxel Chunks + Water + Materials** |
+| **CSG Unions & MeshParts** |  Partial |  Partial |  Good |  **Full AssetId & RenderFidelity Preservation** |
+| **PBR SurfaceAppearance** |  No |  Partial |  Good |  **ColorMap, NormalMap, Metalness, Roughness** |
+| **Lighting & Atmosphere** |  Basic |  Good |  Good |  **Atmosphere, Sky, SunRays, PostEffects** |
+| **Audio & SoundGroups** |  Basic |  Basic |  Basic |  **Equalizer, Reverb, Distortion, PitchShift** |
+| **Constraints & Bones** |  Partial |  Partial |  Partial |  **Attachments, Bones, Motors, Welds, Align** |
+| **CollectionService Tags** |  No |  Partial |  Partial |  **100% Preserved via CollectionService** |
+| **Modern Attributes** |  No |  Partial |  Partial |  **100% Preserved via GetAttributes()** |
+| **Export: Roblox XML (.rbxlx)** |  Yes |  Yes |  Yes |  **Standard Compliant v4 XML** |
+| **Export: Roblox Binary (.rbxl)** |  No |  No |  No |  **LZ4-Compressed Binary Format** |
+| **Export: Studio Lua Script (.lua)** |  No |  No |  No |  **Standalone Recreation Script** |
+| **Bypass StreamingEnabled** |  No |  No |  Partial |  **Pre-loader Simulation** |
+| **Cross-Platform Support** |  Windows only |  Windows |  Windows |  **macOS, Windows & Mobile** |
 
 ---
 
-## 🎨 Visual Fidelity Engine (10/10)
+##  Visual Fidelity Engine (10/10)
 
 1. **Terrain Engine**:
    - Reads 3D regions using `Terrain:ReadVoxels(Region3int16)`.
@@ -50,7 +50,7 @@ HyperSaveInstance was designed from the ground up by analyzing and combining the
 
 ---
 
-## 💻 Script Decompiler Engine (10/10)
+##  Script Decompiler Engine (10/10)
 
 1. **LocalScripts & ModuleScripts**:
    - Decompiled in parallel using configurable worker pools.

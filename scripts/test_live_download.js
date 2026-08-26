@@ -27,7 +27,7 @@ function fetchUrl(url) {
 
 async function runLiveTest() {
     console.log('===============================================================');
-    console.log('🌐 SIMULAÇÃO DE DOWNLOAD REAL (VIA HTTPS RAW GITHUB) 🌐');
+    console.log(' SIMULAÇÃO DE DOWNLOAD REAL (VIA HTTPS RAW GITHUB) ');
     console.log('===============================================================\n');
 
     console.log(`[PASSO 1] Baixando script direto do GitHub Raw...`);
@@ -62,24 +62,24 @@ async function runLiveTest() {
             if (content.includes(check.match)) {
                 console.log(`  ✓ [OK] ${check.name}`);
             } else {
-                console.error(`  ❌ [FALHA] ${check.name} não encontrado no código baixado!`);
+                console.error(`   [FALHA] ${check.name} não encontrado no código baixado!`);
                 allPassed = false;
             }
         }
 
         if (allPassed) {
             console.log('\n===============================================================');
-            console.log('🎉 RESULTADO: O SCRIPT FUNCIONA 100% AO SER BAIXADO!');
+            console.log(' RESULTADO: O SCRIPT FUNCIONA 100% AO SER BAIXADO!');
             console.log('Qualquer jogador que colar o loadstring no executor receberá o');
             console.log('código completo instantaneamente pronto para rodar.');
             console.log('===============================================================');
         } else {
-            console.error('\n❌ Algumas verificações falharam no código baixado!');
+            console.error('\n Algumas verificações falharam no código baixado!');
             process.exit(1);
         }
 
     } catch (err) {
-        console.error('❌ Erro ao baixar script do GitHub:', err.message);
+        console.error(' Erro ao baixar script do GitHub:', err.message);
         process.exit(1);
     }
 }

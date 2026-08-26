@@ -8,7 +8,7 @@ local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local HttpService = game:GetService("HttpService")
 
 -- Create Toolbar & Button in Studio
-local toolbar = plugin:CreateToolbar("⚡ HyperSave Importer")
+local toolbar = plugin:CreateToolbar(" HyperSave Importer")
 local openBtn = toolbar:CreateButton(
     "Importar Jogo",
     "Abre o menu para importar e reconstruir mapas e scripts do HyperSaveInstance",
@@ -27,7 +27,7 @@ local widgetInfo = DockWidgetPluginGuiInfo.new(
 )
 
 local widget = plugin:CreateDockWidgetPluginGui("HyperSave_StudioImporter", widgetInfo)
-widget.Title = "⚡ HyperSave Studio Importer"
+widget.Title = " HyperSave Studio Importer"
 
 openBtn.Click:Connect(function()
     widget.Enabled = not widget.Enabled
@@ -41,7 +41,7 @@ background.BorderSizePixel = 0
 background.Parent = widget
 
 local title = Instance.new("TextLabel")
-title.Text = "⚡ Reconstruir Jogo / Importar Assets"
+title.Text = " Reconstruir Jogo / Importar Assets"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 15
 title.TextColor3 = Color3.fromRGB(240, 245, 255)
@@ -78,7 +78,7 @@ codeBox.Position = UDim2.new(0, 12, 0, 82)
 codeBox.Parent = background
 
 local buildBtn = Instance.new("TextButton")
-buildBtn.Text = "🚀 EXECUTAR RECONSTRUÇÃO COMPLETA"
+buildBtn.Text = " EXECUTAR RECONSTRUÇÃO COMPLETA"
 buildBtn.Font = Enum.Font.GothamBold
 buildBtn.TextSize = 12
 buildBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -101,17 +101,17 @@ statusLbl.Parent = background
 buildBtn.MouseButton1Click:Connect(function()
     local code = codeBox.Text
     if #code == 0 then
-        statusLbl.Text = "⚠️ Cole o código do arquivo .lua antes de executar!"
+        statusLbl.Text = " Cole o código do arquivo .lua antes de executar!"
         statusLbl.TextColor3 = Color3.fromRGB(255, 180, 50)
         return
     end
 
-    statusLbl.Text = "⏳ Reconstruindo instâncias e hierarquia..."
+    statusLbl.Text = " Reconstruindo instâncias e hierarquia..."
     statusLbl.TextColor3 = Color3.fromRGB(6, 182, 212)
 
     local fn, err = loadstring(code)
     if not fn then
-        statusLbl.Text = "❌ Erro na sintaxe do código: " .. tostring(err)
+        statusLbl.Text = " Erro na sintaxe do código: " .. tostring(err)
         statusLbl.TextColor3 = Color3.fromRGB(239, 68, 68)
         return
     end
@@ -123,7 +123,7 @@ buildBtn.MouseButton1Click:Connect(function()
         statusLbl.Text = "✓ Jogo reconstruído com sucesso no Roblox Studio!"
         statusLbl.TextColor3 = Color3.fromRGB(34, 197, 94)
     else
-        statusLbl.Text = "❌ Erro durante a execução: " .. tostring(execErr)
+        statusLbl.Text = " Erro durante a execução: " .. tostring(execErr)
         statusLbl.TextColor3 = Color3.fromRGB(239, 68, 68)
     end
 end)

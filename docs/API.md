@@ -1,4 +1,4 @@
-# 📖 HyperSaveInstance - API Documentation
+#  HyperSaveInstance - API Documentation
 
 HyperSaveInstance can be executed directly as an interactive In-Game GUI or used programmatically inside custom automation scripts.
 

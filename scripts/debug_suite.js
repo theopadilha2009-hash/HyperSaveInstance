@@ -147,7 +147,7 @@ function testPlugin() {
 
 function runAll() {
     console.log('=====================================================');
-    console.log('⚡ HYPERSAVEINSTANCE - MASTER DEBUG & AUDIT SUITE ⚡');
+    console.log(' HYPERSAVEINSTANCE - MASTER DEBUG & AUDIT SUITE ');
     console.log('=====================================================');
 
     testBase64Logic();
