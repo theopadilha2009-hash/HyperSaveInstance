@@ -127,6 +127,17 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         return directSource
     end
 
+    -- Check DecompileIgnore rules (USSI parity)
+    if options.DecompileIgnore and type(options.DecompileIgnore) == "table" then
+        local fullName = scriptInstance:GetFullName()
+        for _, pattern in ipairs(options.DecompileIgnore) do
+            if string.find(scriptInstance.Name, pattern) or string.find(fullName, pattern) then
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
+                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
+            end
+        end
+    end
+
     local isServerScript = scriptInstance:IsA("Script")
     if isServerScript then
         pcall(function()

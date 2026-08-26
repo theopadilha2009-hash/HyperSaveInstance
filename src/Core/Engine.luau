@@ -101,6 +101,17 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
 
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
 
+    -- Custom IgnoreList check (USSI / UltraSmart parity)
+    if self.Config.IgnoreList and type(self.Config.IgnoreList) == "table" then
+        for _, item in ipairs(self.Config.IgnoreList) do
+            if typeof(item) == "Instance" and (inst == item or inst:IsDescendantOf(item)) then
+                return false
+            elseif type(item) == "string" and (inst.Name == item or inst.ClassName == item) then
+                return false
+            end
+        end
+    end
+
     return true
 end
 

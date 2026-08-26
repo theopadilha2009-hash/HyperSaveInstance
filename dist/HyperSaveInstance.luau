@@ -945,6 +945,17 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         return directSource
     end
 
+    -- Check DecompileIgnore rules (USSI parity)
+    if options.DecompileIgnore and type(options.DecompileIgnore) == "table" then
+        local fullName = scriptInstance:GetFullName()
+        for _, pattern in ipairs(options.DecompileIgnore) do
+            if string.find(scriptInstance.Name, pattern) or string.find(fullName, pattern) then
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
+                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
+            end
+        end
+    end
+
     local isServerScript = scriptInstance:IsA("Script")
     if isServerScript then
         pcall(function()
@@ -1166,6 +1177,17 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
     if ClassBlacklist.Names[inst.Name] then return false end
 
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
+
+    -- Custom IgnoreList check (USSI / UltraSmart parity)
+    if self.Config.IgnoreList and type(self.Config.IgnoreList) == "table" then
+        for _, item in ipairs(self.Config.IgnoreList) do
+            if typeof(item) == "Instance" and (inst == item or inst:IsDescendantOf(item)) then
+                return false
+            elseif type(item) == "string" and (inst.Name == item or inst.ClassName == item) then
+                return false
+            end
+        end
+    end
 
     return true
 end
@@ -3372,6 +3394,15 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
                         append(string.format('%s\t\t<NumberRange name="%s">%.7g %.7g</NumberRange>\n', indent, propName, val.Min, val.Max))
                     elseif propType == "Rect" and typeof(val) == "Rect" then
                         append(string.format('%s\t\t<Rect2D name="%s"><min><X>%.7g</X><Y>%.7g</Y></min><max><X>%.7g</X><Y>%.7g</Y></max></Rect2D>\n', indent, propName, val.Min.X, val.Min.Y, val.Max.X, val.Max.Y))
+                    elseif propType == "Font" and typeof(val) == "Font" then
+                        append(string.format('%s\t\t<Font name="%s">\n%s\t\t\t<Family><url>%s</url></Family>\n%s\t\t\t<Weight>%d</Weight>\n%s\t\t\t<Style>%s</Style>\n%s\t\t</Font>\n',
+                            indent, propName, indent, escapeXml(val.Family), indent, (val.Weight and val.Weight.Value) or 400, indent, (val.Style and val.Style.Name) or "Normal", indent))
+                    elseif propType == "PhysicalProperties" and typeof(val) == "PhysicalProperties" then
+                        append(string.format('%s\t\t<PhysicalProperties name="%s">\n%s\t\t\t<CustomPhysics>true</CustomPhysics>\n%s\t\t\t<Density>%.7g</Density>\n%s\t\t\t<Friction>%.7g</Friction>\n%s\t\t\t<Elasticity>%.7g</Elasticity>\n%s\t\t\t<FrictionWeight>%.7g</FrictionWeight>\n%s\t\t\t<ElasticityWeight>%.7g</ElasticityWeight>\n%s\t\t</PhysicalProperties>\n',
+                            indent, propName, indent, indent, val.Density, indent, val.Friction, indent, val.Elasticity, indent, val.FrictionWeight, indent, val.ElasticityWeight, indent))
+                    elseif propType == "Ray" and typeof(val) == "Ray" then
+                        append(string.format('%s\t\t<Ray name="%s"><origin><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></origin><direction><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></direction></Ray>\n',
+                            indent, propName, val.Origin.X, val.Origin.Y, val.Origin.Z, val.Direction.X, val.Direction.Y, val.Direction.Z))
                     end
                 end
             end
