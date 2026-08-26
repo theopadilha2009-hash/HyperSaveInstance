@@ -20,6 +20,9 @@ local Defaults = {
     AssetDownloadWorkers = 6,              -- Parallel threads for raw asset downloading
     AssetFolderName = "",                  -- Auto-generated if empty: HyperSave_Assets_<PlaceId>
 
+    -- Smart Optimizer (Strictly Optional / Disabled by default to preserve 100% raw map integrity)
+    OptimizeGeometry = false,              -- Optional deduplication of redundant structures
+
     -- Visual & Asset Fidelity (10/10)
     SaveTerrain = true,                    -- Save Terrain properties & decorations
     SaveTerrainVoxels = true,              -- Extract voxel occupancy & materials (SmoothTerrain)
@@ -80,6 +83,7 @@ local Presets = {
         DecompileScripts = true,
         SaveServerScriptPlaceholders = true,
         SaveNilInstances = true,
+        OptimizeGeometry = false,
     },
     Fast = {
         DownloadRawAssets = false,
@@ -97,6 +101,7 @@ local Presets = {
         DecompileScripts = false,
         SaveServerScriptPlaceholders = true,
         SaveNilInstances = false,
+        OptimizeGeometry = false,
     },
     VisualsOnly = {
         DownloadRawAssets = true,
@@ -114,6 +119,7 @@ local Presets = {
         DecompileScripts = false,
         SaveServerScriptPlaceholders = false,
         SaveNilInstances = false,
+        OptimizeGeometry = false,
     },
     ScriptsOnly = {
         DownloadRawAssets = false,
@@ -131,6 +137,7 @@ local Presets = {
         DecompileScripts = true,
         SaveServerScriptPlaceholders = true,
         SaveNilInstances = true,
+        OptimizeGeometry = false,
     }
 }
 

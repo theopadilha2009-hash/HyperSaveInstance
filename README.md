@@ -1,7 +1,7 @@
 <div align="center">
 
-# ⚡ HyperSaveInstance v2.0
-### The Definitive, All-in-One Universal Roblox Game Cloner & SaveInstance Engine
+# ⚡ HyperSaveInstance v2.0 (Ultimate Master Suite)
+### The Definitive, All-in-One Universal Roblox Game Cloner & Reverse-Engineering Suite
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=for-the-badge)](https://github.com/theopadilha2009-hash/HyperSaveInstance)
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge)](https://github.com/theopadilha2009-hash/HyperSaveInstance)
@@ -21,42 +21,50 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/
 
 ---
 
-## 💎 Why HyperSaveInstance?
+## 💎 Master Suite Features
 
 | Feature | Legacy Synapse | USSI Standard | UltraSmart | **HyperSaveInstance v2.0** |
 | :--- | :---: | :---: | :---: | :---: |
 | **In-Game GUI (1-Click HUD)** | ❌ | ❌ | ⚠️ Basic | ✅ **Modern Glassmorphic Dark UI** |
 | **Visual Fidelity** | 6/10 | 9/10 | 9/10 | ✅ **10/10 (Full Terrain, PBR, Lighting, CSG)** |
 | **Script Decompiler Engine** | ⚠️ Slow | ⚠️ Single-thread | ⚠️ Basic | ✅ **Multi-Worker Pool with Auto-Retry** |
-| **Terrain SmoothVoxels** | ❌ | ⚠️ Basic | ✅ Good | ✅ **Full 3D Voxel Chunks + Water + Materials** |
-| **CSG Unions & MeshParts** | ⚠️ Partial | ⚠️ Partial | ✅ Good | ✅ **Preserves RenderFidelity & Collision** |
-| **Attributes & Tags** | ❌ | ⚠️ Partial | ⚠️ Partial | ✅ **100% Preserved (CollectionService & Attributes)** |
-| **Supported File Formats** | `.rbxlx` | `.rbxlx` | `.rbxlx` | ✅ **`.rbxlx` (XML), `.rbxl` (Binary), `.lua` (Studio Script)** |
-| **Bypass StreamingEnabled** | ❌ | ❌ | ⚠️ Partial | ✅ **Smart Chunk Pre-loader** |
+| **Raw Asset Downloader** | ❌ No | ❌ No | ❌ No | ✅ **Downloads .mp3, .png, .mesh to local folder** |
+| **Official Roblox Studio Plugin** | ❌ No | ❌ No | ❌ No | ✅ **1-Click Import & Rebuild Toolbar Plugin** |
+| **Live Network Sniffer (RemoteSpy)** | ❌ No | ❌ No | ❌ No | ✅ **Logs RemoteEvents / Functions + Exports JSON** |
+| **3D Wavefront Exporter (.OBJ / .MTL)** | ❌ No | ❌ No | ❌ No | ✅ **Export to Blender, Unity & Unreal** |
+| **Multi-Place Universe Tracker** | ❌ No | ❌ No | ❌ No | ✅ **Lists & clones all sub-places in universe** |
+| **Anti-AFK & Anti-Kick Protection** | ❌ No | ❌ No | ❌ No | ✅ **Prevents 20-min idle disconnection (268/273)** |
+| **Bypass StreamingEnabled** | ❌ No | ❌ No | ⚠️ Partial | ✅ **Auto-Map Spatial Grid Sweeper** |
+| **Keybind HUD Toggle** | ❌ No | ❌ No | ❌ No | ✅ **[RightShift] Instant Show / Hide** |
+| **Supported File Formats** | `.rbxlx` | `.rbxlx` | `.rbxlx` | ✅ **`.rbxlx` (XML), `.rbxl` (Binary), `.lua`, `.obj`** |
 | **Cross-Platform Compatibility** | ❌ Windows | ⚠️ Windows | ⚠️ Windows | ✅ **macOS, Windows & Mobile** |
 
 ---
 
-## 🌟 Key Features
+## 🌟 Complete Feature Breakdown
 
-### 🎨 10/10 Visual Fidelity
-- **Full Terrain Voxel Extraction**: Reads 3D voxel regions (`Terrain:ReadVoxels`), saving material and occupancy grids for perfect smooth terrain recreation in Roblox Studio.
+### 🎨 1. 10/10 Visual Fidelity & 3D Terrain
+- **Full SmoothTerrain Voxel Extraction**: Reads 3D voxel regions (`Terrain:ReadVoxels`), saving material and occupancy grids for perfect smooth terrain recreation in Roblox Studio.
 - **Atmosphere & Lighting**: Captures Atmosphere density/offset/haze, Skybox (all 6 textures), SunRays, Bloom, Blur, ColorCorrection, and DepthOfField.
 - **PBR SurfaceAppearance**: Preserves NormalMap, RoughnessMap, MetalnessMap, and ColorMap.
-- **CSG & Solid Modeling**: Preserves `UnionOperation`, `NegateOperation`, `MeshPart`, and `SpecialMesh` properties, scales, and vertex colors.
-- **Physics & Constraints**: Full support for Attachments, Bones, Motor6D, Welds, Springs, Hinges, Prismatic, and Align constraints.
+- **CSG & Solid Modeling**: Preserves `UnionOperation`, `NegateOperation`, `MeshPart`, and `SpecialMesh` with deep `PhysicsData` and `ChildData` buffers.
 
-### 📜 10/10 Script & Code Decompilation
+### 📜 2. 10/10 Script Decompilation & RemoteSpy Backend
 - **Concurrent Multi-Worker Decompiler**: Utilizes parallel workers (`task.spawn` pool) to decompile hundreds of scripts in seconds.
-- **Timeout Protection**: Never freezes the game; scripts that exceed timeout limits are automatically retried or logged.
-- **Server Script Placeholders**: Generates structured placeholder stubs with RemoteEvent / RemoteFunction network endpoints, preserving the complete hierarchy even with FilteringEnabled active.
-- **Bytecode Extraction Fallback**: Falls back to raw Luau bytecode dumping when full decompilation is unsupported by the executor.
+- **RemoteSpy Backend Auto-Generator**: Generates structured server script stubs with `.OnServerEvent` / `.OnServerInvoke` dispatchers for all network endpoints.
+- **Bytecode Fallback**: Extracts and Base64-encodes raw Luau bytecode when full decompiler is unavailable.
 
-### 🖥️ Modern In-Game Interface
-- **1-Click "Clone Entire Game" Button**: Immediate backup with zero setup.
-- **Live Progress Tracking**: Real-time progress bar, stage indicators, and estimated completion.
-- **Built-in Colored Terminal / Logs**: Inspect scanned instances and decompiled scripts on the fly with a 1-click log copy button.
-- **Granular Customization**: Toggle individual services, terrain chunk size, decompiler workers, and export format.
+### 📦 3. Raw Asset Downloader
+- Downloads all audio tracks (`.mp3`), textures/PBR maps (`.png`), 3D meshes (`.mesh`), and animations (`.rbxanim`) into a dedicated `HyperSave_Assets_<PlaceId>/` folder on your disk.
+
+### 📡 4. Live Network Traffic Sniffer
+- Hooks into `RemoteEvent:FireServer` and `RemoteFunction:InvokeServer` to record parameters, payloads, and timestamps while you play, exporting the protocol to JSON.
+
+### 🧊 5. 3D Wavefront Exporter (.OBJ + .MTL)
+- Exports the 3D map directly to `.obj` and `.mtl` for immediate import into **Blender**, **Cinema 4D**, **Unity**, or **Unreal Engine**.
+
+### 🔌 6. Official Roblox Studio Plugin (`plugin/HyperSaveImporter.server.luau`)
+- Drop the plugin into your Studio plugins folder to rebuild maps, import local assets, and restore place hierarchy with 1 click.
 
 ---
 
@@ -68,15 +76,12 @@ Open your executor (on macOS, Windows, or Mobile) and execute:
 loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()
 ```
 
-### 2. Choose Your Mode
-- **🌟 Completo (10/10)**: Saves everything (Terrain Voxels, Models, Lighting, Scripts, UI, Attributes, Tags).
-- **⚡ Rápido**: Saves visual models and lighting quickly without waiting for script decompilation.
-- **🎨 Apenas Visual**: Focuses 100% on maps, meshes, terrain, and lighting.
-- **📜 Apenas Scripts**: Focuses 100% on decompiling all client and replicated scripts.
-
-### 3. Open in Roblox Studio
-- If exported as `.rbxlx` or `.rbxl`: Open **Roblox Studio** -> **File** -> **Open from File...** -> Select your saved file located in your executor's `workspace` folder.
-- If exported as `.lua`: Copy the generated script and paste it into the **Roblox Studio Command Bar** or run it as a plugin script.
+### 2. Controls
+- **Abrir / Esconder Menu**: Pressione **`RightShift`** ou toque no botão flutuante `[⚡ HYPERSAVE]`.
+- **Clonar Jogo Inteiro**: Vá na aba **`🚀 Clonar Tudo`** e clique no botão roxo principal.
+- **Salvar Modelo Isolado**: Vá na aba **`🎯 Salvar Modelo`** e digite o nome do carro/arma que deseja salvar.
+- **Gravar Rede**: Vá na aba **`📡 Rede / Remotes`** e clique em **`▶️ INICIAR GRAVAÇÃO`**.
+- **Exportar para Blender**: Vá na aba **`🧊 Exportar 3D`** e clique em **`🚀 EXPORTAR MAPA 3D (.OBJ)`**.
 
 ---
 
@@ -94,65 +99,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/
 | **Delta** | Android / iOS | ✅ Yes | ✅ Yes | 🟢 **100% Supported** |
 | **Codex** | Android / iOS | ✅ Yes | ✅ Yes | 🟢 **100% Supported** |
 | **Arceus X** | Android / iOS | ✅ Yes | ✅ Yes | 🟢 **100% Supported** |
-
----
-
-## 📦 Project Architecture
-
-```
-HyperSaveInstance/
-├── src/
-│   ├── init.luau                   # Modular entry point
-│   ├── Config/
-│   │   ├── Defaults.luau           # Default settings & preset manager
-│   │   └── ClassBlacklist.luau     # Filtering of internal/core objects
-│   ├── Core/
-│   │   ├── Engine.luau             # Master orchestrator & task scheduler
-│   │   ├── Reflection.luau         # Roblox API reflection database
-│   │   ├── Decompiler.luau         # Multi-worker decompiler engine
-│   │   ├── TerrainSerializer.luau  # 3D voxel chunk extractor
-│   │   ├── SerializerXml.luau      # Roblox XML format (.rbxlx)
-│   │   ├── SerializerBinary.luau   # Roblox Binary format (.rbxl)
-│   │   ├── SerializerScript.luau   # Studio Lua recreation script (.lua)
-│   │   └── AssetHandler.luau       # CSG, Mesh, Texture & Audio handler
-│   ├── UI/
-│   │   ├── Interface.luau          # Glassmorphic HUD & in-game GUI
-│   │   └── Theme.luau              # Design tokens, styling & animations
-│   └── Utils/
-│       ├── Environment.luau        # Universal executor polyfills
-│       ├── Base64.luau             # High-speed Base64 engine
-│       ├── LZ4.luau                # Pure Luau LZ4 compressor
-│       └── Stream.luau             # Binary stream buffer
-├── scripts/
-│   ├── bundle.js                   # Node.js bundler (builds dist/HyperSaveInstance.luau)
-│   └── test_parser.js              # Automated validation suite
-├── dist/
-│   └── HyperSaveInstance.luau      # Standalone single-file production bundle
-├── docs/
-│   ├── API.md                      # Scripting & programmatic API reference
-│   └── FEATURES.md                 # Deep architectural breakdown & comparisons
-├── loader.luau                     # 1-Line raw loader
-├── package.json                    # Development scripts
-└── README.md                       # Project documentation
-```
-
----
-
-## 💻 Development & Building
-
-To build the standalone single-file distribution bundle locally:
-
-```bash
-# Clone the repository
-git clone https://github.com/theopadilha2009-hash/HyperSaveInstance.git
-cd HyperSaveInstance
-
-# Compile the standalone production bundle
-npm run build
-
-# Run automated tests and validation
-npm test
-```
 
 ---
 

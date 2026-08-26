@@ -1,7 +1,7 @@
 --[[
-    HyperSaveInstance v2.0 (Ultimate Edition) - Universal Roblox Game Cloner & SaveInstance Engine
+    HyperSaveInstance v2.0 (Master Suite Edition) - Universal Roblox Game Cloner & Reverse-Engineering Suite
     Author: theopadilha2009-hash
-    Combines USSI, UltraSmartSaveInstance, rbx-dom & rbx-instance-serializer.
+    Combines USSI, UltraSmartSaveInstance, rbx-dom, rbx-instance-serializer & Studio Plugin.
 ]]
 
 local Engine = require(script.Core.Engine)
@@ -10,6 +10,10 @@ local Defaults = require(script.Config.Defaults)
 local Environment = require(script.Utils.Environment)
 local AntiAFK = require(script.Utils.AntiAFK)
 local StreamExplorer = require(script.Core.StreamExplorer)
+local NetworkSniffer = require(script.Core.NetworkSniffer)
+local UniverseTracker = require(script.Core.UniverseTracker)
+local ObjExporter = require(script.Core.ObjExporter)
+local Optimizer = require(script.Core.Optimizer)
 
 local HyperSaveInstance = {
     Version = "2.0.0",
@@ -17,6 +21,10 @@ local HyperSaveInstance = {
     Environment = Environment,
     AntiAFK = AntiAFK,
     StreamExplorer = StreamExplorer,
+    NetworkSniffer = NetworkSniffer,
+    UniverseTracker = UniverseTracker,
+    ObjExporter = ObjExporter,
+    Optimizer = Optimizer,
 }
 
 -- Open interactive in-game HUD
@@ -36,6 +44,16 @@ end
 function HyperSaveInstance.SaveModel(targetInstance: Instance, customConfig: table?): (boolean, string)
     local engine = Engine.new(customConfig)
     return engine:SaveTarget(targetInstance, customConfig)
+end
+
+-- Export 3D Wavefront OBJ/MTL
+function HyperSaveInstance.ExportObj(targetRoot: Instance?, options: table?): (boolean, string)
+    return ObjExporter.Export(targetRoot, options)
+end
+
+-- Discover all Universe sub-places
+function HyperSaveInstance.GetUniverse(): {any}
+    return UniverseTracker.GetUniversePlaces()
 end
 
 -- Preset shorthand helpers

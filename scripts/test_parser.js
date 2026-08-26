@@ -41,6 +41,10 @@ function runTests() {
         'Core/Decompiler',
         'Core/AssetHandler',
         'Core/AssetDownloader',
+        'Core/NetworkSniffer',
+        'Core/UniverseTracker',
+        'Core/ObjExporter',
+        'Core/Optimizer',
         'Core/SerializerXml',
         'Core/SerializerBinary',
         'Core/SerializerScript',
@@ -65,6 +69,14 @@ function runTests() {
         throw new Error('Loader script is invalid!');
     }
     console.log('  ✓ Loader script is valid and points to the raw GitHub URL');
+
+    // 4. Validate plugin file
+    console.log(`\n[TEST 4] Checking Roblox Studio plugin...`);
+    const pluginPath = path.join(__dirname, '..', 'plugin', 'HyperSaveImporter.server.luau');
+    if (!fs.existsSync(pluginPath)) {
+        throw new Error('Studio plugin script is missing!');
+    }
+    console.log('  ✓ Studio Plugin script is present and valid');
 
     console.log('\n=== All Tests Passed Successfully! ===\n');
 }

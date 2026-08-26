@@ -1,6 +1,6 @@
 --[[
-    HyperSaveInstance - Modern Glassmorphic HUD & In-Game GUI
-    Includes built-in tutorial, 1-click clone, target selector, keybind toggle and copy tools.
+    HyperSaveInstance - Modern Glassmorphic HUD & Master In-Game Suite
+    Includes 1-Click Clone, Target Selector, Network Sniffer, Universe Tracker, 3D OBJ Exporter, Tutorial and Settings.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -9,6 +9,9 @@ local Players = game:GetService("Players")
 local Theme = require(script.Parent.Theme)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 local Defaults = require(script.Parent.Parent.Config.Defaults)
+local NetworkSniffer = require(script.Parent.Parent.Core.NetworkSniffer)
+local UniverseTracker = require(script.Parent.Parent.Core.UniverseTracker)
+local ObjExporter = require(script.Parent.Parent.Core.ObjExporter)
 
 local Interface = {}
 Interface.__index = Interface
@@ -75,8 +78,8 @@ function Interface:BuildUI()
     -- Main Container
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
-    main.Size = UDim2.new(0, 620, 0, 450)
-    main.Position = UDim2.new(0.5, -310, 0.5, -225)
+    main.Size = UDim2.new(0, 640, 0, 460)
+    main.Position = UDim2.new(0.5, -320, 0.5, -230)
     main.BackgroundColor3 = Theme.Background
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -135,7 +138,7 @@ function Interface:BuildUI()
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Text = "⚡ HyperSaveInstance"
     titleLabel.Font = Theme.FontTitle
-    titleLabel.TextSize = 16
+    titleLabel.TextSize = 15
     titleLabel.TextColor3 = Theme.TextPrimary
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Size = UDim2.new(0, 190, 1, 0)
@@ -216,6 +219,9 @@ function Interface:BuildUI()
     local tabs = {
         {"Dashboard", "🚀 Clonar Tudo"},
         {"Selector", "🎯 Salvar Modelo"},
+        {"Network", "📡 Rede / Remotes"},
+        {"Universe", "🌌 Universo"},
+        {"ObjExport", "🧊 Exportar 3D"},
         {"Tutorial", "📖 Como Usar"},
         {"Settings", "⚙️ Configurações"},
         {"Console", "📜 Console"},
@@ -231,11 +237,11 @@ function Interface:BuildUI()
         local navBtn = Instance.new("TextButton")
         navBtn.Text = tabLabel
         navBtn.Font = Theme.FontSemiBold
-        navBtn.TextSize = 11
+        navBtn.TextSize = 10
         navBtn.TextColor3 = (i == 1) and Theme.TextPrimary or Theme.TextSecondary
         navBtn.BackgroundColor3 = (i == 1) and Theme.CardHover or Theme.CardBg
-        navBtn.Size = UDim2.new(1, -12, 0, 32)
-        navBtn.Position = UDim2.new(0, 6, 0, 8 + (i - 1) * 36)
+        navBtn.Size = UDim2.new(1, -12, 0, 28)
+        navBtn.Position = UDim2.new(0, 6, 0, 6 + (i - 1) * 32)
         Theme.AddCorner(navBtn, Theme.CornerSmall)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
@@ -256,6 +262,9 @@ function Interface:BuildUI()
     -- Build Individual Tab Pages
     self:BuildDashboardTab()
     self:BuildSelectorTab()
+    self:BuildNetworkTab()
+    self:BuildUniverseTab()
+    self:BuildObjExportTab()
     self:BuildTutorialTab()
     self:BuildSettingsTab()
     self:BuildConsoleTab()
@@ -616,7 +625,271 @@ function Interface:BuildSelectorTab()
     end)
 end
 
--- 3. Tutorial Tab (Built-in Step-by-Step Guide)
+-- 3. Network Sniffer Tab
+function Interface:BuildNetworkTab()
+    local parent = self.TabFrames["Network"]
+
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, -32, 0, 36)
+    topBar.Position = UDim2.new(0, 16, 0, 12)
+    topBar.BackgroundTransparency = 1
+    topBar.Parent = parent
+
+    local toggleSnifferBtn = Instance.new("TextButton")
+    toggleSnifferBtn.Text = "▶️ INICIAR GRAVAÇÃO DE REDE"
+    toggleSnifferBtn.Font = Theme.FontSemiBold
+    toggleSnifferBtn.TextSize = 11
+    toggleSnifferBtn.TextColor3 = Theme.AccentSuccess
+    toggleSnifferBtn.BackgroundColor3 = Theme.CardBg
+    toggleSnifferBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    Theme.AddCorner(toggleSnifferBtn, Theme.CornerSmall)
+    Theme.AddStroke(toggleSnifferBtn, Theme.Border, 1)
+    toggleSnifferBtn.Parent = topBar
+
+    local exportSnifferBtn = Instance.new("TextButton")
+    exportSnifferBtn.Text = "💾 EXPORTAR PROTOCOLO (.json)"
+    exportSnifferBtn.Font = Theme.FontSemiBold
+    exportSnifferBtn.TextSize = 11
+    exportSnifferBtn.TextColor3 = Theme.TextPrimary
+    exportSnifferBtn.BackgroundColor3 = Theme.CardBg
+    exportSnifferBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    exportSnifferBtn.Position = UDim2.new(0.52, 0, 0, 0)
+    Theme.AddCorner(exportSnifferBtn, Theme.CornerSmall)
+    Theme.AddStroke(exportSnifferBtn, Theme.Border, 1)
+    exportSnifferBtn.Parent = topBar
+
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, -32, 1, -64)
+    scroll.Position = UDim2.new(0, 16, 0, 56)
+    scroll.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Theme.Border
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Theme.AddCorner(scroll, Theme.CornerMedium)
+    Theme.AddStroke(scroll, Theme.Border, 1)
+    scroll.Parent = parent
+
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 4)
+    layout.Parent = scroll
+
+    toggleSnifferBtn.MouseButton1Click:Connect(function()
+        if NetworkSniffer.IsActive then
+            NetworkSniffer.Stop()
+            toggleSnifferBtn.Text = "▶️ INICIAR GRAVAÇÃO DE REDE"
+            toggleSnifferBtn.TextColor3 = Theme.AccentSuccess
+        else
+            NetworkSniffer.Start()
+            toggleSnifferBtn.Text = "⏹️ PARAR GRAVAÇÃO"
+            toggleSnifferBtn.TextColor3 = Theme.AccentDanger
+        end
+    end)
+
+    exportSnifferBtn.MouseButton1Click:Connect(function()
+        local file = NetworkSniffer.ExportLogs()
+        exportSnifferBtn.Text = "✓ Salvo: " .. file
+        Environment.SetClipboard(file)
+        task.delay(2, function()
+            exportSnifferBtn.Text = "💾 EXPORTAR PROTOCOLO (.json)"
+        end)
+    end)
+
+    NetworkSniffer.OnCall(function(entry)
+        local row = Instance.new("TextLabel")
+        row.Text = string.format("[%s] [%s] %s -> %s", entry.Timestamp, entry.Type, entry.RemoteName, entry.ArgsPreview)
+        row.Font = Theme.FontCode
+        row.TextSize = 10
+        row.TextColor3 = (entry.Type == "FireServer") and Theme.AccentCyan or Theme.AccentSecondary
+        row.TextXAlignment = Enum.TextXAlignment.Left
+        row.Size = UDim2.new(1, -12, 0, 16)
+        row.BackgroundTransparency = 1
+        row.Parent = scroll
+
+        scroll.CanvasSize = UDim2.new(0, 0, 0, #NetworkSniffer.CapturedLogs * 18)
+        scroll.CanvasPosition = Vector2.new(0, scroll.CanvasSize.Y.Offset)
+    end)
+end
+
+-- 4. Universe Tab (Multi-Place Tracker)
+function Interface:BuildUniverseTab()
+    local parent = self.TabFrames["Universe"]
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, -32, 1, -32)
+    card.Position = UDim2.new(0, 16, 0, 16)
+    card.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(card, Theme.CornerMedium)
+    Theme.AddStroke(card, Theme.Border, 1)
+    card.Parent = parent
+
+    local headerLbl = Instance.new("TextLabel")
+    headerLbl.Text = "🌌 RASTREADOR DE UNIVERSO (MULTI-PLACES)"
+    headerLbl.Font = Theme.FontTitle
+    headerLbl.TextSize = 13
+    headerLbl.TextColor3 = Theme.AccentSecondary
+    headerLbl.TextXAlignment = Enum.TextXAlignment.Left
+    headerLbl.Size = UDim2.new(1, -24, 0, 24)
+    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.BackgroundTransparency = 1
+    headerLbl.Parent = card
+
+    local scanBtn = Instance.new("TextButton")
+    scanBtn.Text = "🔍 BUSCAR SUB-PLACES DO UNIVERSO"
+    scanBtn.Font = Theme.FontSemiBold
+    scanBtn.TextSize = 11
+    scanBtn.TextColor3 = Theme.TextPrimary
+    scanBtn.BackgroundColor3 = Theme.CardHover
+    scanBtn.Size = UDim2.new(1, -24, 0, 34)
+    scanBtn.Position = UDim2.new(0, 12, 0, 42)
+    Theme.AddCorner(scanBtn, Theme.CornerSmall)
+    Theme.AddStroke(scanBtn, Theme.Border, 1)
+    scanBtn.Parent = card
+
+    local placeScroll = Instance.new("ScrollingFrame")
+    placeScroll.Size = UDim2.new(1, -24, 1, -94)
+    placeScroll.Position = UDim2.new(0, 12, 0, 84)
+    placeScroll.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
+    placeScroll.ScrollBarThickness = 4
+    placeScroll.ScrollBarImageColor3 = Theme.Border
+    Theme.AddCorner(placeScroll, Theme.CornerSmall)
+    Theme.AddStroke(placeScroll, Theme.Border, 1)
+    placeScroll.Parent = card
+
+    local placeLayout = Instance.new("UIListLayout")
+    placeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    placeLayout.Padding = UDim.new(0, 4)
+    placeLayout.Parent = placeScroll
+
+    scanBtn.MouseButton1Click:Connect(function()
+        scanBtn.Text = "⏳ Buscando lugares do universo..."
+        for _, child in ipairs(placeScroll:GetChildren()) do
+            if child:IsA("Frame") then child:Destroy() end
+        end
+
+        task.spawn(function()
+            local list = UniverseTracker.GetUniversePlaces()
+            scanBtn.Text = string.format("✓ %d lugares encontrados no Universo", #list)
+
+            for idx, pInfo in ipairs(list) do
+                local row = Instance.new("Frame")
+                row.Size = UDim2.new(1, -12, 0, 28)
+                row.BackgroundColor3 = Theme.CardBg
+                Theme.AddCorner(row, Theme.CornerSmall)
+                row.Parent = placeScroll
+
+                local pName = Instance.new("TextLabel")
+                pName.Text = string.format("%s (ID: %d)", pInfo.Name, pInfo.PlaceId)
+                pName.Font = Theme.FontRegular
+                pName.TextSize = 11
+                pName.TextColor3 = pInfo.IsRoot and Theme.AccentCyan or Theme.TextPrimary
+                pName.TextXAlignment = Enum.TextXAlignment.Left
+                pName.Size = UDim2.new(0.7, 0, 1, 0)
+                pName.Position = UDim2.new(0, 8, 0, 0)
+                pName.BackgroundTransparency = 1
+                pName.Parent = row
+
+                local copyIdBtn = Instance.new("TextButton")
+                copyIdBtn.Text = "Copiar ID"
+                copyIdBtn.Font = Theme.FontSemiBold
+                copyIdBtn.TextSize = 10
+                copyIdBtn.TextColor3 = Theme.TextSecondary
+                copyIdBtn.BackgroundColor3 = Theme.CardHover
+                copyIdBtn.Size = UDim2.new(0, 80, 0, 20)
+                copyIdBtn.Position = UDim2.new(1, -88, 0.5, -10)
+                Theme.AddCorner(copyIdBtn, Theme.CornerPill)
+                copyIdBtn.Parent = row
+
+                copyIdBtn.MouseButton1Click:Connect(function()
+                    Environment.SetClipboard(tostring(pInfo.PlaceId))
+                    copyIdBtn.Text = "✓ Copiado"
+                    task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
+                end)
+            end
+
+            placeScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 34)
+        end)
+    end)
+end
+
+-- 5. OBJ Export Tab (Blender / Unity 3D)
+function Interface:BuildObjExportTab()
+    local parent = self.TabFrames["ObjExport"]
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, -32, 1, -32)
+    card.Position = UDim2.new(0, 16, 0, 16)
+    card.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(card, Theme.CornerMedium)
+    Theme.AddStroke(card, Theme.Border, 1)
+    card.Parent = parent
+
+    local headerLbl = Instance.new("TextLabel")
+    headerLbl.Text = "🧊 EXPORTADOR 3D WAVEFRONT (.OBJ + .MTL)"
+    headerLbl.Font = Theme.FontTitle
+    headerLbl.TextSize = 13
+    headerLbl.TextColor3 = Theme.AccentCyan
+    headerLbl.TextXAlignment = Enum.TextXAlignment.Left
+    headerLbl.Size = UDim2.new(1, -24, 0, 24)
+    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.BackgroundTransparency = 1
+    headerLbl.Parent = card
+
+    local desc = Instance.new("TextLabel")
+    desc.Text = "Converte todos os blocos e modelos do mapa diretamente para arquivos .obj e .mtl com cores e materiais prontos para abrir no Blender, Cinema 4D, Maya, Unity ou Unreal Engine."
+    desc.Font = Theme.FontRegular
+    desc.TextSize = 11
+    desc.TextColor3 = Theme.TextSecondary
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.TextYAlignment = Enum.TextYAlignment.Top
+    desc.TextWrapped = true
+    desc.Size = UDim2.new(1, -24, 0, 48)
+    desc.Position = UDim2.new(0, 12, 0, 42)
+    desc.BackgroundTransparency = 1
+    desc.Parent = card
+
+    local exportObjBtn = Instance.new("TextButton")
+    exportObjBtn.Text = "🚀 EXPORTAR MAPA 3D (.OBJ + .MTL)"
+    exportObjBtn.Font = Theme.FontTitle
+    exportObjBtn.TextSize = 13
+    exportObjBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    exportObjBtn.BackgroundColor3 = Theme.AccentCyan
+    exportObjBtn.Size = UDim2.new(1, -24, 0, 48)
+    exportObjBtn.Position = UDim2.new(0, 12, 0, 100)
+    Theme.AddCorner(exportObjBtn, Theme.CornerMedium)
+    Theme.AddGradient(exportObjBtn, Theme.AccentCyan, Theme.AccentPrimary, 90)
+    exportObjBtn.Parent = card
+
+    local objStatus = Instance.new("TextLabel")
+    objStatus.Text = "Status: Pronto para exportar"
+    objStatus.Font = Theme.FontRegular
+    objStatus.TextSize = 11
+    objStatus.TextColor3 = Theme.TextMuted
+    objStatus.TextXAlignment = Enum.TextXAlignment.Left
+    objStatus.Size = UDim2.new(1, -24, 0, 24)
+    objStatus.Position = UDim2.new(0, 12, 0, 160)
+    objStatus.BackgroundTransparency = 1
+    objStatus.Parent = card
+
+    exportObjBtn.MouseButton1Click:Connect(function()
+        objStatus.Text = "⏳ Gerando geometria .obj e biblioteca de materiais .mtl..."
+        objStatus.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, file = ObjExporter.Export(workspace)
+            if success then
+                objStatus.Text = "✓ Mapa 3D exportado com sucesso: " .. file
+                objStatus.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(file)
+            else
+                objStatus.Text = "❌ Erro ao exportar 3D: " .. tostring(file)
+                objStatus.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+end
+
+-- 6. Tutorial Tab (Built-in Step-by-Step Guide)
 function Interface:BuildTutorialTab()
     local parent = self.TabFrames["Tutorial"]
 
@@ -692,7 +965,7 @@ function Interface:BuildTutorialTab()
     end)
 end
 
--- 4. Settings Tab
+-- 7. Settings Tab
 function Interface:BuildSettingsTab()
     local parent = self.TabFrames["Settings"]
 
@@ -702,7 +975,7 @@ function Interface:BuildSettingsTab()
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
     scroll.ScrollBarImageColor3 = Theme.Border
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 560)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 600)
     scroll.Parent = parent
 
     local toggles = {
@@ -710,6 +983,7 @@ function Interface:BuildSettingsTab()
         {"AutoExploreStreaming", "Varrer Mapa Inteiro (Bypass de StreamingEnabled)", self.Config.AutoExploreStreaming},
         {"StealthMode", "Modo Furtivo (Proteção contra Anti-Cheats do Jogo)", self.Config.StealthMode},
         {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh) para Pasta Local", self.Config.DownloadRawAssets},
+        {"OptimizeGeometry", "Otimizador de Arquivo (Deduplicação de Estruturas - Opcional)", self.Config.OptimizeGeometry},
         {"SaveTerrain", "Preservar Terreno Completo (Propriedades & Água)", self.Config.SaveTerrain},
         {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
         {"SaveLighting", "Preservar Iluminação, Céu & Efeitos de Atmosfera", self.Config.SaveLighting},
@@ -737,7 +1011,7 @@ function Interface:BuildSettingsTab()
         lbl.Text = title
         lbl.Font = Theme.FontRegular
         lbl.TextSize = 11
-        lbl.TextColor3 = Theme.TextPrimary
+        lbl.TextColor3 = (key == "OptimizeGeometry") and Theme.AccentWarning or Theme.TextPrimary
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Size = UDim2.new(0.8, 0, 1, 0)
         lbl.Position = UDim2.new(0, 12, 0, 0)
@@ -769,7 +1043,7 @@ function Interface:BuildSettingsTab()
     end
 end
 
--- 5. Console Tab
+-- 8. Console Tab
 function Interface:BuildConsoleTab()
     local parent = self.TabFrames["Console"]
 
@@ -812,7 +1086,7 @@ function Interface:BuildConsoleTab()
     end)
 end
 
--- 6. About Tab
+-- 9. About Tab
 function Interface:BuildAboutTab()
     local parent = self.TabFrames["About"]
 
@@ -826,14 +1100,17 @@ function Interface:BuildAboutTab()
 
     local aboutText = Instance.new("TextLabel")
     aboutText.Text = string.format([=[
-⚡ HyperSaveInstance v2.0 (Ultimate Edition)
-Universal Roblox Game Cloner & SaveInstance Engine
+⚡ HyperSaveInstance v2.0 (Ultimate Master Edition)
+Universal Roblox Game Cloner & Reverse-Engineering Suite
 
 • Plataforma: %s
 • Executor: %s
 • Sistema de Arquivos: %s
 • Descompilador: %s
 • Anti-AFK: Ativo
+• Network Sniffer & RemoteSpy: Ativo
+• 3D Wavefront Exporter: Ativo (.OBJ / .MTL)
+• Multi-Place Universe: Ativo
 • Atalho de Teclado: [RightShift]
 
 Repositório Oficial: github.com/theopadilha2009-hash/HyperSaveInstance
@@ -844,7 +1121,7 @@ Repositório Oficial: github.com/theopadilha2009-hash/HyperSaveInstance
         Environment.HasDecompiler() and "Disponível" or "Apenas Bytecode / Stub"
     )
     aboutText.Font = Theme.FontRegular
-    aboutText.TextSize = 12
+    aboutText.TextSize = 11
     aboutText.TextColor3 = Theme.TextPrimary
     aboutText.TextXAlignment = Enum.TextXAlignment.Left
     aboutText.TextYAlignment = Enum.TextYAlignment.Top
