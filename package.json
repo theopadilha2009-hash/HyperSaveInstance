@@ -1,11 +1,11 @@
 {
   "name": "hypersaveinstance",
   "version": "2.0.0",
-  "description": "Universal Roblox Game Cloner & SaveInstance Engine combining USSI, UltraSmartSaveInstance, and rbx-dom with an in-game HUD and script decompiler.",
+  "description": "Universal Roblox Game Cloner, Asset Ripper & Reverse-Engineering Suite combining USSI, UltraSmartSaveInstance, rbx-dom with an in-game HUD and Studio Plugin.",
   "main": "dist/HyperSaveInstance.luau",
   "scripts": {
     "build": "node scripts/bundle.js",
-    "test": "node scripts/test_parser.js"
+    "test": "node scripts/debug_suite.js"
   },
   "keywords": [
     "roblox",
@@ -15,7 +15,9 @@
     "decompiler",
     "terrain-saver",
     "rbxlx",
-    "rbxl"
+    "rbxl",
+    "asset-ripper",
+    "audio-ripper"
   ],
   "author": "theopadilha2009-hash",
   "license": "MIT",
