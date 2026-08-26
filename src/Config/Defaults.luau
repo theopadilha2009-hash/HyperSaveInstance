@@ -44,6 +44,8 @@ local Defaults = {
     DecompileParallelWorkers = 8,          -- Concurrent workers for fast decompilation
     DecompileIgnoreCore = true,            -- Ignore CoreGui / internal scripts
     SaveServerScriptPlaceholders = true,   -- Generate RemoteSpy dispatcher stubs for server scripts
+    SynthesizeServer = true,               -- Auto-generate ServerScriptService mock backend for Remotes
+    AutoCaptureAnimations = true,          -- Capture Motor6D joint transforms into KeyframeSequence
     ExtractBytecodeFallback = true,        -- Extract bytecode dump if decompiler is unavailable
 
     -- Services & Hierarchy

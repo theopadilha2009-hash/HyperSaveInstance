@@ -102,7 +102,13 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 
         -- Script source if script
         if inst:IsA("LuaSourceContainer") then
-            local source = scriptSources[inst] or ""
+            local source = scriptSources[inst]
+            if not source or #source == 0 then
+                pcall(function()
+                    source = (inst :: any).Source
+                end)
+            end
+            source = source or ""
             append(string.format('%s\t\t<ProtectedString name="Source">%s</ProtectedString>\n', indent, escapeCDataOrText(source)))
         end
 

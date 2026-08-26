@@ -136,6 +136,8 @@ local Defaults = {
     DecompileParallelWorkers = 8,          -- Concurrent workers for fast decompilation
     DecompileIgnoreCore = true,            -- Ignore CoreGui / internal scripts
     SaveServerScriptPlaceholders = true,   -- Generate RemoteSpy dispatcher stubs for server scripts
+    SynthesizeServer = true,               -- Auto-generate ServerScriptService mock backend for Remotes
+    AutoCaptureAnimations = true,          -- Capture Motor6D joint transforms into KeyframeSequence
     ExtractBytecodeFallback = true,        -- Extract bytecode dump if decompiler is unavailable
 
     -- Services & Hierarchy
@@ -245,6 +247,139 @@ function Defaults.ApplyPreset(config: table, presetName: string)
 end
 
 return Defaults
+
+end)
+
+__define__("Core/AnimationRecorder", function()
+﻿--[[
+    HyperSaveInstance - Live Animation Keyframe Capturer
+    Solves the Roblox Asset Permission / HTTP 403 issue for Animations by capturing
+    real-time Motor6D joint transformations (CFrame / Transform) and baking them into
+    native KeyframeSequence instances that can be published to the user's account in Studio.
+]]
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local AnimationRecorder = {}
+AnimationRecorder.IsRecording = false
+AnimationRecorder.RecordedSequences = {}
+AnimationRecorder.ActiveConnection = nil
+
+-- Record an active animation track from a Humanoid by sampling joint transforms
+function AnimationRecorder.RecordTrack(humanoid: Humanoid, trackName: string, durationSeconds: number, onComplete: (keyframeSeq: KeyframeSequence) -> ())
+    local character = humanoid.Parent
+    if not character then return end
+
+    -- Collect all Motor6D joints
+    local motors = {}
+    for _, desc in ipairs(character:GetDescendants()) do
+        if desc:IsA("Motor6D") then
+            table.insert(motors, desc)
+        end
+    end
+
+    if #motors == 0 then return end
+
+    local keyframeSeq = Instance.new("KeyframeSequence")
+    keyframeSeq.Name = trackName or "HyperSave_RecordedAnimation"
+
+    local sampleRate = 30 -- 30 FPS sampling
+    local interval = 1 / sampleRate
+    local elapsed = 0
+    local timer = 0
+
+    local frames = {}
+
+    local conn
+    conn = RunService.Heartbeat:Connect(function(dt)
+        elapsed = elapsed + dt
+        timer = timer + dt
+
+        if timer >= interval then
+            timer = 0
+            local timePos = math.floor(elapsed * 1000) / 1000
+
+            local kf = Instance.new("Keyframe")
+            kf.Time = timePos
+
+            -- Create pose hierarchy
+            local posesByPart = {}
+            for _, motor in ipairs(motors) do
+                local p0 = motor.Part0
+                local p1 = motor.Part1
+                if p0 and p1 then
+                    local pose = Instance.new("Pose")
+                    pose.Name = p1.Name
+                    pose.CFrame = motor.Transform
+                    posesByPart[p1.Name] = pose
+                end
+            end
+
+            -- Assemble tree structure
+            for _, motor in ipairs(motors) do
+                local p0 = motor.Part0
+                local p1 = motor.Part1
+                if p0 and p1 and posesByPart[p0.Name] and posesByPart[p1.Name] then
+                    posesByPart[p1.Name].Parent = posesByPart[p0.Name]
+                elseif p1 and posesByPart[p1.Name] and not posesByPart[p1.Name].Parent then
+                    posesByPart[p1.Name].Parent = kf
+                end
+            end
+
+            kf.Parent = keyframeSeq
+        end
+
+        if elapsed >= (durationSeconds or 3) then
+            conn:Disconnect()
+            table.insert(AnimationRecorder.RecordedSequences, keyframeSeq)
+            if onComplete then
+                onComplete(keyframeSeq)
+            end
+        end
+    end)
+
+    return conn
+end
+
+-- Auto-hook into character animation playback
+function AnimationRecorder.StartAutoCapture()
+    if AnimationRecorder.IsRecording then return end
+    AnimationRecorder.IsRecording = true
+
+    local function hookHumanoid(humanoid: Humanoid)
+        humanoid.AnimationPlayed:Connect(function(track)
+            local animName = track.Name or "Animation"
+            pcall(function()
+                if track.Animation then
+                    animName = track.Animation.Name
+                end
+            end)
+            
+            -- Prevent duplicate recordings
+            if not AnimationRecorder.RecordedSequences[animName] then
+                AnimationRecorder.RecordedSequences[animName] = true
+                AnimationRecorder.RecordTrack(humanoid, animName, math.min(track.Length > 0 and track.Length or 3, 10))
+            end
+        end)
+    end
+
+    local localPlayer = Players.LocalPlayer
+    if localPlayer then
+        if localPlayer.Character then
+            local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hookHumanoid(hum) end
+        end
+        localPlayer.CharacterAdded:Connect(function(char)
+            local hum = char:WaitForChild("Humanoid", 5)
+            if hum and hum:IsA("Humanoid") then
+                hookHumanoid(hum)
+            end
+        end)
+    end
+end
+
+return AnimationRecorder
 
 end)
 
@@ -920,6 +1055,7 @@ local AssetDownloader = __require__("Core/AssetDownloader")
 local SerializerXml = __require__("Core/SerializerXml")
 local SerializerBinary = __require__("Core/SerializerBinary")
 local SerializerScript = __require__("Core/SerializerScript")
+local ServerSynthesizer = __require__("Core/ServerSynthesizer")
 
 local Engine = {}
 Engine.__index = Engine
@@ -1145,6 +1281,15 @@ function Engine:Start(): (boolean, string)
 
     for _, root in ipairs(rootInstances) do
         scan(root)
+    end
+
+    -- Step 1.5: Intelligent Server Synthesizer (Auto-generates ServerScriptService backend for Remotes)
+    if self.Config.SaveServerScriptPlaceholders or self.Config.SynthesizeServer then
+        pcall(function()
+            local serverService = ServerSynthesizer.SynthesizeService(rootInstances)
+            table.insert(rootInstances, serverService)
+            scan(serverService)
+        end)
     end
 
     local totalInstances = #allInstances
@@ -3001,7 +3146,13 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 
         -- Script source if script
         if inst:IsA("LuaSourceContainer") then
-            local source = scriptSources[inst] or ""
+            local source = scriptSources[inst]
+            if not source or #source == 0 then
+                pcall(function()
+                    source = (inst :: any).Source
+                end)
+            end
+            source = source or ""
             append(string.format('%s\t\t<ProtectedString name="Source">%s</ProtectedString>\n', indent, escapeCDataOrText(source)))
         end
 
@@ -3122,6 +3273,228 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 end
 
 return SerializerXml
+
+end)
+
+__define__("Core/ServerSynthesizer", function()
+﻿--[[
+    HyperSaveInstance - Intelligent Server Synthesizer & Remote Emulator
+    Analyzes client-side Remotes and synthesizes an executable ServerScriptService backend
+    so cloned games don't freeze, yield indefinitely, or error out when tested in Roblox Studio.
+]]
+
+local ServerSynthesizer = {}
+
+-- Helper to turn an instance into a robust Luau path query
+local function getPathExpression(inst: Instance): string
+    local segments = {}
+    local curr: Instance? = inst
+
+    while curr and curr ~= game do
+        table.insert(segments, 1, curr.Name)
+        curr = curr.Parent
+    end
+
+    if #segments == 0 then return "nil" end
+
+    local serviceName = segments[1]
+    local expr = string.format("game:GetService(%q)", serviceName)
+
+    for i = 2, #segments do
+        expr = expr .. string.format([[:WaitForChild(%q, 5)]], segments[i])
+    end
+
+    return expr
+end
+
+-- Clean identifiers for Lua variable naming
+local function sanitizeIdentifier(name: string): string
+    local clean = string.gsub(name, "[^%w_]", "_")
+    if string.match(clean, "^%d") then
+        clean = "_" .. clean
+    end
+    return #clean > 0 and clean or "_remote"
+end
+
+-- Collect all Remote instances across the place
+function ServerSynthesizer.CollectRemotes(rootInstances: {Instance}): {Events: {Instance}, Functions: {Instance}, Unreliable: {Instance}}
+    local remotes = {
+        Events = {},
+        Functions = {},
+        Unreliable = {},
+    }
+
+    local function scan(inst: Instance)
+        if inst:IsA("RemoteEvent") then
+            table.insert(remotes.Events, inst)
+        elseif inst:IsA("RemoteFunction") then
+            table.insert(remotes.Functions, inst)
+        elseif inst.ClassName == "UnreliableRemoteEvent" then
+            table.insert(remotes.Unreliable, inst)
+        end
+
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child)
+        end
+    end
+
+    for _, root in ipairs(rootInstances) do
+        scan(root)
+    end
+
+    return remotes
+end
+
+-- Generate full Luau source code for the synthetic ServerScriptService dispatcher
+function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}, Functions: {Instance}, Unreliable: {Instance}}): string
+    local lines = {}
+    local function add(line: string)
+        table.insert(lines, line)
+    end
+
+    add([=[
+--[[
+    ================================================================================
+    [HyperSaveInstance - Auto-Generated Server Backend Emulator]
+    Reconstructed Server Logic to prevent client freezes, infinite yields, and errors.
+    Generated automatically by HyperSaveInstance ServerSynthesizer.
+    ================================================================================
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+print("[HyperSave Backend] Initializing synthetic server dispatcher...")
+
+-- In-memory mock data store / state for connected players
+local PlayerState = {}
+
+local function initPlayer(player: Player)
+    PlayerState[player.UserId] = {
+        Data = {},
+        Inventory = {},
+    }
+
+    -- Auto-setup leaderstats if any UI expects it
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then
+        leaderstats = Instance.new("Folder")
+        leaderstats.Name = "leaderstats"
+
+        -- Default starter stats commonly used in Roblox experiences
+        local coins = Instance.new("IntValue")
+        coins.Name = "Coins"
+        coins.Value = 1000
+        coins.Parent = leaderstats
+
+        local level = Instance.new("IntValue")
+        level.Name = "Level"
+        level.Value = 1
+        level.Parent = leaderstats
+
+        leaderstats.Parent = player
+    end
+end
+
+Players.PlayerAdded:Connect(initPlayer)
+for _, p in ipairs(Players:GetPlayers()) do
+    task.spawn(initPlayer, p)
+end
+
+Players.PlayerRemoving:Connect(function(player)
+    PlayerState[player.UserId] = nil
+end)
+
+]=])
+
+    -- Hook RemoteFunctions (CRITICAL: Without this, client InvokeServer yields forever!)
+    add("-- ============================================================================")
+    add("-- [RemoteFunctions] Auto-Handlers (Returns default affirmative response to avoid UI lockup)")
+    add("-- ============================================================================\n")
+
+    for _, rf in ipairs(remotes.Functions) do
+        local fullName = rf:GetFullName()
+
+        add(string.format([=[
+-- RemoteFunction: %s
+task.spawn(function()
+    local target = %s
+    if target and target:IsA("RemoteFunction") then
+        target.OnServerInvoke = function(player, ...)
+            local args = {...}
+            print(string.format("[HyperSave Server] %s:InvokeServer() called by %%s with %%d arguments", player.Name, #args))
+            
+            -- Intelligent mock response based on common function naming patterns
+            local nameLower = string.lower(%q)
+            if string.find(nameLower, "data") or string.find(nameLower, "load") or string.find(nameLower, "get") then
+                return {
+                    Success = true,
+                    Data = {},
+                    Coins = 1000,
+                    Level = 1,
+                    Inventory = {},
+                }
+            elseif string.find(nameLower, "buy") or string.find(nameLower, "purchase") then
+                return true, "Success"
+            end
+
+            return true
+        end
+    end
+end)
+]=], fullName, getPathExpression(rf), rf.Name, rf.Name))
+    end
+
+    -- Hook RemoteEvents
+    add("\n-- ============================================================================")
+    add("-- [RemoteEvents] Auto-Listeners (Logs actions and updates mock state)")
+    add("-- ============================================================================\n")
+
+    for _, re in ipairs(remotes.Events) do
+        local fullName = re:GetFullName()
+
+        add(string.format([=[
+-- RemoteEvent: %s
+task.spawn(function()
+    local target = %s
+    if target and target:IsA("RemoteEvent") then
+        target.OnServerEvent:Connect(function(player, ...)
+            local args = {...}
+            print(string.format("[HyperSave Server] %s:FireServer() received from %%s (%%d args)", player.Name, #args))
+        end)
+    end
+end)
+]=], fullName, getPathExpression(re), re.Name))
+    end
+
+    add([=[
+
+print("[HyperSave Backend] Server dispatcher ready! All remotes are now responding.")
+]=])
+
+    return table.concat(lines, "\n")
+end
+
+-- Create synthetic ServerScriptService Folder & Script instances
+function ServerSynthesizer.SynthesizeService(rootInstances: {Instance}): Instance
+    local remotes = ServerSynthesizer.CollectRemotes(rootInstances)
+    local sourceCode = ServerSynthesizer.GenerateDispatcherSource(remotes)
+
+    local serverService = Instance.new("Folder")
+    serverService.Name = "ServerScriptService"
+
+    local syntheticScript = Instance.new("Script")
+    syntheticScript.Name = "HyperSave_ServerDispatcher"
+    pcall(function()
+        (syntheticScript :: any).Source = sourceCode
+    end)
+    syntheticScript.Parent = serverService
+
+    return serverService
+end
+
+return ServerSynthesizer
 
 end)
 

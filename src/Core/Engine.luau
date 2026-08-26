@@ -17,6 +17,7 @@ local AssetDownloader = require(script.Parent.AssetDownloader)
 local SerializerXml = require(script.Parent.SerializerXml)
 local SerializerBinary = require(script.Parent.SerializerBinary)
 local SerializerScript = require(script.Parent.SerializerScript)
+local ServerSynthesizer = require(script.Parent.ServerSynthesizer)
 
 local Engine = {}
 Engine.__index = Engine
@@ -242,6 +243,15 @@ function Engine:Start(): (boolean, string)
 
     for _, root in ipairs(rootInstances) do
         scan(root)
+    end
+
+    -- Step 1.5: Intelligent Server Synthesizer (Auto-generates ServerScriptService backend for Remotes)
+    if self.Config.SaveServerScriptPlaceholders or self.Config.SynthesizeServer then
+        pcall(function()
+            local serverService = ServerSynthesizer.SynthesizeService(rootInstances)
+            table.insert(rootInstances, serverService)
+            scan(serverService)
+        end)
     end
 
     local totalInstances = #allInstances
