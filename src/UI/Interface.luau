@@ -1264,7 +1264,7 @@ function Interface:BuildSettingsTab()
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
     scroll.ScrollBarImageColor3 = Theme.Border
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 600)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 720)
     scroll.Parent = parent
 
     local toggles = {
@@ -1280,7 +1280,9 @@ function Interface:BuildSettingsTab()
         {"SaveUnions", "Preservar CSG Unions & NegateOperations (Physics & ChildData)", self.Config.SaveUnions},
         {"SaveSurfaceAppearance", "Preservar Texturas PBR & SurfaceAppearances", self.Config.SaveSurfaceAppearance},
         {"DecompileScripts", "Descompilar Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
+        {"IsolateStarterPlayer", "Extrair Scripts & GUIs Ativos do Jogador para o StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
         {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Backend para Scripts de Servidor", self.Config.SaveServerScriptPlaceholders},
+        {"SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer},
         {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
         {"SaveAttributes", "Salvar Atributos Modernos de Instância", self.Config.SaveAttributes},
         {"SaveTags", "Salvar Tags de CollectionService", self.Config.SaveTags},
