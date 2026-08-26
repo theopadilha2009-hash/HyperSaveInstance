@@ -1,7 +1,7 @@
 <div align="center">
 
 # ⚡ HyperSaveInstance v2.0 (Ultimate Master Suite)
-### The Definitive, All-in-One Universal Roblox Game Cloner & Reverse-Engineering Suite
+### The Definitive, All-in-One Universal Roblox Game Cloner, Asset Ripper & Reverse-Engineering Suite
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=for-the-badge)](https://github.com/theopadilha2009-hash/HyperSaveInstance)
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge)](https://github.com/theopadilha2009-hash/HyperSaveInstance)
@@ -29,6 +29,9 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/
 | **Visual Fidelity** | 6/10 | 9/10 | 9/10 | ✅ **10/10 (Full Terrain, PBR, Lighting, CSG)** |
 | **Script Decompiler Engine** | ⚠️ Slow | ⚠️ Single-thread | ⚠️ Basic | ✅ **Multi-Worker Pool with Auto-Retry** |
 | **Raw Asset Downloader** | ❌ No | ❌ No | ❌ No | ✅ **Downloads .mp3, .png, .mesh to local folder** |
+| **In-Game Audio Player / Ripper** | ❌ No | ❌ No | ❌ No | ✅ **Soundboard preview + 1-Click ID Copy** |
+| **Lighting & Skybox Ripper** | ❌ No | ❌ No | ❌ No | ✅ **Extracts Atmosphere & Sky to .rbxmx** |
+| **GUI & HUD Ripper** | ❌ No | ❌ No | ❌ No | ✅ **Extracts all ScreenGuis / Menus to .rbxmx** |
 | **Official Roblox Studio Plugin** | ❌ No | ❌ No | ❌ No | ✅ **1-Click Import & Rebuild Toolbar Plugin** |
 | **Live Network Sniffer (RemoteSpy)** | ❌ No | ❌ No | ❌ No | ✅ **Logs RemoteEvents / Functions + Exports JSON** |
 | **3D Wavefront Exporter (.OBJ / .MTL)** | ❌ No | ❌ No | ❌ No | ✅ **Export to Blender, Unity & Unreal** |
@@ -43,28 +46,30 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/
 
 ## 🌟 Complete Feature Breakdown
 
-### 🎨 1. 10/10 Visual Fidelity & 3D Terrain
-- **Full SmoothTerrain Voxel Extraction**: Reads 3D voxel regions (`Terrain:ReadVoxels`), saving material and occupancy grids for perfect smooth terrain recreation in Roblox Studio.
-- **Atmosphere & Lighting**: Captures Atmosphere density/offset/haze, Skybox (all 6 textures), SunRays, Bloom, Blur, ColorCorrection, and DepthOfField.
-- **PBR SurfaceAppearance**: Preserves NormalMap, RoughnessMap, MetalnessMap, and ColorMap.
-- **CSG & Solid Modeling**: Preserves `UnionOperation`, `NegateOperation`, `MeshPart`, and `SpecialMesh` with deep `PhysicsData` and `ChildData` buffers.
+### 🚀 1. 1-Click Game Cloner (Dashboard)
+- Keep it dead simple! Open the menu and click **`🚀 CLONAR JOGO INTEIRO (1-CLIQUE)`** to save everything (Terrain Voxels, Models, Lighting, Scripts, UI, Attributes, Tags) to an `.rbxlx` file.
 
-### 📜 2. 10/10 Script Decompilation & RemoteSpy Backend
-- **Concurrent Multi-Worker Decompiler**: Utilizes parallel workers (`task.spawn` pool) to decompile hundreds of scripts in seconds.
-- **RemoteSpy Backend Auto-Generator**: Generates structured server script stubs with `.OnServerEvent` / `.OnServerInvoke` dispatchers for all network endpoints.
-- **Bytecode Fallback**: Extracts and Base64-encodes raw Luau bytecode when full decompiler is unavailable.
+### 🎵 2. In-Game Soundboard & Audio Ripper
+- Browse, listen to, and preview all sound effects, songs, and voice tracks with in-game Play/Stop buttons.
+- Copy any Sound ID with 1 click or export the entire soundtrack list to `.txt`.
 
-### 📦 3. Raw Asset Downloader
-- Downloads all audio tracks (`.mp3`), textures/PBR maps (`.png`), 3D meshes (`.mesh`), and animations (`.rbxanim`) into a dedicated `HyperSave_Assets_<PlaceId>/` folder on your disk.
+### 💡 3. Lighting & Atmosphere Ripper
+- Extract 4K Skyboxes, Atmosphere density, SunRays, Bloom, Blur, DepthOfField, and ColorCorrection into a standalone `.rbxmx` preset for your own games.
 
-### 📡 4. Live Network Traffic Sniffer
-- Hooks into `RemoteEvent:FireServer` and `RemoteFunction:InvokeServer` to record parameters, payloads, and timestamps while you play, exporting the protocol to JSON.
+### 📱 4. GUI & HUD Ripper
+- Extract all ScreenGuis, Inventories, Shops, and HUDs with rounded corners (`UICorner`), gradients, and UI scripts into an isolated UI Pack.
 
-### 🧊 5. 3D Wavefront Exporter (.OBJ + .MTL)
-- Exports the 3D map directly to `.obj` and `.mtl` for immediate import into **Blender**, **Cinema 4D**, **Unity**, or **Unreal Engine**.
+### 🎯 5. Isolated Target Model Selector
+- Type the name of any Model, Car, Gun, Map, or Folder (e.g. `"Car"`, `"Shop"`, `"Weapon"`) and export just that model to `.rbxm`.
 
-### 🔌 6. Official Roblox Studio Plugin (`plugin/HyperSaveImporter.server.luau`)
-- Drop the plugin into your Studio plugins folder to rebuild maps, import local assets, and restore place hierarchy with 1 click.
+### 📡 6. Live Network Traffic Sniffer (RemoteSpy)
+- Monitor and record real-time `RemoteEvent` and `RemoteFunction` packets as you play, exporting the protocol to JSON.
+
+### 🧊 7. 3D Wavefront Exporter (.OBJ + .MTL)
+- Convert the 3D map into `.obj` and `.mtl` for immediate import into **Blender**, **Cinema 4D**, **Unity**, or **Unreal Engine**.
+
+### 🔌 8. Official Roblox Studio Plugin (`plugin/HyperSaveImporter.server.luau`)
+- Drop into Studio plugins for 1-click game rebuild and local asset linking.
 
 ---
 
@@ -79,9 +84,9 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/
 ### 2. Controls
 - **Abrir / Esconder Menu**: Pressione **`RightShift`** ou toque no botão flutuante `[⚡ HYPERSAVE]`.
 - **Clonar Jogo Inteiro**: Vá na aba **`🚀 Clonar Tudo`** e clique no botão roxo principal.
-- **Salvar Modelo Isolado**: Vá na aba **`🎯 Salvar Modelo`** e digite o nome do carro/arma que deseja salvar.
-- **Gravar Rede**: Vá na aba **`📡 Rede / Remotes`** e clique em **`▶️ INICIAR GRAVAÇÃO`**.
-- **Exportar para Blender**: Vá na aba **`🧊 Exportar 3D`** e clique em **`🚀 EXPORTAR MAPA 3D (.OBJ)`**.
+- **Ouvir Músicas**: Vá na aba **`🎵 Músicas & Sons`** e clique em **`▶️ Play`**.
+- **Salvar Iluminação**: Vá na aba **`💡 Iluminação`** e clique em **`🚀 SALVAR PRESET`**.
+- **Salvar Interfaces**: Vá na aba **`📱 Interfaces (UI)`** e clique em **`🚀 SALVAR TODAS AS GUIs`**.
 
 ---
 

@@ -572,6 +572,111 @@ return AssetHandler
 
 end)
 
+__define__("Core/AudioRipper", function()
+--[[
+    HyperSaveInstance - Audio Ripper & In-Game Soundboard
+    Scans, previews, plays and extracts all music tracks and sound effects in the game.
+]]
+
+local SoundService = game:GetService("SoundService")
+local Environment = __require__("Utils/Environment")
+
+local AudioRipper = {}
+local previewSoundInstance = nil
+
+export type AudioInfo = {
+    Name: string,
+    SoundId: string,
+    CleanId: string,
+    Path: string,
+    Volume: number,
+    TimeLength: number
+}
+
+-- Collect all sound instances in the game
+function AudioRipper.ScanSounds(): {AudioInfo}
+    local sounds = {}
+    local seenIds = {}
+
+    local function scan(inst: Instance)
+        if inst:IsA("Sound") and #inst.SoundId > 0 then
+            local cleanId = string.match(inst.SoundId, "%d+")
+            if cleanId and not seenIds[cleanId] then
+                seenIds[cleanId] = true
+                table.insert(sounds, {
+                    Name = inst.Name,
+                    SoundId = inst.SoundId,
+                    CleanId = cleanId,
+                    Path = inst:GetFullName(),
+                    Volume = inst.Volume,
+                    TimeLength = inst.TimeLength
+                })
+            end
+        end
+
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child)
+        end
+    end
+
+    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "StarterGui", "Chat"}) do
+        local s, service = pcall(function() return game:GetService(sName) end)
+        if s and service then scan(service) end
+    end
+
+    return sounds
+end
+
+-- Play in-game preview
+function AudioRipper.PlayPreview(soundId: string): boolean
+    pcall(function()
+        if previewSoundInstance then
+            previewSoundInstance:Stop()
+            previewSoundInstance:Destroy()
+            previewSoundInstance = nil
+        end
+
+        local snd = Instance.new("Sound")
+        snd.SoundId = soundId
+        snd.Volume = 1
+        snd.Parent = SoundService
+        snd:Play()
+        previewSoundInstance = snd
+    end)
+    return true
+end
+
+-- Stop in-game preview
+function AudioRipper.StopPreview()
+    pcall(function()
+        if previewSoundInstance then
+            previewSoundInstance:Stop()
+            previewSoundInstance:Destroy()
+            previewSoundInstance = nil
+        end
+    end)
+end
+
+-- Export sound list to text/json
+function AudioRipper.ExportSoundList(): string
+    local list = AudioRipper.ScanSounds()
+    local placeId = game.PlaceId or 0
+    local fileName = string.format("HyperSave_Soundtrack_%d.txt", placeId)
+
+    local lines = {"=== HyperSaveInstance - Game Soundtrack & Audio List ===", ""}
+    for i, snd in ipairs(list) do
+        table.insert(lines, string.format("[%d] %s | ID: %s | URL: rbxassetid://%s", i, snd.Name, snd.CleanId, snd.CleanId))
+    end
+
+    local content = table.concat(lines, "\n")
+    Environment.WriteFile(fileName, content)
+    return fileName
+end
+
+return AudioRipper
+
+end)
+
 __define__("Core/Decompiler", function()
 --[[
     HyperSaveInstance - Advanced Multi-Worker Script Decompiler & RemoteSpy Server Reconstructor
@@ -1199,6 +1304,122 @@ function Engine:Start(): (boolean, string)
 end
 
 return Engine
+
+end)
+
+__define__("Core/GuiRipper", function()
+--[[
+    HyperSaveInstance - GUI & HUD Ripper
+    Extracts all ScreenGuis, Menus, Inventories, Health Bars, and HUDs to a standalone UI Pack.
+]]
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local Environment = __require__("Utils/Environment")
+local SerializerXml = __require__("Core/SerializerXml")
+local Decompiler = __require__("Core/Decompiler")
+
+local GuiRipper = {}
+
+function GuiRipper.ExportAllGuis(options: table?): (boolean, string)
+    local placeId = game.PlaceId or 0
+    local fileName = string.format("HyperSave_UIPack_%d.rbxmx", placeId)
+
+    local folder = Instance.new("Folder")
+    folder.Name = "Extracted_UIPack"
+
+    local allGuis = {}
+    local scriptInstances = {}
+
+    -- Scan StarterGui
+    for _, gui in ipairs(StarterGui:GetChildren()) do
+        if gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui") then
+            pcall(function()
+                local cl = gui:Clone()
+                if cl then cl.Parent = folder end
+            end)
+        end
+    end
+
+    -- Scan PlayerGui if available
+    local player = Players.LocalPlayer
+    if player then
+        local pGui = player:FindFirstChild("PlayerGui")
+        if pGui then
+            for _, gui in ipairs(pGui:GetChildren()) do
+                if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not folder:FindFirstChild(gui.Name) then
+                    pcall(function()
+                        local cl = gui:Clone()
+                        if cl then cl.Parent = folder end
+                    end)
+                end
+            end
+        end
+    end
+
+    local function scanScripts(inst: Instance)
+        if inst:IsA("LuaSourceContainer") then
+            table.insert(scriptInstances, inst)
+        end
+        for _, child in ipairs(inst:GetChildren()) do scanScripts(child) end
+    end
+    scanScripts(folder)
+
+    local scriptSources = {}
+    if #scriptInstances > 0 then
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, options or {DecompileScripts = true})
+    end
+
+    local xml = SerializerXml.Serialize({folder}, scriptSources, nil, {SaveAttributes = true, SaveTags = true})
+    local writeOk = Environment.WriteFile(fileName, xml)
+
+    if writeOk then
+        return true, fileName
+    end
+    return false, "Failed to write UI pack file."
+end
+
+return GuiRipper
+
+end)
+
+__define__("Core/LightingRipper", function()
+--[[
+    HyperSaveInstance - Lighting & Atmosphere Preset Ripper
+    Extracts realistic Skyboxes, Atmospheres, ColorCorrections, SunRays, and Post-Processing to a standalone preset.
+]]
+
+local Lighting = game:GetService("Lighting")
+local Environment = __require__("Utils/Environment")
+local SerializerXml = __require__("Core/SerializerXml")
+
+local LightingRipper = {}
+
+function LightingRipper.ExportLightingPreset(): (boolean, string)
+    local placeId = game.PlaceId or 0
+    local fileName = string.format("HyperSave_LightingPreset_%d.rbxmx", placeId)
+
+    local folder = Instance.new("Folder")
+    folder.Name = "LightingPreset"
+
+    -- Clone all post processing effects & sky into folder
+    for _, child in ipairs(Lighting:GetChildren()) do
+        pcall(function()
+            local clone = child:Clone()
+            if clone then clone.Parent = folder end
+        end)
+    end
+
+    local xml = SerializerXml.Serialize({Lighting, folder}, {}, nil, {SaveAttributes = true, SaveTags = true})
+    local writeOk = Environment.WriteFile(fileName, xml)
+
+    if writeOk then
+        return true, fileName
+    end
+    return false, "Failed to write lighting preset file."
+end
+
+return LightingRipper
 
 end)
 
@@ -3189,7 +3410,7 @@ end)
 __define__("UI/Interface", function()
 --[[
     HyperSaveInstance - Modern Glassmorphic HUD & Master In-Game Suite
-    Includes 1-Click Clone, Target Selector, Network Sniffer, Universe Tracker, 3D OBJ Exporter, Tutorial and Settings.
+    Includes 1-Click Clone, Audio Ripper, Lighting Ripper, GUI Ripper, Target Selector, Network Sniffer, Universe Tracker, 3D OBJ Exporter, Tutorial and Settings.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -3198,6 +3419,9 @@ local Players = game:GetService("Players")
 local Theme = __require__("Core/Theme")
 local Environment = __require__("Utils/Environment")
 local Defaults = __require__("Config/Defaults")
+local AudioRipper = require(script.Parent.Parent.Core.AudioRipper)
+local LightingRipper = require(script.Parent.Parent.Core.LightingRipper)
+local GuiRipper = require(script.Parent.Parent.Core.GuiRipper)
 local NetworkSniffer = require(script.Parent.Parent.Core.NetworkSniffer)
 local UniverseTracker = require(script.Parent.Parent.Core.UniverseTracker)
 local ObjExporter = require(script.Parent.Parent.Core.ObjExporter)
@@ -3267,8 +3491,8 @@ function Interface:BuildUI()
     -- Main Container
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
-    main.Size = UDim2.new(0, 640, 0, 460)
-    main.Position = UDim2.new(0.5, -320, 0.5, -230)
+    main.Size = UDim2.new(0, 660, 0, 480)
+    main.Position = UDim2.new(0.5, -330, 0.5, -240)
     main.BackgroundColor3 = Theme.Background
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -3379,12 +3603,15 @@ function Interface:BuildUI()
         screenGui:Destroy()
     end)
 
-    -- Tab Navigation Bar
-    local navBar = Instance.new("Frame")
+    -- Tab Navigation Bar (Scrollable for all master tools)
+    local navBar = Instance.new("ScrollingFrame")
     navBar.Name = "NavBar"
-    navBar.Size = UDim2.new(0, 140, 1, -48)
+    navBar.Size = UDim2.new(0, 144, 1, -48)
     navBar.Position = UDim2.new(0, 0, 0, 48)
     navBar.BackgroundColor3 = Theme.CardBg
+    navBar.ScrollBarThickness = 3
+    navBar.ScrollBarImageColor3 = Theme.Border
+    navBar.CanvasSize = UDim2.new(0, 0, 0, 380)
     navBar.BorderSizePixel = 0
     navBar.Parent = main
 
@@ -3398,8 +3625,8 @@ function Interface:BuildUI()
     -- Content Area
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -140, 1, -48)
-    contentArea.Position = UDim2.new(0, 140, 0, 48)
+    contentArea.Size = UDim2.new(1, -144, 1, -48)
+    contentArea.Position = UDim2.new(0, 144, 0, 48)
     contentArea.BackgroundTransparency = 1
     contentArea.Parent = main
     self.ContentArea = contentArea
@@ -3408,6 +3635,9 @@ function Interface:BuildUI()
     local tabs = {
         {"Dashboard", "🚀 Clonar Tudo"},
         {"Selector", "🎯 Salvar Modelo"},
+        {"AudioRipper", "🎵 Músicas & Sons"},
+        {"LightingRipper", "💡 Iluminação"},
+        {"GuiRipper", "📱 Interfaces (UI)"},
         {"Network", "📡 Rede / Remotes"},
         {"Universe", "🌌 Universo"},
         {"ObjExport", "🧊 Exportar 3D"},
@@ -3429,8 +3659,8 @@ function Interface:BuildUI()
         navBtn.TextSize = 10
         navBtn.TextColor3 = (i == 1) and Theme.TextPrimary or Theme.TextSecondary
         navBtn.BackgroundColor3 = (i == 1) and Theme.CardHover or Theme.CardBg
-        navBtn.Size = UDim2.new(1, -12, 0, 28)
-        navBtn.Position = UDim2.new(0, 6, 0, 6 + (i - 1) * 32)
+        navBtn.Size = UDim2.new(1, -12, 0, 26)
+        navBtn.Position = UDim2.new(0, 6, 0, 6 + (i - 1) * 30)
         Theme.AddCorner(navBtn, Theme.CornerSmall)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
@@ -3451,6 +3681,9 @@ function Interface:BuildUI()
     -- Build Individual Tab Pages
     self:BuildDashboardTab()
     self:BuildSelectorTab()
+    self:BuildAudioRipperTab()
+    self:BuildLightingRipperTab()
+    self:BuildGuiRipperTab()
     self:BuildNetworkTab()
     self:BuildUniverseTab()
     self:BuildObjExportTab()
@@ -3478,7 +3711,7 @@ function Interface:SwitchTab(targetTab: string)
     end
 end
 
--- 1. Dashboard Tab
+-- 1. Dashboard Tab (Clean, Prominent 1-Click Game Cloner)
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
@@ -3814,7 +4047,284 @@ function Interface:BuildSelectorTab()
     end)
 end
 
--- 3. Network Sniffer Tab
+-- 3. Audio Ripper & Soundboard Tab
+function Interface:BuildAudioRipperTab()
+    local parent = self.TabFrames["AudioRipper"]
+
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, -32, 0, 36)
+    topBar.Position = UDim2.new(0, 16, 0, 12)
+    topBar.BackgroundTransparency = 1
+    topBar.Parent = parent
+
+    local scanAudioBtn = Instance.new("TextButton")
+    scanAudioBtn.Text = "🔍 ESCANEAR SONS DO JOGO"
+    scanAudioBtn.Font = Theme.FontSemiBold
+    scanAudioBtn.TextSize = 11
+    scanAudioBtn.TextColor3 = Theme.AccentCyan
+    scanAudioBtn.BackgroundColor3 = Theme.CardBg
+    scanAudioBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    Theme.AddCorner(scanAudioBtn, Theme.CornerSmall)
+    Theme.AddStroke(scanAudioBtn, Theme.Border, 1)
+    scanAudioBtn.Parent = topBar
+
+    local exportAudioListBtn = Instance.new("TextButton")
+    exportAudioListBtn.Text = "📋 EXPORTAR LISTA DE ÁUDIOS (.txt)"
+    exportAudioListBtn.Font = Theme.FontSemiBold
+    exportAudioListBtn.TextSize = 11
+    exportAudioListBtn.TextColor3 = Theme.TextPrimary
+    exportAudioListBtn.BackgroundColor3 = Theme.CardBg
+    exportAudioListBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    exportAudioListBtn.Position = UDim2.new(0.52, 0, 0, 0)
+    Theme.AddCorner(exportAudioListBtn, Theme.CornerSmall)
+    Theme.AddStroke(exportAudioListBtn, Theme.Border, 1)
+    exportAudioListBtn.Parent = topBar
+
+    local audioScroll = Instance.new("ScrollingFrame")
+    audioScroll.Size = UDim2.new(1, -32, 1, -64)
+    audioScroll.Position = UDim2.new(0, 16, 0, 56)
+    audioScroll.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+    audioScroll.ScrollBarThickness = 4
+    audioScroll.ScrollBarImageColor3 = Theme.Border
+    Theme.AddCorner(audioScroll, Theme.CornerMedium)
+    Theme.AddStroke(audioScroll, Theme.Border, 1)
+    audioScroll.Parent = parent
+
+    local audioLayout = Instance.new("UIListLayout")
+    audioLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    audioLayout.Padding = UDim.new(0, 4)
+    audioLayout.Parent = audioScroll
+
+    scanAudioBtn.MouseButton1Click:Connect(function()
+        scanAudioBtn.Text = "⏳ Escaneando..."
+        for _, child in ipairs(audioScroll:GetChildren()) do
+            if child:IsA("Frame") then child:Destroy() end
+        end
+
+        task.spawn(function()
+            local list = AudioRipper.ScanSounds()
+            scanAudioBtn.Text = string.format("✓ %d sons encontrados", #list)
+
+            for _, snd in ipairs(list) do
+                local row = Instance.new("Frame")
+                row.Size = UDim2.new(1, -12, 0, 28)
+                row.BackgroundColor3 = Theme.CardBg
+                Theme.AddCorner(row, Theme.CornerSmall)
+                row.Parent = audioScroll
+
+                local sndLbl = Instance.new("TextLabel")
+                sndLbl.Text = string.format("🎵 %s (ID: %s)", snd.Name, snd.CleanId)
+                sndLbl.Font = Theme.FontRegular
+                sndLbl.TextSize = 10
+                sndLbl.TextColor3 = Theme.TextPrimary
+                sndLbl.TextXAlignment = Enum.TextXAlignment.Left
+                sndLbl.Size = UDim2.new(0.65, 0, 1, 0)
+                sndLbl.Position = UDim2.new(0, 8, 0, 0)
+                sndLbl.BackgroundTransparency = 1
+                sndLbl.Parent = row
+
+                local playBtn = Instance.new("TextButton")
+                playBtn.Text = "▶️ Play"
+                playBtn.Font = Theme.FontSemiBold
+                playBtn.TextSize = 10
+                playBtn.TextColor3 = Theme.AccentSuccess
+                playBtn.BackgroundColor3 = Theme.CardHover
+                playBtn.Size = UDim2.new(0, 48, 0, 20)
+                playBtn.Position = UDim2.new(1, -110, 0.5, -10)
+                Theme.AddCorner(playBtn, Theme.CornerPill)
+                playBtn.Parent = row
+
+                playBtn.MouseButton1Click:Connect(function()
+                    AudioRipper.PlayPreview(snd.SoundId)
+                end)
+
+                local copyBtn = Instance.new("TextButton")
+                copyBtn.Text = "Copiar ID"
+                copyBtn.Font = Theme.FontSemiBold
+                copyBtn.TextSize = 9
+                copyBtn.TextColor3 = Theme.TextSecondary
+                copyBtn.BackgroundColor3 = Theme.CardHover
+                copyBtn.Size = UDim2.new(0, 54, 0, 20)
+                copyBtn.Position = UDim2.new(1, -58, 0.5, -10)
+                Theme.AddCorner(copyBtn, Theme.CornerPill)
+                copyBtn.Parent = row
+
+                copyBtn.MouseButton1Click:Connect(function()
+                    Environment.SetClipboard(snd.CleanId)
+                    copyBtn.Text = "✓"
+                    task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
+                end)
+            end
+
+            audioScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 32)
+        end)
+    end)
+
+    exportAudioListBtn.MouseButton1Click:Connect(function()
+        local file = AudioRipper.ExportSoundList()
+        exportAudioListBtn.Text = "✓ Lista Exportada: " .. file
+        Environment.SetClipboard(file)
+        task.delay(2, function()
+            exportAudioListBtn.Text = "📋 EXPORTAR LISTA DE ÁUDIOS (.txt)"
+        end)
+    end)
+end
+
+-- 4. Lighting & Atmosphere Ripper Tab
+function Interface:BuildLightingRipperTab()
+    local parent = self.TabFrames["LightingRipper"]
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, -32, 1, -32)
+    card.Position = UDim2.new(0, 16, 0, 16)
+    card.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(card, Theme.CornerMedium)
+    Theme.AddStroke(card, Theme.Border, 1)
+    card.Parent = parent
+
+    local headerLbl = Instance.new("TextLabel")
+    headerLbl.Text = "💡 EXTRATOR DE ILUMINAÇÃO & ATMOSFERA"
+    headerLbl.Font = Theme.FontTitle
+    headerLbl.TextSize = 13
+    headerLbl.TextColor3 = Theme.AccentCyan
+    headerLbl.TextXAlignment = Enum.TextXAlignment.Left
+    headerLbl.Size = UDim2.new(1, -24, 0, 24)
+    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.BackgroundTransparency = 1
+    headerLbl.Parent = card
+
+    local desc = Instance.new("TextLabel")
+    desc.Text = "Extrai instantaneamente todas as propriedades visuais de iluminação, Skybox (todas as 6 texturas), Atmosphere (densidade, névoa e cores), SunRays, Bloom, Blur, ColorCorrection e DepthOfField para um arquivo separado (.rbxmx) que você pode colar em qualquer jogo seu!"
+    desc.Font = Theme.FontRegular
+    desc.TextSize = 11
+    desc.TextColor3 = Theme.TextSecondary
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.TextYAlignment = Enum.TextYAlignment.Top
+    desc.TextWrapped = true
+    desc.Size = UDim2.new(1, -24, 0, 60)
+    desc.Position = UDim2.new(0, 12, 0, 42)
+    desc.BackgroundTransparency = 1
+    desc.Parent = card
+
+    local exportLightBtn = Instance.new("TextButton")
+    exportLightBtn.Text = "🚀 SALVAR PRESET DE ILUMINAÇÃO (.rbxmx)"
+    exportLightBtn.Font = Theme.FontTitle
+    exportLightBtn.TextSize = 13
+    exportLightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    exportLightBtn.BackgroundColor3 = Theme.AccentCyan
+    exportLightBtn.Size = UDim2.new(1, -24, 0, 48)
+    exportLightBtn.Position = UDim2.new(0, 12, 0, 116)
+    Theme.AddCorner(exportLightBtn, Theme.CornerMedium)
+    Theme.AddGradient(exportLightBtn, Theme.AccentCyan, Theme.AccentPrimary, 90)
+    exportLightBtn.Parent = card
+
+    local lightStatus = Instance.new("TextLabel")
+    lightStatus.Text = "Status: Pronto para salvar iluminação"
+    lightStatus.Font = Theme.FontRegular
+    lightStatus.TextSize = 11
+    lightStatus.TextColor3 = Theme.TextMuted
+    lightStatus.TextXAlignment = Enum.TextXAlignment.Left
+    lightStatus.Size = UDim2.new(1, -24, 0, 24)
+    lightStatus.Position = UDim2.new(0, 12, 0, 176)
+    lightStatus.BackgroundTransparency = 1
+    lightStatus.Parent = card
+
+    exportLightBtn.MouseButton1Click:Connect(function()
+        lightStatus.Text = "⏳ Extraindo efeitos e skyboxes..."
+        lightStatus.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, file = LightingRipper.ExportLightingPreset()
+            if success then
+                lightStatus.Text = "✓ Iluminação salva com sucesso: " .. file
+                lightStatus.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(file)
+            else
+                lightStatus.Text = "❌ Erro: " .. tostring(file)
+                lightStatus.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+end
+
+-- 5. GUI & HUD Ripper Tab
+function Interface:BuildGuiRipperTab()
+    local parent = self.TabFrames["GuiRipper"]
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, -32, 1, -32)
+    card.Position = UDim2.new(0, 16, 0, 16)
+    card.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(card, Theme.CornerMedium)
+    Theme.AddStroke(card, Theme.Border, 1)
+    card.Parent = parent
+
+    local headerLbl = Instance.new("TextLabel")
+    headerLbl.Text = "📱 EXTRATOR DE INTERFACES (GUIs & HUDs)"
+    headerLbl.Font = Theme.FontTitle
+    headerLbl.TextSize = 13
+    headerLbl.TextColor3 = Theme.AccentSecondary
+    headerLbl.TextXAlignment = Enum.TextXAlignment.Left
+    headerLbl.Size = UDim2.new(1, -24, 0, 24)
+    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.BackgroundTransparency = 1
+    headerLbl.Parent = card
+
+    local desc = Instance.new("TextLabel")
+    desc.Text = "Extrai todas as ScreenGuis, Menus, Lojas, Inventários, Barras de Vida e HUDs com seus respectivos cantos arredondados (UICorner), gradientes (UIGradient) e scripts de interface para um pacote de UI independente (.rbxmx)!"
+    desc.Font = Theme.FontRegular
+    desc.TextSize = 11
+    desc.TextColor3 = Theme.TextSecondary
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.TextYAlignment = Enum.TextYAlignment.Top
+    desc.TextWrapped = true
+    desc.Size = UDim2.new(1, -24, 0, 60)
+    desc.Position = UDim2.new(0, 12, 0, 42)
+    desc.BackgroundTransparency = 1
+    desc.Parent = card
+
+    local exportGuiBtn = Instance.new("TextButton")
+    exportGuiBtn.Text = "🚀 SALVAR TODAS AS GUIs (.rbxmx)"
+    exportGuiBtn.Font = Theme.FontTitle
+    exportGuiBtn.TextSize = 13
+    exportGuiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    exportGuiBtn.BackgroundColor3 = Theme.AccentSecondary
+    exportGuiBtn.Size = UDim2.new(1, -24, 0, 48)
+    exportGuiBtn.Position = UDim2.new(0, 12, 0, 116)
+    Theme.AddCorner(exportGuiBtn, Theme.CornerMedium)
+    Theme.AddGradient(exportGuiBtn, Theme.AccentSecondary, Theme.AccentPrimary, 90)
+    exportGuiBtn.Parent = card
+
+    local guiStatus = Instance.new("TextLabel")
+    guiStatus.Text = "Status: Pronto para salvar GUIs"
+    guiStatus.Font = Theme.FontRegular
+    guiStatus.TextSize = 11
+    guiStatus.TextColor3 = Theme.TextMuted
+    guiStatus.TextXAlignment = Enum.TextXAlignment.Left
+    guiStatus.Size = UDim2.new(1, -24, 0, 24)
+    guiStatus.Position = UDim2.new(0, 12, 0, 176)
+    guiStatus.BackgroundTransparency = 1
+    guiStatus.Parent = card
+
+    exportGuiBtn.MouseButton1Click:Connect(function()
+        guiStatus.Text = "⏳ Extraindo e descompilando interfaces..."
+        guiStatus.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, file = GuiRipper.ExportAllGuis(self.Config)
+            if success then
+                guiStatus.Text = "✓ Pacote de GUIs salvo com sucesso: " .. file
+                guiStatus.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(file)
+            else
+                guiStatus.Text = "❌ Erro: " .. tostring(file)
+                guiStatus.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+end
+
+-- 6. Network Sniffer Tab
 function Interface:BuildNetworkTab()
     local parent = self.TabFrames["Network"]
 
@@ -3900,7 +4410,7 @@ function Interface:BuildNetworkTab()
     end)
 end
 
--- 4. Universe Tab (Multi-Place Tracker)
+-- 7. Universe Tab (Multi-Place Tracker)
 function Interface:BuildUniverseTab()
     local parent = self.TabFrames["Universe"]
 
@@ -4001,7 +4511,7 @@ function Interface:BuildUniverseTab()
     end)
 end
 
--- 5. OBJ Export Tab (Blender / Unity 3D)
+-- 8. OBJ Export Tab (Blender / Unity 3D)
 function Interface:BuildObjExportTab()
     local parent = self.TabFrames["ObjExport"]
 
@@ -4078,7 +4588,7 @@ function Interface:BuildObjExportTab()
     end)
 end
 
--- 6. Tutorial Tab (Built-in Step-by-Step Guide)
+-- 9. Tutorial Tab (Built-in Step-by-Step Guide)
 function Interface:BuildTutorialTab()
     local parent = self.TabFrames["Tutorial"]
 
@@ -4154,7 +4664,7 @@ function Interface:BuildTutorialTab()
     end)
 end
 
--- 7. Settings Tab
+-- 10. Settings Tab
 function Interface:BuildSettingsTab()
     local parent = self.TabFrames["Settings"]
 
@@ -4232,7 +4742,7 @@ function Interface:BuildSettingsTab()
     end
 end
 
--- 8. Console Tab
+-- 11. Console Tab
 function Interface:BuildConsoleTab()
     local parent = self.TabFrames["Console"]
 
@@ -4275,7 +4785,7 @@ function Interface:BuildConsoleTab()
     end)
 end
 
--- 9. About Tab
+-- 12. About Tab
 function Interface:BuildAboutTab()
     local parent = self.TabFrames["About"]
 
@@ -4289,7 +4799,7 @@ function Interface:BuildAboutTab()
 
     local aboutText = Instance.new("TextLabel")
     aboutText.Text = string.format([=[
-⚡ HyperSaveInstance v2.0 (Ultimate Master Edition)
+⚡ HyperSaveInstance v2.0 (Ultimate Master Suite)
 Universal Roblox Game Cloner & Reverse-Engineering Suite
 
 • Plataforma: %s
@@ -4297,6 +4807,9 @@ Universal Roblox Game Cloner & Reverse-Engineering Suite
 • Sistema de Arquivos: %s
 • Descompilador: %s
 • Anti-AFK: Ativo
+• Soundboard & Audio Ripper: Ativo
+• Lighting Preset Ripper: Ativo
+• GUI & HUD Ripper: Ativo
 • Network Sniffer & RemoteSpy: Ativo
 • 3D Wavefront Exporter: Ativo (.OBJ / .MTL)
 • Multi-Place Universe: Ativo
@@ -5168,7 +5681,7 @@ end)
 
 -- Entry Point
 --[[
-    HyperSaveInstance v2.0 (Master Suite Edition) - Universal Roblox Game Cloner & Reverse-Engineering Suite
+    HyperSaveInstance v2.0 (Ultimate Master Suite) - Universal Roblox Game Cloner & Reverse-Engineering Suite
     Author: theopadilha2009-hash
     Combines USSI, UltraSmartSaveInstance, rbx-dom, rbx-instance-serializer & Studio Plugin.
 ]]
@@ -5183,6 +5696,9 @@ local NetworkSniffer = __require__("Core/NetworkSniffer")
 local UniverseTracker = __require__("Core/UniverseTracker")
 local ObjExporter = __require__("Core/ObjExporter")
 local Optimizer = __require__("Core/Optimizer")
+local AudioRipper = __require__("Core/AudioRipper")
+local LightingRipper = __require__("Core/LightingRipper")
+local GuiRipper = __require__("Core/GuiRipper")
 
 local HyperSaveInstance = {
     Version = "2.0.0",
@@ -5194,6 +5710,9 @@ local HyperSaveInstance = {
     UniverseTracker = UniverseTracker,
     ObjExporter = ObjExporter,
     Optimizer = Optimizer,
+    AudioRipper = AudioRipper,
+    LightingRipper = LightingRipper,
+    GuiRipper = GuiRipper,
 }
 
 -- Open interactive in-game HUD
@@ -5223,6 +5742,19 @@ end
 -- Discover all Universe sub-places
 function HyperSaveInstance.GetUniverse(): {any}
     return UniverseTracker.GetUniversePlaces()
+end
+
+-- Rippers
+function HyperSaveInstance.RipAudio(): string
+    return AudioRipper.ExportSoundList()
+end
+
+function HyperSaveInstance.RipLighting(): (boolean, string)
+    return LightingRipper.ExportLightingPreset()
+end
+
+function HyperSaveInstance.RipGuis(options: table?): (boolean, string)
+    return GuiRipper.ExportAllGuis(options)
 end
 
 -- Preset shorthand helpers

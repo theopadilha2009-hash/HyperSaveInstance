@@ -1,5 +1,5 @@
 --[[
-    HyperSaveInstance v2.0 (Master Suite Edition) - Universal Roblox Game Cloner & Reverse-Engineering Suite
+    HyperSaveInstance v2.0 (Ultimate Master Suite) - Universal Roblox Game Cloner & Reverse-Engineering Suite
     Author: theopadilha2009-hash
     Combines USSI, UltraSmartSaveInstance, rbx-dom, rbx-instance-serializer & Studio Plugin.
 ]]
@@ -14,6 +14,9 @@ local NetworkSniffer = require(script.Core.NetworkSniffer)
 local UniverseTracker = require(script.Core.UniverseTracker)
 local ObjExporter = require(script.Core.ObjExporter)
 local Optimizer = require(script.Core.Optimizer)
+local AudioRipper = require(script.Core.AudioRipper)
+local LightingRipper = require(script.Core.LightingRipper)
+local GuiRipper = require(script.Core.GuiRipper)
 
 local HyperSaveInstance = {
     Version = "2.0.0",
@@ -25,6 +28,9 @@ local HyperSaveInstance = {
     UniverseTracker = UniverseTracker,
     ObjExporter = ObjExporter,
     Optimizer = Optimizer,
+    AudioRipper = AudioRipper,
+    LightingRipper = LightingRipper,
+    GuiRipper = GuiRipper,
 }
 
 -- Open interactive in-game HUD
@@ -54,6 +60,19 @@ end
 -- Discover all Universe sub-places
 function HyperSaveInstance.GetUniverse(): {any}
     return UniverseTracker.GetUniversePlaces()
+end
+
+-- Rippers
+function HyperSaveInstance.RipAudio(): string
+    return AudioRipper.ExportSoundList()
+end
+
+function HyperSaveInstance.RipLighting(): (boolean, string)
+    return LightingRipper.ExportLightingPreset()
+end
+
+function HyperSaveInstance.RipGuis(options: table?): (boolean, string)
+    return GuiRipper.ExportAllGuis(options)
 end
 
 -- Preset shorthand helpers
