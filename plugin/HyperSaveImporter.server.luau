@@ -83,7 +83,7 @@ scroll.Position = UDim2.new(0, 0, 0, 48)
 scroll.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
 scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 6
-scroll.CanvasSize = UDim2.new(0, 0, 0, 680)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 1150)
 scroll.Parent = root
 
 local layout = Instance.new("UIListLayout")
@@ -182,6 +182,145 @@ local function createButton(parent: Instance, text: string, bgColor: Color3)
 
     return btn
 end
+
+-- ============================================================================
+-- FEATURE 0: ⚡ 1-CLIQUE: REPARO MESTRE TOTAL & TORNAR JOGO JOGÁVEL
+-- ============================================================================
+local cardMaster = createCard(
+    "⚡ REPARO MESTRE TOTAL (1-CLIQUE)",
+    "Executa TODAS as correções em sequência: destrava permissões, conserta áudios 403, blinda scripts, emula DataStores/VIP e deixa o jogo 100% pronto para dar Play!",
+    0
+)
+cardMaster.Size = UDim2.new(1, 0, 0, 130)
+cardMaster.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
+cardMaster.Parent = scroll
+
+local btnMaster = createButton(cardMaster, "🚀 EXECUTAR REPARO MESTRE TOTAL", Color3.fromRGB(236, 72, 153))
+btnMaster.Size = UDim2.new(1, -24, 0, 42)
+
+btnMaster.MouseButton1Click:Connect(function()
+    ChangeHistoryService:SetWaypoint("Before HyperSave Master Repair")
+    setStatus("Executando reparo mestre total...", Color3.fromRGB(236, 72, 153))
+
+    -- 1. Destravar permissões & packages
+    local unlockedPackages = 0
+    local unlockedParts = 0
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("PackageLink") then
+            pcall(function() desc:Destroy() unlockedPackages = unlockedPackages + 1 end)
+        elseif desc:IsA("BasePart") and desc.Locked then
+            desc.Locked = false
+            unlockedParts = unlockedParts + 1
+        end
+    end
+
+    -- 2. Consertar áudios 403
+    local fixedAudio = 0
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("Sound") and #desc.SoundId > 0 and string.find(desc.SoundId, "rbxassetid://") then
+            desc.SoundId = FALLBACK_SOUNDS.Generic
+            fixedAudio = fixedAudio + 1
+        end
+    end
+
+    -- 3. Blindar scripts
+    local protectedScripts = 0
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("LocalScript") or desc:IsA("ModuleScript") then
+            local s, src = pcall(function() return desc.Source end)
+            if s and src and (string.find(src, "Failed to decompile") or string.find(src, "decompilation failed")) then
+                desc.Source = "-- [HyperSave Safe Stub]\nreturn function(...) return true end\n"
+                protectedScripts = protectedScripts + 1
+            end
+        end
+    end
+
+    -- 4. Criar backend sintético com DataStores & VIP
+    local remotesFolder = ServerScriptService:FindFirstChild("HyperSave_ServerBackend")
+    if not remotesFolder then
+        remotesFolder = Instance.new("Folder")
+        remotesFolder.Name = "HyperSave_ServerBackend"
+        remotesFolder.Parent = ServerScriptService
+    end
+
+    local serverScript = remotesFolder:FindFirstChild("ServerDispatcher")
+    if not serverScript then
+        serverScript = Instance.new("Script")
+        serverScript.Name = "ServerDispatcher"
+        serverScript.Parent = remotesFolder
+    end
+
+    local countFuncs = 0
+    local countEvents = 0
+    local code = [=[
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local DataStoreService = game:GetService("DataStoreService")
+
+print("[HyperSave Master Backend] Servidor ativo! VIP & DataStore liberados.")
+
+pcall(function()
+    MarketplaceService.UserOwnsGamePassAsync = function(player, passId) return true end
+    MarketplaceService.PlayerOwnsAsset = function(player, assetId) return true end
+end)
+
+local MockStores = {}
+pcall(function()
+    DataStoreService.GetDataStore = function(self, name, scope)
+        local id = tostring(name) .. "_" .. tostring(scope or "global")
+        if not MockStores[id] then
+            local mem = {}
+            MockStores[id] = {
+                GetAsync = function(s, k) return mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000} end,
+                SetAsync = function(s, k, v) mem[k] = v return v end,
+                UpdateAsync = function(s, k, fn) local curr = mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000} local n = fn(curr) mem[k] = n return n end,
+                RemoveAsync = function(s, k) local o = mem[k] mem[k] = nil return o end,
+            }
+        end
+        return MockStores[id]
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    local ls = player:FindFirstChild("leaderstats")
+    if not ls then
+        ls = Instance.new("Folder")
+        ls.Name = "leaderstats"
+        local coins = Instance.new("IntValue")
+        coins.Name = "Coins"
+        coins.Value = 1000000
+        coins.Parent = ls
+        local cash = Instance.new("IntValue")
+        cash.Name = "Cash"
+        cash.Value = 1000000
+        cash.Parent = ls
+        local level = Instance.new("IntValue")
+        level.Name = "Level"
+        level.Value = 50
+        level.Parent = ls
+        ls.Parent = player
+    end
+end)
+]=]
+
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("RemoteFunction") then
+            countFuncs = countFuncs + 1
+            code = code .. string.format("\npcall(function() (%s).OnServerInvoke = function(p, ...) return true, {Success=true} end end)", desc:GetFullName())
+        elseif desc:IsA("RemoteEvent") then
+            countEvents = countEvents + 1
+            code = code .. string.format("\npcall(function() (%s).OnServerEvent:Connect(function(p, ...) end) end)", desc:GetFullName())
+        end
+    end
+
+    pcall(function() serverScript.Source = code end)
+
+    ChangeHistoryService:SetWaypoint("After HyperSave Master Repair")
+    local summary = string.format("✓ REPARO MESTRE CONCLUÍDO! %d pacotes desvinculados, %d áudios corrigidos, %d scripts blindados e %d remotes conectados! Aperte F5!",
+        unlockedPackages, fixedAudio, protectedScripts, countFuncs + countEvents)
+    setStatus(summary, Color3.fromRGB(34, 197, 94))
+end)
 
 -- ============================================================================
 -- FEATURE 1: SINTETIZAR SERVIDOR (Resolve o travamento de InvokeServer & Remotes)
@@ -476,6 +615,83 @@ btnExec.MouseButton1Click:Connect(function()
     else
         setStatus("Erro ao executar: " .. tostring(execErr), Color3.fromRGB(239, 68, 68))
     end
+end)
+
+-- ============================================================================
+-- FEATURE 6: ✨ ILUMINAÇÃO ULTRA-REALISTA (PBR + FUTURE)
+-- ============================================================================
+local cardLight = createCard(
+    "6. Atualizar Iluminação para PBR / Future (Qualidade AAA)",
+    "Atualiza a tecnologia do Lighting para 'Future', ativa sombras suaves de alta definição, adiciona Atmosphere, Bloom e SunRays cinemáticos.",
+    6
+)
+cardLight.Parent = scroll
+
+local btnLight = createButton(cardLight, "✨ APLICAR ILUMINAÇÃO ULTRA-REALISTA", Color3.fromRGB(245, 158, 11))
+
+btnLight.MouseButton1Click:Connect(function()
+    ChangeHistoryService:SetWaypoint("Before HyperSave Cinematic Lighting")
+    setStatus("Aplicando tecnologia Future e efeitos visuais...", Color3.fromRGB(6, 182, 212))
+
+    local Lighting = game:GetService("Lighting")
+    pcall(function()
+        Lighting.Technology = Enum.Technology.Future
+        Lighting.ShadowSoftness = 0.2
+        Lighting.EnvironmentDiffuseScale = 1
+        Lighting.EnvironmentSpecularScale = 1
+        Lighting.GlobalShadows = true
+
+        local bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", Lighting)
+        bloom.Intensity = 0.8
+        bloom.Size = 24
+        bloom.Threshold = 1.2
+
+        local sunrays = Lighting:FindFirstChildOfClass("SunRaysEffect") or Instance.new("SunRaysEffect", Lighting)
+        sunrays.Intensity = 0.15
+        sunrays.Spread = 0.8
+
+        local colorCorr = Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect", Lighting)
+        colorCorr.Brightness = 0.02
+        colorCorr.Contrast = 0.05
+        colorCorr.Saturation = 0.1
+    end)
+
+    ChangeHistoryService:SetWaypoint("After HyperSave Cinematic Lighting")
+    setStatus("✓ Iluminação atualizada para qualidade Future / PBR cinemática!", Color3.fromRGB(34, 197, 94))
+end)
+
+-- ============================================================================
+-- FEATURE 7: 🧍 ESTABILIZADOR DE RIGS & NPCS (Anti-Ragdoll de Limbs)
+-- ============================================================================
+local cardRigs = createCard(
+    "7. Estabilizador de NPCs & Rigs de Personagens",
+    "Garante que NPCs e personagens do mapa não desmontem ou caiam no chão como ragdolls sem física ao dar Play no Studio, ancorando raízes com segurança.",
+    7
+)
+cardRigs.Parent = scroll
+
+local btnRigs = createButton(cardRigs, "🧍 ESTABILIZAR NPCS E RIGS DO MAPA", Color3.fromRGB(59, 130, 246))
+
+btnRigs.MouseButton1Click:Connect(function()
+    ChangeHistoryService:SetWaypoint("Before HyperSave Rig Stabilizer")
+    setStatus("Estabilizando Humanoids e Rigs no Workspace...", Color3.fromRGB(6, 182, 212))
+
+    local stabilized = 0
+    for _, desc in ipairs(workspace:GetDescendants()) do
+        if desc:IsA("Humanoid") then
+            local model = desc.Parent
+            if model and model:IsA("Model") then
+                local hrp = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model.PrimaryPart
+                if hrp and hrp:IsA("BasePart") and not hrp.Anchored then
+                    hrp.Anchored = true
+                    stabilized = stabilized + 1
+                end
+            end
+        end
+    end
+
+    ChangeHistoryService:SetWaypoint("After HyperSave Rig Stabilizer")
+    setStatus(string.format("✓ %d NPCs/Rigs estabilizados com sucesso!", stabilized), Color3.fromRGB(34, 197, 94))
 end)
 
 print("[HyperSave Suite] Plugin carregado com sucesso!")

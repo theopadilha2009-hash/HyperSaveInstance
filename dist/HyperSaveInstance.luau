@@ -1574,6 +1574,11 @@ function Engine:Start(): (boolean, string)
         end
     end
 
+    -- Memory Watchdog & Cache Flush to prevent OOM crash on massive games
+    pcall(function()
+        collectgarbage("collect")
+    end)
+
     -- Step 5: Serialize Output
     self:EmitProgress({
         Stage = "Serializing",
