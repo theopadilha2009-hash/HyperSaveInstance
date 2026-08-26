@@ -1,4 +1,4 @@
-﻿--[[
+--[[
     HyperSaveInstance - Intelligent Server Synthesizer & Remote Emulator
     Analyzes client-side Remotes and synthesizes an executable ServerScriptService backend
     so cloned games don't freeze, yield indefinitely, or error out when tested in Roblox Studio.
@@ -85,10 +85,55 @@ function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local DataStoreService = game:GetService("DataStoreService")
 
-print("[HyperSave Backend] Initializing synthetic server dispatcher...")
+print("[HyperSave Backend] Initializing synthetic server dispatcher with full gameplay emulation...")
 
--- In-memory mock data store / state for connected players
+-- 1. Mock MarketplaceService to unlock ALL GamePasses & VIP areas in Studio testing
+pcall(function()
+    MarketplaceService.UserOwnsGamePassAsync = function(player, passId)
+        print(string.format("[HyperSave VIP Emulator] GamePass #%s granted to %s (VIP Unlocked)", tostring(passId), tostring(player.Name)))
+        return true
+    end
+    MarketplaceService.PlayerOwnsAsset = function(player, assetId)
+        return true
+    end
+end)
+
+-- 2. Mock DataStoreService (In-memory storage so saves don't throw permission errors in Studio)
+local MockDataStores = {}
+pcall(function()
+    DataStoreService.GetDataStore = function(self, name, scope)
+        local dsName = tostring(name) .. "_" .. tostring(scope or "global")
+        if not MockDataStores[dsName] then
+            local memoryStore = {}
+            MockDataStores[dsName] = {
+                GetAsync = function(s, key)
+                    return memoryStore[key] or {Coins = 1000000, Level = 10, Gems = 50000}
+                end,
+                SetAsync = function(s, key, value)
+                    memoryStore[key] = value
+                    return value
+                end,
+                UpdateAsync = function(s, key, transformFn)
+                    local current = memoryStore[key] or {Coins = 1000000, Level = 10, Gems = 50000}
+                    local new = transformFn(current)
+                    memoryStore[key] = new
+                    return new
+                end,
+                RemoveAsync = function(s, key)
+                    local old = memoryStore[key]
+                    memoryStore[key] = nil
+                    return old
+                end,
+            }
+        end
+        return MockDataStores[dsName]
+    end
+end)
+
+-- 3. In-memory mock data store / state for connected players
 local PlayerState = {}
 
 local function initPlayer(player: Player)
@@ -97,21 +142,25 @@ local function initPlayer(player: Player)
         Inventory = {},
     }
 
-    -- Auto-setup leaderstats if any UI expects it
+    -- Auto-setup generous leaderstats if any UI expects it
     local leaderstats = player:FindFirstChild("leaderstats")
     if not leaderstats then
         leaderstats = Instance.new("Folder")
         leaderstats.Name = "leaderstats"
 
-        -- Default starter stats commonly used in Roblox experiences
         local coins = Instance.new("IntValue")
         coins.Name = "Coins"
-        coins.Value = 1000
+        coins.Value = 1000000
         coins.Parent = leaderstats
+
+        local cash = Instance.new("IntValue")
+        cash.Name = "Cash"
+        cash.Value = 1000000
+        cash.Parent = leaderstats
 
         local level = Instance.new("IntValue")
         level.Name = "Level"
-        level.Value = 1
+        level.Value = 50
         level.Parent = leaderstats
 
         leaderstats.Parent = player

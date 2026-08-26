@@ -150,6 +150,8 @@ local Defaults = {
     AutoExploreStreaming = false,          -- Full map grid teleport sweep for StreamingEnabled
     StreamingPreloadRadius = 1024,         -- Preload simulation radius
     IsolateStarterPlayer = true,           -- Copy PlayerScripts/PlayerGui to StarterPlayer/StarterGui
+    GenerateSafeSpawn = true,              -- Create SpawnLocation at player position to prevent falling into void
+    EmulatePlayableGame = true,            -- Enable DataStore & VIP gamepass emulation for instant Studio playability
 
     -- Performance & Throttling
     ChunkSize = 250,                       -- Instances processed per frame/tick to prevent lag/freeze
@@ -856,6 +858,35 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
 ]=], scriptInstance.ClassName, path, status, execName, dateStr)
 end
 
+-- Intelligent script beautifier & variable name recoverer
+function Decompiler.Beautify(code: string): string
+    if not code or #code == 0 then return "" end
+
+    local commonServices = {
+        "Players", "ReplicatedStorage", "ReplicatedFirst", "RunService", "TweenService",
+        "UserInputService", "HttpService", "SoundService", "Lighting", "Debris",
+        "MarketplaceService", "TeleportService", "StarterGui", "ContextActionService"
+    }
+
+    local replacements = {}
+    for _, service in ipairs(commonServices) do
+        -- Match patterns: local v1 = game:GetService("Players")
+        for varName in string.gmatch(code, "local%s+([%w_]+)%s*=%s*game:GetService%([\"']" .. service .. "[\"']%)") do
+            if varName ~= service and string.match(varName, "^[vu_]%d+$") then
+                replacements[varName] = service
+            end
+        end
+    end
+
+    local beautified = code
+    for oldVar, newVar in pairs(replacements) do
+        beautified = string.gsub(beautified, "([%s%(%[{,;=])" .. oldVar .. "([%s%)%]}:;%.])", "%1" .. newVar .. "%2")
+        beautified = string.gsub(beautified, "local%s+" .. oldVar .. "%s*=", "local " .. newVar .. " =")
+    end
+
+    return beautified
+end
+
 -- Generate Intelligent Server Backend Dispatcher (RemoteSpy Auto-Generator)
 local function generateServerDispatcher(scriptInstance: LuaSourceContainer): string
     local parent = scriptInstance.Parent
@@ -1004,7 +1035,8 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
             end
 
             if finished and result then
-                return generateHeader(scriptInstance, "Decompiled Successfully") .. result
+                local beautified = Decompiler.Beautify(result)
+                return generateHeader(scriptInstance, "Decompiled Successfully") .. beautified
             end
         end
     end
@@ -1396,6 +1428,31 @@ function Engine:Start(): (boolean, string)
                         end
                     end
                 end
+            end
+        end)
+    end
+
+    -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio
+    if self.Config.GenerateSafeSpawn then
+        pcall(function()
+            local Players = game:GetService("Players")
+            local localPlayer = Players.LocalPlayer
+            local char = localPlayer and localPlayer.Character
+            local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head") or char.PrimaryPart)
+            if hrp and workspace and not workspace:FindFirstChild("HyperSave_SafeSpawn") then
+                local spawnPos = hrp.CFrame - Vector3.new(0, 3, 0)
+                local safeSpawn = Instance.new("SpawnLocation")
+                safeSpawn.Name = "HyperSave_SafeSpawn"
+                safeSpawn.Size = Vector3.new(12, 1.2, 12)
+                safeSpawn.CFrame = spawnPos
+                safeSpawn.Anchored = true
+                safeSpawn.CanCollide = true
+                safeSpawn.Transparency = 0.4
+                safeSpawn.Material = Enum.Material.Neon
+                safeSpawn.Color = Color3.fromRGB(0, 200, 255)
+                safeSpawn.Neutral = true
+                safeSpawn.Duration = 0
+                safeSpawn.Parent = workspace
             end
         end)
     end
@@ -3441,7 +3498,7 @@ return SerializerXml
 end)
 
 __define__("Core/ServerSynthesizer", function()
-﻿--[[
+--[[
     HyperSaveInstance - Intelligent Server Synthesizer & Remote Emulator
     Analyzes client-side Remotes and synthesizes an executable ServerScriptService backend
     so cloned games don't freeze, yield indefinitely, or error out when tested in Roblox Studio.
@@ -3528,10 +3585,55 @@ function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local DataStoreService = game:GetService("DataStoreService")
 
-print("[HyperSave Backend] Initializing synthetic server dispatcher...")
+print("[HyperSave Backend] Initializing synthetic server dispatcher with full gameplay emulation...")
 
--- In-memory mock data store / state for connected players
+-- 1. Mock MarketplaceService to unlock ALL GamePasses & VIP areas in Studio testing
+pcall(function()
+    MarketplaceService.UserOwnsGamePassAsync = function(player, passId)
+        print(string.format("[HyperSave VIP Emulator] GamePass #%s granted to %s (VIP Unlocked)", tostring(passId), tostring(player.Name)))
+        return true
+    end
+    MarketplaceService.PlayerOwnsAsset = function(player, assetId)
+        return true
+    end
+end)
+
+-- 2. Mock DataStoreService (In-memory storage so saves don't throw permission errors in Studio)
+local MockDataStores = {}
+pcall(function()
+    DataStoreService.GetDataStore = function(self, name, scope)
+        local dsName = tostring(name) .. "_" .. tostring(scope or "global")
+        if not MockDataStores[dsName] then
+            local memoryStore = {}
+            MockDataStores[dsName] = {
+                GetAsync = function(s, key)
+                    return memoryStore[key] or {Coins = 1000000, Level = 10, Gems = 50000}
+                end,
+                SetAsync = function(s, key, value)
+                    memoryStore[key] = value
+                    return value
+                end,
+                UpdateAsync = function(s, key, transformFn)
+                    local current = memoryStore[key] or {Coins = 1000000, Level = 10, Gems = 50000}
+                    local new = transformFn(current)
+                    memoryStore[key] = new
+                    return new
+                end,
+                RemoveAsync = function(s, key)
+                    local old = memoryStore[key]
+                    memoryStore[key] = nil
+                    return old
+                end,
+            }
+        end
+        return MockDataStores[dsName]
+    end
+end)
+
+-- 3. In-memory mock data store / state for connected players
 local PlayerState = {}
 
 local function initPlayer(player: Player)
@@ -3540,21 +3642,25 @@ local function initPlayer(player: Player)
         Inventory = {},
     }
 
-    -- Auto-setup leaderstats if any UI expects it
+    -- Auto-setup generous leaderstats if any UI expects it
     local leaderstats = player:FindFirstChild("leaderstats")
     if not leaderstats then
         leaderstats = Instance.new("Folder")
         leaderstats.Name = "leaderstats"
 
-        -- Default starter stats commonly used in Roblox experiences
         local coins = Instance.new("IntValue")
         coins.Name = "Coins"
-        coins.Value = 1000
+        coins.Value = 1000000
         coins.Parent = leaderstats
+
+        local cash = Instance.new("IntValue")
+        cash.Name = "Cash"
+        cash.Value = 1000000
+        cash.Parent = leaderstats
 
         local level = Instance.new("IntValue")
         level.Name = "Level"
-        level.Value = 1
+        level.Value = 50
         level.Parent = leaderstats
 
         leaderstats.Parent = player

@@ -38,6 +38,35 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
 ]=], scriptInstance.ClassName, path, status, execName, dateStr)
 end
 
+-- Intelligent script beautifier & variable name recoverer
+function Decompiler.Beautify(code: string): string
+    if not code or #code == 0 then return "" end
+
+    local commonServices = {
+        "Players", "ReplicatedStorage", "ReplicatedFirst", "RunService", "TweenService",
+        "UserInputService", "HttpService", "SoundService", "Lighting", "Debris",
+        "MarketplaceService", "TeleportService", "StarterGui", "ContextActionService"
+    }
+
+    local replacements = {}
+    for _, service in ipairs(commonServices) do
+        -- Match patterns: local v1 = game:GetService("Players")
+        for varName in string.gmatch(code, "local%s+([%w_]+)%s*=%s*game:GetService%([\"']" .. service .. "[\"']%)") do
+            if varName ~= service and string.match(varName, "^[vu_]%d+$") then
+                replacements[varName] = service
+            end
+        end
+    end
+
+    local beautified = code
+    for oldVar, newVar in pairs(replacements) do
+        beautified = string.gsub(beautified, "([%s%(%[{,;=])" .. oldVar .. "([%s%)%]}:;%.])", "%1" .. newVar .. "%2")
+        beautified = string.gsub(beautified, "local%s+" .. oldVar .. "%s*=", "local " .. newVar .. " =")
+    end
+
+    return beautified
+end
+
 -- Generate Intelligent Server Backend Dispatcher (RemoteSpy Auto-Generator)
 local function generateServerDispatcher(scriptInstance: LuaSourceContainer): string
     local parent = scriptInstance.Parent
@@ -186,7 +215,8 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
             end
 
             if finished and result then
-                return generateHeader(scriptInstance, "Decompiled Successfully") .. result
+                local beautified = Decompiler.Beautify(result)
+                return generateHeader(scriptInstance, "Decompiled Successfully") .. beautified
             end
         end
     end

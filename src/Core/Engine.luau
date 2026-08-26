@@ -323,6 +323,31 @@ function Engine:Start(): (boolean, string)
         end)
     end
 
+    -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio
+    if self.Config.GenerateSafeSpawn then
+        pcall(function()
+            local Players = game:GetService("Players")
+            local localPlayer = Players.LocalPlayer
+            local char = localPlayer and localPlayer.Character
+            local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head") or char.PrimaryPart)
+            if hrp and workspace and not workspace:FindFirstChild("HyperSave_SafeSpawn") then
+                local spawnPos = hrp.CFrame - Vector3.new(0, 3, 0)
+                local safeSpawn = Instance.new("SpawnLocation")
+                safeSpawn.Name = "HyperSave_SafeSpawn"
+                safeSpawn.Size = Vector3.new(12, 1.2, 12)
+                safeSpawn.CFrame = spawnPos
+                safeSpawn.Anchored = true
+                safeSpawn.CanCollide = true
+                safeSpawn.Transparency = 0.4
+                safeSpawn.Material = Enum.Material.Neon
+                safeSpawn.Color = Color3.fromRGB(0, 200, 255)
+                safeSpawn.Neutral = true
+                safeSpawn.Duration = 0
+                safeSpawn.Parent = workspace
+            end
+        end)
+    end
+
     -- Scan hierarchy & scripts
     self:EmitProgress({
         Stage = "Scanning",

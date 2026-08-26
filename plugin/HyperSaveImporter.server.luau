@@ -213,15 +213,46 @@ btnServer.MouseButton1Click:Connect(function()
 --[[
     [HyperSaveInstance - Backend de Servidor Sintético]
     Garante que todas as RemoteFunctions retornem sucesso imediatamente,
-    evitando que os scripts locais do cliente congelem em 'InvokeServer()'.
+    emula DataStores em memória e desbloqueia GamePasses/VIP para o jogo rodar perfeitamente no Studio.
 ]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local DataStoreService = game:GetService("DataStoreService")
 
-print("[HyperSave Server] Inicializando emulador de servidor...")
+print("[HyperSave Server] Inicializando emulador de servidor com DataStore & VIP grátis...")
 
--- Configurar Leaderstats inicial para o jogador
+-- Desbloquear GamePasses e Áreas VIP no Studio
+pcall(function()
+    MarketplaceService.UserOwnsGamePassAsync = function(player, passId)
+        print(string.format("[HyperSave VIP] Acesso VIP concedido para GamePass #%s", tostring(passId)))
+        return true
+    end
+    MarketplaceService.PlayerOwnsAsset = function(player, assetId)
+        return true
+    end
+end)
+
+-- Emulador de DataStore em Memória
+local MockStores = {}
+pcall(function()
+    DataStoreService.GetDataStore = function(self, name, scope)
+        local id = tostring(name) .. "_" .. tostring(scope or "global")
+        if not MockStores[id] then
+            local mem = {}
+            MockStores[id] = {
+                GetAsync = function(s, k) return mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000} end,
+                SetAsync = function(s, k, v) mem[k] = v return v end,
+                UpdateAsync = function(s, k, fn) local curr = mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000} local n = fn(curr) mem[k] = n return n end,
+                RemoveAsync = function(s, k) local o = mem[k] mem[k] = nil return o end,
+            }
+        end
+        return MockStores[id]
+    end
+end)
+
+-- Configurar Leaderstats inicial com saldo generoso para testes
 Players.PlayerAdded:Connect(function(player)
     local ls = player:FindFirstChild("leaderstats")
     if not ls then
@@ -230,12 +261,17 @@ Players.PlayerAdded:Connect(function(player)
         
         local coins = Instance.new("IntValue")
         coins.Name = "Coins"
-        coins.Value = 1000
+        coins.Value = 1000000
         coins.Parent = ls
         
+        local cash = Instance.new("IntValue")
+        cash.Name = "Cash"
+        cash.Value = 1000000
+        cash.Parent = ls
+
         local level = Instance.new("IntValue")
         level.Name = "Level"
-        level.Value = 1
+        level.Value = 50
         level.Parent = ls
         
         ls.Parent = player

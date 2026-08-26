@@ -55,6 +55,8 @@ local Defaults = {
     AutoExploreStreaming = false,          -- Full map grid teleport sweep for StreamingEnabled
     StreamingPreloadRadius = 1024,         -- Preload simulation radius
     IsolateStarterPlayer = true,           -- Copy PlayerScripts/PlayerGui to StarterPlayer/StarterGui
+    GenerateSafeSpawn = true,              -- Create SpawnLocation at player position to prevent falling into void
+    EmulatePlayableGame = true,            -- Enable DataStore & VIP gamepass emulation for instant Studio playability
 
     -- Performance & Throttling
     ChunkSize = 250,                       -- Instances processed per frame/tick to prevent lag/freeze
