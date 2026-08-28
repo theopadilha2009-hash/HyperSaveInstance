@@ -32,7 +32,8 @@ local function writeChunk(stream: any, chunkName: string, data: string)
     end
 end
 
-function SerializerBinary.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table): string
+function SerializerBinary.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+    local opts = options or {}
     local stream = Stream.new()
 
     -- Write Binary Header

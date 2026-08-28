@@ -38,8 +38,8 @@ function RaycastSelector:InitVisuals()
         hl.OutlineTransparency = 0.1
         hl.Enabled = false
         
-        -- Store in CoreGui or protected container
-        local parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
+        -- Store in gethui, CoreGui or workspace
+        local parent = (gethui and gethui()) or game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
         hl.Parent = parent
         self.Highlight = hl
     end)
@@ -114,7 +114,7 @@ function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance
             self.HoveredInstance = target
             
             if self.Highlight then
-                if target and target:IsA("Model") or target:IsA("BasePart") then
+                if target and (target:IsA("Model") or target:IsA("BasePart")) then
                     self.Highlight.Adornee = target
                     self.Highlight.Enabled = true
                 else

@@ -35,7 +35,8 @@ local function formatValueLua(val: any, propType: string): string
     return "nil"
 end
 
-function SerializerScript.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table): string
+function SerializerScript.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+    local opts = options or {}
     local out = {}
     local function append(str: string)
         table.insert(out, str)

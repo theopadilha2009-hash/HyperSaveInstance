@@ -71,7 +71,8 @@ local function serializeAttributes(attrs: {[string]: any}): string
 end
 
 -- Main XML Document Generation
-function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table): string
+function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+    local opts = options or {}
     local refMap = {}
     local refCounter = 0
 
@@ -204,7 +205,7 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
         end
 
         -- CollectionService Tags
-        if options.SaveTags then
+        if opts.SaveTags then
             local tags = Reflection.GetTags(inst)
             if #tags > 0 then
                 local b64Tags = Base64.Encode(table.concat(tags, "\0"))

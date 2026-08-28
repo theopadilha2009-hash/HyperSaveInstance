@@ -2150,8 +2150,8 @@ function RaycastSelector:InitVisuals()
         hl.OutlineTransparency = 0.1
         hl.Enabled = false
         
-        -- Store in CoreGui or protected container
-        local parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
+        -- Store in gethui, CoreGui or workspace
+        local parent = (gethui and gethui()) or game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
         hl.Parent = parent
         self.Highlight = hl
     end)
@@ -2226,7 +2226,7 @@ function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance
             self.HoveredInstance = target
             
             if self.Highlight then
-                if target and target:IsA("Model") or target:IsA("BasePart") then
+                if target and (target:IsA("Model") or target:IsA("BasePart")) then
                     self.Highlight.Adornee = target
                     self.Highlight.Enabled = true
                 else
@@ -3262,7 +3262,8 @@ local function writeChunk(stream: any, chunkName: string, data: string)
     end
 end
 
-function SerializerBinary.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table): string
+function SerializerBinary.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+    local opts = options or {}
     local stream = Stream.new()
 
     -- Write Binary Header
@@ -3387,7 +3388,8 @@ local function formatValueLua(val: any, propType: string): string
     return "nil"
 end
 
-function SerializerScript.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table): string
+function SerializerScript.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+    local opts = options or {}
     local out = {}
     local function append(str: string)
         table.insert(out, str)
@@ -3567,7 +3569,8 @@ local function serializeAttributes(attrs: {[string]: any}): string
 end
 
 -- Main XML Document Generation
-function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table): string
+function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+    local opts = options or {}
     local refMap = {}
     local refCounter = 0
 
@@ -3700,7 +3703,7 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
         end
 
         -- CollectionService Tags
-        if options.SaveTags then
+        if opts.SaveTags then
             local tags = Reflection.GetTags(inst)
             if #tags > 0 then
                 local b64Tags = Base64.Encode(table.concat(tags, "\0"))
