@@ -1,6 +1,6 @@
 --[[
     HyperSaveInstance v2.0 (Ultimate Master Suite) - Universal Roblox Game Cloner & Reverse-Engineering Suite
-    Author: theopadilha2009-hash
+    Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     Combines USSI, UltraSmartSaveInstance, rbx-dom, rbx-instance-serializer & Studio Plugin.
 ]]
 

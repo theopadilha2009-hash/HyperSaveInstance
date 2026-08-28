@@ -5,26 +5,32 @@
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Colors
-    Background = Color3.fromRGB(15, 17, 23),
-    CardBg = Color3.fromRGB(24, 27, 36),
-    CardHover = Color3.fromRGB(32, 36, 48),
-    Border = Color3.fromRGB(45, 52, 70),
-    BorderLight = Color3.fromRGB(65, 75, 100),
+    -- Colors & Rich Dark Glassmorphism Palette
+    Background = Color3.fromRGB(11, 13, 20),
+    BackgroundGlass = Color3.fromRGB(16, 19, 30),
+    CardBg = Color3.fromRGB(20, 24, 38),
+    CardHover = Color3.fromRGB(28, 34, 52),
+    CardActive = Color3.fromRGB(36, 44, 68),
+    Border = Color3.fromRGB(42, 50, 75),
+    BorderLight = Color3.fromRGB(70, 84, 125),
+    BorderNeon = Color3.fromRGB(0, 229, 255),
     
-    -- Accents & Gradients
-    AccentPrimary = Color3.fromRGB(99, 102, 241),    -- Indigo
-    AccentSecondary = Color3.fromRGB(168, 85, 247),  -- Purple
-    AccentCyan = Color3.fromRGB(6, 182, 212),        -- Cyan
-    AccentSuccess = Color3.fromRGB(34, 197, 94),     -- Green
-    AccentWarning = Color3.fromRGB(234, 179, 8),     -- Amber
-    AccentDanger = Color3.fromRGB(239, 68, 68),      -- Red
+    -- Vibrant Accents & Gradients
+    AccentPrimary = Color3.fromRGB(124, 58, 237),   -- Royal Violet
+    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Purple
+    AccentCyan = Color3.fromRGB(0, 229, 255),       -- Neon Cyber Cyan
+    AccentSuccess = Color3.fromRGB(16, 185, 129),   -- Emerald Green
+    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber Gold
+    AccentDanger = Color3.fromRGB(239, 68, 68),     -- Vivid Crimson
+    AccentTheo = Color3.fromRGB(236, 72, 153),       -- Hot Pink / Neon Fuchsia
 
     -- Text Colors
     TextPrimary = Color3.fromRGB(248, 250, 252),
     TextSecondary = Color3.fromRGB(148, 163, 184),
     TextMuted = Color3.fromRGB(100, 116, 139),
-    TextAccent = Color3.fromRGB(129, 140, 248),
+    TextAccent = Color3.fromRGB(167, 139, 250),
+    TextCyan = Color3.fromRGB(103, 232, 249),
+    TextTheo = Color3.fromRGB(244, 114, 182),
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,

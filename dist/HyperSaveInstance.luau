@@ -847,12 +847,15 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
     
     return string.format([=[
 --[[
-    [HyperSaveInstance - Decompiled Script]
+    ================================================================================
+    [HyperSaveInstance v2.0 - Decompiled Script]
+    Created by: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     Class: %s
     Path: %s
     Status: %s
     Executor: %s
     Exported At: %s
+    ================================================================================
 ]]
 
 ]=], scriptInstance.ClassName, path, status, execName, dateStr)
@@ -3813,7 +3816,8 @@ function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}
     add([=[
 --[[
     ================================================================================
-    [HyperSaveInstance - Auto-Generated Server Backend Emulator]
+    [HyperSaveInstance v2.0 - Auto-Generated Server Backend Emulator]
+    Created by: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     Reconstructed Server Logic to prevent client freezes, infinite yields, and errors.
     Generated automatically by HyperSaveInstance ServerSynthesizer.
     ================================================================================
@@ -4359,16 +4363,17 @@ function Interface:BuildUI()
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
     floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = " HYPERSAVE"
+    floatingBtn.Text = "⚡ HYPERSAVE • THEO"
     floatingBtn.Font = Theme.FontTitle
     floatingBtn.TextSize = 11
     floatingBtn.TextColor3 = Theme.TextPrimary
     floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 110, 0, 32)
+    floatingBtn.Size = UDim2.new(0, 150, 0, 34)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerPill)
     Theme.AddStroke(floatingBtn, Theme.AccentCyan, 1.5)
+    Theme.AddGradient(floatingBtn, Theme.AccentCyan, Theme.AccentPrimary, 45)
     floatingBtn.Parent = screenGui
     self.FloatingToggle = floatingBtn
 
@@ -4381,7 +4386,7 @@ function Interface:BuildUI()
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
     Theme.AddCorner(main, Theme.CornerLarge)
-    Theme.AddStroke(main, Theme.Border, 1.5)
+    Theme.AddStroke(main, Theme.BorderLight, 1.5)
     main.Parent = screenGui
     self.MainFrame = main
 
@@ -4433,27 +4438,27 @@ function Interface:BuildUI()
 
     -- Title & Logo
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Text = " HyperSaveInstance"
+    titleLabel.Text = "⚡ HyperSaveInstance"
     titleLabel.Font = Theme.FontTitle
     titleLabel.TextSize = 15
     titleLabel.TextColor3 = Theme.TextPrimary
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 190, 1, 0)
+    titleLabel.Size = UDim2.new(0, 180, 1, 0)
     titleLabel.Position = UDim2.new(0, 16, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Parent = header
 
-    -- Platform / Keybind Badge
+    -- Platform & Creator Badge
     local badge = Instance.new("TextLabel")
-    badge.Text = Environment.GetPlatform() .. " • [RightShift]"
+    badge.Text = "por Theo Lorentz Padilha • [RightShift]"
     badge.Font = Theme.FontSemiBold
     badge.TextSize = 11
     badge.TextColor3 = Theme.AccentCyan
-    badge.BackgroundColor3 = Color3.fromRGB(8, 30, 45)
-    badge.Size = UDim2.new(0, 170, 0, 24)
-    badge.Position = UDim2.new(0, 210, 0.5, -12)
+    badge.BackgroundColor3 = Color3.fromRGB(12, 22, 38)
+    badge.Size = UDim2.new(0, 230, 0, 26)
+    badge.Position = UDim2.new(0, 200, 0.5, -13)
     Theme.AddCorner(badge, Theme.CornerPill)
-    Theme.AddStroke(badge, Color3.fromRGB(15, 80, 100), 1)
+    Theme.AddStroke(badge, Theme.BorderNeon, 1)
     badge.Parent = header
 
     -- Minimize Button
@@ -5888,48 +5893,203 @@ end
 function Interface:BuildAboutTab()
     local parent = self.TabFrames["About"]
 
-    local card = Instance.new("Frame")
-    card.Size = UDim2.new(1, -32, 1, -32)
-    card.Position = UDim2.new(0, 16, 0, 16)
-    card.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(card, Theme.CornerMedium)
-    Theme.AddStroke(card, Theme.Border, 1)
-    card.Parent = parent
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, -32, 1, -32)
+    scroll.Position = UDim2.new(0, 16, 0, 16)
+    scroll.BackgroundColor3 = Theme.BackgroundGlass
+    scroll.ScrollBarThickness = 5
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 480)
+    Theme.AddCorner(scroll, Theme.CornerMedium)
+    Theme.AddStroke(scroll, Theme.BorderLight, 1)
+    scroll.Parent = parent
 
-    local aboutText = Instance.new("TextLabel")
-    aboutText.Text = string.format([=[
- HyperSaveInstance v2.0 (Ultimate Master Suite)
-Universal Roblox Game Cloner & Reverse-Engineering Suite
+    -- Developer Profile Header Card
+    local devCard = Instance.new("Frame")
+    devCard.Size = UDim2.new(1, -24, 0, 120)
+    devCard.Position = UDim2.new(0, 12, 0, 12)
+    devCard.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(devCard, Theme.CornerMedium)
+    Theme.AddStroke(devCard, Theme.BorderNeon, 1.2)
+    Theme.AddGradient(devCard, Theme.CardBg, Color3.fromRGB(24, 18, 38), 45)
+    devCard.Parent = scroll
 
-• Plataforma: %s
-• Executor: %s
-• Sistema de Arquivos: %s
-• Descompilador: %s
-• Anti-AFK: Ativo
-• Soundboard & Audio Ripper: Ativo
-• Lighting Preset Ripper: Ativo
-• GUI & HUD Ripper: Ativo
-• Network Sniffer & RemoteSpy: Ativo
-• 3D Wavefront Exporter: Ativo (.OBJ / .MTL)
-• Multi-Place Universe: Ativo
-• Atalho de Teclado: [RightShift]
+    -- Avatar Emblem
+    local avatar = Instance.new("Frame")
+    avatar.Size = UDim2.new(0, 56, 0, 56)
+    avatar.Position = UDim2.new(0, 16, 0, 16)
+    avatar.BackgroundColor3 = Theme.AccentPrimary
+    Theme.AddCorner(avatar, Theme.CornerPill)
+    Theme.AddGradient(avatar, Theme.AccentCyan, Theme.AccentTheo, 45)
+    avatar.Parent = devCard
 
-Repositório Oficial: github.com/theopadilha2009-hash/HyperSaveInstance
-]=],
-        Environment.GetPlatform(),
-        Environment.GetExecutorName(),
-        Environment.HasFileSystem() and "Disponível (writefile)" or "Indisponível",
-        Environment.HasDecompiler() and "Disponível" or "Apenas Bytecode / Stub"
-    )
-    aboutText.Font = Theme.FontRegular
-    aboutText.TextSize = 11
-    aboutText.TextColor3 = Theme.TextPrimary
-    aboutText.TextXAlignment = Enum.TextXAlignment.Left
-    aboutText.TextYAlignment = Enum.TextYAlignment.Top
-    aboutText.Size = UDim2.new(1, -32, 1, -32)
-    aboutText.Position = UDim2.new(0, 16, 0, 16)
-    aboutText.BackgroundTransparency = 1
-    aboutText.Parent = card
+    local avatarTxt = Instance.new("TextLabel")
+    avatarTxt.Text = "TLP"
+    avatarTxt.Font = Theme.FontTitle
+    avatarTxt.TextSize = 18
+    avatarTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+    avatarTxt.Size = UDim2.new(1, 0, 1, 0)
+    avatarTxt.BackgroundTransparency = 1
+    avatarTxt.Parent = avatar
+
+    -- Developer Name & Title
+    local devName = Instance.new("TextLabel")
+    devName.Text = "Theo Lorentz Padilha"
+    devName.Font = Theme.FontTitle
+    devName.TextSize = 16
+    devName.TextColor3 = Theme.TextPrimary
+    devName.TextXAlignment = Enum.TextXAlignment.Left
+    devName.Size = UDim2.new(1, -96, 0, 22)
+    devName.Position = UDim2.new(0, 84, 0, 16)
+    devName.BackgroundTransparency = 1
+    devName.Parent = devCard
+
+    local devRole = Instance.new("TextLabel")
+    devRole.Text = "⭐ Criador & Engenheiro Principal do HyperSaveInstance Suite"
+    devRole.Font = Theme.FontSemiBold
+    devRole.TextSize = 11
+    devRole.TextColor3 = Theme.TextTheo
+    devRole.TextXAlignment = Enum.TextXAlignment.Left
+    devRole.Size = UDim2.new(1, -96, 0, 18)
+    devRole.Position = UDim2.new(0, 84, 0, 38)
+    devRole.BackgroundTransparency = 1
+    devRole.Parent = devCard
+
+    -- GitHub Link Button
+    local btnGithub = Instance.new("TextButton")
+    btnGithub.Text = "🔗 Copiar Perfil GitHub (github.com/theopadilha2009-hash)"
+    btnGithub.Font = Theme.FontSemiBold
+    btnGithub.TextSize = 11
+    btnGithub.TextColor3 = Theme.TextPrimary
+    btnGithub.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+    btnGithub.Size = UDim2.new(0.58, 0, 0, 30)
+    btnGithub.Position = UDim2.new(0, 84, 0, 68)
+    Theme.AddCorner(btnGithub, Theme.CornerSmall)
+    Theme.AddStroke(btnGithub, Theme.BorderNeon, 1)
+    btnGithub.Parent = devCard
+
+    btnGithub.MouseButton1Click:Connect(function()
+        Environment.SetClipboard("https://github.com/theopadilha2009-hash")
+        btnGithub.Text = "✓ Link do GitHub Copiado!"
+        btnGithub.TextColor3 = Theme.AccentSuccess
+        task.delay(2.5, function()
+            btnGithub.Text = "🔗 Copiar Perfil GitHub (github.com/theopadilha2009-hash)"
+            btnGithub.TextColor3 = Theme.TextPrimary
+        end)
+    end)
+
+    -- Repository Link Button
+    local btnRepo = Instance.new("TextButton")
+    btnRepo.Text = "⭐ Repositório Oficial"
+    btnRepo.Font = Theme.FontSemiBold
+    btnRepo.TextSize = 11
+    btnRepo.TextColor3 = Theme.TextPrimary
+    btnRepo.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+    btnRepo.Size = UDim2.new(0.35, -4, 0, 30)
+    btnRepo.Position = UDim2.new(0.62, 2, 0, 68)
+    Theme.AddCorner(btnRepo, Theme.CornerSmall)
+    Theme.AddStroke(btnRepo, Theme.AccentPrimary, 1)
+    btnRepo.Parent = devCard
+
+    btnRepo.MouseButton1Click:Connect(function()
+        Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
+        btnRepo.Text = "✓ Link do Repo Copiado!"
+        btnRepo.TextColor3 = Theme.AccentSuccess
+        task.delay(2.5, function()
+            btnRepo.Text = "⭐ Repositório Oficial"
+            btnRepo.TextColor3 = Theme.TextPrimary
+        end)
+    end)
+
+    -- System Diagnostics Card
+    local sysCard = Instance.new("Frame")
+    sysCard.Size = UDim2.new(1, -24, 0, 180)
+    sysCard.Position = UDim2.new(0, 12, 0, 142)
+    sysCard.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(sysCard, Theme.CornerMedium)
+    Theme.AddStroke(sysCard, Theme.Border, 1)
+    sysCard.Parent = scroll
+
+    local sysTitle = Instance.new("TextLabel")
+    sysTitle.Text = "📊 DIAGNÓSTICO DO SISTEMA & AMBIENTE"
+    sysTitle.Font = Theme.FontTitle
+    sysTitle.TextSize = 12
+    sysTitle.TextColor3 = Theme.AccentCyan
+    sysTitle.TextXAlignment = Enum.TextXAlignment.Left
+    sysTitle.Size = UDim2.new(1, -20, 0, 20)
+    sysTitle.Position = UDim2.new(0, 12, 0, 10)
+    sysTitle.BackgroundTransparency = 1
+    sysTitle.Parent = sysCard
+
+    local diagItems = {
+        {"Plataforma:", Environment.GetPlatform()},
+        {"Executor:", Environment.GetExecutorName()},
+        {"Escrita de Arquivo (writefile):", Environment.HasFileSystem() and "Ativo (Totalmente Suportado)" or "Indisponível"},
+        {"Descompilador Luau:", Environment.HasDecompiler() and "Ativo (Descompilação Completa)" or "Modo Bytecode / Fallback"},
+        {"Bypass de StreamingEnabled:", "Ativo (StreamExplorer Espacial)"},
+        {"Emulador de DataStore & VIP:", "Ativo (1.000.000 Coins / VIP Liberado)"},
+        {"Atalho de Teclado (HUD):", "[RightShift] ou Botão Flutuante"},
+    }
+
+    for i, item in ipairs(diagItems) do
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, -24, 0, 18)
+        row.Position = UDim2.new(0, 12, 0, 32 + (i - 1) * 20)
+        row.BackgroundTransparency = 1
+        row.Parent = sysCard
+
+        local lblKey = Instance.new("TextLabel")
+        lblKey.Text = "• " .. item[1]
+        lblKey.Font = Theme.FontSemiBold
+        lblKey.TextSize = 11
+        lblKey.TextColor3 = Theme.TextSecondary
+        lblKey.TextXAlignment = Enum.TextXAlignment.Left
+        lblKey.Size = UDim2.new(0.5, 0, 1, 0)
+        lblKey.BackgroundTransparency = 1
+        lblKey.Parent = row
+
+        local lblVal = Instance.new("TextLabel")
+        lblVal.Text = item[2]
+        lblVal.Font = Theme.FontRegular
+        lblVal.TextSize = 11
+        lblVal.TextColor3 = (string.find(item[2], "Ativo") or string.find(item[2], "Suportado")) and Theme.AccentSuccess or Theme.TextPrimary
+        lblVal.TextXAlignment = Enum.TextXAlignment.Right
+        lblVal.Size = UDim2.new(0.5, 0, 1, 0)
+        lblVal.Position = UDim2.new(0.5, 0, 0, 0)
+        lblVal.BackgroundTransparency = 1
+        lblVal.Parent = row
+    end
+
+    -- Suite Capabilities Summary Card
+    local featCard = Instance.new("Frame")
+    featCard.Size = UDim2.new(1, -24, 0, 120)
+    featCard.Position = UDim2.new(0, 12, 0, 332)
+    featCard.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(featCard, Theme.CornerMedium)
+    Theme.AddStroke(featCard, Theme.Border, 1)
+    featCard.Parent = scroll
+
+    local featTitle = Instance.new("TextLabel")
+    featTitle.Text = "⚡ RECURSOS EXCLUSIVOS INCLUÍDOS"
+    featTitle.Font = Theme.FontTitle
+    featTitle.TextSize = 12
+    featTitle.TextColor3 = Theme.AccentPurple
+    featTitle.TextXAlignment = Enum.TextXAlignment.Left
+    featTitle.Size = UDim2.new(1, -20, 0, 20)
+    featTitle.Position = UDim2.new(0, 12, 0, 10)
+    featTitle.BackgroundTransparency = 1
+    featTitle.Parent = featCard
+
+    local featDesc = Instance.new("TextLabel")
+    featDesc.Text = "✓ Seletor 3D com Mira no Mundo & Multi-Seleção em Lote\n✓ Extração de Terreno SmoothVoxels 3D, Iluminação PBR & Sons\n✓ Plugin Oficial de Roblox Studio com Reparo Mestre 1-Clique\n✓ Desofuscador de Variáveis de Scripts e Proteção Anti-AFK"
+    featDesc.Font = Theme.FontRegular
+    featDesc.TextSize = 11
+    featDesc.TextColor3 = Theme.TextSecondary
+    featDesc.TextXAlignment = Enum.TextXAlignment.Left
+    featDesc.TextYAlignment = Enum.TextYAlignment.Top
+    featDesc.Size = UDim2.new(1, -24, 0, 75)
+    featDesc.Position = UDim2.new(0, 12, 0, 34)
+    featDesc.BackgroundTransparency = 1
+    featDesc.Parent = featCard
 end
 
 function Interface:Log(message: string, color: Color3?)
@@ -6027,26 +6187,32 @@ __define__("UI/Theme", function()
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Colors
-    Background = Color3.fromRGB(15, 17, 23),
-    CardBg = Color3.fromRGB(24, 27, 36),
-    CardHover = Color3.fromRGB(32, 36, 48),
-    Border = Color3.fromRGB(45, 52, 70),
-    BorderLight = Color3.fromRGB(65, 75, 100),
+    -- Colors & Rich Dark Glassmorphism Palette
+    Background = Color3.fromRGB(11, 13, 20),
+    BackgroundGlass = Color3.fromRGB(16, 19, 30),
+    CardBg = Color3.fromRGB(20, 24, 38),
+    CardHover = Color3.fromRGB(28, 34, 52),
+    CardActive = Color3.fromRGB(36, 44, 68),
+    Border = Color3.fromRGB(42, 50, 75),
+    BorderLight = Color3.fromRGB(70, 84, 125),
+    BorderNeon = Color3.fromRGB(0, 229, 255),
     
-    -- Accents & Gradients
-    AccentPrimary = Color3.fromRGB(99, 102, 241),    -- Indigo
-    AccentSecondary = Color3.fromRGB(168, 85, 247),  -- Purple
-    AccentCyan = Color3.fromRGB(6, 182, 212),        -- Cyan
-    AccentSuccess = Color3.fromRGB(34, 197, 94),     -- Green
-    AccentWarning = Color3.fromRGB(234, 179, 8),     -- Amber
-    AccentDanger = Color3.fromRGB(239, 68, 68),      -- Red
+    -- Vibrant Accents & Gradients
+    AccentPrimary = Color3.fromRGB(124, 58, 237),   -- Royal Violet
+    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Purple
+    AccentCyan = Color3.fromRGB(0, 229, 255),       -- Neon Cyber Cyan
+    AccentSuccess = Color3.fromRGB(16, 185, 129),   -- Emerald Green
+    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber Gold
+    AccentDanger = Color3.fromRGB(239, 68, 68),     -- Vivid Crimson
+    AccentTheo = Color3.fromRGB(236, 72, 153),       -- Hot Pink / Neon Fuchsia
 
     -- Text Colors
     TextPrimary = Color3.fromRGB(248, 250, 252),
     TextSecondary = Color3.fromRGB(148, 163, 184),
     TextMuted = Color3.fromRGB(100, 116, 139),
-    TextAccent = Color3.fromRGB(129, 140, 248),
+    TextAccent = Color3.fromRGB(167, 139, 250),
+    TextCyan = Color3.fromRGB(103, 232, 249),
+    TextTheo = Color3.fromRGB(244, 114, 182),
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,
@@ -6812,7 +6978,7 @@ end)
 -- Entry Point
 --[[
     HyperSaveInstance v2.0 (Ultimate Master Suite) - Universal Roblox Game Cloner & Reverse-Engineering Suite
-    Author: theopadilha2009-hash
+    Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     Combines USSI, UltraSmartSaveInstance, rbx-dom, rbx-instance-serializer & Studio Plugin.
 ]]
 

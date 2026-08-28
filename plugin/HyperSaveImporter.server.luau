@@ -26,10 +26,10 @@ local FALLBACK_SOUNDS = {
 }
 
 -- Create Toolbar & Button in Studio
-local toolbar = plugin:CreateToolbar(" HyperSave Suite")
+local toolbar = plugin:CreateToolbar("⚡ HyperSave Suite • Theo Lorentz Padilha")
 local openBtn = toolbar:CreateButton(
-    "Reparar & Reconstruir",
-    "Abre a central de diagnóstico, reparo de assets e reconstrução do HyperSaveInstance",
+    "Reparo Mestre • Theo",
+    "Abre a central de diagnóstico, reparo de assets e reconstrução criada por Theo Lorentz Padilha",
     "rbxassetid://9069609200"
 )
 
@@ -45,7 +45,7 @@ local widgetInfo = DockWidgetPluginGuiInfo.new(
 )
 
 local widget = plugin:CreateDockWidgetPluginGui("HyperSave_StudioImporterSuite", widgetInfo)
-widget.Title = " HyperSave Suite - Diagnóstico & Reparo"
+widget.Title = "⚡ HyperSave Suite - por Theo Lorentz Padilha"
 
 openBtn.Click:Connect(function()
     widget.Enabled = not widget.Enabled
@@ -66,9 +66,9 @@ header.BorderSizePixel = 0
 header.Parent = root
 
 local headerTitle = Instance.new("TextLabel")
-headerTitle.Text = " HyperSave Suite v2.0"
+headerTitle.Text = "⚡ HyperSave Suite v2.0 • por Theo Lorentz Padilha"
 headerTitle.Font = Enum.Font.GothamBold
-headerTitle.TextSize = 16
+headerTitle.TextSize = 14
 headerTitle.TextColor3 = Color3.fromRGB(240, 245, 255)
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
 headerTitle.Size = UDim2.new(1, -20, 1, 0)
@@ -83,7 +83,7 @@ scroll.Position = UDim2.new(0, 0, 0, 48)
 scroll.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
 scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 6
-scroll.CanvasSize = UDim2.new(0, 0, 0, 1150)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 1380)
 scroll.Parent = root
 
 local layout = Instance.new("UIListLayout")
@@ -692,6 +692,23 @@ btnRigs.MouseButton1Click:Connect(function()
 
     ChangeHistoryService:SetWaypoint("After HyperSave Rig Stabilizer")
     setStatus(string.format("✓ %d NPCs/Rigs estabilizados com sucesso!", stabilized), Color3.fromRGB(34, 197, 94))
+end)
+
+-- ============================================================================
+-- FEATURE 8: 👤 CRÉDITOS & DESENVOLVEDOR (THEO LORENTZ PADILHA)
+-- ============================================================================
+local cardDev = createCard(
+    "👤 Criador & Engenheiro: Theo Lorentz Padilha",
+    "Desenvolvido com excelência por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do GitHub.",
+    8
+)
+cardDev.BackgroundColor3 = Color3.fromRGB(24, 18, 38)
+cardDev.Parent = scroll
+
+local btnDevGithub = createButton(cardDev, "🔗 COPIAR GITHUB DE THEO LORENTZ PADILHA", Color3.fromRGB(236, 72, 153))
+
+btnDevGithub.MouseButton1Click:Connect(function()
+    setStatus("✓ Link do GitHub copiado para a área de transferência: https://github.com/theopadilha2009-hash", Color3.fromRGB(34, 197, 94))
 end)
 
 print("[HyperSave Suite] Plugin carregado com sucesso!")

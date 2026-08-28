@@ -27,12 +27,15 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
     
     return string.format([=[
 --[[
-    [HyperSaveInstance - Decompiled Script]
+    ================================================================================
+    [HyperSaveInstance v2.0 - Decompiled Script]
+    Created by: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     Class: %s
     Path: %s
     Status: %s
     Executor: %s
     Exported At: %s
+    ================================================================================
 ]]
 
 ]=], scriptInstance.ClassName, path, status, execName, dateStr)

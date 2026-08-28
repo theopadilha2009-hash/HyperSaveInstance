@@ -76,7 +76,8 @@ function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}
     add([=[
 --[[
     ================================================================================
-    [HyperSaveInstance - Auto-Generated Server Backend Emulator]
+    [HyperSaveInstance v2.0 - Auto-Generated Server Backend Emulator]
+    Created by: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     Reconstructed Server Logic to prevent client freezes, infinite yields, and errors.
     Generated automatically by HyperSaveInstance ServerSynthesizer.
     ================================================================================
