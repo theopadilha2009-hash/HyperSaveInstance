@@ -26,9 +26,9 @@ local FALLBACK_SOUNDS = {
 }
 
 -- Create Toolbar & Button in Studio
-local toolbar = plugin:CreateToolbar("⚡ HyperSave Suite • Theo Lorentz Padilha")
+local toolbar = plugin:CreateToolbar("💀 HyperSave Suite • Theo Lorentz Padilha")
 local openBtn = toolbar:CreateButton(
-    "Reparo Mestre • Theo",
+    "💀 Reparo Mestre • Theo",
     "Abre a central de diagnóstico, reparo de assets e reconstrução criada por Theo Lorentz Padilha",
     "rbxassetid://9069609200"
 )
@@ -45,31 +45,31 @@ local widgetInfo = DockWidgetPluginGuiInfo.new(
 )
 
 local widget = plugin:CreateDockWidgetPluginGui("HyperSave_StudioImporterSuite", widgetInfo)
-widget.Title = "⚡ HyperSave Suite - por Theo Lorentz Padilha"
+widget.Title = "💀 HyperSave Suite - por Theo Lorentz Padilha"
 
 openBtn.Click:Connect(function()
     widget.Enabled = not widget.Enabled
 end)
 
--- Main UI Root
+-- Main UI Root (Obsidian Gothic Theme)
 local root = Instance.new("Frame")
 root.Size = UDim2.new(1, 0, 1, 0)
-root.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
+root.BackgroundColor3 = Color3.fromRGB(6, 7, 10)
 root.BorderSizePixel = 0
 root.Parent = widget
 
 -- Header
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 48)
-header.BackgroundColor3 = Color3.fromRGB(24, 27, 38)
+header.BackgroundColor3 = Color3.fromRGB(14, 16, 24)
 header.BorderSizePixel = 0
 header.Parent = root
 
 local headerTitle = Instance.new("TextLabel")
-headerTitle.Text = "⚡ HyperSave Suite v2.0 • por Theo Lorentz Padilha"
+headerTitle.Text = "💀 HyperSave Suite v2.0 • por Theo Lorentz Padilha"
 headerTitle.Font = Enum.Font.GothamBold
 headerTitle.TextSize = 14
-headerTitle.TextColor3 = Color3.fromRGB(240, 245, 255)
+headerTitle.TextColor3 = Color3.fromRGB(245, 248, 255)
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
 headerTitle.Size = UDim2.new(1, -20, 1, 0)
 headerTitle.Position = UDim2.new(0, 16, 0, 0)

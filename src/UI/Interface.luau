@@ -69,21 +69,21 @@ function Interface:BuildUI()
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
     floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = "⚡ HYPERSAVE • THEO"
+    floatingBtn.Text = "💀 HYPERSAVE • THEO"
     floatingBtn.Font = Theme.FontTitle
     floatingBtn.TextSize = 11
     floatingBtn.TextColor3 = Theme.TextPrimary
     floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 150, 0, 34)
+    floatingBtn.Size = UDim2.new(0, 154, 0, 34)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerPill)
-    Theme.AddStroke(floatingBtn, Theme.AccentCyan, 1.5)
-    Theme.AddGradient(floatingBtn, Theme.AccentCyan, Theme.AccentPrimary, 45)
+    Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
+    Theme.AddGradient(floatingBtn, Color3.fromRGB(15, 12, 24), Color3.fromRGB(35, 20, 55), 45)
     floatingBtn.Parent = screenGui
     self.FloatingToggle = floatingBtn
 
-    -- Main Container
+    -- Main Container (Obsidian Gothic Theme)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.Size = UDim2.new(0, 660, 0, 480)
@@ -142,14 +142,14 @@ function Interface:BuildUI()
     headerLine.BorderSizePixel = 0
     headerLine.Parent = header
 
-    -- Title & Logo
+    -- Title & Skull Logo
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Text = "⚡ HyperSaveInstance"
+    titleLabel.Text = "💀 HyperSaveInstance"
     titleLabel.Font = Theme.FontTitle
     titleLabel.TextSize = 15
     titleLabel.TextColor3 = Theme.TextPrimary
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 180, 1, 0)
+    titleLabel.Size = UDim2.new(0, 185, 1, 0)
     titleLabel.Position = UDim2.new(0, 16, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Parent = header
@@ -159,10 +159,10 @@ function Interface:BuildUI()
     badge.Text = "por Theo Lorentz Padilha • [RightShift]"
     badge.Font = Theme.FontSemiBold
     badge.TextSize = 11
-    badge.TextColor3 = Theme.AccentCyan
-    badge.BackgroundColor3 = Color3.fromRGB(12, 22, 38)
+    badge.TextColor3 = Theme.AccentTheo
+    badge.BackgroundColor3 = Color3.fromRGB(18, 14, 28)
     badge.Size = UDim2.new(0, 230, 0, 26)
-    badge.Position = UDim2.new(0, 200, 0.5, -13)
+    badge.Position = UDim2.new(0, 205, 0.5, -13)
     Theme.AddCorner(badge, Theme.CornerPill)
     Theme.AddStroke(badge, Theme.BorderNeon, 1)
     badge.Parent = header

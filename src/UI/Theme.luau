@@ -5,32 +5,33 @@
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Colors & Rich Dark Glassmorphism Palette
-    Background = Color3.fromRGB(11, 13, 20),
-    BackgroundGlass = Color3.fromRGB(16, 19, 30),
-    CardBg = Color3.fromRGB(20, 24, 38),
-    CardHover = Color3.fromRGB(28, 34, 52),
-    CardActive = Color3.fromRGB(36, 44, 68),
-    Border = Color3.fromRGB(42, 50, 75),
-    BorderLight = Color3.fromRGB(70, 84, 125),
-    BorderNeon = Color3.fromRGB(0, 229, 255),
+    -- Dark Gothic Obsidian Palette (Ram Skull Aesthetic)
+    Background = Color3.fromRGB(6, 7, 10),
+    BackgroundGlass = Color3.fromRGB(12, 13, 18),
+    CardBg = Color3.fromRGB(16, 18, 26),
+    CardHover = Color3.fromRGB(25, 28, 40),
+    CardActive = Color3.fromRGB(35, 40, 58),
+    Border = Color3.fromRGB(36, 40, 56),
+    BorderLight = Color3.fromRGB(80, 68, 115),
+    BorderNeon = Color3.fromRGB(168, 85, 247), -- Spectral Violet Glow
     
-    -- Vibrant Accents & Gradients
+    -- Accents & Gradients
     AccentPrimary = Color3.fromRGB(124, 58, 237),   -- Royal Violet
-    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Purple
-    AccentCyan = Color3.fromRGB(0, 229, 255),       -- Neon Cyber Cyan
-    AccentSuccess = Color3.fromRGB(16, 185, 129),   -- Emerald Green
-    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber Gold
-    AccentDanger = Color3.fromRGB(239, 68, 68),     -- Vivid Crimson
-    AccentTheo = Color3.fromRGB(236, 72, 153),       -- Hot Pink / Neon Fuchsia
+    AccentSecondary = Color3.fromRGB(147, 51, 234), -- Dark Purple
+    AccentCyan = Color3.fromRGB(147, 197, 253),     -- Bone Ice Silver
+    AccentSuccess = Color3.fromRGB(34, 197, 94),     -- Spectral Emerald
+    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber
+    AccentDanger = Color3.fromRGB(225, 29, 72),     -- Crimson Blood
+    AccentTheo = Color3.fromRGB(192, 132, 252),     -- Mystic Lavender
+    AccentSkull = Color3.fromRGB(245, 245, 250),    -- Bone White
 
     -- Text Colors
-    TextPrimary = Color3.fromRGB(248, 250, 252),
-    TextSecondary = Color3.fromRGB(148, 163, 184),
-    TextMuted = Color3.fromRGB(100, 116, 139),
-    TextAccent = Color3.fromRGB(167, 139, 250),
-    TextCyan = Color3.fromRGB(103, 232, 249),
-    TextTheo = Color3.fromRGB(244, 114, 182),
+    TextPrimary = Color3.fromRGB(248, 250, 252),    -- Pure Bone White
+    TextSecondary = Color3.fromRGB(156, 163, 175),  -- Silver Mist
+    TextMuted = Color3.fromRGB(100, 116, 139),      -- Dark Slate
+    TextAccent = Color3.fromRGB(192, 132, 252),     -- Violet Glow
+    TextCyan = Color3.fromRGB(147, 197, 253),
+    TextTheo = Color3.fromRGB(216, 180, 254),
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,
@@ -39,9 +40,9 @@ local Theme = {
     FontCode = Enum.Font.Code,
 
     -- Radii
-    CornerLarge = UDim.new(0, 14),
-    CornerMedium = UDim.new(0, 10),
-    CornerSmall = UDim.new(0, 6),
+    CornerLarge = UDim.new(0, 12),
+    CornerMedium = UDim.new(0, 8),
+    CornerSmall = UDim.new(0, 5),
     CornerPill = UDim.new(1, 0),
 }
 

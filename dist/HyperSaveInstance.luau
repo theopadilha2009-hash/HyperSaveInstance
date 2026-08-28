@@ -4363,21 +4363,21 @@ function Interface:BuildUI()
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
     floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = "⚡ HYPERSAVE • THEO"
+    floatingBtn.Text = "💀 HYPERSAVE • THEO"
     floatingBtn.Font = Theme.FontTitle
     floatingBtn.TextSize = 11
     floatingBtn.TextColor3 = Theme.TextPrimary
     floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 150, 0, 34)
+    floatingBtn.Size = UDim2.new(0, 154, 0, 34)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerPill)
-    Theme.AddStroke(floatingBtn, Theme.AccentCyan, 1.5)
-    Theme.AddGradient(floatingBtn, Theme.AccentCyan, Theme.AccentPrimary, 45)
+    Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
+    Theme.AddGradient(floatingBtn, Color3.fromRGB(15, 12, 24), Color3.fromRGB(35, 20, 55), 45)
     floatingBtn.Parent = screenGui
     self.FloatingToggle = floatingBtn
 
-    -- Main Container
+    -- Main Container (Obsidian Gothic Theme)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.Size = UDim2.new(0, 660, 0, 480)
@@ -4436,14 +4436,14 @@ function Interface:BuildUI()
     headerLine.BorderSizePixel = 0
     headerLine.Parent = header
 
-    -- Title & Logo
+    -- Title & Skull Logo
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Text = "⚡ HyperSaveInstance"
+    titleLabel.Text = "💀 HyperSaveInstance"
     titleLabel.Font = Theme.FontTitle
     titleLabel.TextSize = 15
     titleLabel.TextColor3 = Theme.TextPrimary
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 180, 1, 0)
+    titleLabel.Size = UDim2.new(0, 185, 1, 0)
     titleLabel.Position = UDim2.new(0, 16, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Parent = header
@@ -4453,10 +4453,10 @@ function Interface:BuildUI()
     badge.Text = "por Theo Lorentz Padilha • [RightShift]"
     badge.Font = Theme.FontSemiBold
     badge.TextSize = 11
-    badge.TextColor3 = Theme.AccentCyan
-    badge.BackgroundColor3 = Color3.fromRGB(12, 22, 38)
+    badge.TextColor3 = Theme.AccentTheo
+    badge.BackgroundColor3 = Color3.fromRGB(18, 14, 28)
     badge.Size = UDim2.new(0, 230, 0, 26)
-    badge.Position = UDim2.new(0, 200, 0.5, -13)
+    badge.Position = UDim2.new(0, 205, 0.5, -13)
     Theme.AddCorner(badge, Theme.CornerPill)
     Theme.AddStroke(badge, Theme.BorderNeon, 1)
     badge.Parent = header
@@ -6187,32 +6187,33 @@ __define__("UI/Theme", function()
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Colors & Rich Dark Glassmorphism Palette
-    Background = Color3.fromRGB(11, 13, 20),
-    BackgroundGlass = Color3.fromRGB(16, 19, 30),
-    CardBg = Color3.fromRGB(20, 24, 38),
-    CardHover = Color3.fromRGB(28, 34, 52),
-    CardActive = Color3.fromRGB(36, 44, 68),
-    Border = Color3.fromRGB(42, 50, 75),
-    BorderLight = Color3.fromRGB(70, 84, 125),
-    BorderNeon = Color3.fromRGB(0, 229, 255),
+    -- Dark Gothic Obsidian Palette (Ram Skull Aesthetic)
+    Background = Color3.fromRGB(6, 7, 10),
+    BackgroundGlass = Color3.fromRGB(12, 13, 18),
+    CardBg = Color3.fromRGB(16, 18, 26),
+    CardHover = Color3.fromRGB(25, 28, 40),
+    CardActive = Color3.fromRGB(35, 40, 58),
+    Border = Color3.fromRGB(36, 40, 56),
+    BorderLight = Color3.fromRGB(80, 68, 115),
+    BorderNeon = Color3.fromRGB(168, 85, 247), -- Spectral Violet Glow
     
-    -- Vibrant Accents & Gradients
+    -- Accents & Gradients
     AccentPrimary = Color3.fromRGB(124, 58, 237),   -- Royal Violet
-    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Purple
-    AccentCyan = Color3.fromRGB(0, 229, 255),       -- Neon Cyber Cyan
-    AccentSuccess = Color3.fromRGB(16, 185, 129),   -- Emerald Green
-    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber Gold
-    AccentDanger = Color3.fromRGB(239, 68, 68),     -- Vivid Crimson
-    AccentTheo = Color3.fromRGB(236, 72, 153),       -- Hot Pink / Neon Fuchsia
+    AccentSecondary = Color3.fromRGB(147, 51, 234), -- Dark Purple
+    AccentCyan = Color3.fromRGB(147, 197, 253),     -- Bone Ice Silver
+    AccentSuccess = Color3.fromRGB(34, 197, 94),     -- Spectral Emerald
+    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber
+    AccentDanger = Color3.fromRGB(225, 29, 72),     -- Crimson Blood
+    AccentTheo = Color3.fromRGB(192, 132, 252),     -- Mystic Lavender
+    AccentSkull = Color3.fromRGB(245, 245, 250),    -- Bone White
 
     -- Text Colors
-    TextPrimary = Color3.fromRGB(248, 250, 252),
-    TextSecondary = Color3.fromRGB(148, 163, 184),
-    TextMuted = Color3.fromRGB(100, 116, 139),
-    TextAccent = Color3.fromRGB(167, 139, 250),
-    TextCyan = Color3.fromRGB(103, 232, 249),
-    TextTheo = Color3.fromRGB(244, 114, 182),
+    TextPrimary = Color3.fromRGB(248, 250, 252),    -- Pure Bone White
+    TextSecondary = Color3.fromRGB(156, 163, 175),  -- Silver Mist
+    TextMuted = Color3.fromRGB(100, 116, 139),      -- Dark Slate
+    TextAccent = Color3.fromRGB(192, 132, 252),     -- Violet Glow
+    TextCyan = Color3.fromRGB(147, 197, 253),
+    TextTheo = Color3.fromRGB(216, 180, 254),
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,
@@ -6221,9 +6222,9 @@ local Theme = {
     FontCode = Enum.Font.Code,
 
     -- Radii
-    CornerLarge = UDim.new(0, 14),
-    CornerMedium = UDim.new(0, 10),
-    CornerSmall = UDim.new(0, 6),
+    CornerLarge = UDim.new(0, 12),
+    CornerMedium = UDim.new(0, 8),
+    CornerSmall = UDim.new(0, 5),
     CornerPill = UDim.new(1, 0),
 }
 
