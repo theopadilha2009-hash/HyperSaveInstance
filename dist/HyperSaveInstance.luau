@@ -1260,10 +1260,57 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
     local writeOk = Environment.WriteFile(fileName, output)
 
     if writeOk then
+        if cfg.CopyToClipboardOnComplete then
+            Environment.SetClipboard(fileName)
+        end
         self:PlayChime()
         return true, fileName
     end
     return false, "Failed to write model file."
+end
+
+-- Save multiple target instances into a single combined .rbxm / .rbxlx pack
+function Engine:SaveTargetBatch(targets: {Instance}, customConfig: table?): (boolean, string)
+    if not targets or #targets == 0 then
+        return false, "No target instances specified for batch export!"
+    end
+
+    local cfg = table.clone(self.Config)
+    if customConfig then
+        for k, v in pairs(customConfig) do cfg[k] = v end
+    end
+
+    local fileName = string.format("HyperSave_MultiPack_%d_items_%d.%s", #targets, os.time(), cfg.Format or "rbxm")
+    local scriptInstances = {}
+
+    local function scan(inst: Instance)
+        if not self:ShouldSaveInstance(inst) then return end
+        if inst:IsA("LuaSourceContainer") then
+            table.insert(scriptInstances, inst)
+        end
+        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+    end
+
+    for _, target in ipairs(targets) do
+        scan(target)
+    end
+
+    local scriptSources = {}
+    if cfg.DecompileScripts and #scriptInstances > 0 then
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, cfg)
+    end
+
+    local output = SerializerXml.Serialize(targets, scriptSources, nil, cfg)
+    local writeOk = Environment.WriteFile(fileName, output)
+
+    if writeOk then
+        if cfg.CopyToClipboardOnComplete then
+            Environment.SetClipboard(fileName)
+        end
+        self:PlayChime()
+        return true, fileName
+    end
+    return false, "Failed to write batch package file."
 end
 
 -- Main Save Process
@@ -2059,6 +2106,188 @@ function Optimizer.OptimizeHierarchy(rootInstances: {Instance}, options: table):
 end
 
 return Optimizer
+
+end)
+
+__define__("Core/RaycastSelector", function()
+--[[
+    HyperSaveInstance - 3D In-World Raycast & Model Selector
+    Allows the user to hover and click directly on any 3D model, vehicle, weapon or structure
+    in the game world to inspect its hierarchy and save it with all internal scripts.
+]]
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local RaycastSelector = {}
+RaycastSelector.__index = RaycastSelector
+
+function RaycastSelector.new(options: table?)
+    local self = setmetatable({}, RaycastSelector)
+    self.Options = options or {}
+    self.IsActive = false
+    self.HoveredInstance = nil
+    self.SelectedInstance = nil
+    self.Highlight = nil
+    self.SelectionBox = nil
+    self.Connections = {}
+    self.OnSelectedCallback = nil
+    self.OnHoverCallback = nil
+
+    self:InitVisuals()
+    return self
+end
+
+-- Initialize the visual highlight indicators
+function RaycastSelector:InitVisuals()
+    pcall(function()
+        local hl = Instance.new("Highlight")
+        hl.Name = "HyperSave_SelectorHighlight"
+        hl.FillColor = Color3.fromRGB(0, 200, 255)
+        hl.FillTransparency = 0.65
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+        hl.OutlineTransparency = 0.1
+        hl.Enabled = false
+        
+        -- Store in CoreGui or protected container
+        local parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
+        hl.Parent = parent
+        self.Highlight = hl
+    end)
+end
+
+-- Find the most meaningful parent Model or Tool from a clicked BasePart
+function RaycastSelector:ResolveTarget(part: BasePart): Instance
+    if not part then return nil end
+
+    local current: Instance? = part
+    local bestModel: Instance = part
+
+    while current and current ~= workspace and current ~= game do
+        if current:IsA("Model") and current.Parent == workspace then
+            bestModel = current
+            break
+        elseif current:IsA("Tool") or current:IsA("Accessory") or current:IsA("Model") then
+            bestModel = current
+        end
+        current = current.Parent
+    end
+
+    return bestModel
+end
+
+-- Perform raycast from mouse screen position into 3D world
+function RaycastSelector:RaycastMouse(): (Instance?, Vector3?)
+    local camera = workspace.CurrentCamera
+    if not camera then return nil, nil end
+
+    local mousePos = UserInputService:GetMouseLocation()
+    local unitRay = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+
+    local filterList = {}
+    local localPlayer = Players.LocalPlayer
+    if localPlayer and localPlayer.Character then
+        table.insert(filterList, localPlayer.Character)
+    end
+    if self.Highlight then
+        table.insert(filterList, self.Highlight)
+    end
+
+    params.FilterDescendantsInstances = filterList
+    params.IgnoreWater = true
+
+    local result = workspace:Raycast(unitRay.Origin, unitRay.Direction * 2000, params)
+    if result and result.Instance then
+        local target = self:ResolveTarget(result.Instance)
+        return target, result.Position
+    end
+
+    return nil, nil
+end
+
+-- Start interactive click-to-select mode in 3D world
+function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance?) -> ())?)
+    if self.IsActive then self:Stop() end
+
+    self.IsActive = true
+    self.OnSelectedCallback = onSelected
+    self.OnHoverCallback = onHover
+
+    -- RenderStepped hover raycast
+    local hoverConn = RunService.RenderStepped:Connect(function()
+        if not self.IsActive then return end
+
+        local target = self:RaycastMouse()
+        if target ~= self.HoveredInstance then
+            self.HoveredInstance = target
+            
+            if self.Highlight then
+                if target and target:IsA("Model") or target:IsA("BasePart") then
+                    self.Highlight.Adornee = target
+                    self.Highlight.Enabled = true
+                else
+                    self.Highlight.Adornee = nil
+                    self.Highlight.Enabled = false
+                end
+            end
+
+            if self.OnHoverCallback then
+                self.OnHoverCallback(target)
+            end
+        end
+    end)
+    table.insert(self.Connections, hoverConn)
+
+    -- Click listener
+    local clickConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not self.IsActive then return end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local target = self.HoveredInstance or self:RaycastMouse()
+            if target then
+                self.SelectedInstance = target
+                local cb = self.OnSelectedCallback
+                self:Stop()
+                if cb then
+                    cb(target)
+                end
+            end
+        elseif input.KeyCode == Enum.KeyCode.Escape then
+            self:Stop()
+        end
+    end)
+    table.insert(self.Connections, clickConn)
+end
+
+-- Stop click-to-select mode and clean up
+function RaycastSelector:Stop()
+    self.IsActive = false
+    for _, conn in ipairs(self.Connections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    self.Connections = {}
+
+    if self.Highlight then
+        self.Highlight.Adornee = nil
+        self.Highlight.Enabled = false
+    end
+    self.HoveredInstance = nil
+end
+
+-- Destroy visual elements permanently
+function RaycastSelector:Destroy()
+    self:Stop()
+    if self.Highlight then
+        pcall(function() self.Highlight:Destroy() end)
+        self.Highlight = nil
+    end
+end
+
+return RaycastSelector
 
 end)
 
@@ -4073,6 +4302,7 @@ local GuiRipper = require(script.Parent.Parent.Core.GuiRipper)
 local NetworkSniffer = require(script.Parent.Parent.Core.NetworkSniffer)
 local UniverseTracker = require(script.Parent.Parent.Core.UniverseTracker)
 local ObjExporter = require(script.Parent.Parent.Core.ObjExporter)
+local RaycastSelector = require(script.Parent.Parent.Core.RaycastSelector)
 
 local Interface = {}
 Interface.__index = Interface
@@ -4086,6 +4316,9 @@ function Interface.new(engine: any)
     self.IsMinimized = false
     self.SavedFilePath = ""
     self.SavedAssetPath = ""
+    self.Raycast = RaycastSelector.new()
+    self.SelectedTargets = {}
+    self.CurrentTargetInstance = nil
 
     self:BuildUI()
     self:BindEngineEvents()
@@ -4593,20 +4826,22 @@ function Interface:BuildDashboardTab()
     end)
 end
 
--- 2. Target Selector Tab (Save Individual Model / Folder)
+-- 2. Target Selector Tab (Save Individual Model / Folder / 3D Raycast / Multi-Select)
 function Interface:BuildSelectorTab()
     local parent = self.TabFrames["Selector"]
 
-    local card = Instance.new("Frame")
-    card.Size = UDim2.new(1, -32, 1, -32)
-    card.Position = UDim2.new(0, 16, 0, 16)
-    card.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(card, Theme.CornerMedium)
-    Theme.AddStroke(card, Theme.Border, 1)
-    card.Parent = parent
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, -32, 1, -32)
+    scroll.Position = UDim2.new(0, 16, 0, 16)
+    scroll.BackgroundColor3 = Theme.CardBg
+    scroll.ScrollBarThickness = 5
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 520)
+    Theme.AddCorner(scroll, Theme.CornerMedium)
+    Theme.AddStroke(scroll, Theme.Border, 1)
+    scroll.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = " SALVAR APENAS UM MODELO / PASTA ESPECÍFICA"
+    headerLbl.Text = "🎯 SELETOR DE MODELOS, ARMAS & MULTI-SELEÇÃO"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -4614,81 +4849,292 @@ function Interface:BuildSelectorTab()
     headerLbl.Size = UDim2.new(1, -24, 0, 24)
     headerLbl.Position = UDim2.new(0, 12, 0, 12)
     headerLbl.BackgroundTransparency = 1
-    headerLbl.Parent = card
+    headerLbl.Parent = scroll
 
-    local descLbl = Instance.new("TextLabel")
-    descLbl.Text = "Digite o nome exato do Modelo, Carro, Arma, Mapa ou Pasta no Workspace/ReplicatedStorage:"
-    descLbl.Font = Theme.FontRegular
-    descLbl.TextSize = 11
-    descLbl.TextColor3 = Theme.TextSecondary
-    descLbl.TextXAlignment = Enum.TextXAlignment.Left
-    descLbl.Size = UDim2.new(1, -24, 0, 20)
-    descLbl.Position = UDim2.new(0, 12, 0, 40)
-    descLbl.BackgroundTransparency = 1
-    descLbl.Parent = card
+    -- 1. In-World 3D Raycast Click Selector Button
+    local raycastBtn = Instance.new("TextButton")
+    raycastBtn.Text = "🎯 CLICAR NO OBJETO NO MUNDO 3D (SELETOR VISUAL)"
+    raycastBtn.Font = Theme.FontTitle
+    raycastBtn.TextSize = 12
+    raycastBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    raycastBtn.BackgroundColor3 = Theme.AccentCyan
+    raycastBtn.Size = UDim2.new(1, -24, 0, 38)
+    raycastBtn.Position = UDim2.new(0, 12, 0, 42)
+    Theme.AddCorner(raycastBtn, Theme.CornerSmall)
+    Theme.AddGradient(raycastBtn, Theme.AccentCyan, Theme.AccentPrimary, 0)
+    raycastBtn.Parent = scroll
 
+    -- 2. Search by Name Textbox
     local searchBox = Instance.new("TextBox")
-    searchBox.PlaceholderText = "Ex: Carro, ShopGui, Gun, Map, etc..."
+    searchBox.PlaceholderText = "Ou digite o nome: Ferrari, Gun, ShopGui, Map..."
     searchBox.Font = Theme.FontRegular
     searchBox.TextSize = 12
     searchBox.TextColor3 = Theme.TextPrimary
     searchBox.PlaceholderColor3 = Theme.TextMuted
     searchBox.BackgroundColor3 = Color3.fromRGB(12, 14, 20)
     searchBox.Size = UDim2.new(1, -24, 0, 36)
-    searchBox.Position = UDim2.new(0, 12, 0, 68)
+    searchBox.Position = UDim2.new(0, 12, 0, 88)
     Theme.AddCorner(searchBox, Theme.CornerSmall)
     Theme.AddStroke(searchBox, Theme.Border, 1)
-    searchBox.Parent = card
+    searchBox.Parent = scroll
 
-    local saveTargetBtn = Instance.new("TextButton")
-    saveTargetBtn.Text = " SALVAR MODELO SELECIONADO (.rbxm)"
-    saveTargetBtn.Font = Theme.FontTitle
-    saveTargetBtn.TextSize = 13
-    saveTargetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    saveTargetBtn.BackgroundColor3 = Theme.AccentCyan
-    saveTargetBtn.Size = UDim2.new(1, -24, 0, 44)
-    saveTargetBtn.Position = UDim2.new(0, 12, 0, 116)
-    Theme.AddCorner(saveTargetBtn, Theme.CornerMedium)
-    Theme.AddGradient(saveTargetBtn, Theme.AccentCyan, Theme.AccentPrimary, 90)
-    saveTargetBtn.Parent = card
+    -- 3. Selected Target Info Card
+    local infoCard = Instance.new("Frame")
+    infoCard.Size = UDim2.new(1, -24, 0, 90)
+    infoCard.Position = UDim2.new(0, 12, 0, 132)
+    infoCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+    Theme.AddCorner(infoCard, Theme.CornerSmall)
+    Theme.AddStroke(infoCard, Theme.Border, 1)
+    infoCard.Parent = scroll
 
+    local targetTitle = Instance.new("TextLabel")
+    targetTitle.Text = "Nenhum objeto selecionado no momento"
+    targetTitle.Font = Theme.FontSemiBold
+    targetTitle.TextSize = 12
+    targetTitle.TextColor3 = Theme.TextPrimary
+    targetTitle.TextXAlignment = Enum.TextXAlignment.Left
+    targetTitle.Size = UDim2.new(1, -16, 0, 20)
+    targetTitle.Position = UDim2.new(0, 10, 0, 8)
+    targetTitle.BackgroundTransparency = 1
+    targetTitle.Parent = infoCard
+
+    local targetStats = Instance.new("TextLabel")
+    targetStats.Text = "Mire no jogo com o botão acima ou digite o nome para inspecionar."
+    targetStats.Font = Theme.FontRegular
+    targetStats.TextSize = 11
+    targetStats.TextColor3 = Theme.TextSecondary
+    targetStats.TextXAlignment = Enum.TextXAlignment.Left
+    targetStats.Size = UDim2.new(1, -16, 0, 20)
+    targetStats.Position = UDim2.new(0, 10, 0, 32)
+    targetStats.BackgroundTransparency = 1
+    targetStats.Parent = infoCard
+
+    local targetPath = Instance.new("TextLabel")
+    targetPath.Text = "Caminho: -"
+    targetPath.Font = Theme.FontRegular
+    targetPath.TextSize = 10
+    targetPath.TextColor3 = Theme.TextMuted
+    targetPath.TextXAlignment = Enum.TextXAlignment.Left
+    targetPath.Size = UDim2.new(1, -16, 0, 20)
+    targetPath.Position = UDim2.new(0, 10, 0, 56)
+    targetPath.BackgroundTransparency = 1
+    targetPath.Parent = infoCard
+
+    -- Helper to update info display
+    local function inspectInstance(inst: Instance?)
+        self.CurrentTargetInstance = inst
+        if not inst then
+            targetTitle.Text = "Nenhum objeto selecionado"
+            targetTitle.TextColor3 = Theme.TextMuted
+            targetStats.Text = "Use o botão 3D ou digite o nome acima."
+            targetPath.Text = "Caminho: -"
+            return
+        end
+
+        local parts = 0
+        local scripts = 0
+        local meshes = 0
+
+        for _, desc in ipairs(inst:GetDescendants()) do
+            if desc:IsA("BasePart") then parts = parts + 1 end
+            if desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then meshes = meshes + 1 end
+            if desc:IsA("LuaSourceContainer") then scripts = scripts + 1 end
+        end
+        if inst:IsA("BasePart") then parts = parts + 1 end
+        if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
+
+        targetTitle.Text = string.format("📦 %s (%s)", inst.Name, inst.ClassName)
+        targetTitle.TextColor3 = Theme.AccentCyan
+        targetStats.Text = string.format("📊 %d Peças • %d Malhas 3D • %d Scripts Descompiláveis", parts, meshes, scripts)
+        targetStats.TextColor3 = Theme.AccentSuccess
+        targetPath.Text = "📍 Caminho: " .. inst:GetFullName()
+    end
+
+    -- 4. Action Buttons (Save Single / Add to Pack)
+    local btnSaveSingle = Instance.new("TextButton")
+    btnSaveSingle.Text = "💾 SALVAR ESTE MODELO (.rbxm)"
+    btnSaveSingle.Font = Theme.FontTitle
+    btnSaveSingle.TextSize = 12
+    btnSaveSingle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnSaveSingle.BackgroundColor3 = Theme.AccentSuccess
+    btnSaveSingle.Size = UDim2.new(0.48, 0, 0, 38)
+    btnSaveSingle.Position = UDim2.new(0, 12, 0, 230)
+    Theme.AddCorner(btnSaveSingle, Theme.CornerSmall)
+    btnSaveSingle.Parent = scroll
+
+    local btnAddToPack = Instance.new("TextButton")
+    btnAddToPack.Text = "➕ ADICIONAR AO PACOTE"
+    btnAddToPack.Font = Theme.FontTitle
+    btnAddToPack.TextSize = 12
+    btnAddToPack.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnAddToPack.BackgroundColor3 = Theme.AccentPurple
+    btnAddToPack.Size = UDim2.new(0.48, 0, 0, 38)
+    btnAddToPack.Position = UDim2.new(0.52, 0, 0, 230)
+    Theme.AddCorner(btnAddToPack, Theme.CornerSmall)
+    btnAddToPack.Parent = scroll
+
+    -- 5. Multi-Select Package Card
+    local packCard = Instance.new("Frame")
+    packCard.Size = UDim2.new(1, -24, 0, 110)
+    packCard.Position = UDim2.new(0, 12, 0, 276)
+    packCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+    Theme.AddCorner(packCard, Theme.CornerSmall)
+    Theme.AddStroke(packCard, Theme.Border, 1)
+    packCard.Parent = scroll
+
+    local packTitle = Instance.new("TextLabel")
+    packTitle.Text = "📦 PACOTE MULTI-SELEÇÃO: 0 ITENS"
+    packTitle.Font = Theme.FontSemiBold
+    packTitle.TextSize = 12
+    packTitle.TextColor3 = Theme.AccentPurple
+    packTitle.TextXAlignment = Enum.TextXAlignment.Left
+    packTitle.Size = UDim2.new(0.7, 0, 0, 20)
+    packTitle.Position = UDim2.new(0, 10, 0, 10)
+    packTitle.BackgroundTransparency = 1
+    packTitle.Parent = packCard
+
+    local btnClearPack = Instance.new("TextButton")
+    btnClearPack.Text = "Limpar"
+    btnClearPack.Font = Theme.FontSemiBold
+    btnClearPack.TextSize = 11
+    btnClearPack.TextColor3 = Theme.AccentDanger
+    btnClearPack.BackgroundColor3 = Color3.fromRGB(30, 20, 25)
+    btnClearPack.Size = UDim2.new(0.24, 0, 0, 24)
+    btnClearPack.Position = UDim2.new(0.73, 0, 0, 8)
+    Theme.AddCorner(btnClearPack, Theme.CornerSmall)
+    btnClearPack.Parent = packCard
+
+    local btnSavePack = Instance.new("TextButton")
+    btnSavePack.Text = "🚀 BAIXAR PACOTE COMPLETO (.rbxm)"
+    btnSavePack.Font = Theme.FontTitle
+    btnSavePack.TextSize = 12
+    btnSavePack.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnSavePack.BackgroundColor3 = Theme.AccentPurple
+    btnSavePack.Size = UDim2.new(1, -20, 0, 38)
+    btnSavePack.Position = UDim2.new(0, 10, 0, 56)
+    Theme.AddCorner(btnSavePack, Theme.CornerSmall)
+    Theme.AddGradient(btnSavePack, Theme.AccentPurple, Theme.AccentCyan, 0)
+    btnSavePack.Parent = packCard
+
+    -- 6. Result & Status Label
     local resultLabel = Instance.new("TextLabel")
-    resultLabel.Text = "Status: Aguardando seleção"
+    resultLabel.Text = "Status: Pronto para selecionar."
     resultLabel.Font = Theme.FontRegular
     resultLabel.TextSize = 11
     resultLabel.TextColor3 = Theme.TextMuted
     resultLabel.TextXAlignment = Enum.TextXAlignment.Left
-    resultLabel.Size = UDim2.new(1, -24, 0, 24)
-    resultLabel.Position = UDim2.new(0, 12, 0, 170)
+    resultLabel.Size = UDim2.new(1, -24, 0, 36)
+    resultLabel.Position = UDim2.new(0, 12, 0, 396)
+    resultLabel.TextWrapped = true
     resultLabel.BackgroundTransparency = 1
-    resultLabel.Parent = card
+    resultLabel.Parent = scroll
 
-    saveTargetBtn.MouseButton1Click:Connect(function()
-        local targetName = searchBox.Text
-        if #targetName == 0 then
-            resultLabel.Text = " Digite um nome para buscar!"
+    -- Update pack counter UI
+    local function updatePackUI()
+        packTitle.Text = string.format("📦 PACOTE MULTI-SELEÇÃO: %d ITENS", #self.SelectedTargets)
+    end
+
+    -- Event: 3D Raycast click button
+    raycastBtn.MouseButton1Click:Connect(function()
+        if self.MainFrame then self.MainFrame.Visible = false end
+        resultLabel.Text = "🎯 Modo 3D ativo! Clique em qualquer objeto no mundo para selecionar."
+        resultLabel.TextColor3 = Theme.AccentCyan
+
+        self.Raycast:Start(function(selected)
+            if self.MainFrame then self.MainFrame.Visible = true end
+            if selected then
+                searchBox.Text = selected.Name
+                inspectInstance(selected)
+                resultLabel.Text = "✓ Objeto selecionado: " .. selected.Name
+                resultLabel.TextColor3 = Theme.AccentSuccess
+            end
+        end)
+    end)
+
+    -- Event: Search box text change
+    searchBox.FocusLost:Connect(function(enterPressed)
+        local text = searchBox.Text
+        if #text > 0 then
+            local found = workspace:FindFirstChild(text, true) or game:GetService("ReplicatedStorage"):FindFirstChild(text, true)
+            if found then
+                inspectInstance(found)
+                resultLabel.Text = "✓ Objeto encontrado: " .. found.Name
+                resultLabel.TextColor3 = Theme.AccentSuccess
+            else
+                inspectInstance(nil)
+                resultLabel.Text = "❌ Objeto não encontrado no jogo!"
+                resultLabel.TextColor3 = Theme.AccentDanger
+            end
+        end
+    end)
+
+    -- Event: Save single model
+    btnSaveSingle.MouseButton1Click:Connect(function()
+        local target = self.CurrentTargetInstance
+        if not target then
+            resultLabel.Text = "❌ Selecione um modelo antes de salvar!"
             resultLabel.TextColor3 = Theme.AccentWarning
             return
         end
 
-        local found = workspace:FindFirstChild(targetName, true) or game:GetService("ReplicatedStorage"):FindFirstChild(targetName, true)
-        if not found then
-            resultLabel.Text = string.format(" Objeto '%s' não foi encontrado no jogo!", targetName)
-            resultLabel.TextColor3 = Theme.AccentDanger
-            return
-        end
-
-        resultLabel.Text = " Salvando modelo: " .. found.Name .. "..."
+        resultLabel.Text = "⏳ Salvando " .. target.Name .. " com todos os scripts..."
         resultLabel.TextColor3 = Theme.AccentCyan
 
         task.spawn(function()
-            local success, msg = self.Engine:SaveTarget(found)
+            local success, msg = self.Engine:SaveTarget(target)
             if success then
                 resultLabel.Text = "✓ Modelo salvo com sucesso: " .. msg
                 resultLabel.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(msg)
             else
-                resultLabel.Text = " Erro ao salvar: " .. tostring(msg)
+                resultLabel.Text = "❌ Erro ao salvar: " .. tostring(msg)
+                resultLabel.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+
+    -- Event: Add to pack
+    btnAddToPack.MouseButton1Click:Connect(function()
+        local target = self.CurrentTargetInstance
+        if not target then
+            resultLabel.Text = "❌ Selecione um modelo para adicionar ao pacote!"
+            resultLabel.TextColor3 = Theme.AccentWarning
+            return
+        end
+
+        table.insert(self.SelectedTargets, target)
+        updatePackUI()
+        resultLabel.Text = string.format("✓ '%s' adicionado ao pacote (%d no total)!", target.Name, #self.SelectedTargets)
+        resultLabel.TextColor3 = Theme.AccentSuccess
+    end)
+
+    -- Event: Clear pack
+    btnClearPack.MouseButton1Click:Connect(function()
+        self.SelectedTargets = {}
+        updatePackUI()
+        resultLabel.Text = "Pacote limpo."
+        resultLabel.TextColor3 = Theme.TextMuted
+    end)
+
+    -- Event: Save full multi-pack
+    btnSavePack.MouseButton1Click:Connect(function()
+        if #self.SelectedTargets == 0 then
+            resultLabel.Text = "❌ O pacote está vazio! Adicione itens primeiro."
+            resultLabel.TextColor3 = Theme.AccentWarning
+            return
+        end
+
+        resultLabel.Text = string.format("⏳ Salvando pacote com %d itens e scripts...", #self.SelectedTargets)
+        resultLabel.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, msg = self.Engine:SaveTargetBatch(self.SelectedTargets)
+            if success then
+                resultLabel.Text = "✓ Pacote salvo com sucesso: " .. msg
+                resultLabel.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(msg)
+            else
+                resultLabel.Text = "❌ Erro ao salvar pacote: " .. tostring(msg)
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
         end)

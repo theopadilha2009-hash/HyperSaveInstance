@@ -151,10 +151,57 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
     local writeOk = Environment.WriteFile(fileName, output)
 
     if writeOk then
+        if cfg.CopyToClipboardOnComplete then
+            Environment.SetClipboard(fileName)
+        end
         self:PlayChime()
         return true, fileName
     end
     return false, "Failed to write model file."
+end
+
+-- Save multiple target instances into a single combined .rbxm / .rbxlx pack
+function Engine:SaveTargetBatch(targets: {Instance}, customConfig: table?): (boolean, string)
+    if not targets or #targets == 0 then
+        return false, "No target instances specified for batch export!"
+    end
+
+    local cfg = table.clone(self.Config)
+    if customConfig then
+        for k, v in pairs(customConfig) do cfg[k] = v end
+    end
+
+    local fileName = string.format("HyperSave_MultiPack_%d_items_%d.%s", #targets, os.time(), cfg.Format or "rbxm")
+    local scriptInstances = {}
+
+    local function scan(inst: Instance)
+        if not self:ShouldSaveInstance(inst) then return end
+        if inst:IsA("LuaSourceContainer") then
+            table.insert(scriptInstances, inst)
+        end
+        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+    end
+
+    for _, target in ipairs(targets) do
+        scan(target)
+    end
+
+    local scriptSources = {}
+    if cfg.DecompileScripts and #scriptInstances > 0 then
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, cfg)
+    end
+
+    local output = SerializerXml.Serialize(targets, scriptSources, nil, cfg)
+    local writeOk = Environment.WriteFile(fileName, output)
+
+    if writeOk then
+        if cfg.CopyToClipboardOnComplete then
+            Environment.SetClipboard(fileName)
+        end
+        self:PlayChime()
+        return true, fileName
+    end
+    return false, "Failed to write batch package file."
 end
 
 -- Main Save Process

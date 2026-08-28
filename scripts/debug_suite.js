@@ -94,6 +94,7 @@ function testSourceFiles() {
         'src/Core/Decompiler.luau',
         'src/Core/TerrainSerializer.luau',
         'src/Core/StreamExplorer.luau',
+        'src/Core/RaycastSelector.luau',
         'src/Core/AssetHandler.luau',
         'src/Core/AssetDownloader.luau',
         'src/Core/AudioRipper.luau',
