@@ -252,11 +252,12 @@ function Interface:BuildUI()
         navBtn.Text = tabLabel
         navBtn.Font = Theme.FontSemiBold
         navBtn.TextSize = 10
-        navBtn.TextColor3 = (i == 1) and Theme.TextPrimary or Theme.TextSecondary
-        navBtn.BackgroundColor3 = (i == 1) and Theme.CardHover or Theme.CardBg
+        navBtn.TextColor3 = (i == 1) and Theme.AccentSkull or Theme.TextSecondary
+        navBtn.BackgroundColor3 = (i == 1) and Theme.CardActive or Theme.CardBg
         navBtn.Size = UDim2.new(1, -12, 0, 26)
         navBtn.Position = UDim2.new(0, 6, 0, 6 + (i - 1) * 30)
         Theme.AddCorner(navBtn, Theme.CornerSmall)
+        Theme.AddStroke(navBtn, (i == 1) and Theme.BorderNeon or Theme.Border, 1)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
 
@@ -296,12 +297,15 @@ function Interface:SwitchTab(targetTab: string)
         frame.Visible = (k == targetTab)
     end
     for k, btn in pairs(self.NavButtons) do
+        local stroke = btn:FindFirstChildOfClass("UIStroke")
         if k == targetTab then
-            btn.TextColor3 = Theme.TextPrimary
-            btn.BackgroundColor3 = Theme.CardHover
+            btn.TextColor3 = Theme.AccentSkull
+            btn.BackgroundColor3 = Theme.CardActive
+            if stroke then stroke.Color = Theme.BorderNeon end
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
+            if stroke then stroke.Color = Theme.Border end
         end
     end
 end
@@ -310,18 +314,19 @@ end
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
-    -- Big Action Clone Button (1-Click)
+    -- Big Action Clone Button (1-Click Purple & Black)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = " CLONAR JOGO INTEIRO (1-CLIQUE)"
+    cloneBtn.Text = "💀 CLONAR JOGO INTEIRO (1-CLIQUE)"
     cloneBtn.Font = Theme.FontTitle
     cloneBtn.TextSize = 14
-    cloneBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    cloneBtn.TextColor3 = Theme.AccentSkull
     cloneBtn.BackgroundColor3 = Theme.AccentPrimary
     cloneBtn.Size = UDim2.new(1, -32, 0, 52)
     cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
-    Theme.AddGradient(cloneBtn, Theme.AccentPrimary, Theme.AccentSecondary, 90)
+    Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.5)
+    Theme.AddGradient(cloneBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(76, 29, 149), 90)
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 

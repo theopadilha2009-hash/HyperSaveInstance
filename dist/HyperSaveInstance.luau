@@ -2147,10 +2147,10 @@ function RaycastSelector:InitVisuals()
     pcall(function()
         local hl = Instance.new("Highlight")
         hl.Name = "HyperSave_SelectorHighlight"
-        hl.FillColor = Color3.fromRGB(0, 200, 255)
-        hl.FillTransparency = 0.65
-        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-        hl.OutlineTransparency = 0.1
+        hl.FillColor = Color3.fromRGB(168, 85, 247)
+        hl.FillTransparency = 0.6
+        hl.OutlineColor = Color3.fromRGB(243, 232, 255)
+        hl.OutlineTransparency = 0.05
         hl.Enabled = false
         
         -- Store in gethui, CoreGui or workspace
@@ -4546,11 +4546,12 @@ function Interface:BuildUI()
         navBtn.Text = tabLabel
         navBtn.Font = Theme.FontSemiBold
         navBtn.TextSize = 10
-        navBtn.TextColor3 = (i == 1) and Theme.TextPrimary or Theme.TextSecondary
-        navBtn.BackgroundColor3 = (i == 1) and Theme.CardHover or Theme.CardBg
+        navBtn.TextColor3 = (i == 1) and Theme.AccentSkull or Theme.TextSecondary
+        navBtn.BackgroundColor3 = (i == 1) and Theme.CardActive or Theme.CardBg
         navBtn.Size = UDim2.new(1, -12, 0, 26)
         navBtn.Position = UDim2.new(0, 6, 0, 6 + (i - 1) * 30)
         Theme.AddCorner(navBtn, Theme.CornerSmall)
+        Theme.AddStroke(navBtn, (i == 1) and Theme.BorderNeon or Theme.Border, 1)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
 
@@ -4590,12 +4591,15 @@ function Interface:SwitchTab(targetTab: string)
         frame.Visible = (k == targetTab)
     end
     for k, btn in pairs(self.NavButtons) do
+        local stroke = btn:FindFirstChildOfClass("UIStroke")
         if k == targetTab then
-            btn.TextColor3 = Theme.TextPrimary
-            btn.BackgroundColor3 = Theme.CardHover
+            btn.TextColor3 = Theme.AccentSkull
+            btn.BackgroundColor3 = Theme.CardActive
+            if stroke then stroke.Color = Theme.BorderNeon end
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
+            if stroke then stroke.Color = Theme.Border end
         end
     end
 end
@@ -4604,18 +4608,19 @@ end
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
-    -- Big Action Clone Button (1-Click)
+    -- Big Action Clone Button (1-Click Purple & Black)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = " CLONAR JOGO INTEIRO (1-CLIQUE)"
+    cloneBtn.Text = "💀 CLONAR JOGO INTEIRO (1-CLIQUE)"
     cloneBtn.Font = Theme.FontTitle
     cloneBtn.TextSize = 14
-    cloneBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    cloneBtn.TextColor3 = Theme.AccentSkull
     cloneBtn.BackgroundColor3 = Theme.AccentPrimary
     cloneBtn.Size = UDim2.new(1, -32, 0, 52)
     cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
-    Theme.AddGradient(cloneBtn, Theme.AccentPrimary, Theme.AccentSecondary, 90)
+    Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.5)
+    Theme.AddGradient(cloneBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(76, 29, 149), 90)
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
@@ -6187,33 +6192,33 @@ __define__("UI/Theme", function()
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Dark Gothic Obsidian Palette (Ram Skull Aesthetic)
-    Background = Color3.fromRGB(6, 7, 10),
-    BackgroundGlass = Color3.fromRGB(12, 13, 18),
-    CardBg = Color3.fromRGB(16, 18, 26),
-    CardHover = Color3.fromRGB(25, 28, 40),
-    CardActive = Color3.fromRGB(35, 40, 58),
-    Border = Color3.fromRGB(36, 40, 56),
-    BorderLight = Color3.fromRGB(80, 68, 115),
-    BorderNeon = Color3.fromRGB(168, 85, 247), -- Spectral Violet Glow
+    -- Pure Purple & Black Palette (Roxo e Preto - Gothic Skull Edition)
+    Background = Color3.fromRGB(5, 4, 9),          -- Pure Obsidian Black
+    BackgroundGlass = Color3.fromRGB(9, 7, 16),     -- Black with Purple Haze
+    CardBg = Color3.fromRGB(14, 11, 23),            -- Deep Purple-Black Card
+    CardHover = Color3.fromRGB(27, 20, 45),         -- Dark Violet Hover
+    CardActive = Color3.fromRGB(43, 27, 70),        -- Electric Violet Active
+    Border = Color3.fromRGB(47, 29, 75),            -- Deep Purple Border
+    BorderLight = Color3.fromRGB(126, 34, 206),     -- Electric Purple Stroke
+    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Vivid Neon Purple Glow
     
-    -- Accents & Gradients
-    AccentPrimary = Color3.fromRGB(124, 58, 237),   -- Royal Violet
-    AccentSecondary = Color3.fromRGB(147, 51, 234), -- Dark Purple
-    AccentCyan = Color3.fromRGB(147, 197, 253),     -- Bone Ice Silver
-    AccentSuccess = Color3.fromRGB(34, 197, 94),     -- Spectral Emerald
-    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber
-    AccentDanger = Color3.fromRGB(225, 29, 72),     -- Crimson Blood
-    AccentTheo = Color3.fromRGB(192, 132, 252),     -- Mystic Lavender
-    AccentSkull = Color3.fromRGB(245, 245, 250),    -- Bone White
+    -- Accents & Gradients (Strictly Purple / Violet / Black)
+    AccentPrimary = Color3.fromRGB(147, 51, 234),   -- Royal Electric Purple (#9333ea)
+    AccentSecondary = Color3.fromRGB(192, 132, 252), -- Radiant Violet (#c084fc)
+    AccentCyan = Color3.fromRGB(216, 180, 254),     -- Light Lavender (#d8b4fe)
+    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Neon Purple Glow (#a855f7)
+    AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta Purple (#e879f9)
+    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Crimson Rose (#f43f5e)
+    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Bright Lavender (#f0abfc)
+    AccentSkull = Color3.fromRGB(250, 245, 255),    -- Pure Bone White (#faf5ff)
 
     -- Text Colors
-    TextPrimary = Color3.fromRGB(248, 250, 252),    -- Pure Bone White
-    TextSecondary = Color3.fromRGB(156, 163, 175),  -- Silver Mist
-    TextMuted = Color3.fromRGB(100, 116, 139),      -- Dark Slate
-    TextAccent = Color3.fromRGB(192, 132, 252),     -- Violet Glow
-    TextCyan = Color3.fromRGB(147, 197, 253),
-    TextTheo = Color3.fromRGB(216, 180, 254),
+    TextPrimary = Color3.fromRGB(250, 245, 255),    -- Bone White (#faf5ff)
+    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lavender (#d8b4fe)
+    TextMuted = Color3.fromRGB(147, 130, 169),      -- Muted Ash Purple
+    TextAccent = Color3.fromRGB(192, 132, 252),     -- Vibrant Purple
+    TextCyan = Color3.fromRGB(233, 213, 255),       -- Pale Lavender
+    TextTheo = Color3.fromRGB(245, 208, 254),       -- Hot Lavender
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,

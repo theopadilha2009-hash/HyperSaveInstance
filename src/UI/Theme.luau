@@ -5,33 +5,33 @@
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Dark Gothic Obsidian Palette (Ram Skull Aesthetic)
-    Background = Color3.fromRGB(6, 7, 10),
-    BackgroundGlass = Color3.fromRGB(12, 13, 18),
-    CardBg = Color3.fromRGB(16, 18, 26),
-    CardHover = Color3.fromRGB(25, 28, 40),
-    CardActive = Color3.fromRGB(35, 40, 58),
-    Border = Color3.fromRGB(36, 40, 56),
-    BorderLight = Color3.fromRGB(80, 68, 115),
-    BorderNeon = Color3.fromRGB(168, 85, 247), -- Spectral Violet Glow
+    -- Pure Purple & Black Palette (Roxo e Preto - Gothic Skull Edition)
+    Background = Color3.fromRGB(5, 4, 9),          -- Pure Obsidian Black
+    BackgroundGlass = Color3.fromRGB(9, 7, 16),     -- Black with Purple Haze
+    CardBg = Color3.fromRGB(14, 11, 23),            -- Deep Purple-Black Card
+    CardHover = Color3.fromRGB(27, 20, 45),         -- Dark Violet Hover
+    CardActive = Color3.fromRGB(43, 27, 70),        -- Electric Violet Active
+    Border = Color3.fromRGB(47, 29, 75),            -- Deep Purple Border
+    BorderLight = Color3.fromRGB(126, 34, 206),     -- Electric Purple Stroke
+    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Vivid Neon Purple Glow
     
-    -- Accents & Gradients
-    AccentPrimary = Color3.fromRGB(124, 58, 237),   -- Royal Violet
-    AccentSecondary = Color3.fromRGB(147, 51, 234), -- Dark Purple
-    AccentCyan = Color3.fromRGB(147, 197, 253),     -- Bone Ice Silver
-    AccentSuccess = Color3.fromRGB(34, 197, 94),     -- Spectral Emerald
-    AccentWarning = Color3.fromRGB(245, 158, 11),   -- Amber
-    AccentDanger = Color3.fromRGB(225, 29, 72),     -- Crimson Blood
-    AccentTheo = Color3.fromRGB(192, 132, 252),     -- Mystic Lavender
-    AccentSkull = Color3.fromRGB(245, 245, 250),    -- Bone White
+    -- Accents & Gradients (Strictly Purple / Violet / Black)
+    AccentPrimary = Color3.fromRGB(147, 51, 234),   -- Royal Electric Purple (#9333ea)
+    AccentSecondary = Color3.fromRGB(192, 132, 252), -- Radiant Violet (#c084fc)
+    AccentCyan = Color3.fromRGB(216, 180, 254),     -- Light Lavender (#d8b4fe)
+    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Neon Purple Glow (#a855f7)
+    AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta Purple (#e879f9)
+    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Crimson Rose (#f43f5e)
+    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Bright Lavender (#f0abfc)
+    AccentSkull = Color3.fromRGB(250, 245, 255),    -- Pure Bone White (#faf5ff)
 
     -- Text Colors
-    TextPrimary = Color3.fromRGB(248, 250, 252),    -- Pure Bone White
-    TextSecondary = Color3.fromRGB(156, 163, 175),  -- Silver Mist
-    TextMuted = Color3.fromRGB(100, 116, 139),      -- Dark Slate
-    TextAccent = Color3.fromRGB(192, 132, 252),     -- Violet Glow
-    TextCyan = Color3.fromRGB(147, 197, 253),
-    TextTheo = Color3.fromRGB(216, 180, 254),
+    TextPrimary = Color3.fromRGB(250, 245, 255),    -- Bone White (#faf5ff)
+    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lavender (#d8b4fe)
+    TextMuted = Color3.fromRGB(147, 130, 169),      -- Muted Ash Purple
+    TextAccent = Color3.fromRGB(192, 132, 252),     -- Vibrant Purple
+    TextCyan = Color3.fromRGB(233, 213, 255),       -- Pale Lavender
+    TextTheo = Color3.fromRGB(245, 208, 254),       -- Hot Lavender
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,
