@@ -4836,49 +4836,57 @@ function Interface:BuildDashboardTab()
     statusDetail.Parent = progressCard
     self.StatusDetail = statusDetail
 
-    -- Quick Action Copy Buttons
+    -- Quick Action Copy Buttons (UIListLayout Grid)
     local copyBar = Instance.new("Frame")
     copyBar.Size = UDim2.new(1, -32, 0, 24)
     copyBar.Position = UDim2.new(0, 16, 0, 78)
     copyBar.BackgroundTransparency = 1
     copyBar.Parent = progressCard
 
+    local copyLayout = Instance.new("UIListLayout")
+    copyLayout.FillDirection = Enum.FillDirection.Horizontal
+    copyLayout.Padding = UDim.new(0, 8)
+    copyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    copyLayout.Parent = copyBar
+
     local copyFilePathBtn = Instance.new("TextButton")
-    copyFilePathBtn.Text = " Copiar Nome do Arquivo"
+    copyFilePathBtn.Text = "📁 Copiar Nome do Arquivo"
     copyFilePathBtn.Font = Theme.FontSemiBold
     copyFilePathBtn.TextSize = 10
     copyFilePathBtn.TextColor3 = Theme.TextSecondary
     copyFilePathBtn.BackgroundColor3 = Theme.CardHover
-    copyFilePathBtn.Size = UDim2.new(0.48, 0, 1, 0)
-    copyFilePathBtn.Position = UDim2.new(0, 0, 0, 0)
-    Theme.AddCorner(copyFilePathBtn, Theme.CornerSmall)
+    copyFilePathBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    copyFilePathBtn.LayoutOrder = 1
+    Theme.AddCorner(copyFilePathBtn, Theme.CornerPill)
+    Theme.AddStroke(copyFilePathBtn, Theme.Border, 1)
     copyFilePathBtn.Parent = copyBar
 
-    copyFilePathBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(copyFilePathBtn, function()
         local name = self.SavedFilePath
         if #name == 0 then name = self.Engine:GetDefaultFileName() end
         Environment.SetClipboard(name)
         copyFilePathBtn.Text = "✓ Nome Copiado!"
-        task.delay(2, function() copyFilePathBtn.Text = " Copiar Nome do Arquivo" end)
+        task.delay(2, function() copyFilePathBtn.Text = "📁 Copiar Nome do Arquivo" end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
-    copyAssetsPathBtn.Text = " Copiar Pasta de Assets"
+    copyAssetsPathBtn.Text = "📦 Copiar Pasta de Assets"
     copyAssetsPathBtn.Font = Theme.FontSemiBold
     copyAssetsPathBtn.TextSize = 10
     copyAssetsPathBtn.TextColor3 = Theme.TextSecondary
     copyAssetsPathBtn.BackgroundColor3 = Theme.CardHover
-    copyAssetsPathBtn.Size = UDim2.new(0.48, 0, 1, 0)
-    copyAssetsPathBtn.Position = UDim2.new(0.52, 0, 0, 0)
-    Theme.AddCorner(copyAssetsPathBtn, Theme.CornerSmall)
+    copyAssetsPathBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    copyAssetsPathBtn.LayoutOrder = 2
+    Theme.AddCorner(copyAssetsPathBtn, Theme.CornerPill)
+    Theme.AddStroke(copyAssetsPathBtn, Theme.Border, 1)
     copyAssetsPathBtn.Parent = copyBar
 
-    copyAssetsPathBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(copyAssetsPathBtn, function()
         local name = self.SavedAssetPath
         if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
         Environment.SetClipboard(name)
         copyAssetsPathBtn.Text = "✓ Pasta Copiada!"
-        task.delay(2, function() copyAssetsPathBtn.Text = " Copiar Pasta de Assets" end)
+        task.delay(2, function() copyAssetsPathBtn.Text = "📦 Copiar Pasta de Assets" end)
     end)
 end
 
@@ -5561,24 +5569,26 @@ function Interface:BuildNetworkTab()
     layout.Padding = UDim.new(0, 4)
     layout.Parent = scroll
 
-    toggleSnifferBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(toggleSnifferBtn, function()
         if NetworkSniffer.IsActive then
             NetworkSniffer.Stop()
-            toggleSnifferBtn.Text = " INICIAR GRAVAÇÃO DE REDE"
-            toggleSnifferBtn.TextColor3 = Theme.AccentSuccess
+            toggleSnifferBtn.Text = "📡 INICIAR GRAVAÇÃO"
+            toggleSnifferBtn.TextColor3 = Theme.AccentSkull
+            toggleSnifferBtn.BackgroundColor3 = Theme.AccentPrimary
         else
             NetworkSniffer.Start()
-            toggleSnifferBtn.Text = " PARAR GRAVAÇÃO"
-            toggleSnifferBtn.TextColor3 = Theme.AccentDanger
+            toggleSnifferBtn.Text = "🛑 PARAR GRAVAÇÃO"
+            toggleSnifferBtn.TextColor3 = Theme.AccentSkull
+            toggleSnifferBtn.BackgroundColor3 = Theme.AccentDanger
         end
     end)
 
-    exportSnifferBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(exportSnifferBtn, function()
         local file = NetworkSniffer.ExportLogs()
         exportSnifferBtn.Text = "✓ Salvo: " .. file
         Environment.SetClipboard(file)
         task.delay(2, function()
-            exportSnifferBtn.Text = " EXPORTAR PROTOCOLO (.json)"
+            exportSnifferBtn.Text = "📄 EXPORTAR (.json)"
         end)
     end)
 
