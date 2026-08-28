@@ -1,37 +1,41 @@
 --[[
-    HyperSaveInstance - Modern Glassmorphic Design System & Theme
+    HyperSaveInstance - Bubble UI & Translucent Acrylic Design System
+    Created by Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
 ]]
 
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Pure Purple & Black Palette (Roxo e Preto - Gothic Skull Edition)
-    Background = Color3.fromRGB(5, 4, 9),          -- Pure Obsidian Black
-    BackgroundGlass = Color3.fromRGB(9, 7, 16),     -- Black with Purple Haze
-    CardBg = Color3.fromRGB(14, 11, 23),            -- Deep Purple-Black Card
-    CardHover = Color3.fromRGB(27, 20, 45),         -- Dark Violet Hover
-    CardActive = Color3.fromRGB(43, 27, 70),        -- Electric Violet Active
-    Border = Color3.fromRGB(47, 29, 75),            -- Deep Purple Border
-    BorderLight = Color3.fromRGB(126, 34, 206),     -- Electric Purple Stroke
-    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Vivid Neon Purple Glow
+    -- Pure Purple & Black Translucent Acrylic Palette
+    Background = Color3.fromRGB(7, 5, 13),          -- Deep Obsidian Black
+    BackgroundTransparency = 0.06,                  -- Frosted Glass Depth
+    CardBg = Color3.fromRGB(16, 12, 28),            -- Translucent Purple-Black
+    CardTransparency = 0.2,                         -- Acrylic Window Effect
+    CardHover = Color3.fromRGB(30, 22, 52),         -- Smooth Violet Hover
+    CardActive = Color3.fromRGB(48, 32, 82),        -- Solid Active Violet
+    Border = Color3.fromRGB(56, 40, 88),            -- Subtle Purple Border
+    BorderTransparency = 0.35,                      -- Soft Border Blend
+    BorderLight = Color3.fromRGB(139, 92, 246),     -- Electric Violet Stroke
+    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Glowing Purple Neon
     
-    -- Accents & Gradients (Strictly Purple / Violet / Black)
-    AccentPrimary = Color3.fromRGB(147, 51, 234),   -- Royal Electric Purple (#9333ea)
-    AccentSecondary = Color3.fromRGB(192, 132, 252), -- Radiant Violet (#c084fc)
+    -- Solid, Rich Accent Colors
+    AccentPrimary = Color3.fromRGB(139, 92, 246),   -- Electric Royal Purple (#8b5cf6)
+    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Radiant Violet (#a855f7)
+    AccentDark = Color3.fromRGB(91, 33, 182),       -- Deep Amethyst (#5b21b6)
     AccentCyan = Color3.fromRGB(216, 180, 254),     -- Light Lavender (#d8b4fe)
-    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Neon Purple Glow (#a855f7)
-    AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta Purple (#e879f9)
-    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Crimson Rose (#f43f5e)
-    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Bright Lavender (#f0abfc)
-    AccentSkull = Color3.fromRGB(250, 245, 255),    -- Pure Bone White (#faf5ff)
+    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Solid Purple (#a855f7)
+    AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta (#e879f9)
+    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Vivid Rose (#f43f5e)
+    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Hot Lavender (#f0abfc)
+    AccentSkull = Color3.fromRGB(255, 255, 255),    -- Crisp Pure White (#ffffff)
 
-    -- Text Colors
-    TextPrimary = Color3.fromRGB(250, 245, 255),    -- Bone White (#faf5ff)
-    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lavender (#d8b4fe)
-    TextMuted = Color3.fromRGB(147, 130, 169),      -- Muted Ash Purple
-    TextAccent = Color3.fromRGB(192, 132, 252),     -- Vibrant Purple
+    -- Modern Crisp Typography
+    TextPrimary = Color3.fromRGB(255, 255, 255),    -- Pure White
+    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lilac
+    TextMuted = Color3.fromRGB(156, 140, 180),      -- Muted Ash Violet
+    TextAccent = Color3.fromRGB(192, 132, 252),     -- Bright Violet
     TextCyan = Color3.fromRGB(233, 213, 255),       -- Pale Lavender
-    TextTheo = Color3.fromRGB(245, 208, 254),       -- Hot Lavender
+    TextTheo = Color3.fromRGB(245, 208, 254),       -- Glowing Lavender
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,
@@ -39,10 +43,10 @@ local Theme = {
     FontRegular = Enum.Font.Gotham,
     FontCode = Enum.Font.Code,
 
-    -- Radii
-    CornerLarge = UDim.new(0, 12),
-    CornerMedium = UDim.new(0, 8),
-    CornerSmall = UDim.new(0, 5),
+    -- Smooth Bubble Radii ("Mais Bolha")
+    CornerLarge = UDim.new(0, 16),
+    CornerMedium = UDim.new(0, 12),
+    CornerSmall = UDim.new(0, 8),
     CornerPill = UDim.new(1, 0),
 }
 
@@ -57,7 +61,7 @@ function Theme.Tween(instance: Instance, duration: number, properties: {[string]
     return tween
 end
 
--- Create rounded corner
+-- Create rounded bubble corner
 function Theme.AddCorner(instance: Instance, radius: UDim?): UICorner
     local corner = Instance.new("UICorner")
     corner.CornerRadius = radius or Theme.CornerMedium
@@ -86,6 +90,40 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
     grad.Rotation = rotation or 45
     grad.Parent = instance
     return grad
+end
+
+-- Interactive Button Animation Helper (Hover Spring & Click Feedback)
+function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
+    local origSize = btn.Size
+    local origBg = btn.BackgroundColor3
+    
+    btn.MouseEnter:Connect(function()
+        Theme.Tween(btn, 0.15, {
+            BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
+        })
+    end)
+
+    btn.MouseLeave:Connect(function()
+        Theme.Tween(btn, 0.15, {
+            BackgroundColor3 = origBg
+        })
+    end)
+
+    btn.MouseButton1Down:Connect(function()
+        Theme.Tween(btn, 0.08, {
+            Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
+        })
+    end)
+
+    btn.MouseButton1Up:Connect(function()
+        Theme.Tween(btn, 0.12, {
+            Size = origSize
+        })
+    end)
+
+    if onClick then
+        btn.MouseButton1Click:Connect(onClick)
+    end
 end
 
 return Theme

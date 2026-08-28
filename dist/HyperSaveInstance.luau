@@ -4366,34 +4366,35 @@ function Interface:BuildUI()
     floatingBtn.Text = "💀 HYPERSAVE • THEO"
     floatingBtn.Font = Theme.FontTitle
     floatingBtn.TextSize = 11
-    floatingBtn.TextColor3 = Theme.TextPrimary
+    floatingBtn.TextColor3 = Theme.AccentSkull
     floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 154, 0, 34)
+    floatingBtn.Size = UDim2.new(0, 154, 0, 36)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerPill)
     Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
-    Theme.AddGradient(floatingBtn, Color3.fromRGB(15, 12, 24), Color3.fromRGB(35, 20, 55), 45)
+    Theme.AddGradient(floatingBtn, Color3.fromRGB(16, 12, 28), Color3.fromRGB(48, 28, 78), 45)
     floatingBtn.Parent = screenGui
     self.FloatingToggle = floatingBtn
 
-    -- Main Container (Obsidian Gothic Theme)
+    Theme.AnimateButton(floatingBtn, function()
+        if self.MainFrame then self.MainFrame.Visible = true end
+        floatingBtn.Visible = false
+    end)
+
+    -- Main Container (Translucent Acrylic Bubble Theme)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.Size = UDim2.new(0, 660, 0, 480)
     main.Position = UDim2.new(0.5, -330, 0.5, -240)
     main.BackgroundColor3 = Theme.Background
+    main.BackgroundTransparency = Theme.BackgroundTransparency
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
     Theme.AddCorner(main, Theme.CornerLarge)
     Theme.AddStroke(main, Theme.BorderLight, 1.5)
     main.Parent = screenGui
     self.MainFrame = main
-
-    floatingBtn.MouseButton1Click:Connect(function()
-        main.Visible = true
-        floatingBtn.Visible = false
-    end)
 
     -- Dragging logic
     local dragging, dragInput, dragStart, startPos
@@ -4426,6 +4427,7 @@ function Interface:BuildUI()
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 48)
     header.BackgroundColor3 = Theme.CardBg
+    header.BackgroundTransparency = Theme.CardTransparency
     header.BorderSizePixel = 0
     header.Parent = main
 
@@ -4440,28 +4442,28 @@ function Interface:BuildUI()
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Text = "💀 HyperSaveInstance"
     titleLabel.Font = Theme.FontTitle
-    titleLabel.TextSize = 15
-    titleLabel.TextColor3 = Theme.TextPrimary
+    titleLabel.TextSize = 14
+    titleLabel.TextColor3 = Theme.AccentSkull
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 185, 1, 0)
+    titleLabel.Size = UDim2.new(0, 175, 1, 0)
     titleLabel.Position = UDim2.new(0, 16, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Parent = header
 
-    -- Platform & Creator Badge
+    -- Platform & Creator Badge (Pill Badge)
     local badge = Instance.new("TextLabel")
     badge.Text = "por Theo Lorentz Padilha • [RightShift]"
     badge.Font = Theme.FontSemiBold
     badge.TextSize = 11
     badge.TextColor3 = Theme.AccentTheo
-    badge.BackgroundColor3 = Color3.fromRGB(18, 14, 28)
+    badge.BackgroundColor3 = Color3.fromRGB(20, 15, 34)
     badge.Size = UDim2.new(0, 230, 0, 26)
-    badge.Position = UDim2.new(0, 205, 0.5, -13)
+    badge.Position = UDim2.new(0, 195, 0.5, -13)
     Theme.AddCorner(badge, Theme.CornerPill)
     Theme.AddStroke(badge, Theme.BorderNeon, 1)
     badge.Parent = header
 
-    -- Minimize Button
+    -- Minimize Button (Bubble Pill)
     local minBtn = Instance.new("TextButton")
     minBtn.Text = "–"
     minBtn.Font = Theme.FontTitle
@@ -4470,14 +4472,15 @@ function Interface:BuildUI()
     minBtn.BackgroundColor3 = Theme.CardHover
     minBtn.Size = UDim2.new(0, 28, 0, 28)
     minBtn.Position = UDim2.new(1, -70, 0.5, -14)
-    Theme.AddCorner(minBtn, Theme.CornerSmall)
+    Theme.AddCorner(minBtn, Theme.CornerPill)
     minBtn.Parent = header
-    minBtn.MouseButton1Click:Connect(function()
+
+    Theme.AnimateButton(minBtn, function()
         main.Visible = false
         floatingBtn.Visible = true
     end)
 
-    -- Close Button
+    -- Close Button (Bubble Pill)
     local closeBtn = Instance.new("TextButton")
     closeBtn.Text = "✕"
     closeBtn.Font = Theme.FontTitle
@@ -4486,21 +4489,23 @@ function Interface:BuildUI()
     closeBtn.BackgroundColor3 = Theme.CardHover
     closeBtn.Size = UDim2.new(0, 28, 0, 28)
     closeBtn.Position = UDim2.new(1, -38, 0.5, -14)
-    Theme.AddCorner(closeBtn, Theme.CornerSmall)
+    Theme.AddCorner(closeBtn, Theme.CornerPill)
     closeBtn.Parent = header
-    closeBtn.MouseButton1Click:Connect(function()
+
+    Theme.AnimateButton(closeBtn, function()
         screenGui:Destroy()
     end)
 
     -- Tab Navigation Bar (Scrollable for all master tools)
     local navBar = Instance.new("ScrollingFrame")
     navBar.Name = "NavBar"
-    navBar.Size = UDim2.new(0, 144, 1, -48)
+    navBar.Size = UDim2.new(0, 148, 1, -48)
     navBar.Position = UDim2.new(0, 0, 0, 48)
     navBar.BackgroundColor3 = Theme.CardBg
+    navBar.BackgroundTransparency = Theme.CardTransparency
     navBar.ScrollBarThickness = 3
-    navBar.ScrollBarImageColor3 = Theme.Border
-    navBar.CanvasSize = UDim2.new(0, 0, 0, 380)
+    navBar.ScrollBarImageColor3 = Theme.BorderLight
+    navBar.CanvasSize = UDim2.new(0, 0, 0, 420)
     navBar.BorderSizePixel = 0
     navBar.Parent = main
 
@@ -4514,26 +4519,26 @@ function Interface:BuildUI()
     -- Content Area
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -144, 1, -48)
-    contentArea.Position = UDim2.new(0, 144, 0, 48)
+    contentArea.Size = UDim2.new(1, -148, 1, -48)
+    contentArea.Position = UDim2.new(0, 148, 0, 48)
     contentArea.BackgroundTransparency = 1
     contentArea.Parent = main
     self.ContentArea = contentArea
 
     -- Navigation buttons
     local tabs = {
-        {"Dashboard", " Clonar Tudo"},
-        {"Selector", " Salvar Modelo"},
-        {"AudioRipper", " Músicas & Sons"},
-        {"LightingRipper", " Iluminação"},
-        {"GuiRipper", " Interfaces (UI)"},
-        {"Network", " Rede / Remotes"},
-        {"Universe", " Universo"},
-        {"ObjExport", " Exportar 3D"},
-        {"Tutorial", " Como Usar"},
-        {"Settings", " Configurações"},
-        {"Console", " Console"},
-        {"About", " Informações"}
+        {"Dashboard", "🚀 Clonar Tudo"},
+        {"Selector", "🎯 Salvar Modelo"},
+        {"AudioRipper", "🎵 Músicas & Sons"},
+        {"LightingRipper", "✨ Iluminação"},
+        {"GuiRipper", "🖥️ Interfaces (UI)"},
+        {"Network", "📡 Rede / Remotes"},
+        {"Universe", "🌌 Universo"},
+        {"ObjExport", "🧊 Exportar 3D"},
+        {"Tutorial", "📖 Como Usar"},
+        {"Settings", "⚙️ Configurações"},
+        {"Console", "💻 Console"},
+        {"About", "👑 Informações"}
     }
 
     self.TabFrames = {}
@@ -4548,9 +4553,10 @@ function Interface:BuildUI()
         navBtn.TextSize = 10
         navBtn.TextColor3 = (i == 1) and Theme.AccentSkull or Theme.TextSecondary
         navBtn.BackgroundColor3 = (i == 1) and Theme.CardActive or Theme.CardBg
-        navBtn.Size = UDim2.new(1, -12, 0, 26)
-        navBtn.Position = UDim2.new(0, 6, 0, 6 + (i - 1) * 30)
-        Theme.AddCorner(navBtn, Theme.CornerSmall)
+        navBtn.BackgroundTransparency = (i == 1) and 0 or 0.4
+        navBtn.Size = UDim2.new(1, -14, 0, 28)
+        navBtn.Position = UDim2.new(0, 7, 0, 7 + (i - 1) * 33)
+        Theme.AddCorner(navBtn, Theme.CornerMedium)
         Theme.AddStroke(navBtn, (i == 1) and Theme.BorderNeon or Theme.Border, 1)
         navBtn.Parent = navBar
         self.NavButtons[tabKey] = navBtn
@@ -4563,7 +4569,7 @@ function Interface:BuildUI()
         tabFrame.Parent = contentArea
         self.TabFrames[tabKey] = tabFrame
 
-        navBtn.MouseButton1Click:Connect(function()
+        Theme.AnimateButton(navBtn, function()
             self:SwitchTab(tabKey)
         end)
     end
@@ -4595,10 +4601,12 @@ function Interface:SwitchTab(targetTab: string)
         if k == targetTab then
             btn.TextColor3 = Theme.AccentSkull
             btn.BackgroundColor3 = Theme.CardActive
+            btn.BackgroundTransparency = 0
             if stroke then stroke.Color = Theme.BorderNeon end
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
+            btn.BackgroundTransparency = 0.4
             if stroke then stroke.Color = Theme.Border end
         end
     end
@@ -4641,17 +4649,23 @@ function Interface:BuildDashboardTab()
     presetLabel.Parent = parent
 
     local presetContainer = Instance.new("Frame")
-    presetContainer.Size = UDim2.new(1, -32, 0, 34)
+    presetContainer.Size = UDim2.new(1, -32, 0, 36)
     presetContainer.Position = UDim2.new(0, 16, 0, 96)
     presetContainer.BackgroundTransparency = 1
     presetContainer.Parent = parent
 
+    local presetLayout = Instance.new("UIListLayout")
+    presetLayout.FillDirection = Enum.FillDirection.Horizontal
+    presetLayout.Padding = UDim.new(0, 8)
+    presetLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    presetLayout.Parent = presetContainer
+
     local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
     local presetDisplay = {
-        Full = " Completo 10/10",
-        Fast = " Rápido",
-        VisualsOnly = " Apenas Visual",
-        ScriptsOnly = " Apenas Scripts"
+        Full = "⭐ Completo 10/10",
+        Fast = "⚡ Rápido",
+        VisualsOnly = "🎨 Apenas Visual",
+        ScriptsOnly = "📜 Apenas Scripts"
     }
 
     self.PresetButtons = {}
@@ -4659,21 +4673,32 @@ function Interface:BuildDashboardTab()
         local btn = Instance.new("TextButton")
         btn.Text = presetDisplay[pKey]
         btn.Font = Theme.FontSemiBold
-        btn.TextSize = 11
-        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentCyan or Theme.TextSecondary
-        btn.BackgroundColor3 = Theme.CardBg
-        btn.Size = UDim2.new(0.235, 0, 1, 0)
-        btn.Position = UDim2.new((i - 1) * 0.255, 0, 0, 0)
+        btn.TextSize = 10
+        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentSkull or Theme.TextSecondary
+        btn.BackgroundColor3 = (self.Config.Mode == pKey) and Theme.CardActive or Theme.CardBg
+        btn.BackgroundTransparency = (self.Config.Mode == pKey) and 0 or Theme.CardTransparency
+        btn.Size = UDim2.new(0.25, -6, 1, 0)
+        btn.LayoutOrder = i
         Theme.AddCorner(btn, Theme.CornerSmall)
-        Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.AccentCyan or Theme.Border, 1)
+        Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.BorderNeon or Theme.Border, 1)
         btn.Parent = presetContainer
         self.PresetButtons[pKey] = btn
 
-        btn.MouseButton1Click:Connect(function()
+        Theme.AnimateButton(btn, function()
             Defaults.ApplyPreset(self.Config, pKey)
             for k, b in pairs(self.PresetButtons) do
-                b.TextColor3 = (k == pKey) and Theme.AccentCyan or Theme.TextSecondary
-                b:FindFirstChildOfClass("UIStroke").Color = (k == pKey) and Theme.AccentCyan or Theme.Border
+                local stroke = b:FindFirstChildOfClass("UIStroke")
+                if k == pKey then
+                    b.TextColor3 = Theme.AccentSkull
+                    b.BackgroundColor3 = Theme.CardActive
+                    b.BackgroundTransparency = 0
+                    if stroke then stroke.Color = Theme.BorderNeon end
+                else
+                    b.TextColor3 = Theme.TextSecondary
+                    b.BackgroundColor3 = Theme.CardBg
+                    b.BackgroundTransparency = Theme.CardTransparency
+                    if stroke then stroke.Color = Theme.Border end
+                end
             end
             self:Log("Modo selecionado: " .. pKey)
         end)
@@ -4687,15 +4712,21 @@ function Interface:BuildDashboardTab()
     formatLabel.TextColor3 = Theme.TextMuted
     formatLabel.TextXAlignment = Enum.TextXAlignment.Left
     formatLabel.Size = UDim2.new(1, -32, 0, 18)
-    formatLabel.Position = UDim2.new(0, 16, 0, 140)
+    formatLabel.Position = UDim2.new(0, 16, 0, 142)
     formatLabel.BackgroundTransparency = 1
     formatLabel.Parent = parent
 
     local formatContainer = Instance.new("Frame")
-    formatContainer.Size = UDim2.new(1, -32, 0, 30)
-    formatContainer.Position = UDim2.new(0, 16, 0, 160)
+    formatContainer.Size = UDim2.new(1, -32, 0, 32)
+    formatContainer.Position = UDim2.new(0, 16, 0, 162)
     formatContainer.BackgroundTransparency = 1
     formatContainer.Parent = parent
+
+    local formatLayout = Instance.new("UIListLayout")
+    formatLayout.FillDirection = Enum.FillDirection.Horizontal
+    formatLayout.Padding = UDim.new(0, 8)
+    formatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    formatLayout.Parent = formatContainer
 
     local formats = {
         {"rbxlx", "Roblox XML (.rbxlx)"},
@@ -4709,31 +4740,43 @@ function Interface:BuildDashboardTab()
         local fBtn = Instance.new("TextButton")
         fBtn.Text = fLabel
         fBtn.Font = Theme.FontSemiBold
-        fBtn.TextSize = 11
-        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.AccentSuccess or Theme.TextSecondary
-        fBtn.BackgroundColor3 = Theme.CardBg
-        fBtn.Size = UDim2.new(0.31, 0, 1, 0)
-        fBtn.Position = UDim2.new((i - 1) * 0.34, 0, 0, 0)
+        fBtn.TextSize = 10
+        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.AccentSkull or Theme.TextSecondary
+        fBtn.BackgroundColor3 = (self.Config.Format == fKey) and Theme.CardActive or Theme.CardBg
+        fBtn.BackgroundTransparency = (self.Config.Format == fKey) and 0 or Theme.CardTransparency
+        fBtn.Size = UDim2.new(0.333, -6, 1, 0)
+        fBtn.LayoutOrder = i
         Theme.AddCorner(fBtn, Theme.CornerSmall)
-        Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.AccentSuccess or Theme.Border, 1)
+        Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.BorderNeon or Theme.Border, 1)
         fBtn.Parent = formatContainer
         self.FormatButtons[fKey] = fBtn
 
-        fBtn.MouseButton1Click:Connect(function()
+        Theme.AnimateButton(fBtn, function()
             self.Config.Format = fKey
             for k, b in pairs(self.FormatButtons) do
-                b.TextColor3 = (k == fKey) and Theme.AccentSuccess or Theme.TextSecondary
-                b:FindFirstChildOfClass("UIStroke").Color = (k == fKey) and Theme.AccentSuccess or Theme.Border
+                local stroke = b:FindFirstChildOfClass("UIStroke")
+                if k == fKey then
+                    b.TextColor3 = Theme.AccentSkull
+                    b.BackgroundColor3 = Theme.CardActive
+                    b.BackgroundTransparency = 0
+                    if stroke then stroke.Color = Theme.BorderNeon end
+                else
+                    b.TextColor3 = Theme.TextSecondary
+                    b.BackgroundColor3 = Theme.CardBg
+                    b.BackgroundTransparency = Theme.CardTransparency
+                    if stroke then stroke.Color = Theme.Border end
+                end
             end
             self:Log("Formato definido para: ." .. fKey)
         end)
     end
 
-    -- Progress Container
+    -- Progress Container (Frosted Glass Acrylic Card)
     local progressCard = Instance.new("Frame")
     progressCard.Size = UDim2.new(1, -32, 0, 106)
     progressCard.Position = UDim2.new(0, 16, 0, 204)
     progressCard.BackgroundColor3 = Theme.CardBg
+    progressCard.BackgroundTransparency = Theme.CardTransparency
     Theme.AddCorner(progressCard, Theme.CornerMedium)
     Theme.AddStroke(progressCard, Theme.Border, 1)
     progressCard.Parent = parent
@@ -4847,14 +4890,16 @@ function Interface:BuildSelectorTab()
     scroll.Size = UDim2.new(1, -32, 1, -32)
     scroll.Position = UDim2.new(0, 16, 0, 16)
     scroll.BackgroundColor3 = Theme.CardBg
-    scroll.ScrollBarThickness = 5
+    scroll.BackgroundTransparency = Theme.CardTransparency
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Theme.BorderLight
     scroll.CanvasSize = UDim2.new(0, 0, 0, 520)
-    Theme.AddCorner(scroll, Theme.CornerMedium)
+    Theme.AddCorner(scroll, Theme.CornerLarge)
     Theme.AddStroke(scroll, Theme.Border, 1)
     scroll.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "🎯 SELETOR DE MODELOS, ARMAS & MULTI-SELEÇÃO"
+    headerLbl.Text = "🎯 SELETOR DE MODELOS & MULTI-SELEÇÃO"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -4864,49 +4909,51 @@ function Interface:BuildSelectorTab()
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = scroll
 
-    -- 1. In-World 3D Raycast Click Selector Button
+    -- 1. In-World 3D Raycast Click Selector Button (Bubble Button)
     local raycastBtn = Instance.new("TextButton")
     raycastBtn.Text = "🎯 CLICAR NO OBJETO NO MUNDO 3D (SELETOR VISUAL)"
     raycastBtn.Font = Theme.FontTitle
-    raycastBtn.TextSize = 12
-    raycastBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    raycastBtn.BackgroundColor3 = Theme.AccentCyan
+    raycastBtn.TextSize = 11
+    raycastBtn.TextColor3 = Theme.AccentSkull
+    raycastBtn.BackgroundColor3 = Theme.AccentPrimary
     raycastBtn.Size = UDim2.new(1, -24, 0, 38)
     raycastBtn.Position = UDim2.new(0, 12, 0, 42)
-    Theme.AddCorner(raycastBtn, Theme.CornerSmall)
-    Theme.AddGradient(raycastBtn, Theme.AccentCyan, Theme.AccentPrimary, 0)
+    Theme.AddCorner(raycastBtn, Theme.CornerMedium)
+    Theme.AddStroke(raycastBtn, Theme.BorderNeon, 1.5)
+    Theme.AddGradient(raycastBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
     raycastBtn.Parent = scroll
 
     -- 2. Search by Name Textbox
     local searchBox = Instance.new("TextBox")
     searchBox.PlaceholderText = "Ou digite o nome: Ferrari, Gun, ShopGui, Map..."
     searchBox.Font = Theme.FontRegular
-    searchBox.TextSize = 12
+    searchBox.TextSize = 11
     searchBox.TextColor3 = Theme.TextPrimary
     searchBox.PlaceholderColor3 = Theme.TextMuted
-    searchBox.BackgroundColor3 = Color3.fromRGB(12, 14, 20)
+    searchBox.BackgroundColor3 = Color3.fromRGB(10, 8, 16)
     searchBox.Size = UDim2.new(1, -24, 0, 36)
     searchBox.Position = UDim2.new(0, 12, 0, 88)
     Theme.AddCorner(searchBox, Theme.CornerSmall)
     Theme.AddStroke(searchBox, Theme.Border, 1)
     searchBox.Parent = scroll
 
-    -- 3. Selected Target Info Card
+    -- 3. Selected Target Info Card (Frosted Acrylic)
     local infoCard = Instance.new("Frame")
-    infoCard.Size = UDim2.new(1, -24, 0, 90)
+    infoCard.Size = UDim2.new(1, -24, 0, 88)
     infoCard.Position = UDim2.new(0, 12, 0, 132)
-    infoCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
-    Theme.AddCorner(infoCard, Theme.CornerSmall)
+    infoCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
+    infoCard.BackgroundTransparency = 0.3
+    Theme.AddCorner(infoCard, Theme.CornerMedium)
     Theme.AddStroke(infoCard, Theme.Border, 1)
     infoCard.Parent = scroll
 
     local targetTitle = Instance.new("TextLabel")
     targetTitle.Text = "Nenhum objeto selecionado no momento"
     targetTitle.Font = Theme.FontSemiBold
-    targetTitle.TextSize = 12
+    targetTitle.TextSize = 11
     targetTitle.TextColor3 = Theme.TextPrimary
     targetTitle.TextXAlignment = Enum.TextXAlignment.Left
-    targetTitle.Size = UDim2.new(1, -16, 0, 20)
+    targetTitle.Size = UDim2.new(1, -20, 0, 20)
     targetTitle.Position = UDim2.new(0, 10, 0, 8)
     targetTitle.BackgroundTransparency = 1
     targetTitle.Parent = infoCard
@@ -4914,10 +4961,10 @@ function Interface:BuildSelectorTab()
     local targetStats = Instance.new("TextLabel")
     targetStats.Text = "Mire no jogo com o botão acima ou digite o nome para inspecionar."
     targetStats.Font = Theme.FontRegular
-    targetStats.TextSize = 11
+    targetStats.TextSize = 10
     targetStats.TextColor3 = Theme.TextSecondary
     targetStats.TextXAlignment = Enum.TextXAlignment.Left
-    targetStats.Size = UDim2.new(1, -16, 0, 20)
+    targetStats.Size = UDim2.new(1, -20, 0, 20)
     targetStats.Position = UDim2.new(0, 10, 0, 32)
     targetStats.BackgroundTransparency = 1
     targetStats.Parent = infoCard
@@ -4928,7 +4975,7 @@ function Interface:BuildSelectorTab()
     targetPath.TextSize = 10
     targetPath.TextColor3 = Theme.TextMuted
     targetPath.TextXAlignment = Enum.TextXAlignment.Left
-    targetPath.Size = UDim2.new(1, -16, 0, 20)
+    targetPath.Size = UDim2.new(1, -20, 0, 20)
     targetPath.Position = UDim2.new(0, 10, 0, 56)
     targetPath.BackgroundTransparency = 1
     targetPath.Parent = infoCard
@@ -4963,43 +5010,58 @@ function Interface:BuildSelectorTab()
         targetPath.Text = "📍 Caminho: " .. inst:GetFullName()
     end
 
-    -- 4. Action Buttons (Save Single / Add to Pack)
+    -- 4. Action Buttons Container (UIListLayout Pixel-Perfect Horizontal Grid)
+    local actionBtnContainer = Instance.new("Frame")
+    actionBtnContainer.Size = UDim2.new(1, -24, 0, 38)
+    actionBtnContainer.Position = UDim2.new(0, 12, 0, 228)
+    actionBtnContainer.BackgroundTransparency = 1
+    actionBtnContainer.Parent = scroll
+
+    local actionLayout = Instance.new("UIListLayout")
+    actionLayout.FillDirection = Enum.FillDirection.Horizontal
+    actionLayout.Padding = UDim.new(0, 8)
+    actionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    actionLayout.Parent = actionBtnContainer
+
     local btnSaveSingle = Instance.new("TextButton")
     btnSaveSingle.Text = "💾 SALVAR ESTE MODELO (.rbxm)"
     btnSaveSingle.Font = Theme.FontTitle
-    btnSaveSingle.TextSize = 12
-    btnSaveSingle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btnSaveSingle.BackgroundColor3 = Theme.AccentSuccess
-    btnSaveSingle.Size = UDim2.new(0.48, 0, 0, 38)
-    btnSaveSingle.Position = UDim2.new(0, 12, 0, 230)
-    Theme.AddCorner(btnSaveSingle, Theme.CornerSmall)
-    btnSaveSingle.Parent = scroll
+    btnSaveSingle.TextSize = 11
+    btnSaveSingle.TextColor3 = Theme.AccentSkull
+    btnSaveSingle.BackgroundColor3 = Theme.AccentPrimary
+    btnSaveSingle.Size = UDim2.new(0.5, -4, 1, 0)
+    btnSaveSingle.LayoutOrder = 1
+    Theme.AddCorner(btnSaveSingle, Theme.CornerMedium)
+    Theme.AddStroke(btnSaveSingle, Theme.BorderNeon, 1)
+    btnSaveSingle.Parent = actionBtnContainer
 
     local btnAddToPack = Instance.new("TextButton")
     btnAddToPack.Text = "➕ ADICIONAR AO PACOTE"
     btnAddToPack.Font = Theme.FontTitle
-    btnAddToPack.TextSize = 12
-    btnAddToPack.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btnAddToPack.BackgroundColor3 = Theme.AccentPurple
-    btnAddToPack.Size = UDim2.new(0.48, 0, 0, 38)
-    btnAddToPack.Position = UDim2.new(0.52, 0, 0, 230)
-    Theme.AddCorner(btnAddToPack, Theme.CornerSmall)
-    btnAddToPack.Parent = scroll
+    btnAddToPack.TextSize = 11
+    btnAddToPack.TextColor3 = Theme.AccentSkull
+    btnAddToPack.BackgroundColor3 = Theme.CardActive
+    btnAddToPack.Size = UDim2.new(0.5, -4, 1, 0)
+    btnAddToPack.LayoutOrder = 2
+    Theme.AddCorner(btnAddToPack, Theme.CornerMedium)
+    Theme.AddStroke(btnAddToPack, Theme.BorderLight, 1)
+    btnAddToPack.Parent = actionBtnContainer
 
-    -- 5. Multi-Select Package Card
+    -- 5. Multi-Select Package Card (Frosted Acrylic)
     local packCard = Instance.new("Frame")
     packCard.Size = UDim2.new(1, -24, 0, 110)
-    packCard.Position = UDim2.new(0, 12, 0, 276)
-    packCard.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
-    Theme.AddCorner(packCard, Theme.CornerSmall)
+    packCard.Position = UDim2.new(0, 12, 0, 274)
+    packCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
+    packCard.BackgroundTransparency = 0.3
+    Theme.AddCorner(packCard, Theme.CornerMedium)
     Theme.AddStroke(packCard, Theme.Border, 1)
     packCard.Parent = scroll
 
     local packTitle = Instance.new("TextLabel")
     packTitle.Text = "📦 PACOTE MULTI-SELEÇÃO: 0 ITENS"
     packTitle.Font = Theme.FontSemiBold
-    packTitle.TextSize = 12
-    packTitle.TextColor3 = Theme.AccentPurple
+    packTitle.TextSize = 11
+    packTitle.TextColor3 = Theme.AccentCyan
     packTitle.TextXAlignment = Enum.TextXAlignment.Left
     packTitle.Size = UDim2.new(0.7, 0, 0, 20)
     packTitle.Position = UDim2.new(0, 10, 0, 10)
@@ -5009,24 +5071,26 @@ function Interface:BuildSelectorTab()
     local btnClearPack = Instance.new("TextButton")
     btnClearPack.Text = "Limpar"
     btnClearPack.Font = Theme.FontSemiBold
-    btnClearPack.TextSize = 11
+    btnClearPack.TextSize = 10
     btnClearPack.TextColor3 = Theme.AccentDanger
-    btnClearPack.BackgroundColor3 = Color3.fromRGB(30, 20, 25)
+    btnClearPack.BackgroundColor3 = Color3.fromRGB(24, 14, 22)
     btnClearPack.Size = UDim2.new(0.24, 0, 0, 24)
     btnClearPack.Position = UDim2.new(0.73, 0, 0, 8)
     Theme.AddCorner(btnClearPack, Theme.CornerSmall)
+    Theme.AddStroke(btnClearPack, Theme.AccentDanger, 1, 0.4)
     btnClearPack.Parent = packCard
 
     local btnSavePack = Instance.new("TextButton")
     btnSavePack.Text = "🚀 BAIXAR PACOTE COMPLETO (.rbxm)"
     btnSavePack.Font = Theme.FontTitle
-    btnSavePack.TextSize = 12
-    btnSavePack.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btnSavePack.BackgroundColor3 = Theme.AccentPurple
+    btnSavePack.TextSize = 11
+    btnSavePack.TextColor3 = Theme.AccentSkull
+    btnSavePack.BackgroundColor3 = Theme.AccentPrimary
     btnSavePack.Size = UDim2.new(1, -20, 0, 38)
     btnSavePack.Position = UDim2.new(0, 10, 0, 56)
-    Theme.AddCorner(btnSavePack, Theme.CornerSmall)
-    Theme.AddGradient(btnSavePack, Theme.AccentPurple, Theme.AccentCyan, 0)
+    Theme.AddCorner(btnSavePack, Theme.CornerMedium)
+    Theme.AddStroke(btnSavePack, Theme.BorderNeon, 1.2)
+    Theme.AddGradient(btnSavePack, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 0)
     btnSavePack.Parent = packCard
 
     -- 6. Result & Status Label
@@ -5048,7 +5112,7 @@ function Interface:BuildSelectorTab()
     end
 
     -- Event: 3D Raycast click button
-    raycastBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(raycastBtn, function()
         if self.MainFrame then self.MainFrame.Visible = false end
         resultLabel.Text = "🎯 Modo 3D ativo! Clique em qualquer objeto no mundo para selecionar."
         resultLabel.TextColor3 = Theme.AccentCyan
@@ -5082,7 +5146,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Save single model
-    btnSaveSingle.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(btnSaveSingle, function()
         local target = self.CurrentTargetInstance
         if not target then
             resultLabel.Text = "❌ Selecione um modelo antes de salvar!"
@@ -5107,7 +5171,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Add to pack
-    btnAddToPack.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(btnAddToPack, function()
         local target = self.CurrentTargetInstance
         if not target then
             resultLabel.Text = "❌ Selecione um modelo para adicionar ao pacote!"
@@ -5122,7 +5186,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Clear pack
-    btnClearPack.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(btnClearPack, function()
         self.SelectedTargets = {}
         updatePackUI()
         resultLabel.Text = "Pacote limpo."
@@ -5130,7 +5194,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Save full multi-pack
-    btnSavePack.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(btnSavePack, function()
         if #self.SelectedTargets == 0 then
             resultLabel.Text = "❌ O pacote está vazio! Adicione itens primeiro."
             resultLabel.TextColor3 = Theme.AccentWarning
@@ -5148,14 +5212,7 @@ function Interface:BuildSelectorTab()
                 Environment.SetClipboard(msg)
             else
                 resultLabel.Text = "❌ Erro ao salvar pacote: " .. tostring(msg)
-                resultLabel.TextColor3 = Theme.AccentDanger
-            end
-        end)
-    end)
-end
-
--- 3. Audio Ripper & Soundboard Tab
-function Interface:BuildAudioRipperTab()
+                resultfunction Interface:BuildAudioRipperTab()
     local parent = self.TabFrames["AudioRipper"]
 
     local topBar = Instance.new("Frame")
@@ -5164,46 +5221,55 @@ function Interface:BuildAudioRipperTab()
     topBar.BackgroundTransparency = 1
     topBar.Parent = parent
 
+    local topLayout = Instance.new("UIListLayout")
+    topLayout.FillDirection = Enum.FillDirection.Horizontal
+    topLayout.Padding = UDim.new(0, 8)
+    topLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    topLayout.Parent = topBar
+
     local scanAudioBtn = Instance.new("TextButton")
-    scanAudioBtn.Text = " ESCANEAR SONS DO JOGO"
+    scanAudioBtn.Text = "🎵 ESCANEAR SONS DO JOGO"
     scanAudioBtn.Font = Theme.FontSemiBold
     scanAudioBtn.TextSize = 11
-    scanAudioBtn.TextColor3 = Theme.AccentCyan
-    scanAudioBtn.BackgroundColor3 = Theme.CardBg
-    scanAudioBtn.Size = UDim2.new(0.48, 0, 1, 0)
-    Theme.AddCorner(scanAudioBtn, Theme.CornerSmall)
-    Theme.AddStroke(scanAudioBtn, Theme.Border, 1)
+    scanAudioBtn.TextColor3 = Theme.AccentSkull
+    scanAudioBtn.BackgroundColor3 = Theme.AccentPrimary
+    scanAudioBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    scanAudioBtn.LayoutOrder = 1
+    Theme.AddCorner(scanAudioBtn, Theme.CornerMedium)
+    Theme.AddStroke(scanAudioBtn, Theme.BorderNeon, 1)
     scanAudioBtn.Parent = topBar
 
     local exportAudioListBtn = Instance.new("TextButton")
-    exportAudioListBtn.Text = " EXPORTAR LISTA DE ÁUDIOS (.txt)"
+    exportAudioListBtn.Text = "📄 EXPORTAR LISTA (.txt)"
     exportAudioListBtn.Font = Theme.FontSemiBold
     exportAudioListBtn.TextSize = 11
     exportAudioListBtn.TextColor3 = Theme.TextPrimary
     exportAudioListBtn.BackgroundColor3 = Theme.CardBg
-    exportAudioListBtn.Size = UDim2.new(0.48, 0, 1, 0)
-    exportAudioListBtn.Position = UDim2.new(0.52, 0, 0, 0)
-    Theme.AddCorner(exportAudioListBtn, Theme.CornerSmall)
+    exportAudioListBtn.BackgroundTransparency = Theme.CardTransparency
+    exportAudioListBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    exportAudioListBtn.LayoutOrder = 2
+    Theme.AddCorner(exportAudioListBtn, Theme.CornerMedium)
     Theme.AddStroke(exportAudioListBtn, Theme.Border, 1)
     exportAudioListBtn.Parent = topBar
 
     local audioScroll = Instance.new("ScrollingFrame")
     audioScroll.Size = UDim2.new(1, -32, 1, -64)
     audioScroll.Position = UDim2.new(0, 16, 0, 56)
-    audioScroll.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+    audioScroll.BackgroundColor3 = Theme.CardBg
+    audioScroll.BackgroundTransparency = Theme.CardTransparency
     audioScroll.ScrollBarThickness = 4
-    audioScroll.ScrollBarImageColor3 = Theme.Border
-    Theme.AddCorner(audioScroll, Theme.CornerMedium)
+    audioScroll.ScrollBarImageColor3 = Theme.BorderLight
+    Theme.AddCorner(audioScroll, Theme.CornerLarge)
     Theme.AddStroke(audioScroll, Theme.Border, 1)
     audioScroll.Parent = parent
 
     local audioLayout = Instance.new("UIListLayout")
     audioLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    audioLayout.Padding = UDim.new(0, 4)
+    audioLayout.Padding = UDim.new(0, 6)
     audioLayout.Parent = audioScroll
 
-    scanAudioBtn.MouseButton1Click:Connect(function()
-        scanAudioBtn.Text = " Escaneando..."
+    Theme.AnimateButton(scanAudioBtn, function()
+        scanAudioBtn.Text = "Escaneando sons..."
         for _, child in ipairs(audioScroll:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
@@ -5214,34 +5280,36 @@ function Interface:BuildAudioRipperTab()
 
             for _, snd in ipairs(list) do
                 local row = Instance.new("Frame")
-                row.Size = UDim2.new(1, -12, 0, 28)
-                row.BackgroundColor3 = Theme.CardBg
+                row.Size = UDim2.new(1, -12, 0, 32)
+                row.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
+                row.BackgroundTransparency = 0.3
                 Theme.AddCorner(row, Theme.CornerSmall)
+                Theme.AddStroke(row, Theme.Border, 1)
                 row.Parent = audioScroll
 
                 local sndLbl = Instance.new("TextLabel")
-                sndLbl.Text = string.format(" %s (ID: %s)", snd.Name, snd.CleanId)
+                sndLbl.Text = string.format("🎵 %s (ID: %s)", snd.Name, snd.CleanId)
                 sndLbl.Font = Theme.FontRegular
                 sndLbl.TextSize = 10
                 sndLbl.TextColor3 = Theme.TextPrimary
                 sndLbl.TextXAlignment = Enum.TextXAlignment.Left
                 sndLbl.Size = UDim2.new(0.65, 0, 1, 0)
-                sndLbl.Position = UDim2.new(0, 8, 0, 0)
+                sndLbl.Position = UDim2.new(0, 10, 0, 0)
                 sndLbl.BackgroundTransparency = 1
                 sndLbl.Parent = row
 
                 local playBtn = Instance.new("TextButton")
-                playBtn.Text = " Play"
+                playBtn.Text = "▶ Play"
                 playBtn.Font = Theme.FontSemiBold
                 playBtn.TextSize = 10
-                playBtn.TextColor3 = Theme.AccentSuccess
-                playBtn.BackgroundColor3 = Theme.CardHover
-                playBtn.Size = UDim2.new(0, 48, 0, 20)
-                playBtn.Position = UDim2.new(1, -110, 0.5, -10)
+                playBtn.TextColor3 = Theme.AccentSkull
+                playBtn.BackgroundColor3 = Theme.AccentPrimary
+                playBtn.Size = UDim2.new(0, 52, 0, 22)
+                playBtn.Position = UDim2.new(1, -120, 0.5, -11)
                 Theme.AddCorner(playBtn, Theme.CornerPill)
                 playBtn.Parent = row
 
-                playBtn.MouseButton1Click:Connect(function()
+                Theme.AnimateButton(playBtn, function()
                     AudioRipper.PlayPreview(snd.SoundId)
                 end)
 
@@ -5251,28 +5319,28 @@ function Interface:BuildAudioRipperTab()
                 copyBtn.TextSize = 9
                 copyBtn.TextColor3 = Theme.TextSecondary
                 copyBtn.BackgroundColor3 = Theme.CardHover
-                copyBtn.Size = UDim2.new(0, 54, 0, 20)
-                copyBtn.Position = UDim2.new(1, -58, 0.5, -10)
+                copyBtn.Size = UDim2.new(0, 58, 0, 22)
+                copyBtn.Position = UDim2.new(1, -62, 0.5, -11)
                 Theme.AddCorner(copyBtn, Theme.CornerPill)
                 copyBtn.Parent = row
 
-                copyBtn.MouseButton1Click:Connect(function()
+                Theme.AnimateButton(copyBtn, function()
                     Environment.SetClipboard(snd.CleanId)
                     copyBtn.Text = "✓"
                     task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
                 end)
             end
 
-            audioScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 32)
+            audioScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 38)
         end)
     end)
 
-    exportAudioListBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(exportAudioListBtn, function()
         local file = AudioRipper.ExportSoundList()
-        exportAudioListBtn.Text = "✓ Lista Exportada: " .. file
+        exportAudioListBtn.Text = "✓ Lista Exportada!"
         Environment.SetClipboard(file)
         task.delay(2, function()
-            exportAudioListBtn.Text = " EXPORTAR LISTA DE ÁUDIOS (.txt)"
+            exportAudioListBtn.Text = "📄 EXPORTAR LISTA (.txt)"
         end)
     end)
 end
@@ -5285,18 +5353,19 @@ function Interface:BuildLightingRipperTab()
     card.Size = UDim2.new(1, -32, 1, -32)
     card.Position = UDim2.new(0, 16, 0, 16)
     card.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(card, Theme.CornerMedium)
+    card.BackgroundTransparency = Theme.CardTransparency
+    Theme.AddCorner(card, Theme.CornerLarge)
     Theme.AddStroke(card, Theme.Border, 1)
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = " EXTRATOR DE ILUMINAÇÃO & ATMOSFERA"
+    headerLbl.Text = "✨ EXTRATOR DE ILUMINAÇÃO & ATMOSFERA"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
     headerLbl.TextXAlignment = Enum.TextXAlignment.Left
     headerLbl.Size = UDim2.new(1, -24, 0, 24)
-    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.Position = UDim2.new(0, 16, 0, 16)
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = card
 
@@ -5308,21 +5377,22 @@ function Interface:BuildLightingRipperTab()
     desc.TextXAlignment = Enum.TextXAlignment.Left
     desc.TextYAlignment = Enum.TextYAlignment.Top
     desc.TextWrapped = true
-    desc.Size = UDim2.new(1, -24, 0, 60)
-    desc.Position = UDim2.new(0, 12, 0, 42)
+    desc.Size = UDim2.new(1, -32, 0, 60)
+    desc.Position = UDim2.new(0, 16, 0, 48)
     desc.BackgroundTransparency = 1
     desc.Parent = card
 
     local exportLightBtn = Instance.new("TextButton")
-    exportLightBtn.Text = " SALVAR PRESET DE ILUMINAÇÃO (.rbxmx)"
+    exportLightBtn.Text = "✨ SALVAR PRESET DE ILUMINAÇÃO (.rbxmx)"
     exportLightBtn.Font = Theme.FontTitle
-    exportLightBtn.TextSize = 13
-    exportLightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    exportLightBtn.BackgroundColor3 = Theme.AccentCyan
-    exportLightBtn.Size = UDim2.new(1, -24, 0, 48)
-    exportLightBtn.Position = UDim2.new(0, 12, 0, 116)
+    exportLightBtn.TextSize = 12
+    exportLightBtn.TextColor3 = Theme.AccentSkull
+    exportLightBtn.BackgroundColor3 = Theme.AccentPrimary
+    exportLightBtn.Size = UDim2.new(1, -32, 0, 46)
+    exportLightBtn.Position = UDim2.new(0, 16, 0, 120)
     Theme.AddCorner(exportLightBtn, Theme.CornerMedium)
-    Theme.AddGradient(exportLightBtn, Theme.AccentCyan, Theme.AccentPrimary, 90)
+    Theme.AddStroke(exportLightBtn, Theme.BorderNeon, 1.2)
+    Theme.AddGradient(exportLightBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
     exportLightBtn.Parent = card
 
     local lightStatus = Instance.new("TextLabel")
@@ -5331,13 +5401,13 @@ function Interface:BuildLightingRipperTab()
     lightStatus.TextSize = 11
     lightStatus.TextColor3 = Theme.TextMuted
     lightStatus.TextXAlignment = Enum.TextXAlignment.Left
-    lightStatus.Size = UDim2.new(1, -24, 0, 24)
-    lightStatus.Position = UDim2.new(0, 12, 0, 176)
+    lightStatus.Size = UDim2.new(1, -32, 0, 24)
+    lightStatus.Position = UDim2.new(0, 16, 0, 180)
     lightStatus.BackgroundTransparency = 1
     lightStatus.Parent = card
 
-    exportLightBtn.MouseButton1Click:Connect(function()
-        lightStatus.Text = " Extraindo efeitos e skyboxes..."
+    Theme.AnimateButton(exportLightBtn, function()
+        lightStatus.Text = "Extraindo efeitos e skyboxes..."
         lightStatus.TextColor3 = Theme.AccentCyan
 
         task.spawn(function()
@@ -5347,7 +5417,7 @@ function Interface:BuildLightingRipperTab()
                 lightStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                lightStatus.Text = " Erro: " .. tostring(file)
+                lightStatus.Text = "❌ Erro: " .. tostring(file)
                 lightStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -5362,18 +5432,19 @@ function Interface:BuildGuiRipperTab()
     card.Size = UDim2.new(1, -32, 1, -32)
     card.Position = UDim2.new(0, 16, 0, 16)
     card.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(card, Theme.CornerMedium)
+    card.BackgroundTransparency = Theme.CardTransparency
+    Theme.AddCorner(card, Theme.CornerLarge)
     Theme.AddStroke(card, Theme.Border, 1)
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = " EXTRATOR DE INTERFACES (GUIs & HUDs)"
+    headerLbl.Text = "🖥️ EXTRATOR DE INTERFACES (GUIs & HUDs)"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
-    headerLbl.TextColor3 = Theme.AccentSecondary
+    headerLbl.TextColor3 = Theme.AccentCyan
     headerLbl.TextXAlignment = Enum.TextXAlignment.Left
     headerLbl.Size = UDim2.new(1, -24, 0, 24)
-    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.Position = UDim2.new(0, 16, 0, 16)
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = card
 
@@ -5385,21 +5456,22 @@ function Interface:BuildGuiRipperTab()
     desc.TextXAlignment = Enum.TextXAlignment.Left
     desc.TextYAlignment = Enum.TextYAlignment.Top
     desc.TextWrapped = true
-    desc.Size = UDim2.new(1, -24, 0, 60)
-    desc.Position = UDim2.new(0, 12, 0, 42)
+    desc.Size = UDim2.new(1, -32, 0, 60)
+    desc.Position = UDim2.new(0, 16, 0, 48)
     desc.BackgroundTransparency = 1
     desc.Parent = card
 
     local exportGuiBtn = Instance.new("TextButton")
-    exportGuiBtn.Text = " SALVAR TODAS AS GUIs (.rbxmx)"
+    exportGuiBtn.Text = "🖥️ SALVAR TODAS AS GUIs (.rbxmx)"
     exportGuiBtn.Font = Theme.FontTitle
-    exportGuiBtn.TextSize = 13
-    exportGuiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    exportGuiBtn.BackgroundColor3 = Theme.AccentSecondary
-    exportGuiBtn.Size = UDim2.new(1, -24, 0, 48)
-    exportGuiBtn.Position = UDim2.new(0, 12, 0, 116)
+    exportGuiBtn.TextSize = 12
+    exportGuiBtn.TextColor3 = Theme.AccentSkull
+    exportGuiBtn.BackgroundColor3 = Theme.AccentPrimary
+    exportGuiBtn.Size = UDim2.new(1, -32, 0, 46)
+    exportGuiBtn.Position = UDim2.new(0, 16, 0, 120)
     Theme.AddCorner(exportGuiBtn, Theme.CornerMedium)
-    Theme.AddGradient(exportGuiBtn, Theme.AccentSecondary, Theme.AccentPrimary, 90)
+    Theme.AddStroke(exportGuiBtn, Theme.BorderNeon, 1.2)
+    Theme.AddGradient(exportGuiBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
     exportGuiBtn.Parent = card
 
     local guiStatus = Instance.new("TextLabel")
@@ -5408,13 +5480,13 @@ function Interface:BuildGuiRipperTab()
     guiStatus.TextSize = 11
     guiStatus.TextColor3 = Theme.TextMuted
     guiStatus.TextXAlignment = Enum.TextXAlignment.Left
-    guiStatus.Size = UDim2.new(1, -24, 0, 24)
-    guiStatus.Position = UDim2.new(0, 12, 0, 176)
+    guiStatus.Size = UDim2.new(1, -32, 0, 24)
+    guiStatus.Position = UDim2.new(0, 16, 0, 180)
     guiStatus.BackgroundTransparency = 1
     guiStatus.Parent = card
 
-    exportGuiBtn.MouseButton1Click:Connect(function()
-        guiStatus.Text = " Extraindo e descompilando interfaces..."
+    Theme.AnimateButton(exportGuiBtn, function()
+        guiStatus.Text = "Extraindo e descompilando interfaces..."
         guiStatus.TextColor3 = Theme.AccentCyan
 
         task.spawn(function()
@@ -5424,7 +5496,7 @@ function Interface:BuildGuiRipperTab()
                 guiStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                guiStatus.Text = " Erro: " .. tostring(file)
+                guiStatus.Text = "❌ Erro: " .. tostring(file)
                 guiStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -5441,37 +5513,46 @@ function Interface:BuildNetworkTab()
     topBar.BackgroundTransparency = 1
     topBar.Parent = parent
 
+    local netLayout = Instance.new("UIListLayout")
+    netLayout.FillDirection = Enum.FillDirection.Horizontal
+    netLayout.Padding = UDim.new(0, 8)
+    netLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    netLayout.Parent = topBar
+
     local toggleSnifferBtn = Instance.new("TextButton")
-    toggleSnifferBtn.Text = " INICIAR GRAVAÇÃO DE REDE"
+    toggleSnifferBtn.Text = "📡 INICIAR GRAVAÇÃO"
     toggleSnifferBtn.Font = Theme.FontSemiBold
     toggleSnifferBtn.TextSize = 11
-    toggleSnifferBtn.TextColor3 = Theme.AccentSuccess
-    toggleSnifferBtn.BackgroundColor3 = Theme.CardBg
-    toggleSnifferBtn.Size = UDim2.new(0.48, 0, 1, 0)
-    Theme.AddCorner(toggleSnifferBtn, Theme.CornerSmall)
-    Theme.AddStroke(toggleSnifferBtn, Theme.Border, 1)
+    toggleSnifferBtn.TextColor3 = Theme.AccentSkull
+    toggleSnifferBtn.BackgroundColor3 = Theme.AccentPrimary
+    toggleSnifferBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    toggleSnifferBtn.LayoutOrder = 1
+    Theme.AddCorner(toggleSnifferBtn, Theme.CornerMedium)
+    Theme.AddStroke(toggleSnifferBtn, Theme.BorderNeon, 1)
     toggleSnifferBtn.Parent = topBar
 
     local exportSnifferBtn = Instance.new("TextButton")
-    exportSnifferBtn.Text = " EXPORTAR PROTOCOLO (.json)"
+    exportSnifferBtn.Text = "📄 EXPORTAR (.json)"
     exportSnifferBtn.Font = Theme.FontSemiBold
     exportSnifferBtn.TextSize = 11
     exportSnifferBtn.TextColor3 = Theme.TextPrimary
     exportSnifferBtn.BackgroundColor3 = Theme.CardBg
-    exportSnifferBtn.Size = UDim2.new(0.48, 0, 1, 0)
-    exportSnifferBtn.Position = UDim2.new(0.52, 0, 0, 0)
-    Theme.AddCorner(exportSnifferBtn, Theme.CornerSmall)
+    exportSnifferBtn.BackgroundTransparency = Theme.CardTransparency
+    exportSnifferBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    exportSnifferBtn.LayoutOrder = 2
+    Theme.AddCorner(exportSnifferBtn, Theme.CornerMedium)
     Theme.AddStroke(exportSnifferBtn, Theme.Border, 1)
     exportSnifferBtn.Parent = topBar
 
     local scroll = Instance.new("ScrollingFrame")
     scroll.Size = UDim2.new(1, -32, 1, -64)
     scroll.Position = UDim2.new(0, 16, 0, 56)
-    scroll.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+    scroll.BackgroundColor3 = Theme.CardBg
+    scroll.BackgroundTransparency = Theme.CardTransparency
     scroll.ScrollBarThickness = 4
-    scroll.ScrollBarImageColor3 = Theme.Border
+    scroll.ScrollBarImageColor3 = Theme.BorderLight
     scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    Theme.AddCorner(scroll, Theme.CornerMedium)
+    Theme.AddCorner(scroll, Theme.CornerLarge)
     Theme.AddStroke(scroll, Theme.Border, 1)
     scroll.Parent = parent
 
@@ -5525,50 +5606,52 @@ function Interface:BuildUniverseTab()
     card.Size = UDim2.new(1, -32, 1, -32)
     card.Position = UDim2.new(0, 16, 0, 16)
     card.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(card, Theme.CornerMedium)
+    card.BackgroundTransparency = Theme.CardTransparency
+    Theme.AddCorner(card, Theme.CornerLarge)
     Theme.AddStroke(card, Theme.Border, 1)
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = " RASTREADOR DE UNIVERSO (MULTI-PLACES)"
+    headerLbl.Text = "🌌 RASTREADOR DE UNIVERSO (MULTI-PLACES)"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
-    headerLbl.TextColor3 = Theme.AccentSecondary
+    headerLbl.TextColor3 = Theme.AccentCyan
     headerLbl.TextXAlignment = Enum.TextXAlignment.Left
     headerLbl.Size = UDim2.new(1, -24, 0, 24)
-    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.Position = UDim2.new(0, 16, 0, 16)
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = card
 
     local scanBtn = Instance.new("TextButton")
-    scanBtn.Text = " BUSCAR SUB-PLACES DO UNIVERSO"
-    scanBtn.Font = Theme.FontSemiBold
+    scanBtn.Text = "🌌 BUSCAR SUB-PLACES DO UNIVERSO"
+    scanBtn.Font = Theme.FontTitle
     scanBtn.TextSize = 11
-    scanBtn.TextColor3 = Theme.TextPrimary
-    scanBtn.BackgroundColor3 = Theme.CardHover
-    scanBtn.Size = UDim2.new(1, -24, 0, 34)
-    scanBtn.Position = UDim2.new(0, 12, 0, 42)
-    Theme.AddCorner(scanBtn, Theme.CornerSmall)
-    Theme.AddStroke(scanBtn, Theme.Border, 1)
+    scanBtn.TextColor3 = Theme.AccentSkull
+    scanBtn.BackgroundColor3 = Theme.AccentPrimary
+    scanBtn.Size = UDim2.new(1, -32, 0, 36)
+    scanBtn.Position = UDim2.new(0, 16, 0, 46)
+    Theme.AddCorner(scanBtn, Theme.CornerMedium)
+    Theme.AddStroke(scanBtn, Theme.BorderNeon, 1)
     scanBtn.Parent = card
 
     local placeScroll = Instance.new("ScrollingFrame")
-    placeScroll.Size = UDim2.new(1, -24, 1, -94)
-    placeScroll.Position = UDim2.new(0, 12, 0, 84)
-    placeScroll.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
+    placeScroll.Size = UDim2.new(1, -32, 1, -100)
+    placeScroll.Position = UDim2.new(0, 16, 0, 90)
+    placeScroll.BackgroundColor3 = Color3.fromRGB(10, 8, 18)
+    placeScroll.BackgroundTransparency = 0.3
     placeScroll.ScrollBarThickness = 4
-    placeScroll.ScrollBarImageColor3 = Theme.Border
-    Theme.AddCorner(placeScroll, Theme.CornerSmall)
+    placeScroll.ScrollBarImageColor3 = Theme.BorderLight
+    Theme.AddCorner(placeScroll, Theme.CornerMedium)
     Theme.AddStroke(placeScroll, Theme.Border, 1)
     placeScroll.Parent = card
 
     local placeLayout = Instance.new("UIListLayout")
     placeLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    placeLayout.Padding = UDim.new(0, 4)
+    placeLayout.Padding = UDim.new(0, 6)
     placeLayout.Parent = placeScroll
 
-    scanBtn.MouseButton1Click:Connect(function()
-        scanBtn.Text = " Buscando lugares do universo..."
+    Theme.AnimateButton(scanBtn, function()
+        scanBtn.Text = "Buscando sub-places..."
         for _, child in ipairs(placeScroll:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
@@ -5579,19 +5662,21 @@ function Interface:BuildUniverseTab()
 
             for idx, pInfo in ipairs(list) do
                 local row = Instance.new("Frame")
-                row.Size = UDim2.new(1, -12, 0, 28)
+                row.Size = UDim2.new(1, -12, 0, 32)
                 row.BackgroundColor3 = Theme.CardBg
+                row.BackgroundTransparency = 0.2
                 Theme.AddCorner(row, Theme.CornerSmall)
+                Theme.AddStroke(row, Theme.Border, 1)
                 row.Parent = placeScroll
 
                 local pName = Instance.new("TextLabel")
-                pName.Text = string.format("%s (ID: %d)", pInfo.Name, pInfo.PlaceId)
+                pName.Text = string.format("📍 %s (ID: %d)", pInfo.Name, pInfo.PlaceId)
                 pName.Font = Theme.FontRegular
-                pName.TextSize = 11
+                pName.TextSize = 10
                 pName.TextColor3 = pInfo.IsRoot and Theme.AccentCyan or Theme.TextPrimary
                 pName.TextXAlignment = Enum.TextXAlignment.Left
                 pName.Size = UDim2.new(0.7, 0, 1, 0)
-                pName.Position = UDim2.new(0, 8, 0, 0)
+                pName.Position = UDim2.new(0, 10, 0, 0)
                 pName.BackgroundTransparency = 1
                 pName.Parent = row
 
@@ -5601,19 +5686,19 @@ function Interface:BuildUniverseTab()
                 copyIdBtn.TextSize = 10
                 copyIdBtn.TextColor3 = Theme.TextSecondary
                 copyIdBtn.BackgroundColor3 = Theme.CardHover
-                copyIdBtn.Size = UDim2.new(0, 80, 0, 20)
-                copyIdBtn.Position = UDim2.new(1, -88, 0.5, -10)
+                copyIdBtn.Size = UDim2.new(0, 80, 0, 22)
+                copyIdBtn.Position = UDim2.new(1, -88, 0.5, -11)
                 Theme.AddCorner(copyIdBtn, Theme.CornerPill)
                 copyIdBtn.Parent = row
 
-                copyIdBtn.MouseButton1Click:Connect(function()
+                Theme.AnimateButton(copyIdBtn, function()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
                     copyIdBtn.Text = "✓ Copiado"
                     task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
                 end)
             end
 
-            placeScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 34)
+            placeScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 40)
         end)
     end)
 end
@@ -5626,18 +5711,19 @@ function Interface:BuildObjExportTab()
     card.Size = UDim2.new(1, -32, 1, -32)
     card.Position = UDim2.new(0, 16, 0, 16)
     card.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(card, Theme.CornerMedium)
+    card.BackgroundTransparency = Theme.CardTransparency
+    Theme.AddCorner(card, Theme.CornerLarge)
     Theme.AddStroke(card, Theme.Border, 1)
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = " EXPORTADOR 3D WAVEFRONT (.OBJ + .MTL)"
+    headerLbl.Text = "🧊 EXPORTADOR 3D WAVEFRONT (.OBJ + .MTL)"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
     headerLbl.TextXAlignment = Enum.TextXAlignment.Left
     headerLbl.Size = UDim2.new(1, -24, 0, 24)
-    headerLbl.Position = UDim2.new(0, 12, 0, 12)
+    headerLbl.Position = UDim2.new(0, 16, 0, 16)
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = card
 
@@ -5649,21 +5735,22 @@ function Interface:BuildObjExportTab()
     desc.TextXAlignment = Enum.TextXAlignment.Left
     desc.TextYAlignment = Enum.TextYAlignment.Top
     desc.TextWrapped = true
-    desc.Size = UDim2.new(1, -24, 0, 48)
-    desc.Position = UDim2.new(0, 12, 0, 42)
+    desc.Size = UDim2.new(1, -32, 0, 48)
+    desc.Position = UDim2.new(0, 16, 0, 48)
     desc.BackgroundTransparency = 1
     desc.Parent = card
 
     local exportObjBtn = Instance.new("TextButton")
-    exportObjBtn.Text = " EXPORTAR MAPA 3D (.OBJ + .MTL)"
+    exportObjBtn.Text = "🧊 EXPORTAR MAPA 3D (.OBJ + .MTL)"
     exportObjBtn.Font = Theme.FontTitle
-    exportObjBtn.TextSize = 13
-    exportObjBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    exportObjBtn.BackgroundColor3 = Theme.AccentCyan
-    exportObjBtn.Size = UDim2.new(1, -24, 0, 48)
-    exportObjBtn.Position = UDim2.new(0, 12, 0, 100)
+    exportObjBtn.TextSize = 12
+    exportObjBtn.TextColor3 = Theme.AccentSkull
+    exportObjBtn.BackgroundColor3 = Theme.AccentPrimary
+    exportObjBtn.Size = UDim2.new(1, -32, 0, 46)
+    exportObjBtn.Position = UDim2.new(0, 16, 0, 108)
     Theme.AddCorner(exportObjBtn, Theme.CornerMedium)
-    Theme.AddGradient(exportObjBtn, Theme.AccentCyan, Theme.AccentPrimary, 90)
+    Theme.AddStroke(exportObjBtn, Theme.BorderNeon, 1.2)
+    Theme.AddGradient(exportObjBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
     exportObjBtn.Parent = card
 
     local objStatus = Instance.new("TextLabel")
@@ -5672,23 +5759,23 @@ function Interface:BuildObjExportTab()
     objStatus.TextSize = 11
     objStatus.TextColor3 = Theme.TextMuted
     objStatus.TextXAlignment = Enum.TextXAlignment.Left
-    objStatus.Size = UDim2.new(1, -24, 0, 24)
-    objStatus.Position = UDim2.new(0, 12, 0, 160)
+    objStatus.Size = UDim2.new(1, -32, 0, 24)
+    objStatus.Position = UDim2.new(0, 16, 0, 166)
     objStatus.BackgroundTransparency = 1
     objStatus.Parent = card
 
-    exportObjBtn.MouseButton1Click:Connect(function()
-        objStatus.Text = " Gerando geometria .obj e biblioteca de materiais .mtl..."
+    Theme.AnimateButton(exportObjBtn, function()
+        objStatus.Text = "Gerando geometria .obj e biblioteca de materiais .mtl..."
         objStatus.TextColor3 = Theme.AccentCyan
 
         task.spawn(function()
-            local success, file = ObjExporter.Export(workspace)
+            local success, file = ObjExporter.ExportWorkspaceToObj()
             if success then
-                objStatus.Text = "✓ Mapa 3D exportado com sucesso: " .. file
+                objStatus.Text = "✓ Exportado com sucesso: " .. file
                 objStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                objStatus.Text = " Erro ao exportar 3D: " .. tostring(file)
+                objStatus.Text = "❌ Erro ao exportar: " .. tostring(file)
                 objStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -5704,15 +5791,15 @@ function Interface:BuildTutorialTab()
     scroll.Position = UDim2.new(0, 12, 0, 12)
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
-    scroll.ScrollBarImageColor3 = Theme.Border
+    scroll.ScrollBarImageColor3 = Theme.BorderLight
     scroll.CanvasSize = UDim2.new(0, 0, 0, 480)
     scroll.Parent = parent
 
     local steps = {
-        {" Passo 1: Iniciar a Cópia", "Basta ir na aba ' Clonar Tudo' e clicar no botão roxo 'CLONAR JOGO INTEIRO'. O HyperSaveInstance vai começar a varrer o mapa."},
-        {" Passo 2: Aguardar o Progresso", "A barra de progresso vai indicar o que está sendo salvo em tempo real: áudios, texturas, meshes 3D, terreno e scripts descompilados."},
-        {" Passo 3: Onde o Arquivo Fica?", "O arquivo .rbxlx e a pasta de assets são salvos automaticamente dentro da pasta 'workspace' do seu executor no seu computador."},
-        {" Passo 4: Como Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' (Arquivo) -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. Pronto! O jogo inteiro abrirá 100% editável!"},
+        {"📌 Passo 1: Iniciar a Cópia", "Basta ir na aba ' Clonar Tudo' e clicar no botão roxo 'CLONAR JOGO INTEIRO'. O HyperSaveInstance vai começar a varrer o mapa."},
+        {"⏳ Passo 2: Aguardar o Progresso", "A barra de progresso vai indicar o que está sendo salvo em tempo real: áudios, texturas, meshes 3D, terreno e scripts descompilados."},
+        {"📁 Passo 3: Onde o Arquivo Fica?", "O arquivo .rbxlx e a pasta de assets são salvos automaticamente dentro da pasta 'workspace' do seu executor no seu computador."},
+        {"🚀 Passo 4: Como Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' (Arquivo) -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. Pronto! O jogo inteiro abrirá 100% editável!"},
     }
 
     for i, step in ipairs(steps) do
@@ -5720,6 +5807,7 @@ function Interface:BuildTutorialTab()
         card.Size = UDim2.new(1, -12, 0, 80)
         card.Position = UDim2.new(0, 0, 0, (i - 1) * 88)
         card.BackgroundColor3 = Theme.CardBg
+        card.BackgroundTransparency = Theme.CardTransparency
         Theme.AddCorner(card, Theme.CornerMedium)
         Theme.AddStroke(card, Theme.Border, 1)
         card.Parent = scroll
@@ -5731,7 +5819,7 @@ function Interface:BuildTutorialTab()
         title.TextColor3 = Theme.AccentCyan
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.Size = UDim2.new(1, -20, 0, 20)
-        title.Position = UDim2.new(0, 10, 0, 8)
+        title.Position = UDim2.new(0, 12, 0, 8)
         title.BackgroundTransparency = 1
         title.Parent = card
 
@@ -5743,30 +5831,30 @@ function Interface:BuildTutorialTab()
         desc.TextXAlignment = Enum.TextXAlignment.Left
         desc.TextYAlignment = Enum.TextYAlignment.Top
         desc.TextWrapped = true
-        desc.Size = UDim2.new(1, -20, 0, 46)
-        desc.Position = UDim2.new(0, 10, 0, 30)
+        desc.Size = UDim2.new(1, -24, 0, 46)
+        desc.Position = UDim2.new(0, 12, 0, 30)
         desc.BackgroundTransparency = 1
         desc.Parent = card
     end
 
     -- Copy Universal Command Button
     local copyScriptCard = Instance.new("TextButton")
-    copyScriptCard.Text = " Copiar Comando de Execução (loadstring) para a Área de Transferência"
+    copyScriptCard.Text = "📋 Copiar Comando de Execução (loadstring) para a Área de Transferência"
     copyScriptCard.Font = Theme.FontSemiBold
     copyScriptCard.TextSize = 11
-    copyScriptCard.TextColor3 = Theme.TextPrimary
-    copyScriptCard.BackgroundColor3 = Theme.CardHover
-    copyScriptCard.Size = UDim2.new(1, -12, 0, 36)
+    copyScriptCard.TextColor3 = Theme.AccentSkull
+    copyScriptCard.BackgroundColor3 = Theme.AccentPrimary
+    copyScriptCard.Size = UDim2.new(1, -12, 0, 38)
     copyScriptCard.Position = UDim2.new(0, 0, 0, 360)
-    Theme.AddCorner(copyScriptCard, Theme.CornerSmall)
-    Theme.AddStroke(copyScriptCard, Theme.AccentPrimary, 1)
+    Theme.AddCorner(copyScriptCard, Theme.CornerPill)
+    Theme.AddStroke(copyScriptCard, Theme.BorderNeon, 1.2)
     copyScriptCard.Parent = scroll
 
-    copyScriptCard.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(copyScriptCard, function()
         Environment.SetClipboard('loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()')
         copyScriptCard.Text = "✓ Comando Copiado!"
         task.delay(2, function()
-            copyScriptCard.Text = " Copiar Comando de Execução (loadstring) para a Área de Transferência"
+            copyScriptCard.Text = "📋 Copiar Comando de Execução (loadstring) para a Área de Transferência"
         end)
     end)
 end
@@ -5780,7 +5868,7 @@ function Interface:BuildSettingsTab()
     scroll.Position = UDim2.new(0, 12, 0, 12)
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
-    scroll.ScrollBarImageColor3 = Theme.Border
+    scroll.ScrollBarImageColor3 = Theme.BorderLight
     scroll.CanvasSize = UDim2.new(0, 0, 0, 720)
     scroll.Parent = parent
 
@@ -5809,10 +5897,12 @@ function Interface:BuildSettingsTab()
         local key, title, defaultVal = item[1], item[2], item[3]
 
         local row = Instance.new("Frame")
-        row.Size = UDim2.new(1, -12, 0, 32)
+        row.Size = UDim2.new(1, -12, 0, 34)
         row.Position = UDim2.new(0, 0, 0, (i - 1) * 38)
         row.BackgroundColor3 = Theme.CardBg
-        Theme.AddCorner(row, Theme.CornerSmall)
+        row.BackgroundTransparency = Theme.CardTransparency
+        Theme.AddCorner(row, Theme.CornerMedium)
+        Theme.AddStroke(row, Theme.Border, 1)
         row.Parent = scroll
 
         local lbl = Instance.new("TextLabel")
@@ -5821,7 +5911,7 @@ function Interface:BuildSettingsTab()
         lbl.TextSize = 11
         lbl.TextColor3 = (key == "OptimizeGeometry") and Theme.AccentWarning or Theme.TextPrimary
         lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.Size = UDim2.new(0.8, 0, 1, 0)
+        lbl.Size = UDim2.new(0.75, 0, 1, 0)
         lbl.Position = UDim2.new(0, 12, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Parent = row
@@ -5830,22 +5920,25 @@ function Interface:BuildSettingsTab()
         switch.Text = defaultVal and "ATIVADO" or "DESATIVADO"
         switch.Font = Theme.FontSemiBold
         switch.TextSize = 10
-        switch.TextColor3 = defaultVal and Theme.AccentSuccess or Theme.TextMuted
-        switch.BackgroundColor3 = defaultVal and Color3.fromRGB(15, 45, 30) or Color3.fromRGB(30, 35, 45)
-        switch.Size = UDim2.new(0, 80, 0, 22)
-        switch.Position = UDim2.new(1, -90, 0.5, -11)
+        switch.TextColor3 = defaultVal and Theme.AccentSkull or Theme.TextMuted
+        switch.BackgroundColor3 = defaultVal and Theme.AccentPrimary or Theme.CardHover
+        switch.Size = UDim2.new(0, 84, 0, 24)
+        switch.Position = UDim2.new(1, -92, 0.5, -12)
         Theme.AddCorner(switch, Theme.CornerPill)
-        Theme.AddStroke(switch, defaultVal and Theme.AccentSuccess or Theme.Border, 1)
+        Theme.AddStroke(switch, defaultVal and Theme.BorderNeon or Theme.Border, 1)
         switch.Parent = row
 
-        switch.MouseButton1Click:Connect(function()
+        Theme.AnimateButton(switch, function()
             local current = self.Config[key]
             local new = not current
             self.Config[key] = new
             switch.Text = new and "ATIVADO" or "DESATIVADO"
-            switch.TextColor3 = new and Theme.AccentSuccess or Theme.TextMuted
-            switch.BackgroundColor3 = new and Color3.fromRGB(15, 45, 30) or Color3.fromRGB(30, 35, 45)
-            switch:FindFirstChildOfClass("UIStroke").Color = new and Theme.AccentSuccess or Theme.Border
+            switch.TextColor3 = new and Theme.AccentSkull or Theme.TextMuted
+            switch.BackgroundColor3 = new and Theme.AccentPrimary or Theme.CardHover
+            local stroke = switch:FindFirstChildOfClass("UIStroke")
+            if stroke then
+                stroke.Color = new and Theme.BorderNeon or Theme.Border
+            end
             self:Log("Opção alterada: " .. key .. " = " .. tostring(new))
         end)
     end
@@ -5856,13 +5949,14 @@ function Interface:BuildConsoleTab()
     local parent = self.TabFrames["Console"]
 
     local consoleBox = Instance.new("ScrollingFrame")
-    consoleBox.Size = UDim2.new(1, -32, 1, -64)
+    consoleBox.Size = UDim2.new(1, -32, 1, -68)
     consoleBox.Position = UDim2.new(0, 16, 0, 16)
-    consoleBox.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+    consoleBox.BackgroundColor3 = Theme.CardBg
+    consoleBox.BackgroundTransparency = Theme.CardTransparency
     consoleBox.ScrollBarThickness = 4
-    consoleBox.ScrollBarImageColor3 = Theme.Border
+    consoleBox.ScrollBarImageColor3 = Theme.BorderLight
     consoleBox.CanvasSize = UDim2.new(0, 0, 0, 0)
-    Theme.AddCorner(consoleBox, Theme.CornerMedium)
+    Theme.AddCorner(consoleBox, Theme.CornerLarge)
     Theme.AddStroke(consoleBox, Theme.Border, 1)
     consoleBox.Parent = parent
     self.ConsoleScroll = consoleBox
@@ -5873,23 +5967,23 @@ function Interface:BuildConsoleTab()
     consoleList.Parent = consoleBox
 
     local copyLogsBtn = Instance.new("TextButton")
-    copyLogsBtn.Text = " Copiar Logs para Área de Transferência"
+    copyLogsBtn.Text = "📋 Copiar Logs para Área de Transferência"
     copyLogsBtn.Font = Theme.FontSemiBold
     copyLogsBtn.TextSize = 11
-    copyLogsBtn.TextColor3 = Theme.TextPrimary
-    copyLogsBtn.BackgroundColor3 = Theme.CardBg
-    copyLogsBtn.Size = UDim2.new(1, -32, 0, 32)
-    copyLogsBtn.Position = UDim2.new(0, 16, 1, -40)
-    Theme.AddCorner(copyLogsBtn, Theme.CornerSmall)
-    Theme.AddStroke(copyLogsBtn, Theme.Border, 1)
+    copyLogsBtn.TextColor3 = Theme.AccentSkull
+    copyLogsBtn.BackgroundColor3 = Theme.AccentPrimary
+    copyLogsBtn.Size = UDim2.new(1, -32, 0, 36)
+    copyLogsBtn.Position = UDim2.new(0, 16, 1, -44)
+    Theme.AddCorner(copyLogsBtn, Theme.CornerPill)
+    Theme.AddStroke(copyLogsBtn, Theme.BorderNeon, 1.2)
     copyLogsBtn.Parent = parent
 
-    copyLogsBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(copyLogsBtn, function()
         local fullLog = table.concat(self.Logs, "\n")
         Environment.SetClipboard(fullLog)
         copyLogsBtn.Text = "✓ Logs Copiados!"
         task.delay(2, function()
-            copyLogsBtn.Text = " Copiar Logs para Área de Transferência"
+            copyLogsBtn.Text = "📋 Copiar Logs para Área de Transferência"
         end)
     end)
 end
@@ -5901,10 +5995,12 @@ function Interface:BuildAboutTab()
     local scroll = Instance.new("ScrollingFrame")
     scroll.Size = UDim2.new(1, -32, 1, -32)
     scroll.Position = UDim2.new(0, 16, 0, 16)
-    scroll.BackgroundColor3 = Theme.BackgroundGlass
-    scroll.ScrollBarThickness = 5
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 480)
-    Theme.AddCorner(scroll, Theme.CornerMedium)
+    scroll.BackgroundColor3 = Theme.CardBg
+    scroll.BackgroundTransparency = Theme.CardTransparency
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Theme.BorderLight
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 490)
+    Theme.AddCorner(scroll, Theme.CornerLarge)
     Theme.AddStroke(scroll, Theme.BorderLight, 1)
     scroll.Parent = parent
 
@@ -5912,26 +6008,27 @@ function Interface:BuildAboutTab()
     local devCard = Instance.new("Frame")
     devCard.Size = UDim2.new(1, -24, 0, 120)
     devCard.Position = UDim2.new(0, 12, 0, 12)
-    devCard.BackgroundColor3 = Theme.CardBg
-    Theme.AddCorner(devCard, Theme.CornerMedium)
+    devCard.BackgroundColor3 = Color3.fromRGB(15, 11, 26)
+    devCard.BackgroundTransparency = 0.2
+    Theme.AddCorner(devCard, Theme.CornerLarge)
     Theme.AddStroke(devCard, Theme.BorderNeon, 1.2)
-    Theme.AddGradient(devCard, Theme.CardBg, Color3.fromRGB(24, 18, 38), 45)
+    Theme.AddGradient(devCard, Color3.fromRGB(15, 11, 26), Color3.fromRGB(30, 20, 48), 45)
     devCard.Parent = scroll
 
-    -- Avatar Emblem
+    -- Avatar Emblem (Bubble Pill)
     local avatar = Instance.new("Frame")
-    avatar.Size = UDim2.new(0, 56, 0, 56)
+    avatar.Size = UDim2.new(0, 52, 0, 52)
     avatar.Position = UDim2.new(0, 16, 0, 16)
     avatar.BackgroundColor3 = Theme.AccentPrimary
     Theme.AddCorner(avatar, Theme.CornerPill)
-    Theme.AddGradient(avatar, Theme.AccentCyan, Theme.AccentTheo, 45)
+    Theme.AddGradient(avatar, Color3.fromRGB(168, 85, 247), Color3.fromRGB(126, 34, 206), 45)
     avatar.Parent = devCard
 
     local avatarTxt = Instance.new("TextLabel")
     avatarTxt.Text = "TLP"
     avatarTxt.Font = Theme.FontTitle
-    avatarTxt.TextSize = 18
-    avatarTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+    avatarTxt.TextSize = 16
+    avatarTxt.TextColor3 = Theme.AccentSkull
     avatarTxt.Size = UDim2.new(1, 0, 1, 0)
     avatarTxt.BackgroundTransparency = 1
     avatarTxt.Parent = avatar
@@ -5940,68 +6037,77 @@ function Interface:BuildAboutTab()
     local devName = Instance.new("TextLabel")
     devName.Text = "Theo Lorentz Padilha"
     devName.Font = Theme.FontTitle
-    devName.TextSize = 16
+    devName.TextSize = 15
     devName.TextColor3 = Theme.TextPrimary
     devName.TextXAlignment = Enum.TextXAlignment.Left
-    devName.Size = UDim2.new(1, -96, 0, 22)
-    devName.Position = UDim2.new(0, 84, 0, 16)
+    devName.Size = UDim2.new(1, -84, 0, 20)
+    devName.Position = UDim2.new(0, 78, 0, 16)
     devName.BackgroundTransparency = 1
     devName.Parent = devCard
 
     local devRole = Instance.new("TextLabel")
-    devRole.Text = "⭐ Criador & Engenheiro Principal do HyperSaveInstance Suite"
+    devRole.Text = "⭐ Criador & Engenheiro Principal • HyperSaveInstance"
     devRole.Font = Theme.FontSemiBold
     devRole.TextSize = 11
     devRole.TextColor3 = Theme.TextTheo
     devRole.TextXAlignment = Enum.TextXAlignment.Left
-    devRole.Size = UDim2.new(1, -96, 0, 18)
-    devRole.Position = UDim2.new(0, 84, 0, 38)
+    devRole.Size = UDim2.new(1, -84, 0, 16)
+    devRole.Position = UDim2.new(0, 78, 0, 38)
     devRole.BackgroundTransparency = 1
     devRole.Parent = devCard
 
+    -- Action Container for Buttons (UIListLayout Grid)
+    local devBtnBar = Instance.new("Frame")
+    devBtnBar.Size = UDim2.new(1, -94, 0, 30)
+    devBtnBar.Position = UDim2.new(0, 78, 0, 68)
+    devBtnBar.BackgroundTransparency = 1
+    devBtnBar.Parent = devCard
+
+    local devBtnLayout = Instance.new("UIListLayout")
+    devBtnLayout.FillDirection = Enum.FillDirection.Horizontal
+    devBtnLayout.Padding = UDim.new(0, 8)
+    devBtnLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    devBtnLayout.Parent = devBtnBar
+
     -- GitHub Link Button
     local btnGithub = Instance.new("TextButton")
-    btnGithub.Text = "🔗 Copiar Perfil GitHub (github.com/theopadilha2009-hash)"
+    btnGithub.Text = "🔗 GitHub Profile"
     btnGithub.Font = Theme.FontSemiBold
-    btnGithub.TextSize = 11
-    btnGithub.TextColor3 = Theme.TextPrimary
-    btnGithub.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
-    btnGithub.Size = UDim2.new(0.58, 0, 0, 30)
-    btnGithub.Position = UDim2.new(0, 84, 0, 68)
-    Theme.AddCorner(btnGithub, Theme.CornerSmall)
+    btnGithub.TextSize = 10
+    btnGithub.TextColor3 = Theme.AccentSkull
+    btnGithub.BackgroundColor3 = Theme.AccentPrimary
+    btnGithub.Size = UDim2.new(0.5, -4, 1, 0)
+    btnGithub.LayoutOrder = 1
+    Theme.AddCorner(btnGithub, Theme.CornerPill)
     Theme.AddStroke(btnGithub, Theme.BorderNeon, 1)
-    btnGithub.Parent = devCard
+    btnGithub.Parent = devBtnBar
 
-    btnGithub.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
-        btnGithub.Text = "✓ Link do GitHub Copiado!"
-        btnGithub.TextColor3 = Theme.AccentSuccess
-        task.delay(2.5, function()
-            btnGithub.Text = "🔗 Copiar Perfil GitHub (github.com/theopadilha2009-hash)"
-            btnGithub.TextColor3 = Theme.TextPrimary
+        btnGithub.Text = "✓ Perfil Copiado!"
+        task.delay(2, function()
+            btnGithub.Text = "🔗 GitHub Profile"
         end)
     end)
 
     -- Repository Link Button
     local btnRepo = Instance.new("TextButton")
-    btnRepo.Text = "⭐ Repositório Oficial"
+    btnRepo.Text = "⭐ Repositório"
     btnRepo.Font = Theme.FontSemiBold
-    btnRepo.TextSize = 11
+    btnRepo.TextSize = 10
     btnRepo.TextColor3 = Theme.TextPrimary
-    btnRepo.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
-    btnRepo.Size = UDim2.new(0.35, -4, 0, 30)
-    btnRepo.Position = UDim2.new(0.62, 2, 0, 68)
-    Theme.AddCorner(btnRepo, Theme.CornerSmall)
-    Theme.AddStroke(btnRepo, Theme.AccentPrimary, 1)
-    btnRepo.Parent = devCard
+    btnRepo.BackgroundColor3 = Theme.CardHover
+    btnRepo.Size = UDim2.new(0.5, -4, 1, 0)
+    btnRepo.LayoutOrder = 2
+    Theme.AddCorner(btnRepo, Theme.CornerPill)
+    Theme.AddStroke(btnRepo, Theme.Border, 1)
+    btnRepo.Parent = devBtnBar
 
-    btnRepo.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
-        btnRepo.Text = "✓ Link do Repo Copiado!"
-        btnRepo.TextColor3 = Theme.AccentSuccess
-        task.delay(2.5, function()
-            btnRepo.Text = "⭐ Repositório Oficial"
-            btnRepo.TextColor3 = Theme.TextPrimary
+        btnRepo.Text = "✓ Repo Copiado!"
+        task.delay(2, function()
+            btnRepo.Text = "⭐ Repositório"
         end)
     end)
 
@@ -6009,7 +6115,8 @@ function Interface:BuildAboutTab()
     local sysCard = Instance.new("Frame")
     sysCard.Size = UDim2.new(1, -24, 0, 180)
     sysCard.Position = UDim2.new(0, 12, 0, 142)
-    sysCard.BackgroundColor3 = Theme.CardBg
+    sysCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
+    sysCard.BackgroundTransparency = 0.3
     Theme.AddCorner(sysCard, Theme.CornerMedium)
     Theme.AddStroke(sysCard, Theme.Border, 1)
     sysCard.Parent = scroll
@@ -6068,7 +6175,8 @@ function Interface:BuildAboutTab()
     local featCard = Instance.new("Frame")
     featCard.Size = UDim2.new(1, -24, 0, 120)
     featCard.Position = UDim2.new(0, 12, 0, 332)
-    featCard.BackgroundColor3 = Theme.CardBg
+    featCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
+    featCard.BackgroundTransparency = 0.3
     Theme.AddCorner(featCard, Theme.CornerMedium)
     Theme.AddStroke(featCard, Theme.Border, 1)
     featCard.Parent = scroll
@@ -6077,7 +6185,7 @@ function Interface:BuildAboutTab()
     featTitle.Text = "⚡ RECURSOS EXCLUSIVOS INCLUÍDOS"
     featTitle.Font = Theme.FontTitle
     featTitle.TextSize = 12
-    featTitle.TextColor3 = Theme.AccentPurple
+    featTitle.TextColor3 = Theme.AccentCyan
     featTitle.TextXAlignment = Enum.TextXAlignment.Left
     featTitle.Size = UDim2.new(1, -20, 0, 20)
     featTitle.Position = UDim2.new(0, 12, 0, 10)
@@ -6186,39 +6294,43 @@ end)
 
 __define__("UI/Theme", function()
 --[[
-    HyperSaveInstance - Modern Glassmorphic Design System & Theme
+    HyperSaveInstance - Bubble UI & Translucent Acrylic Design System
+    Created by Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
 ]]
 
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Pure Purple & Black Palette (Roxo e Preto - Gothic Skull Edition)
-    Background = Color3.fromRGB(5, 4, 9),          -- Pure Obsidian Black
-    BackgroundGlass = Color3.fromRGB(9, 7, 16),     -- Black with Purple Haze
-    CardBg = Color3.fromRGB(14, 11, 23),            -- Deep Purple-Black Card
-    CardHover = Color3.fromRGB(27, 20, 45),         -- Dark Violet Hover
-    CardActive = Color3.fromRGB(43, 27, 70),        -- Electric Violet Active
-    Border = Color3.fromRGB(47, 29, 75),            -- Deep Purple Border
-    BorderLight = Color3.fromRGB(126, 34, 206),     -- Electric Purple Stroke
-    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Vivid Neon Purple Glow
+    -- Pure Purple & Black Translucent Acrylic Palette
+    Background = Color3.fromRGB(7, 5, 13),          -- Deep Obsidian Black
+    BackgroundTransparency = 0.06,                  -- Frosted Glass Depth
+    CardBg = Color3.fromRGB(16, 12, 28),            -- Translucent Purple-Black
+    CardTransparency = 0.2,                         -- Acrylic Window Effect
+    CardHover = Color3.fromRGB(30, 22, 52),         -- Smooth Violet Hover
+    CardActive = Color3.fromRGB(48, 32, 82),        -- Solid Active Violet
+    Border = Color3.fromRGB(56, 40, 88),            -- Subtle Purple Border
+    BorderTransparency = 0.35,                      -- Soft Border Blend
+    BorderLight = Color3.fromRGB(139, 92, 246),     -- Electric Violet Stroke
+    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Glowing Purple Neon
     
-    -- Accents & Gradients (Strictly Purple / Violet / Black)
-    AccentPrimary = Color3.fromRGB(147, 51, 234),   -- Royal Electric Purple (#9333ea)
-    AccentSecondary = Color3.fromRGB(192, 132, 252), -- Radiant Violet (#c084fc)
+    -- Solid, Rich Accent Colors
+    AccentPrimary = Color3.fromRGB(139, 92, 246),   -- Electric Royal Purple (#8b5cf6)
+    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Radiant Violet (#a855f7)
+    AccentDark = Color3.fromRGB(91, 33, 182),       -- Deep Amethyst (#5b21b6)
     AccentCyan = Color3.fromRGB(216, 180, 254),     -- Light Lavender (#d8b4fe)
-    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Neon Purple Glow (#a855f7)
-    AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta Purple (#e879f9)
-    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Crimson Rose (#f43f5e)
-    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Bright Lavender (#f0abfc)
-    AccentSkull = Color3.fromRGB(250, 245, 255),    -- Pure Bone White (#faf5ff)
+    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Solid Purple (#a855f7)
+    AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta (#e879f9)
+    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Vivid Rose (#f43f5e)
+    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Hot Lavender (#f0abfc)
+    AccentSkull = Color3.fromRGB(255, 255, 255),    -- Crisp Pure White (#ffffff)
 
-    -- Text Colors
-    TextPrimary = Color3.fromRGB(250, 245, 255),    -- Bone White (#faf5ff)
-    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lavender (#d8b4fe)
-    TextMuted = Color3.fromRGB(147, 130, 169),      -- Muted Ash Purple
-    TextAccent = Color3.fromRGB(192, 132, 252),     -- Vibrant Purple
+    -- Modern Crisp Typography
+    TextPrimary = Color3.fromRGB(255, 255, 255),    -- Pure White
+    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lilac
+    TextMuted = Color3.fromRGB(156, 140, 180),      -- Muted Ash Violet
+    TextAccent = Color3.fromRGB(192, 132, 252),     -- Bright Violet
     TextCyan = Color3.fromRGB(233, 213, 255),       -- Pale Lavender
-    TextTheo = Color3.fromRGB(245, 208, 254),       -- Hot Lavender
+    TextTheo = Color3.fromRGB(245, 208, 254),       -- Glowing Lavender
 
     -- Fonts
     FontTitle = Enum.Font.GothamBold,
@@ -6226,10 +6338,10 @@ local Theme = {
     FontRegular = Enum.Font.Gotham,
     FontCode = Enum.Font.Code,
 
-    -- Radii
-    CornerLarge = UDim.new(0, 12),
-    CornerMedium = UDim.new(0, 8),
-    CornerSmall = UDim.new(0, 5),
+    -- Smooth Bubble Radii ("Mais Bolha")
+    CornerLarge = UDim.new(0, 16),
+    CornerMedium = UDim.new(0, 12),
+    CornerSmall = UDim.new(0, 8),
     CornerPill = UDim.new(1, 0),
 }
 
@@ -6244,7 +6356,7 @@ function Theme.Tween(instance: Instance, duration: number, properties: {[string]
     return tween
 end
 
--- Create rounded corner
+-- Create rounded bubble corner
 function Theme.AddCorner(instance: Instance, radius: UDim?): UICorner
     local corner = Instance.new("UICorner")
     corner.CornerRadius = radius or Theme.CornerMedium
@@ -6273,6 +6385,40 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
     grad.Rotation = rotation or 45
     grad.Parent = instance
     return grad
+end
+
+-- Interactive Button Animation Helper (Hover Spring & Click Feedback)
+function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
+    local origSize = btn.Size
+    local origBg = btn.BackgroundColor3
+    
+    btn.MouseEnter:Connect(function()
+        Theme.Tween(btn, 0.15, {
+            BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
+        })
+    end)
+
+    btn.MouseLeave:Connect(function()
+        Theme.Tween(btn, 0.15, {
+            BackgroundColor3 = origBg
+        })
+    end)
+
+    btn.MouseButton1Down:Connect(function()
+        Theme.Tween(btn, 0.08, {
+            Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
+        })
+    end)
+
+    btn.MouseButton1Up:Connect(function()
+        Theme.Tween(btn, 0.12, {
+            Size = origSize
+        })
+    end)
+
+    if onClick then
+        btn.MouseButton1Click:Connect(onClick)
+    end
 end
 
 return Theme
