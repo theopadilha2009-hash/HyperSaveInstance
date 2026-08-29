@@ -52,24 +52,30 @@ openBtn.Click:Connect(function()
 end)
 
 -- Main UI Root (Obsidian Gothic Theme)
+-- Main UI Root (Obsidian Bubble Theme)
 local root = Instance.new("Frame")
 root.Size = UDim2.new(1, 0, 1, 0)
-root.BackgroundColor3 = Color3.fromRGB(6, 7, 10)
+root.BackgroundColor3 = Color3.fromRGB(7, 5, 13)
 root.BorderSizePixel = 0
 root.Parent = widget
 
 -- Header
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 48)
-header.BackgroundColor3 = Color3.fromRGB(14, 16, 24)
+header.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
 header.BorderSizePixel = 0
 header.Parent = root
 
+local headerStroke = Instance.new("UIStroke")
+headerStroke.Color = Color3.fromRGB(56, 40, 88)
+headerStroke.Thickness = 1
+headerStroke.Parent = header
+
 local headerTitle = Instance.new("TextLabel")
-headerTitle.Text = "💀 HyperSave Suite v2.0 • por Theo Lorentz Padilha"
+headerTitle.Text = "💀 HyperSave Suite • Theo Lorentz Padilha"
 headerTitle.Font = Enum.Font.GothamBold
 headerTitle.TextSize = 14
-headerTitle.TextColor3 = Color3.fromRGB(245, 248, 255)
+headerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
 headerTitle.Size = UDim2.new(1, -20, 1, 0)
 headerTitle.Position = UDim2.new(0, 16, 0, 0)
@@ -80,9 +86,10 @@ headerTitle.Parent = header
 local scroll = Instance.new("ScrollingFrame")
 scroll.Size = UDim2.new(1, 0, 1, -110)
 scroll.Position = UDim2.new(0, 0, 0, 48)
-scroll.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
+scroll.BackgroundColor3 = Color3.fromRGB(9, 7, 16)
 scroll.BorderSizePixel = 0
-scroll.ScrollBarThickness = 6
+scroll.ScrollBarThickness = 5
+scroll.ScrollBarImageColor3 = Color3.fromRGB(139, 92, 246)
 scroll.CanvasSize = UDim2.new(0, 0, 0, 1380)
 scroll.Parent = root
 
@@ -102,15 +109,20 @@ padding.Parent = scroll
 local statusCard = Instance.new("Frame")
 statusCard.Size = UDim2.new(1, 0, 0, 62)
 statusCard.Position = UDim2.new(0, 0, 1, -62)
-statusCard.BackgroundColor3 = Color3.fromRGB(12, 14, 20)
+statusCard.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
 statusCard.BorderSizePixel = 0
 statusCard.Parent = root
+
+local statusStroke = Instance.new("UIStroke")
+statusStroke.Color = Color3.fromRGB(56, 40, 88)
+statusStroke.Thickness = 1
+statusStroke.Parent = statusCard
 
 local statusLbl = Instance.new("TextLabel")
 statusLbl.Text = "Pronto para diagnosticar e reparar o mapa."
 statusLbl.Font = Enum.Font.Gotham
 statusLbl.TextSize = 11
-statusLbl.TextColor3 = Color3.fromRGB(160, 175, 200)
+statusLbl.TextColor3 = Color3.fromRGB(216, 180, 254)
 statusLbl.TextXAlignment = Enum.TextXAlignment.Left
 statusLbl.TextYAlignment = Enum.TextYAlignment.Top
 statusLbl.TextWrapped = true
@@ -121,26 +133,31 @@ statusLbl.Parent = statusCard
 
 local function setStatus(text: string, color: Color3)
     statusLbl.Text = text
-    statusLbl.TextColor3 = color or Color3.fromRGB(160, 175, 200)
+    statusLbl.TextColor3 = color or Color3.fromRGB(216, 180, 254)
 end
 
 -- Helper: Create UI Card
 local function createCard(title: string, desc: string, layoutOrder: number)
     local card = Instance.new("Frame")
     card.Size = UDim2.new(1, 0, 0, 120)
-    card.BackgroundColor3 = Color3.fromRGB(24, 28, 40)
+    card.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
     card.BorderSizePixel = 0
     card.LayoutOrder = layoutOrder
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 14)
     corner.Parent = card
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(56, 40, 88)
+    stroke.Thickness = 1
+    stroke.Parent = card
 
     local cardTitle = Instance.new("TextLabel")
     cardTitle.Text = title
     cardTitle.Font = Enum.Font.GothamBold
-    cardTitle.TextSize = 13
-    cardTitle.TextColor3 = Color3.fromRGB(240, 245, 255)
+    cardTitle.TextSize = 12
+    cardTitle.TextColor3 = Color3.fromRGB(233, 213, 255)
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.Size = UDim2.new(1, -24, 0, 22)
     cardTitle.Position = UDim2.new(0, 12, 0, 10)
@@ -150,8 +167,8 @@ local function createCard(title: string, desc: string, layoutOrder: number)
     local cardDesc = Instance.new("TextLabel")
     cardDesc.Text = desc
     cardDesc.Font = Enum.Font.Gotham
-    cardDesc.TextSize = 11
-    cardDesc.TextColor3 = Color3.fromRGB(150, 165, 185)
+    cardDesc.TextSize = 10
+    cardDesc.TextColor3 = Color3.fromRGB(156, 140, 180)
     cardDesc.TextXAlignment = Enum.TextXAlignment.Left
     cardDesc.TextYAlignment = Enum.TextYAlignment.Top
     cardDesc.TextWrapped = true
@@ -163,22 +180,27 @@ local function createCard(title: string, desc: string, layoutOrder: number)
     return card
 end
 
--- Helper: Create Action Button
+-- Helper: Create Action Button (Bubble Pill Button)
 local function createButton(parent: Instance, text: string, bgColor: Color3)
     local btn = Instance.new("TextButton")
     btn.Text = text
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 11
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundColor3 = bgColor or Color3.fromRGB(79, 70, 229)
+    btn.BackgroundColor3 = bgColor or Color3.fromRGB(139, 92, 246)
     btn.Size = UDim2.new(1, -24, 0, 36)
     btn.Position = UDim2.new(0, 12, 0, 72)
     btn.BorderSizePixel = 0
     btn.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(168, 85, 247)
+    stroke.Thickness = 1
+    stroke.Parent = btn
 
     return btn
 end
@@ -192,10 +214,10 @@ local cardMaster = createCard(
     0
 )
 cardMaster.Size = UDim2.new(1, 0, 0, 130)
-cardMaster.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
+cardMaster.BackgroundColor3 = Color3.fromRGB(24, 16, 42)
 cardMaster.Parent = scroll
 
-local btnMaster = createButton(cardMaster, "🚀 EXECUTAR REPARO MESTRE TOTAL", Color3.fromRGB(236, 72, 153))
+local btnMaster = createButton(cardMaster, "🚀 EXECUTAR REPARO MESTRE TOTAL", Color3.fromRGB(147, 51, 234))
 btnMaster.Size = UDim2.new(1, -24, 0, 42)
 
 btnMaster.MouseButton1Click:Connect(function()
@@ -698,17 +720,17 @@ end)
 -- FEATURE 8: 👤 CRÉDITOS & DESENVOLVEDOR (THEO LORENTZ PADILHA)
 -- ============================================================================
 local cardDev = createCard(
-    "👤 Criador & Engenheiro: Theo Lorentz Padilha",
+    "👑 Criador & Engenheiro: Theo Lorentz Padilha",
     "Desenvolvido com excelência por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do GitHub.",
     8
 )
-cardDev.BackgroundColor3 = Color3.fromRGB(24, 18, 38)
+cardDev.BackgroundColor3 = Color3.fromRGB(24, 16, 42)
 cardDev.Parent = scroll
 
-local btnDevGithub = createButton(cardDev, "🔗 COPIAR GITHUB DE THEO LORENTZ PADILHA", Color3.fromRGB(236, 72, 153))
+local btnDevGithub = createButton(cardDev, "🔗 COPIAR GITHUB DE THEO LORENTZ PADILHA", Color3.fromRGB(147, 51, 234))
 
 btnDevGithub.MouseButton1Click:Connect(function()
-    setStatus("✓ Link do GitHub copiado para a área de transferência: https://github.com/theopadilha2009-hash", Color3.fromRGB(34, 197, 94))
+    setStatus("✓ Link do GitHub copiado: https://github.com/theopadilha2009-hash", Color3.fromRGB(168, 85, 247))
 end)
 
 print("[HyperSave Suite] Plugin carregado com sucesso!")
