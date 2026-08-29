@@ -5,11 +5,22 @@
 
 local Environment = {}
 
--- Service references
+-- Service references (Safely wrapped in pcalls for all execution identities)
 local cloneref = cloneref or function(obj) return obj end
-local HttpService = cloneref(game:GetService("HttpService"))
-local Players = cloneref(game:GetService("Players"))
-local CoreGui = cloneref(game:GetService("CoreGui"))
+local HttpService = nil
+pcall(function() HttpService = cloneref(game:GetService("HttpService")) end)
+local Players = nil
+pcall(function() Players = cloneref(game:GetService("Players")) end)
+local CoreGui = nil
+pcall(function() CoreGui = cloneref(game:GetService("CoreGui")) end)
+
+-- Universal Task polyfill
+local task = task or {
+    spawn = spawn or function(fn, ...) return coroutine.wrap(fn)(...) end,
+    wait = wait or function(t) return coroutine.yield(t) end,
+    delay = delay or function(t, fn) return task.spawn(function() task.wait(t); fn() end) end,
+    defer = function(fn, ...) return (spawn or task.spawn)(function(...) fn(...) end, ...) end
+}
 
 -- Identify executor & platform
 function Environment.GetExecutorName(): string

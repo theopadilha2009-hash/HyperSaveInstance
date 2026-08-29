@@ -240,7 +240,7 @@ local Presets = {
     }
 }
 
-function Defaults.ApplyPreset(config: table, presetName: string)
+function Defaults.ApplyPreset(config, presetName)
     local preset = Presets[presetName]
     if preset then
         for k, v in pairs(preset) do
@@ -272,7 +272,7 @@ AnimationRecorder.RecordedSequences = {}
 AnimationRecorder.ActiveConnection = nil
 
 -- Record an active animation track from a Humanoid by sampling joint transforms
-function AnimationRecorder.RecordTrack(humanoid: Humanoid, trackName: string, durationSeconds: number, onComplete: (keyframeSeq: KeyframeSequence) -> ())
+function AnimationRecorder.RecordTrack(humanoid, trackName, durationSeconds, onComplete) -> ())
     local character = humanoid.Parent
     if not character then return end
 
@@ -297,7 +297,7 @@ function AnimationRecorder.RecordTrack(humanoid: Humanoid, trackName: string, du
     local frames = {}
 
     local conn
-    conn = RunService.Heartbeat:Connect(function(dt)
+    conn = RunService.Heartbeat:Connect(function (dt)
         elapsed = elapsed + dt
         timer = timer + dt
 
@@ -352,10 +352,10 @@ function AnimationRecorder.StartAutoCapture()
     if AnimationRecorder.IsRecording then return end
     AnimationRecorder.IsRecording = true
 
-    local function hookHumanoid(humanoid: Humanoid)
-        humanoid.AnimationPlayed:Connect(function(track)
+    local function hookHumanoid(humanoid)
+        humanoid.AnimationPlayed:Connect(function (track)
             local animName = track.Name or "Animation"
-            pcall(function()
+            pcall(function ()
                 if track.Animation then
                     animName = track.Animation.Name
                 end
@@ -375,7 +375,7 @@ function AnimationRecorder.StartAutoCapture()
             local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
             if hum then hookHumanoid(hum) end
         end
-        localPlayer.CharacterAdded:Connect(function(char)
+        localPlayer.CharacterAdded:Connect(function (char)
             local hum = char:WaitForChild("Humanoid", 5)
             if hum and hum:IsA("Humanoid") then
                 hookHumanoid(hum)
@@ -399,7 +399,7 @@ local Environment = __require__("Utils/Environment")
 local AssetDownloader = {}
 
 -- Safe HTTP Request polyfill for executors
-local function httpRequest(url: string): string?
+local function httpRequest(url)
     local req = (syn and syn.request) or (http and http.request) or http_request or request
     if req then
         local s, res = pcall(req, {
@@ -412,7 +412,7 @@ local function httpRequest(url: string): string?
     end
 
     -- Fallback to game:HttpGet
-    local s, body = pcall(function()
+    local s, body = pcall(function ()
         return game:HttpGet(url)
     end)
     if s and type(body) == "string" and #body > 0 then
@@ -423,7 +423,7 @@ local function httpRequest(url: string): string?
 end
 
 -- Extract clean asset ID numbers from urls or strings
-function AssetDownloader.ExtractId(assetUrl: string | number): string?
+function AssetDownloader.ExtractId(assetUrl)
     if type(assetUrl) == "number" then
         return tostring(assetUrl)
     end
@@ -436,10 +436,10 @@ function AssetDownloader.ExtractId(assetUrl: string | number): string?
 end
 
 -- Collect all unique asset URLs and IDs from game hierarchy
-function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type: string, Id: string, Url: string, SourceName: string}}
+function AssetDownloader.CollectAssets(instances)
     local assets = {}
 
-    local function registerAsset(assetType: string, rawVal: any, sourceName: string)
+    local function registerAsset(assetType, rawVal, sourceName)
         local id = AssetDownloader.ExtractId(rawVal)
         if id and #id > 0 and not assets[id] then
             local downloadUrl = string.format("https://assetdelivery.roblox.com/v1/asset/?id=%s", id)
@@ -476,9 +476,9 @@ function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type:
             registerAsset("Texture", inst.SkyboxRt, "SkyboxRt")
             registerAsset("Texture", inst.SkyboxUp, "SkyboxUp")
         elseif inst:IsA("ParticleEmitter") or inst:IsA("Beam") or inst:IsA("Trail") then
-            registerAsset("Texture", (inst :: any).Texture, inst.Name)
+            registerAsset("Texture", (inst ).Texture, inst.Name)
         elseif inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
-            registerAsset("Texture", (inst :: any).Image, inst.Name)
+            registerAsset("Texture", (inst ).Image, inst.Name)
         elseif inst:IsA("Animation") then
             registerAsset("Animation", inst.AnimationId, inst.Name)
         elseif inst:IsA("Shirt") then
@@ -492,7 +492,7 @@ function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type:
 end
 
 -- Download all collected assets to local folder structure
-function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: string, options: table, progressCallback: (current: number, total: number, asset: table) -> ()): (number, number)
+function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallback, total, asset) -> ()): (number, number)
     -- Create subdirectories
     Environment.MakeFolder(baseFolder)
     Environment.MakeFolder(baseFolder .. "/audios")
@@ -514,7 +514,7 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
     local threads = {}
 
     for w = 1, workers do
-        local t = task.spawn(function()
+        local t = task.spawn(function ()
             while currentIndex <= total do
                 local myIndex = currentIndex
                 currentIndex = currentIndex + 1
@@ -586,7 +586,7 @@ local Base64 = __require__("Utils/Base64")
 local AssetHandler = {}
 
 -- Sanitize and format asset URLs
-function AssetHandler.FormatAssetId(id: string | number): string
+function AssetHandler.FormatAssetId(id)
     if type(id) == "number" then
         return "rbxassetid://" .. tostring(id)
     end
@@ -600,7 +600,7 @@ function AssetHandler.FormatAssetId(id: string | number): string
 end
 
 -- Extract CSG Hidden Data (PhysicsData, ChildData, AssetId)
-function AssetHandler.ExtractUnionData(union: UnionOperation | NegateOperation)
+function AssetHandler.ExtractUnionData(union)
     local data = {
         AssetId = "",
         PhysicsData = nil,
@@ -612,11 +612,11 @@ function AssetHandler.ExtractUnionData(union: UnionOperation | NegateOperation)
         SmoothingAngle = 0
     }
 
-    pcall(function() data.AssetId = union.AssetId end)
-    pcall(function() data.RenderFidelity = union.RenderFidelity end)
-    pcall(function() data.CollisionFidelity = union.CollisionFidelity end)
-    pcall(function() data.UsePartColor = union.UsePartColor end)
-    pcall(function() data.SmoothingAngle = union.SmoothingAngle end)
+    pcall(function () data.AssetId = union.AssetId end)
+    pcall(function () data.RenderFidelity = union.RenderFidelity end)
+    pcall(function () data.CollisionFidelity = union.CollisionFidelity end)
+    pcall(function () data.UsePartColor = union.UsePartColor end)
+    pcall(function () data.SmoothingAngle = union.SmoothingAngle end)
 
     -- Extract hidden CSG geometry buffers if executor supports gethiddenproperty or getspecialinfo
     local getspecial = getspecialinfo or (syn and syn.get_special_info)
@@ -656,7 +656,7 @@ function AssetHandler.ExtractUnionData(union: UnionOperation | NegateOperation)
 end
 
 -- Process MeshParts and Meshes
-function AssetHandler.ProcessMeshOrUnion(instance: Instance, options: table)
+function AssetHandler.ProcessMeshOrUnion(instance, options)
     local info = {
         ClassName = instance.ClassName,
         MeshId = "",
@@ -670,29 +670,29 @@ function AssetHandler.ProcessMeshOrUnion(instance: Instance, options: table)
     }
 
     if instance:IsA("MeshPart") then
-        pcall(function() info.MeshId = instance.MeshId end)
-        pcall(function() info.TextureId = instance.TextureID end)
-        pcall(function() info.RenderFidelity = instance.RenderFidelity end)
-        pcall(function() info.CollisionFidelity = instance.CollisionFidelity end)
-        pcall(function() info.DoubleSided = instance.DoubleSided end)
-        pcall(function() info.VertexColor = instance.VertexColor end)
+        pcall(function () info.MeshId = instance.MeshId end)
+        pcall(function () info.TextureId = instance.TextureID end)
+        pcall(function () info.RenderFidelity = instance.RenderFidelity end)
+        pcall(function () info.CollisionFidelity = instance.CollisionFidelity end)
+        pcall(function () info.DoubleSided = instance.DoubleSided end)
+        pcall(function () info.VertexColor = instance.VertexColor end)
     elseif instance:IsA("UnionOperation") or instance:IsA("NegateOperation") then
-        info.UnionData = AssetHandler.ExtractUnionData(instance :: any)
+        info.UnionData = AssetHandler.ExtractUnionData(instance )
         info.AssetId = info.UnionData.AssetId
     elseif instance:IsA("SpecialMesh") then
-        pcall(function() info.MeshId = instance.MeshId end)
-        pcall(function() info.TextureId = instance.TextureId end)
-        pcall(function() info.MeshType = instance.MeshType end)
-        pcall(function() info.Scale = instance.Scale end)
-        pcall(function() info.Offset = instance.Offset end)
-        pcall(function() info.VertexColor = instance.VertexColor end)
+        pcall(function () info.MeshId = instance.MeshId end)
+        pcall(function () info.TextureId = instance.TextureId end)
+        pcall(function () info.MeshType = instance.MeshType end)
+        pcall(function () info.Scale = instance.Scale end)
+        pcall(function () info.Offset = instance.Offset end)
+        pcall(function () info.VertexColor = instance.VertexColor end)
     end
 
     return info
 end
 
 -- Process SurfaceAppearance (PBR Textures)
-function AssetHandler.ProcessSurfaceAppearance(instance: SurfaceAppearance)
+function AssetHandler.ProcessSurfaceAppearance(instance)
     local pbr = {
         ColorMap = "",
         NormalMap = "",
@@ -700,11 +700,11 @@ function AssetHandler.ProcessSurfaceAppearance(instance: SurfaceAppearance)
         MetalnessMap = "",
         AlphaMode = Enum.AlphaMode.Overlay
     }
-    pcall(function() pbr.ColorMap = instance.ColorMap end)
-    pcall(function() pbr.NormalMap = instance.NormalMap end)
-    pcall(function() pbr.RoughnessMap = instance.RoughnessMap end)
-    pcall(function() pbr.MetalnessMap = instance.MetalnessMap end)
-    pcall(function() pbr.AlphaMode = instance.AlphaMode end)
+    pcall(function () pbr.ColorMap = instance.ColorMap end)
+    pcall(function () pbr.NormalMap = instance.NormalMap end)
+    pcall(function () pbr.RoughnessMap = instance.RoughnessMap end)
+    pcall(function () pbr.MetalnessMap = instance.MetalnessMap end)
+    pcall(function () pbr.AlphaMode = instance.AlphaMode end)
     return pbr
 end
 
@@ -724,7 +724,7 @@ local Environment = __require__("Utils/Environment")
 local AudioRipper = {}
 local previewSoundInstance = nil
 
-export type AudioInfo = {
+
     Name: string,
     SoundId: string,
     CleanId: string,
@@ -734,11 +734,11 @@ export type AudioInfo = {
 }
 
 -- Collect all sound instances in the game
-function AudioRipper.ScanSounds(): {AudioInfo}
+function AudioRipper.ScanSounds()
     local sounds = {}
     local seenIds = {}
 
-    local function scan(inst: Instance)
+    local function scan(inst)
         if inst:IsA("Sound") and #inst.SoundId > 0 then
             local cleanId = string.match(inst.SoundId, "%d+")
             if cleanId and not seenIds[cleanId] then
@@ -760,7 +760,7 @@ function AudioRipper.ScanSounds(): {AudioInfo}
     end
 
     for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "StarterGui", "Chat"}) do
-        local s, service = pcall(function() return game:GetService(sName) end)
+        local s, service = pcall(function () return game:GetService(sName) end)
         if s and service then scan(service) end
     end
 
@@ -768,8 +768,8 @@ function AudioRipper.ScanSounds(): {AudioInfo}
 end
 
 -- Play in-game preview
-function AudioRipper.PlayPreview(soundId: string): boolean
-    pcall(function()
+function AudioRipper.PlayPreview(soundId)
+    pcall(function ()
         if previewSoundInstance then
             previewSoundInstance:Stop()
             previewSoundInstance:Destroy()
@@ -788,7 +788,7 @@ end
 
 -- Stop in-game preview
 function AudioRipper.StopPreview()
-    pcall(function()
+    pcall(function ()
         if previewSoundInstance then
             previewSoundInstance:Stop()
             previewSoundInstance:Destroy()
@@ -798,7 +798,7 @@ function AudioRipper.StopPreview()
 end
 
 -- Export sound list to text/json
-function AudioRipper.ExportSoundList(): string
+function AudioRipper.ExportSoundList()
     local list = AudioRipper.ScanSounds()
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_Soundtrack_%d.txt", placeId)
@@ -829,9 +829,9 @@ local Base64 = __require__("Utils/Base64")
 local Decompiler = {}
 
 -- Helper to get clean script path
-local function getScriptPath(scriptInstance: LuaSourceContainer): string
+local function getScriptPath(scriptInstance)
     local names = {}
-    local current: Instance? = scriptInstance
+    local current = scriptInstance
     while current and current ~= game do
         table.insert(names, 1, current.Name)
         current = current.Parent
@@ -840,7 +840,7 @@ local function getScriptPath(scriptInstance: LuaSourceContainer): string
 end
 
 -- Generate banner comment for decompiled scripts
-local function generateHeader(scriptInstance: LuaSourceContainer, status: string): string
+local function generateHeader(scriptInstance, status)
     local path = getScriptPath(scriptInstance)
     local dateStr = os.date("%Y-%m-%d %H:%M:%S")
     local execName = Environment.GetExecutorName()
@@ -862,7 +862,7 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
 end
 
 -- Intelligent script beautifier & variable name recoverer
-function Decompiler.Beautify(code: string): string
+function Decompiler.Beautify(code)
     if not code or #code == 0 then return "" end
 
     local commonServices = {
@@ -891,7 +891,7 @@ function Decompiler.Beautify(code: string): string
 end
 
 -- Generate Intelligent Server Backend Dispatcher (RemoteSpy Auto-Generator)
-local function generateServerDispatcher(scriptInstance: LuaSourceContainer): string
+local function generateServerDispatcher(scriptInstance)
     local parent = scriptInstance.Parent
     local remotes = {}
     local functions = {}
@@ -937,7 +937,7 @@ print(string.format("[HyperSaveInstance Backend] Server script %%s initialized."
         code = code .. string.format([=[
 local %s = parent:FindFirstChild(%q)
 if %s and %s:IsA("RemoteEvent") then
-    %s.OnServerEvent:Connect(function(player, ...)
+    %s.OnServerEvent:Connect(function (player, ...)
         local args = {...}
         print(string.format("[%s:OnServerEvent] Received from %%s (%%d args)", player.Name, #args))
         -- Backend logic dispatcher
@@ -952,7 +952,7 @@ end
         code = code .. string.format([=[
 local %s = parent:FindFirstChild(%q)
 if %s and %s:IsA("RemoteFunction") then
-    %s.OnServerInvoke = function(player, ...)
+    %s.OnServerInvoke = function (player, ...)
         local args = {...}
         print(string.format("[%s:OnServerInvoke] Invoked by %%s", player.Name))
         return true -- Default affirmative response
@@ -966,11 +966,11 @@ end
 end
 
 -- Decompile single script safely with timeout & retries
-function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options: table): string
+function Decompiler.DecompileSingle(scriptInstance, options)
     -- 1. Check if source is directly readable (e.g. Studio, Mock, or unprotected environment)
     local directSource = nil
-    pcall(function()
-        local s = (scriptInstance :: any).Source
+    pcall(function ()
+        local s = (scriptInstance ).Source
         if type(s) == "string" and #s > 0 then
             directSource = s
         end
@@ -992,8 +992,8 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
 
     local isServerScript = scriptInstance:IsA("Script")
     if isServerScript then
-        pcall(function()
-            if (scriptInstance :: any).RunContext == Enum.RunContext.Client then
+        pcall(function ()
+            if (scriptInstance ).RunContext == Enum.RunContext.Client then
                 isServerScript = false
             end
         end)
@@ -1019,7 +1019,7 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
             local result = nil
             local finished = false
 
-            task.spawn(function()
+            task.spawn(function ()
                 local success, output = pcall(decompileFn, scriptInstance)
                 if success and type(output) == "string" and #output > 0 then
                     -- Filter out common tiny decompiler error stubs
@@ -1065,7 +1065,7 @@ return rawBytecodeBase64
 end
 
 -- Batch decompile multiple scripts concurrently with worker pool
-function Decompiler.DecompileBatch(scripts: {LuaSourceContainer}, options: table, progressCallback: (current: number, total: number, script: LuaSourceContainer) -> ()): {[LuaSourceContainer]: string}
+function Decompiler.DecompileBatch(scripts, options, progressCallback, total, script) -> ()): {[LuaSourceContainer]: string}
     local results = {}
     local total = #scripts
     local completed = 0
@@ -1076,7 +1076,7 @@ function Decompiler.DecompileBatch(scripts: {LuaSourceContainer}, options: table
 
     local threads = {}
     for w = 1, workers do
-        local t = task.spawn(function()
+        local t = task.spawn(function ()
             while queueIndex <= total do
                 local myIndex = queueIndex
                 queueIndex = queueIndex + 1
@@ -1135,7 +1135,7 @@ local Engine = {}
 Engine.__index = Engine
 
 -- Status types
-export type SaveProgress = {
+
     Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Exploring" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
     Current: number,
     Total: number,
@@ -1145,7 +1145,7 @@ export type SaveProgress = {
     AssetsFolder: string?,
 }
 
-function Engine.new(customConfig: table?)
+function Engine.new(customConfig)
     local self = setmetatable({}, Engine)
     self.Config = table.clone(Defaults)
     if customConfig then
@@ -1165,21 +1165,21 @@ function Engine.new(customConfig: table?)
     return self
 end
 
-function Engine:OnProgress(callback: (progress: SaveProgress) -> ())
+function Engine:OnProgress(callback) -> ())
     table.insert(self.ProgressListeners, callback)
 end
 
-function Engine:EmitProgress(progress: SaveProgress)
+function Engine:EmitProgress(progress)
     for _, cb in ipairs(self.ProgressListeners) do
         task.spawn(cb, progress)
     end
 end
 
 -- Generate safe output filename
-function Engine:GetDefaultFileName(): string
+function Engine:GetDefaultFileName()
     local placeId = game.PlaceId or 0
     local placeName = "Place"
-    pcall(function()
+    pcall(function ()
         placeName = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
     end)
     placeName = string.gsub(placeName, "[^%w_%-]", "_")
@@ -1187,7 +1187,7 @@ function Engine:GetDefaultFileName(): string
     return string.format("HyperSave_%s_%d.%s", placeName, placeId, ext)
 end
 
-function Engine:GetDefaultAssetFolder(): string
+function Engine:GetDefaultAssetFolder()
     local placeId = game.PlaceId or 0
     return string.format("HyperSave_Assets_%d", placeId)
 end
@@ -1195,18 +1195,18 @@ end
 -- Play completion audio chime
 function Engine:PlayChime()
     if not self.Config.PlaySoundOnComplete then return end
-    pcall(function()
+    pcall(function ()
         local sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
         sound.Volume = 0.6
         sound.Parent = SoundService
         sound:Play()
-        sound.Ended:Connect(function() sound:Destroy() end)
+        sound.Ended:Connect(function () sound:Destroy() end)
     end)
 end
 
 -- Check if instance should be saved
-function Engine:ShouldSaveInstance(inst: Instance): boolean
+function Engine:ShouldSaveInstance(inst)
     local cName = inst.ClassName
     if ClassBlacklist.Classes[cName] then return false end
     if ClassBlacklist.Names[inst.Name] then return false end
@@ -1228,7 +1228,7 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
 end
 
 -- Save specific isolated model/folder
-function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, string)
+function Engine:SaveTarget(target, customConfig)
     if not target or not target:IsA("Instance") then
         return false, "Invalid target instance specified!"
     end
@@ -1244,7 +1244,7 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
     local allInstances = {target}
     local scriptInstances = {}
 
-    local function scan(inst: Instance)
+    local function scan(inst)
         if not self:ShouldSaveInstance(inst) then return end
         table.insert(allInstances, inst)
         if inst:IsA("LuaSourceContainer") then
@@ -1273,7 +1273,7 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
 end
 
 -- Save multiple target instances into a single combined .rbxm / .rbxlx pack
-function Engine:SaveTargetBatch(targets: {Instance}, customConfig: table?): (boolean, string)
+function Engine:SaveTargetBatch(targets, customConfig)
     if not targets or #targets == 0 then
         return false, "No target instances specified for batch export!"
     end
@@ -1286,7 +1286,7 @@ function Engine:SaveTargetBatch(targets: {Instance}, customConfig: table?): (boo
     local fileName = string.format("HyperSave_MultiPack_%d_items_%d.%s", #targets, os.time(), cfg.Format or "rbxm")
     local scriptInstances = {}
 
-    local function scan(inst: Instance)
+    local function scan(inst)
         if not self:ShouldSaveInstance(inst) then return end
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
@@ -1317,7 +1317,7 @@ function Engine:SaveTargetBatch(targets: {Instance}, customConfig: table?): (boo
 end
 
 -- Main Save Process
-function Engine:Start(): (boolean, string)
+function Engine:Start()
     if self.IsRunning then
         return false, "Save is already in progress!"
     end
@@ -1347,7 +1347,7 @@ function Engine:Start(): (boolean, string)
             Percentage = 4,
             Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
         })
-        StreamExplorer.ExploreMap(512, function(cur, tot, pos)
+        StreamExplorer.ExploreMap(512, function (cur, tot, pos)
             local pct = 4 + math.floor((cur / tot) * 6)
             self:EmitProgress({
                 Stage = "Exploring",
@@ -1360,12 +1360,12 @@ function Engine:Start(): (boolean, string)
     end
 
     -- Step 1: Collect Root Services to save
-    local rootInstances: {Instance} = {}
-    local allInstances: {Instance} = {}
-    local scriptInstances: {LuaSourceContainer} = {}
+    local rootInstances = {}
+    local allInstances = {}
+    local scriptInstances = {}
 
     for _, serviceName in ipairs(ClassBlacklist.SaveServices) do
-        local success, service = pcall(function()
+        local success, service = pcall(function ()
             return game:GetService(serviceName)
         end)
 
@@ -1381,7 +1381,7 @@ function Engine:Start(): (boolean, string)
         local nils = Environment.GetNilInstances()
         for _, nInst in ipairs(nils) do
             if self:ShouldSaveInstance(nInst) then
-                pcall(function() nInst.Parent = nilFolder end)
+                pcall(function () nInst.Parent = nilFolder end)
             end
         end
         if #nilFolder:GetChildren() > 0 then
@@ -1391,7 +1391,7 @@ function Engine:Start(): (boolean, string)
 
     -- Harvest active client scripts, GUIs and tools from LocalPlayer into Starter containers
     if self.Config.IsolateStarterPlayer then
-        pcall(function()
+        pcall(function ()
             local Players = game:GetService("Players")
             local localPlayer = Players.LocalPlayer
             if localPlayer then
@@ -1418,7 +1418,7 @@ function Engine:Start(): (boolean, string)
                 if playerScripts then
                     for _, child in ipairs(playerScripts:GetChildren()) do
                         if self:ShouldSaveInstance(child) and not starterPlayerScripts:FindFirstChild(child.Name) then
-                            pcall(function()
+                            pcall(function ()
                                 local clone = child:Clone()
                                 if clone then
                                     clone.Parent = starterPlayerScripts
@@ -1433,7 +1433,7 @@ function Engine:Start(): (boolean, string)
                 if playerGui then
                     for _, child in ipairs(playerGui:GetChildren()) do
                         if self:ShouldSaveInstance(child) and child:IsA("LayerCollector") and not starterGui:FindFirstChild(child.Name) then
-                            pcall(function()
+                            pcall(function ()
                                 local clone = child:Clone()
                                 if clone then
                                     clone.Parent = starterGui
@@ -1448,7 +1448,7 @@ function Engine:Start(): (boolean, string)
                 if backpack then
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if tool:IsA("Tool") and not starterPack:FindFirstChild(tool.Name) then
-                            pcall(function()
+                            pcall(function ()
                                 local clone = tool:Clone()
                                 if clone then
                                     clone.Parent = starterPack
@@ -1462,14 +1462,14 @@ function Engine:Start(): (boolean, string)
                 if char then
                     for _, item in ipairs(char:GetChildren()) do
                         if item:IsA("Tool") and not starterPack:FindFirstChild(item.Name) then
-                            pcall(function()
+                            pcall(function ()
                                 local clone = item:Clone()
                                 if clone then
                                     clone.Parent = starterPack
                                 end
                             end)
                         elseif item:IsA("LocalScript") and not starterCharacterScripts:FindFirstChild(item.Name) then
-                            pcall(function()
+                            pcall(function ()
                                 local clone = item:Clone()
                                 if clone then
                                     clone.Parent = starterCharacterScripts
@@ -1484,7 +1484,7 @@ function Engine:Start(): (boolean, string)
 
     -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio
     if self.Config.GenerateSafeSpawn then
-        pcall(function()
+        pcall(function ()
             local Players = game:GetService("Players")
             local localPlayer = Players.LocalPlayer
             local char = localPlayer and localPlayer.Character
@@ -1516,7 +1516,7 @@ function Engine:Start(): (boolean, string)
         Message = "Scanning place hierarchy & all instances...",
     })
 
-    local function scan(inst: Instance)
+    local function scan(inst)
         if not self:ShouldSaveInstance(inst) then return end
         table.insert(allInstances, inst)
 
@@ -1535,7 +1535,7 @@ function Engine:Start(): (boolean, string)
 
     -- Step 1.5: Intelligent Server Synthesizer (Auto-generates ServerScriptService backend for Remotes)
     if self.Config.SaveServerScriptPlaceholders or self.Config.SynthesizeServer then
-        pcall(function()
+        pcall(function ()
             local serverService = ServerSynthesizer.SynthesizeService(rootInstances)
             table.insert(rootInstances, serverService)
             scan(serverService)
@@ -1566,7 +1566,7 @@ function Engine:Start(): (boolean, string)
                 Message = string.format("Downloading %d raw assets (.mp3, .png, .mesh)...", totalAssets),
             })
 
-            local dlOk, dlFail = AssetDownloader.DownloadAll(assets, assetFolder, self.Config, function(cur, tot, item)
+            local dlOk, dlFail = AssetDownloader.DownloadAll(assets, assetFolder, self.Config, function (cur, tot, item)
                 local pct = 15 + math.floor((cur / tot) * 20)
                 self:EmitProgress({
                     Stage = "Assets",
@@ -1598,7 +1598,7 @@ function Engine:Start(): (boolean, string)
     end
 
     -- Step 4: Decompile Scripts
-    local scriptSources: {[LuaSourceContainer]: string} = {}
+    local scriptSources = {}
     if self.Config.DecompileScripts and totalScripts > 0 then
         self:EmitProgress({
             Stage = "Decompiling",
@@ -1608,7 +1608,7 @@ function Engine:Start(): (boolean, string)
             Message = string.format("Decompiling %d scripts with parallel workers...", totalScripts),
         })
 
-        scriptSources = Decompiler.DecompileBatch(scriptInstances, self.Config, function(cur, tot, sInst)
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, self.Config, function (cur, tot, sInst)
             local pct = 45 + math.floor((cur / tot) * 40)
             self:EmitProgress({
                 Stage = "Decompiling",
@@ -1625,7 +1625,7 @@ function Engine:Start(): (boolean, string)
     end
 
     -- Memory Watchdog & Cache Flush to prevent OOM crash on massive games
-    pcall(function()
+    pcall(function ()
         collectgarbage("collect")
     end)
 
@@ -1734,7 +1734,7 @@ local Decompiler = __require__("Core/Decompiler")
 
 local GuiRipper = {}
 
-function GuiRipper.ExportAllGuis(options: table?): (boolean, string)
+function GuiRipper.ExportAllGuis(options)
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_UIPack_%d.rbxmx", placeId)
 
@@ -1747,7 +1747,7 @@ function GuiRipper.ExportAllGuis(options: table?): (boolean, string)
     -- Scan StarterGui
     for _, gui in ipairs(StarterGui:GetChildren()) do
         if gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui") then
-            pcall(function()
+            pcall(function ()
                 local cl = gui:Clone()
                 if cl then cl.Parent = folder end
             end)
@@ -1761,7 +1761,7 @@ function GuiRipper.ExportAllGuis(options: table?): (boolean, string)
         if pGui then
             for _, gui in ipairs(pGui:GetChildren()) do
                 if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not folder:FindFirstChild(gui.Name) then
-                    pcall(function()
+                    pcall(function ()
                         local cl = gui:Clone()
                         if cl then cl.Parent = folder end
                     end)
@@ -1770,7 +1770,7 @@ function GuiRipper.ExportAllGuis(options: table?): (boolean, string)
         end
     end
 
-    local function scanScripts(inst: Instance)
+    local function scanScripts(inst)
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
         end
@@ -1808,7 +1808,7 @@ local SerializerXml = __require__("Core/SerializerXml")
 
 local LightingRipper = {}
 
-function LightingRipper.ExportLightingPreset(): (boolean, string)
+function LightingRipper.ExportLightingPreset()
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_LightingPreset_%d.rbxmx", placeId)
 
@@ -1817,7 +1817,7 @@ function LightingRipper.ExportLightingPreset(): (boolean, string)
 
     -- Clone all post processing effects & sky into folder
     for _, child in ipairs(Lighting:GetChildren()) do
-        pcall(function()
+        pcall(function ()
             local clone = child:Clone()
             if clone then clone.Parent = folder end
         end)
@@ -1854,8 +1854,8 @@ local originalFireServer = nil
 local originalInvokeServer = nil
 
 -- Format arguments safely into readable string / json
-local function serializeArgs(args: table): string
-    local s, json = pcall(function()
+local function serializeArgs(args)
+    local s, json = pcall(function ()
         return HttpService:JSONEncode(args)
     end)
     if s and json then return json end
@@ -1876,7 +1876,7 @@ function NetworkSniffer.Start()
     local hookmeta = hookmetamethod or (syn and syn.hookmetamethod)
     if hookmeta then
         local oldNamecall
-        oldNamecall = hookmeta(game, "__namecall", function(self, ...)
+        oldNamecall = hookmeta(game, "__namecall", function (self, ...)
             local method = getnamecallmethod()
             if NetworkSniffer.IsActive and typeof(self) == "Instance" then
                 if method == "FireServer" and self:IsA("RemoteEvent") then
@@ -1898,7 +1898,7 @@ function NetworkSniffer.Stop()
 end
 
 -- Record a network event
-function NetworkSniffer.LogCall(callType: string, remote: Instance, args: table)
+function NetworkSniffer.LogCall(callType, remote, args)
     local entry = {
         Timestamp = os.date("%H:%M:%S"),
         Type = callType,
@@ -1918,16 +1918,16 @@ function NetworkSniffer.LogCall(callType: string, remote: Instance, args: table)
 end
 
 -- Register UI listener
-function NetworkSniffer.OnCall(callback: (entry: table) -> ())
+function NetworkSniffer.OnCall(callback) -> ())
     table.insert(NetworkSniffer.Listeners, callback)
 end
 
 -- Export captured network protocol to file
-function NetworkSniffer.ExportLogs(): string
+function NetworkSniffer.ExportLogs()
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_Network_%d.json", placeId)
 
-    local s, json = pcall(function()
+    local s, json = pcall(function ()
         return HttpService:JSONEncode(NetworkSniffer.CapturedLogs)
     end)
 
@@ -1962,7 +1962,7 @@ local Environment = __require__("Utils/Environment")
 local ObjExporter = {}
 
 -- Generate standard cube vertices & faces for BasePart
-local function getBoxGeometry(cf: CFrame, size: Vector3, vertOffset: number): (string, string, number)
+local function getBoxGeometry(cf, size, vertOffset)
     local hx, hy, hz = size.X / 2, size.Y / 2, size.Z / 2
     local corners = {
         cf:PointToWorldSpace(Vector3.new(-hx, -hy, -hz)),
@@ -2000,7 +2000,7 @@ local function getBoxGeometry(cf: CFrame, size: Vector3, vertOffset: number): (s
 end
 
 -- Export entire workspace or model to .obj + .mtl
-function ObjExporter.Export(targetRoot: Instance?, options: table?): (boolean, string)
+function ObjExporter.Export(targetRoot, options)
     local root = targetRoot or workspace
     local placeId = game.PlaceId or 0
     local baseName = string.format("HyperSave_Map3D_%d", placeId)
@@ -2021,7 +2021,7 @@ function ObjExporter.Export(targetRoot: Instance?, options: table?): (boolean, s
     local vertOffset = 0
     local partCount = 0
 
-    local function processInstance(inst: Instance)
+    local function processInstance(inst)
         if inst:IsA("BasePart") and not inst:IsA("Terrain") then
             local color = inst.Color
             local matName = string.format("mat_%d_%d_%d", math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255))
@@ -2078,7 +2078,7 @@ __define__("Core/Optimizer", function()
 
 local Optimizer = {}
 
-function Optimizer.OptimizeHierarchy(rootInstances: {Instance}, options: table): {Instance}
+function Optimizer.OptimizeHierarchy(rootInstances, options)
     if not options.OptimizeGeometry then
         return rootInstances
     end
@@ -2086,7 +2086,7 @@ function Optimizer.OptimizeHierarchy(rootInstances: {Instance}, options: table):
     local cleanedRoots = {}
     local prunedCount = 0
 
-    local function cleanRecursive(inst: Instance): boolean
+    local function cleanRecursive(inst)
         -- Remove empty temporary folders or zero-size unrendered parts if safe
         if inst:IsA("Folder") and #inst:GetChildren() == 0 and not inst:GetAttribute("Preserve") then
             prunedCount = prunedCount + 1
@@ -2126,7 +2126,7 @@ local Players = game:GetService("Players")
 local RaycastSelector = {}
 RaycastSelector.__index = RaycastSelector
 
-function RaycastSelector.new(options: table?)
+function RaycastSelector.new(options)
     local self = setmetatable({}, RaycastSelector)
     self.Options = options or {}
     self.IsActive = false
@@ -2144,7 +2144,7 @@ end
 
 -- Initialize the visual highlight indicators
 function RaycastSelector:InitVisuals()
-    pcall(function()
+    pcall(function ()
         local hl = Instance.new("Highlight")
         hl.Name = "HyperSave_SelectorHighlight"
         hl.FillColor = Color3.fromRGB(168, 85, 247)
@@ -2161,11 +2161,9 @@ function RaycastSelector:InitVisuals()
 end
 
 -- Find the most meaningful parent Model or Tool from a clicked BasePart
-function RaycastSelector:ResolveTarget(part: BasePart): Instance
-    if not part then return nil end
-
-    local current: Instance? = part
-    local bestModel: Instance = part
+function RaycastSelector:ResolveTarget(part)
+    local current = part
+    local bestModel = part
 
     while current and current ~= workspace and current ~= game do
         if current:IsA("Model") and current.Parent == workspace then
@@ -2181,7 +2179,7 @@ function RaycastSelector:ResolveTarget(part: BasePart): Instance
 end
 
 -- Perform raycast from mouse screen position into 3D world
-function RaycastSelector:RaycastMouse(): (Instance?, Vector3?)
+function RaycastSelector:RaycastMouse()
     local camera = workspace.CurrentCamera
     if not camera then return nil, nil end
 
@@ -2213,7 +2211,7 @@ function RaycastSelector:RaycastMouse(): (Instance?, Vector3?)
 end
 
 -- Start interactive click-to-select mode in 3D world
-function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance?) -> ())?)
+function RaycastSelector:Start(onSelected) -> (), onHover: ((Instance?) -> ())?)
     if self.IsActive then self:Stop() end
 
     self.IsActive = true
@@ -2221,7 +2219,7 @@ function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance
     self.OnHoverCallback = onHover
 
     -- RenderStepped hover raycast
-    local hoverConn = RunService.RenderStepped:Connect(function()
+    local hoverConn = RunService.RenderStepped:Connect(function ()
         if not self.IsActive then return end
 
         local target = self:RaycastMouse()
@@ -2246,7 +2244,7 @@ function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance
     table.insert(self.Connections, hoverConn)
 
     -- Click listener
-    local clickConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    local clickConn = UserInputService.InputBegan:Connect(function (input, gameProcessed)
         if not self.IsActive then return end
 
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -2270,7 +2268,7 @@ end
 function RaycastSelector:Stop()
     self.IsActive = false
     for _, conn in ipairs(self.Connections) do
-        pcall(function() conn:Disconnect() end)
+        pcall(function () conn:Disconnect() end)
     end
     self.Connections = {}
 
@@ -2285,7 +2283,7 @@ end
 function RaycastSelector:Destroy()
     self:Stop()
     if self.Highlight then
-        pcall(function() self.Highlight:Destroy() end)
+        pcall(function () self.Highlight:Destroy() end)
         self.Highlight = nil
     end
 end
@@ -3162,7 +3160,7 @@ Reflection.ClassHierarchy = {
 -- Cache resolved properties for fast access
 local resolvedPropertyCache = {}
 
-function Reflection.GetPropertiesForClass(className: string)
+function Reflection.GetPropertiesForClass(className)
     if resolvedPropertyCache[className] then
         return resolvedPropertyCache[className]
     end
@@ -3205,8 +3203,8 @@ function Reflection.GetPropertiesForClass(className: string)
 end
 
 -- Get tags via CollectionService
-function Reflection.GetTags(instance: Instance): {string}
-    local success, tags = pcall(function()
+function Reflection.GetTags(instance)
+    local success, tags = pcall(function ()
         return CollectionService:GetTags(instance)
     end)
     if success and type(tags) == "table" and #tags > 0 then
@@ -3216,8 +3214,8 @@ function Reflection.GetTags(instance: Instance): {string}
 end
 
 -- Get attributes
-function Reflection.GetAttributes(instance: Instance): {[string]: any}
-    local success, attrs = pcall(function()
+function Reflection.GetAttributes(instance)
+    local success, attrs = pcall(function ()
         return instance:GetAttributes()
     end)
     if success and type(attrs) == "table" and next(attrs) ~= nil then
@@ -3246,7 +3244,7 @@ local SerializerBinary = {}
 local ROBIN_MAGIC = "<roblox!\x89\xff\x0d\x0a\x1a\x0a"
 
 -- Helper to write a compressed Roblox chunk
-local function writeChunk(stream: any, chunkName: string, data: string)
+local function writeChunk(stream, chunkName, data)
     local uncompressedLen = #data
     local compressed = LZ4.Compress(data)
     local compressedLen = #compressed
@@ -3265,7 +3263,7 @@ local function writeChunk(stream: any, chunkName: string, data: string)
     end
 end
 
-function SerializerBinary.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+function SerializerBinary.Serialize(instances, scriptSources, terrainData, options)
     local opts = options or {}
     local stream = Stream.new()
 
@@ -3281,7 +3279,7 @@ function SerializerBinary.Serialize(instances: {Instance}, scriptSources: {[LuaS
     local idMap = {}
     local idCounter = 0
 
-    local function traverse(inst: Instance)
+    local function traverse(inst)
         local cName = inst.ClassName
         if not classMap[cName] then
             classMap[cName] = {}
@@ -3363,7 +3361,7 @@ local Reflection = __require__("Core/Reflection")
 
 local SerializerScript = {}
 
-local function formatValueLua(val: any, propType: string): string
+local function formatValueLua(val, propType)
     local t = typeof(val)
     if t == "string" then
         return string.format("%q", val)
@@ -3391,10 +3389,10 @@ local function formatValueLua(val: any, propType: string): string
     return "nil"
 end
 
-function SerializerScript.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+function SerializerScript.Serialize(instances, scriptSources, terrainData, options)
     local opts = options or {}
     local out = {}
-    local function append(str: string)
+    local function append(str)
         table.insert(out, str)
     end
 
@@ -3415,7 +3413,7 @@ local function buildGame()
 ]=])
 
     local instCounter = 0
-    local function serializeTree(inst: Instance, parentVar: string)
+    local function serializeTree(inst, parentVar)
         instCounter = instCounter + 1
         local varName = "inst_" .. tostring(instCounter)
         local className = inst.ClassName
@@ -3433,11 +3431,11 @@ local function buildGame()
                 local propType = propInfo.Type
 
                 if propName ~= "Name" and propName ~= "Source" and not propInfo.ReadOnly then
-                    local s, val = pcall(function() return (inst :: any)[propName] end)
+                    local s, val = pcall(function () return (inst )[propName] end)
                     if s and val ~= nil then
                         local luaVal = formatValueLua(val, propType)
                         if luaVal ~= "nil" then
-                            append(string.format('    pcall(function() %s.%s = %s end)\n', varName, propName, luaVal))
+                            append(string.format('    pcall(function () %s.%s = %s end)\n', varName, propName, luaVal))
                         end
                     end
                 end
@@ -3449,7 +3447,7 @@ local function buildGame()
                 if #src > 0 then
                     -- Safely escape any matching closing bracket if present
                     local safeSrc = string.gsub(src, "%]%===%]", "]=== ]")
-                    append(string.format('    pcall(function() %s.Source = [===[%s]===] end)\n', varName, safeSrc))
+                    append(string.format('    pcall(function () %s.Source = [===[%s]===] end)\n', varName, safeSrc))
                 end
             end
 
@@ -3459,7 +3457,7 @@ local function buildGame()
                 for k, v in pairs(attrs) do
                     local luaV = formatValueLua(v, typeof(v))
                     if luaV ~= "nil" then
-                        append(string.format('    pcall(function() %s:SetAttribute(%q, %s) end)\n', varName, k, luaV))
+                        append(string.format('    pcall(function () %s:SetAttribute(%q, %s) end)\n', varName, k, luaV))
                     end
                 end
             end
@@ -3468,7 +3466,7 @@ local function buildGame()
             if options.SaveTags then
                 local tags = Reflection.GetTags(inst)
                 for _, tag in ipairs(tags) do
-                    append(string.format('    pcall(function() CollectionService:AddTag(%s, %q) end)\n', varName, tag))
+                    append(string.format('    pcall(function () CollectionService:AddTag(%s, %q) end)\n', varName, tag))
                 end
             end
 
@@ -3511,8 +3509,7 @@ local Base64 = __require__("Utils/Base64")
 local SerializerXml = {}
 
 -- XML Entity escaping
-local function escapeXml(str: string): string
-    if not str then return "" end
+local function escapeXml(str)then return "" end
     str = tostring(str)
     str = string.gsub(str, "&", "&amp;")
     str = string.gsub(str, "<", "&lt;")
@@ -3523,7 +3520,7 @@ local function escapeXml(str: string): string
 end
 
 -- Escape string content for ProtectedString or general text
-local function escapeCDataOrText(str: string): string
+local function escapeCDataOrText(str)
     if not str or #str == 0 then return "" end
     if string.find(str, "[<>&\"']") or string.find(str, "\n") or string.find(str, "\r") then
         local safe = string.gsub(str, "%]%]>", "]]]]><![CDATA[>")
@@ -3533,7 +3530,7 @@ local function escapeCDataOrText(str: string): string
 end
 
 -- Format CFrame into XML
-local function formatCFrame(cf: CFrame): string
+local function formatCFrame(cf)
     local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = cf:GetComponents()
     return string.format(
         "<X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z><R00>%.7g</R00><R01>%.7g</R01><R02>%.7g</R02><R10>%.7g</R10><R11>%.7g</R11><R12>%.7g</R12><R20>%.7g</R20><R21>%.7g</R21><R22>%.7g</R22>",
@@ -3542,7 +3539,7 @@ local function formatCFrame(cf: CFrame): string
 end
 
 -- Format ColorSequence into XML
-local function formatColorSequence(cs: ColorSequence): string
+local function formatColorSequence(cs)
     local keypoints = cs.Keypoints
     local parts = {}
     for _, kp in ipairs(keypoints) do
@@ -3552,7 +3549,7 @@ local function formatColorSequence(cs: ColorSequence): string
 end
 
 -- Format NumberSequence into XML
-local function formatNumberSequence(ns: NumberSequence): string
+local function formatNumberSequence(ns)
     local keypoints = ns.Keypoints
     local parts = {}
     for _, kp in ipairs(keypoints) do
@@ -3562,7 +3559,7 @@ local function formatNumberSequence(ns: NumberSequence): string
 end
 
 -- Serialize instance attributes into binary/base64 XML format
-local function serializeAttributes(attrs: {[string]: any}): string
+local function serializeAttributes(attrs)
     if not attrs or next(attrs) == nil then return "" end
     local str = ""
     for k, v in pairs(attrs) do
@@ -3572,12 +3569,12 @@ local function serializeAttributes(attrs: {[string]: any}): string
 end
 
 -- Main XML Document Generation
-function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
     local opts = options or {}
     local refMap = {}
     local refCounter = 0
 
-    local function getRef(inst: Instance): string
+    local function getRef(inst)
         if not refMap[inst] then
             refMap[inst] = "RBX" .. tostring(refCounter)
             refCounter = refCounter + 1
@@ -3586,7 +3583,7 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
     end
 
     local xmlBuffer = {}
-    local function append(str: string)
+    local function append(str)
         table.insert(xmlBuffer, str)
     end
 
@@ -3596,7 +3593,7 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 ]])
 
     -- Recursive instance serializer
-    local function serializeInstance(inst: Instance, depth: number)
+    local function serializeInstance(inst, depth)
         local indent = string.rep("\t", depth)
         local className = inst.ClassName
         local ref = getRef(inst)
@@ -3611,8 +3608,8 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
         if inst:IsA("LuaSourceContainer") then
             local source = scriptSources[inst]
             if not source or #source == 0 then
-                pcall(function()
-                    source = (inst :: any).Source
+                pcall(function ()
+                    source = (inst ).Source
                 end)
             end
             source = source or ""
@@ -3621,7 +3618,7 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 
         -- CSG Union Deep Data if applicable
         if inst:IsA("UnionOperation") or inst:IsA("NegateOperation") then
-            local unionData = AssetHandler.ExtractUnionData(inst :: any)
+            local unionData = AssetHandler.ExtractUnionData(inst )
             if unionData.PhysicsData then
                 append(string.format('%s\t\t<BinaryString name="PhysicsData">%s</BinaryString>\n', indent, unionData.PhysicsData))
             end
@@ -3648,8 +3645,8 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
             local propType = propInfo.Type
 
             if propName ~= "Name" and propName ~= "Source" and not propInfo.ReadOnly then
-                local success, val = pcall(function()
-                    return (inst :: any)[propName]
+                local success, val = pcall(function ()
+                    return (inst )[propName]
                 end)
 
                 if success and val ~= nil then
@@ -3747,9 +3744,9 @@ __define__("Core/ServerSynthesizer", function()
 local ServerSynthesizer = {}
 
 -- Helper to turn an instance into a robust Luau path query
-local function getPathExpression(inst: Instance): string
+local function getPathExpression(inst)
     local segments = {}
-    local curr: Instance? = inst
+    local curr = inst
 
     while curr and curr ~= game do
         table.insert(segments, 1, curr.Name)
@@ -3769,7 +3766,7 @@ local function getPathExpression(inst: Instance): string
 end
 
 -- Clean identifiers for Lua variable naming
-local function sanitizeIdentifier(name: string): string
+local function sanitizeIdentifier(name)
     local clean = string.gsub(name, "[^%w_]", "_")
     if string.match(clean, "^%d") then
         clean = "_" .. clean
@@ -3778,14 +3775,14 @@ local function sanitizeIdentifier(name: string): string
 end
 
 -- Collect all Remote instances across the place
-function ServerSynthesizer.CollectRemotes(rootInstances: {Instance}): {Events: {Instance}, Functions: {Instance}, Unreliable: {Instance}}
+function ServerSynthesizer.CollectRemotes(rootInstances)
     local remotes = {
         Events = {},
         Functions = {},
         Unreliable = {},
     }
 
-    local function scan(inst: Instance)
+    local function scan(inst)
         if inst:IsA("RemoteEvent") then
             table.insert(remotes.Events, inst)
         elseif inst:IsA("RemoteFunction") then
@@ -3807,9 +3804,9 @@ function ServerSynthesizer.CollectRemotes(rootInstances: {Instance}): {Events: {
 end
 
 -- Generate full Luau source code for the synthetic ServerScriptService dispatcher
-function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}, Functions: {Instance}, Unreliable: {Instance}}): string
+function ServerSynthesizer.GenerateDispatcherSource(remotes, Functions, Unreliable)
     local lines = {}
-    local function add(line: string)
+    local function add(line)
         table.insert(lines, line)
     end
 
@@ -3832,38 +3829,38 @@ local DataStoreService = game:GetService("DataStoreService")
 print("[HyperSave Backend] Initializing synthetic server dispatcher with full gameplay emulation...")
 
 -- 1. Mock MarketplaceService to unlock ALL GamePasses & VIP areas in Studio testing
-pcall(function()
-    MarketplaceService.UserOwnsGamePassAsync = function(player, passId)
+pcall(function ()
+    MarketplaceService.UserOwnsGamePassAsync = function (player, passId)
         print(string.format("[HyperSave VIP Emulator] GamePass #%s granted to %s (VIP Unlocked)", tostring(passId), tostring(player.Name)))
         return true
     end
-    MarketplaceService.PlayerOwnsAsset = function(player, assetId)
+    MarketplaceService.PlayerOwnsAsset = function (player, assetId)
         return true
     end
 end)
 
 -- 2. Mock DataStoreService (In-memory storage so saves don't throw permission errors in Studio)
 local MockDataStores = {}
-pcall(function()
-    DataStoreService.GetDataStore = function(self, name, scope)
+pcall(function ()
+    DataStoreService.GetDataStore = function (self, name, scope)
         local dsName = tostring(name) .. "_" .. tostring(scope or "global")
         if not MockDataStores[dsName] then
             local memoryStore = {}
             MockDataStores[dsName] = {
-                GetAsync = function(s, key)
+                GetAsync = function (s, key)
                     return memoryStore[key] or {Coins = 1000000, Level = 10, Gems = 50000}
                 end,
-                SetAsync = function(s, key, value)
+                SetAsync = function (s, key, value)
                     memoryStore[key] = value
                     return value
                 end,
-                UpdateAsync = function(s, key, transformFn)
+                UpdateAsync = function (s, key, transformFn)
                     local current = memoryStore[key] or {Coins = 1000000, Level = 10, Gems = 50000}
                     local new = transformFn(current)
                     memoryStore[key] = new
                     return new
                 end,
-                RemoveAsync = function(s, key)
+                RemoveAsync = function (s, key)
                     local old = memoryStore[key]
                     memoryStore[key] = nil
                     return old
@@ -3877,7 +3874,7 @@ end)
 -- 3. In-memory mock data store / state for connected players
 local PlayerState = {}
 
-local function initPlayer(player: Player)
+local function initPlayer(player)
     PlayerState[player.UserId] = {
         Data = {},
         Inventory = {},
@@ -3913,7 +3910,7 @@ for _, p in ipairs(Players:GetPlayers()) do
     task.spawn(initPlayer, p)
 end
 
-Players.PlayerRemoving:Connect(function(player)
+Players.PlayerRemoving:Connect(function (player)
     PlayerState[player.UserId] = nil
 end)
 
@@ -3929,10 +3926,10 @@ end)
 
         add(string.format([=[
 -- RemoteFunction: %s
-task.spawn(function()
+task.spawn(function ()
     local target = %s
     if target and target:IsA("RemoteFunction") then
-        target.OnServerInvoke = function(player, ...)
+        target.OnServerInvoke = function (player, ...)
             local args = {...}
             print(string.format("[HyperSave Server] %s:InvokeServer() called by %%s with %%d arguments", player.Name, #args))
             
@@ -3967,10 +3964,10 @@ end)
 
         add(string.format([=[
 -- RemoteEvent: %s
-task.spawn(function()
+task.spawn(function ()
     local target = %s
     if target and target:IsA("RemoteEvent") then
-        target.OnServerEvent:Connect(function(player, ...)
+        target.OnServerEvent:Connect(function (player, ...)
             local args = {...}
             print(string.format("[HyperSave Server] %s:FireServer() received from %%s (%%d args)", player.Name, #args))
         end)
@@ -3988,7 +3985,7 @@ print("[HyperSave Backend] Server dispatcher ready! All remotes are now respondi
 end
 
 -- Create synthetic ServerScriptService Folder & Script instances
-function ServerSynthesizer.SynthesizeService(rootInstances: {Instance}): Instance
+function ServerSynthesizer.SynthesizeService(rootInstances)
     local remotes = ServerSynthesizer.CollectRemotes(rootInstances)
     local sourceCode = ServerSynthesizer.GenerateDispatcherSource(remotes)
 
@@ -3997,8 +3994,8 @@ function ServerSynthesizer.SynthesizeService(rootInstances: {Instance}): Instanc
 
     local syntheticScript = Instance.new("Script")
     syntheticScript.Name = "HyperSave_ServerDispatcher"
-    pcall(function()
-        (syntheticScript :: any).Source = sourceCode
+    pcall(function ()
+        (syntheticScript ).Source = sourceCode
     end)
     syntheticScript.Parent = serverService
 
@@ -4020,14 +4017,14 @@ local Players = game:GetService("Players")
 local StreamExplorer = {}
 
 -- Scan map bounds and calculate bounding box
-function StreamExplorer.GetMapBoundingBox(): (Vector3, Vector3)
+function StreamExplorer.GetMapBoundingBox()
     local minVec = Vector3.new(-1024, -100, -1024)
     local maxVec = Vector3.new(1024, 500, 1024)
 
     -- Check if Terrain or Spawns exist
     local terrain = workspace.Terrain
     if terrain then
-        local s, extents = pcall(function() return terrain.MaxExtents end)
+        local s, extents = pcall(function () return terrain.MaxExtents end)
         if s and extents then
             minVec = Vector3.new(extents.Min.X * 4, -100, extents.Min.Z * 4)
             maxVec = Vector3.new(extents.Max.X * 4, 500, extents.Max.Z * 4)
@@ -4038,7 +4035,7 @@ function StreamExplorer.GetMapBoundingBox(): (Vector3, Vector3)
     -- Check spawn locations or workspace children
     for _, child in ipairs(workspace:GetChildren()) do
         if child:IsA("BasePart") or child:IsA("Model") then
-            pcall(function()
+            pcall(function ()
                 local cf, sz
                 if child:IsA("Model") then
                     cf, sz = child:GetBoundingBox()
@@ -4056,7 +4053,7 @@ function StreamExplorer.GetMapBoundingBox(): (Vector3, Vector3)
 end
 
 -- Perform automated grid sweep to load chunks
-function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current: number, total: number, pos: Vector3) -> ()): boolean
+function StreamExplorer.ExploreMap(stepSize, progressCallback, total, pos) -> ()): boolean
     if not workspace.StreamingEnabled then return true end
 
     local player = Players.LocalPlayer
@@ -4081,7 +4078,7 @@ function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current
     local completed = 0
 
     for i, targetPos in ipairs(points) do
-        pcall(function()
+        pcall(function ()
             hrp.CFrame = CFrame.new(targetPos)
         end)
         task.wait(0.12) -- Wait for server replication chunk
@@ -4093,7 +4090,7 @@ function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current
     end
 
     -- Return to original position
-    pcall(function()
+    pcall(function ()
         hrp.CFrame = originalCFrame
     end)
 
@@ -4114,7 +4111,7 @@ local Base64 = __require__("Utils/Base64")
 
 local TerrainSerializer = {}
 
-function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
+function TerrainSerializer.ExtractTerrainData(terrain, options)
     local data = {
         Decoration = false,
         WaterColor = Color3.fromRGB(12, 84, 91),
@@ -4132,20 +4129,20 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
     end
 
     -- Extract basic properties safely
-    pcall(function() data.Decoration = terrain.Decoration end)
-    pcall(function() data.WaterColor = terrain.WaterColor end)
-    pcall(function() data.WaterReflectance = terrain.WaterReflectance end)
-    pcall(function() data.WaterTransparency = terrain.WaterTransparency end)
-    pcall(function() data.WaterWaveSize = terrain.WaterWaveSize end)
-    pcall(function() data.WaterWaveSpeed = terrain.WaterWaveSpeed end)
-    pcall(function() data.MaterialColors = terrain.MaterialColors end)
+    pcall(function () data.Decoration = terrain.Decoration end)
+    pcall(function () data.WaterColor = terrain.WaterColor end)
+    pcall(function () data.WaterReflectance = terrain.WaterReflectance end)
+    pcall(function () data.WaterTransparency = terrain.WaterTransparency end)
+    pcall(function () data.WaterWaveSize = terrain.WaterWaveSize end)
+    pcall(function () data.WaterWaveSpeed = terrain.WaterWaveSpeed end)
+    pcall(function () data.MaterialColors = terrain.MaterialColors end)
 
     if not options.SaveTerrainVoxels then
         return data
     end
 
     -- Extract Voxels safely
-    local success, maxExtents = pcall(function()
+    local success, maxExtents = pcall(function ()
         return terrain.MaxExtents
     end)
 
@@ -4176,7 +4173,7 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
                     math.min(chunkMin.Z + step, maxVoxel.Z)
                 )
 
-                local regSuccess, materials, occupancies = pcall(function()
+                local regSuccess, materials, occupancies = pcall(function ()
                     return terrain:ReadVoxels(Region3int16.new(chunkMin, chunkMax))
                 end)
 
@@ -4234,19 +4231,19 @@ local HttpService = game:GetService("HttpService")
 
 local UniverseTracker = {}
 
-export type SubPlaceInfo = {
+
     PlaceId: number,
     Name: string,
     IsRoot: boolean
 }
 
 -- Fetch all places belonging to current Game Universe
-function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
+function UniverseTracker.GetUniversePlaces()
     local places = {}
     local currentPlaceId = game.PlaceId or 0
     local rootName = "Root Place"
 
-    pcall(function()
+    pcall(function ()
         rootName = game:GetService("MarketplaceService"):GetProductInfo(currentPlaceId).Name
     end)
 
@@ -4258,7 +4255,7 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
     })
 
     -- Query AssetService for places in universe
-    local success, pages = pcall(function()
+    local success, pages = pcall(function ()
         return AssetService:GetGamePlacesAsync()
     end)
 
@@ -4278,7 +4275,7 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
 
         processPage()
         while not pages.IsFinished do
-            local nextSuccess = pcall(function() pages:AdvanceToNextPageAsync() end)
+            local nextSuccess = pcall(function () pages:AdvanceToNextPageAsync() end)
             if not nextSuccess then break end
             processPage()
         end
@@ -4314,7 +4311,7 @@ local RaycastSelector = __require__("Core/RaycastSelector")
 local Interface = {}
 Interface.__index = Interface
 
-function Interface.new(engine: any)
+function Interface.new(engine)
     local self = setmetatable({}, Interface)
     self.Engine = engine
     self.Config = engine.Config
@@ -4334,7 +4331,7 @@ function Interface.new(engine: any)
 end
 
 function Interface:BindKeybinds()
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    UserInputService.InputBegan:Connect(function (input, gameProcessed)
         if gameProcessed then return end
         if input.KeyCode == (self.Config.ToggleKeybind or Enum.KeyCode.RightShift) then
             if self.MainFrame then
@@ -4350,7 +4347,7 @@ end
 function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
 
-    pcall(function()
+    pcall(function ()
         local old = parent:FindFirstChild("HyperSaveInstance_UI")
         if old then old:Destroy() end
     end)
@@ -4388,16 +4385,21 @@ function Interface:BuildUI()
     floatingBtn.Parent = screenGui
     self.FloatingToggle = floatingBtn
 
-    Theme.AnimateButton(floatingBtn, function()
+    Theme.AnimateButton(floatingBtn, function ()
         if self.MainFrame then self.MainFrame.Visible = true end
         floatingBtn.Visible = false
     end)
+    
+    local camera = workspace.CurrentCamera
+    local vpSize = (camera and camera.ViewportSize) or Vector2.new(1280, 720)
+    local winWidth = math.clamp(vpSize.X - 24, 320, 660)
+    local winHeight = math.clamp(vpSize.Y - 32, 280, 480)
 
     -- Main Container (Translucent Acrylic Bubble Theme, perfectly centered)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
-    main.Size = UDim2.new(0, 660, 0, 480)
+    main.Size = UDim2.new(0, winWidth, 0, winHeight)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Theme.Background
     main.BackgroundTransparency = Theme.BackgroundTransparency
@@ -4410,57 +4412,49 @@ function Interface:BuildUI()
 
     -- Dragging logic
     local dragging, dragInput, dragStart, startPos
-    main.InputBegan:Connect(function(input)
+    main.InputBegan:Connect(function (input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = main.Position
-            input.Changed:Connect(function()
+            input.Changed:Connect(function ()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                 end
             end)
         end
     end)
-    main.InputChanged:Connect(function(input)
+    main.InputChanged:Connect(function (input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-    UserInputService.InputChanged:Connect(function(input)
+    UserInputService.InputChanged:Connect(function (input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
             main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
-    -- Top Header Bar
+    -- Window Header
     local header = Instance.new("Frame")
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 48)
     header.BackgroundColor3 = Theme.CardBg
-    header.BackgroundTransparency = Theme.CardTransparency
+    header.BackgroundTransparency = 0.1
     header.BorderSizePixel = 0
     header.Parent = main
 
-    local headerLine = Instance.new("Frame")
-    headerLine.Size = UDim2.new(1, 0, 0, 1)
-    headerLine.Position = UDim2.new(0, 0, 1, -1)
-    headerLine.BackgroundColor3 = Theme.Border
-    headerLine.BorderSizePixel = 0
-    headerLine.Parent = header
-
-    -- Title & Skull Logo
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Text = "💀 HyperSaveInstance"
-    titleLabel.Font = Theme.FontTitle
-    titleLabel.TextSize = 14
-    titleLabel.TextColor3 = Theme.AccentSkull
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 175, 1, 0)
-    titleLabel.Position = UDim2.new(0, 16, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Parent = header
+    local title = Instance.new("TextLabel")
+    title.Text = "💀 HYPERSAVE"
+    title.Font = Theme.FontTitle
+    title.TextSize = 15
+    title.TextColor3 = Theme.TextPrimary
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Size = UDim2.new(0, 180, 1, 0)
+    title.Position = UDim2.new(0, 16, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Parent = header
 
     -- Platform & Creator Badge (Pill Badge)
     local badge = Instance.new("TextLabel")
@@ -4487,7 +4481,7 @@ function Interface:BuildUI()
     Theme.AddCorner(minBtn, Theme.CornerPill)
     minBtn.Parent = header
 
-    Theme.AnimateButton(minBtn, function()
+    Theme.AnimateButton(minBtn, function ()
         main.Visible = false
         floatingBtn.Visible = true
     end)
@@ -4504,8 +4498,9 @@ function Interface:BuildUI()
     Theme.AddCorner(closeBtn, Theme.CornerPill)
     closeBtn.Parent = header
 
-    Theme.AnimateButton(closeBtn, function()
-        screenGui:Destroy()
+    Theme.AnimateButton(closeBtn, function ()
+        main.Visible = false
+        floatingBtn.Visible = true
     end)
 
     -- Tab Navigation Bar (Scrollable for all master tools)
@@ -4581,27 +4576,27 @@ function Interface:BuildUI()
         tabFrame.Parent = contentArea
         self.TabFrames[tabKey] = tabFrame
 
-        Theme.AnimateButton(navBtn, function()
+        Theme.AnimateButton(navBtn, function ()
             self:SwitchTab(tabKey)
         end)
     end
 
     -- Build Individual Tab Pages with error boundary protection
-    pcall(function() self:BuildDashboardTab() end)
-    pcall(function() self:BuildSelectorTab() end)
-    pcall(function() self:BuildAudioRipperTab() end)
-    pcall(function() self:BuildLightingRipperTab() end)
-    pcall(function() self:BuildGuiRipperTab() end)
-    pcall(function() self:BuildNetworkTab() end)
-    pcall(function() self:BuildUniverseTab() end)
-    pcall(function() self:BuildObjExportTab() end)
-    pcall(function() self:BuildTutorialTab() end)
-    pcall(function() self:BuildSettingsTab() end)
-    pcall(function() self:BuildConsoleTab() end)
-    pcall(function() self:BuildAboutTab() end)
+    pcall(function () self:BuildDashboardTab() end)
+    pcall(function () self:BuildSelectorTab() end)
+    pcall(function () self:BuildAudioRipperTab() end)
+    pcall(function () self:BuildLightingRipperTab() end)
+    pcall(function () self:BuildGuiRipperTab() end)
+    pcall(function () self:BuildNetworkTab() end)
+    pcall(function () self:BuildUniverseTab() end)
+    pcall(function () self:BuildObjExportTab() end)
+    pcall(function () self:BuildTutorialTab() end)
+    pcall(function () self:BuildSettingsTab() end)
+    pcall(function () self:BuildConsoleTab() end)
+    pcall(function () self:BuildAboutTab() end)
 end
 
-function Interface:SwitchTab(targetTab: string)
+function Interface:SwitchTab(targetTab)
     self.ActiveTab = targetTab
     for k, frame in pairs(self.TabFrames) do
         frame.Visible = (k == targetTab)
@@ -4642,7 +4637,7 @@ function Interface:BuildDashboardTab()
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
-    cloneBtn.MouseButton1Click:Connect(function()
+    cloneBtn.MouseButton1Click:Connect(function ()
         self:StartClone()
     end)
 
@@ -4694,7 +4689,7 @@ function Interface:BuildDashboardTab()
         btn.Parent = presetContainer
         self.PresetButtons[pKey] = btn
 
-        Theme.AnimateButton(btn, function()
+        Theme.AnimateButton(btn, function ()
             Defaults.ApplyPreset(self.Config, pKey)
             for k, b in pairs(self.PresetButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
@@ -4761,7 +4756,7 @@ function Interface:BuildDashboardTab()
         fBtn.Parent = formatContainer
         self.FormatButtons[fKey] = fBtn
 
-        Theme.AnimateButton(fBtn, function()
+        Theme.AnimateButton(fBtn, function ()
             self.Config.Format = fKey
             for k, b in pairs(self.FormatButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
@@ -4871,12 +4866,12 @@ function Interface:BuildDashboardTab()
     Theme.AddStroke(copyFilePathBtn, Theme.Border, 1)
     copyFilePathBtn.Parent = copyBar
 
-    Theme.AnimateButton(copyFilePathBtn, function()
+    Theme.AnimateButton(copyFilePathBtn, function ()
         local name = self.SavedFilePath
         if #name == 0 then name = self.Engine:GetDefaultFileName() end
         Environment.SetClipboard(name)
         copyFilePathBtn.Text = "✓ Nome Copiado!"
-        task.delay(2, function() copyFilePathBtn.Text = "📁 Copiar Nome do Arquivo" end)
+        task.delay(2, function () copyFilePathBtn.Text = "📁 Copiar Nome do Arquivo" end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
@@ -4891,12 +4886,12 @@ function Interface:BuildDashboardTab()
     Theme.AddStroke(copyAssetsPathBtn, Theme.Border, 1)
     copyAssetsPathBtn.Parent = copyBar
 
-    Theme.AnimateButton(copyAssetsPathBtn, function()
+    Theme.AnimateButton(copyAssetsPathBtn, function ()
         local name = self.SavedAssetPath
         if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
         Environment.SetClipboard(name)
         copyAssetsPathBtn.Text = "✓ Pasta Copiada!"
-        task.delay(2, function() copyAssetsPathBtn.Text = "📦 Copiar Pasta de Assets" end)
+        task.delay(2, function () copyAssetsPathBtn.Text = "📦 Copiar Pasta de Assets" end)
     end)
 end
 
@@ -4999,7 +4994,7 @@ function Interface:BuildSelectorTab()
     targetPath.Parent = infoCard
 
     -- Helper to update info display
-    local function inspectInstance(inst: Instance?)
+    local function inspectInstance(inst)
         self.CurrentTargetInstance = inst
         if not inst then
             targetTitle.Text = "Nenhum objeto selecionado"
@@ -5130,12 +5125,12 @@ function Interface:BuildSelectorTab()
     end
 
     -- Event: 3D Raycast click button
-    Theme.AnimateButton(raycastBtn, function()
+    Theme.AnimateButton(raycastBtn, function ()
         if self.MainFrame then self.MainFrame.Visible = false end
         resultLabel.Text = "🎯 Modo 3D ativo! Clique em qualquer objeto no mundo para selecionar."
         resultLabel.TextColor3 = Theme.AccentCyan
 
-        self.Raycast:Start(function(selected)
+        self.Raycast:Start(function (selected)
             if self.MainFrame then self.MainFrame.Visible = true end
             if selected then
                 searchBox.Text = selected.Name
@@ -5147,7 +5142,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Search box text change
-    searchBox.FocusLost:Connect(function(enterPressed)
+    searchBox.FocusLost:Connect(function (enterPressed)
         local text = searchBox.Text
         if #text > 0 then
             local found = workspace:FindFirstChild(text, true) or game:GetService("ReplicatedStorage"):FindFirstChild(text, true)
@@ -5164,7 +5159,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Save single model
-    Theme.AnimateButton(btnSaveSingle, function()
+    Theme.AnimateButton(btnSaveSingle, function ()
         local target = self.CurrentTargetInstance
         if not target then
             resultLabel.Text = "❌ Selecione um modelo antes de salvar!"
@@ -5175,7 +5170,7 @@ function Interface:BuildSelectorTab()
         resultLabel.Text = "⏳ Salvando " .. target.Name .. " com todos os scripts..."
         resultLabel.TextColor3 = Theme.AccentCyan
 
-        task.spawn(function()
+        task.spawn(function ()
             local success, msg = self.Engine:SaveTarget(target)
             if success then
                 resultLabel.Text = "✓ Modelo salvo com sucesso: " .. msg
@@ -5189,7 +5184,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Add to pack
-    Theme.AnimateButton(btnAddToPack, function()
+    Theme.AnimateButton(btnAddToPack, function ()
         local target = self.CurrentTargetInstance
         if not target then
             resultLabel.Text = "❌ Selecione um modelo para adicionar ao pacote!"
@@ -5204,7 +5199,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Clear pack
-    Theme.AnimateButton(btnClearPack, function()
+    Theme.AnimateButton(btnClearPack, function ()
         self.SelectedTargets = {}
         updatePackUI()
         resultLabel.Text = "Pacote limpo."
@@ -5212,7 +5207,7 @@ function Interface:BuildSelectorTab()
     end)
 
     -- Event: Save full multi-pack
-    Theme.AnimateButton(btnSavePack, function()
+    Theme.AnimateButton(btnSavePack, function ()
         if #self.SelectedTargets == 0 then
             resultLabel.Text = "❌ O pacote está vazio! Adicione itens primeiro."
             resultLabel.TextColor3 = Theme.AccentWarning
@@ -5222,7 +5217,7 @@ function Interface:BuildSelectorTab()
         resultLabel.Text = string.format("⏳ Salvando pacote com %d itens e scripts...", #self.SelectedTargets)
         resultLabel.TextColor3 = Theme.AccentCyan
 
-        task.spawn(function()
+        task.spawn(function ()
             local success, msg = self.Engine:SaveTargetBatch(self.SelectedTargets)
             if success then
                 resultLabel.Text = "✓ Pacote salvo com sucesso: " .. msg
@@ -5286,13 +5281,13 @@ function Interface:BuildSelectorTab()
     audioLayout.Padding = UDim.new(0, 6)
     audioLayout.Parent = audioScroll
 
-    Theme.AnimateButton(scanAudioBtn, function()
+    Theme.AnimateButton(scanAudioBtn, function ()
         scanAudioBtn.Text = "Escaneando sons..."
         for _, child in ipairs(audioScroll:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
 
-        task.spawn(function()
+        task.spawn(function ()
             local list = AudioRipper.ScanSounds()
             scanAudioBtn.Text = string.format("✓ %d sons encontrados", #list)
 
@@ -5327,7 +5322,7 @@ function Interface:BuildSelectorTab()
                 Theme.AddCorner(playBtn, Theme.CornerPill)
                 playBtn.Parent = row
 
-                Theme.AnimateButton(playBtn, function()
+                Theme.AnimateButton(playBtn, function ()
                     AudioRipper.PlayPreview(snd.SoundId)
                 end)
 
@@ -5342,10 +5337,10 @@ function Interface:BuildSelectorTab()
                 Theme.AddCorner(copyBtn, Theme.CornerPill)
                 copyBtn.Parent = row
 
-                Theme.AnimateButton(copyBtn, function()
+                Theme.AnimateButton(copyBtn, function ()
                     Environment.SetClipboard(snd.CleanId)
                     copyBtn.Text = "✓"
-                    task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
+                    task.delay(1.5, function () copyBtn.Text = "Copiar ID" end)
                 end)
             end
 
@@ -5353,11 +5348,11 @@ function Interface:BuildSelectorTab()
         end)
     end)
 
-    Theme.AnimateButton(exportAudioListBtn, function()
+    Theme.AnimateButton(exportAudioListBtn, function ()
         local file = AudioRipper.ExportSoundList()
         exportAudioListBtn.Text = "✓ Lista Exportada!"
         Environment.SetClipboard(file)
-        task.delay(2, function()
+        task.delay(2, function ()
             exportAudioListBtn.Text = "📄 EXPORTAR LISTA (.txt)"
         end)
     end)
@@ -5424,11 +5419,11 @@ function Interface:BuildLightingRipperTab()
     lightStatus.BackgroundTransparency = 1
     lightStatus.Parent = card
 
-    Theme.AnimateButton(exportLightBtn, function()
+    Theme.AnimateButton(exportLightBtn, function ()
         lightStatus.Text = "Extraindo efeitos e skyboxes..."
         lightStatus.TextColor3 = Theme.AccentCyan
 
-        task.spawn(function()
+        task.spawn(function ()
             local success, file = LightingRipper.ExportLightingPreset()
             if success then
                 lightStatus.Text = "✓ Iluminação salva com sucesso: " .. file
@@ -5503,11 +5498,11 @@ function Interface:BuildGuiRipperTab()
     guiStatus.BackgroundTransparency = 1
     guiStatus.Parent = card
 
-    Theme.AnimateButton(exportGuiBtn, function()
+    Theme.AnimateButton(exportGuiBtn, function ()
         guiStatus.Text = "Extraindo e descompilando interfaces..."
         guiStatus.TextColor3 = Theme.AccentCyan
 
-        task.spawn(function()
+        task.spawn(function ()
             local success, file = GuiRipper.ExportAllGuis(self.Config)
             if success then
                 guiStatus.Text = "✓ Pacote de GUIs salvo com sucesso: " .. file
@@ -5579,7 +5574,7 @@ function Interface:BuildNetworkTab()
     layout.Padding = UDim.new(0, 4)
     layout.Parent = scroll
 
-    Theme.AnimateButton(toggleSnifferBtn, function()
+    Theme.AnimateButton(toggleSnifferBtn, function ()
         if NetworkSniffer.IsActive then
             NetworkSniffer.Stop()
             toggleSnifferBtn.Text = "📡 INICIAR GRAVAÇÃO"
@@ -5593,16 +5588,16 @@ function Interface:BuildNetworkTab()
         end
     end)
 
-    Theme.AnimateButton(exportSnifferBtn, function()
+    Theme.AnimateButton(exportSnifferBtn, function ()
         local file = NetworkSniffer.ExportLogs()
         exportSnifferBtn.Text = "✓ Salvo: " .. file
         Environment.SetClipboard(file)
-        task.delay(2, function()
+        task.delay(2, function ()
             exportSnifferBtn.Text = "📄 EXPORTAR (.json)"
         end)
     end)
 
-    NetworkSniffer.OnCall(function(entry)
+    NetworkSniffer.OnCall(function (entry)
         local row = Instance.new("TextLabel")
         row.Text = string.format("[%s] [%s] %s -> %s", entry.Timestamp, entry.Type, entry.RemoteName, entry.ArgsPreview)
         row.Font = Theme.FontCode
@@ -5670,13 +5665,13 @@ function Interface:BuildUniverseTab()
     placeLayout.Padding = UDim.new(0, 6)
     placeLayout.Parent = placeScroll
 
-    Theme.AnimateButton(scanBtn, function()
+    Theme.AnimateButton(scanBtn, function ()
         scanBtn.Text = "Buscando sub-places..."
         for _, child in ipairs(placeScroll:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
 
-        task.spawn(function()
+        task.spawn(function ()
             local list = UniverseTracker.GetUniversePlaces()
             scanBtn.Text = string.format("✓ %d lugares encontrados no Universo", #list)
 
@@ -5711,10 +5706,10 @@ function Interface:BuildUniverseTab()
                 Theme.AddCorner(copyIdBtn, Theme.CornerPill)
                 copyIdBtn.Parent = row
 
-                Theme.AnimateButton(copyIdBtn, function()
+                Theme.AnimateButton(copyIdBtn, function ()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
                     copyIdBtn.Text = "✓ Copiado"
-                    task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
+                    task.delay(1.5, function () copyIdBtn.Text = "Copiar ID" end)
                 end)
             end
 
@@ -5784,11 +5779,11 @@ function Interface:BuildObjExportTab()
     objStatus.BackgroundTransparency = 1
     objStatus.Parent = card
 
-    Theme.AnimateButton(exportObjBtn, function()
+    Theme.AnimateButton(exportObjBtn, function ()
         objStatus.Text = "Gerando geometria .obj e biblioteca de materiais .mtl..."
         objStatus.TextColor3 = Theme.AccentCyan
 
-        task.spawn(function()
+        task.spawn(function ()
             local success, file = ObjExporter.ExportWorkspaceToObj()
             if success then
                 objStatus.Text = "✓ Exportado com sucesso: " .. file
@@ -5870,10 +5865,10 @@ function Interface:BuildTutorialTab()
     Theme.AddStroke(copyScriptCard, Theme.BorderNeon, 1.2)
     copyScriptCard.Parent = scroll
 
-    Theme.AnimateButton(copyScriptCard, function()
+    Theme.AnimateButton(copyScriptCard, function ()
         Environment.SetClipboard('loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()')
         copyScriptCard.Text = "✓ Comando Copiado!"
-        task.delay(2, function()
+        task.delay(2, function ()
             copyScriptCard.Text = "📋 Copiar Comando de Execução (loadstring) para a Área de Transferência"
         end)
     end)
@@ -5948,7 +5943,7 @@ function Interface:BuildSettingsTab()
         Theme.AddStroke(switch, defaultVal and Theme.BorderNeon or Theme.Border, 1)
         switch.Parent = row
 
-        Theme.AnimateButton(switch, function()
+        Theme.AnimateButton(switch, function ()
             local current = self.Config[key]
             local new = not current
             self.Config[key] = new
@@ -5998,11 +5993,11 @@ function Interface:BuildConsoleTab()
     Theme.AddStroke(copyLogsBtn, Theme.BorderNeon, 1.2)
     copyLogsBtn.Parent = parent
 
-    Theme.AnimateButton(copyLogsBtn, function()
+    Theme.AnimateButton(copyLogsBtn, function ()
         local fullLog = table.concat(self.Logs, "\n")
         Environment.SetClipboard(fullLog)
         copyLogsBtn.Text = "✓ Logs Copiados!"
-        task.delay(2, function()
+        task.delay(2, function ()
             copyLogsBtn.Text = "📋 Copiar Logs para Área de Transferência"
         end)
     end)
@@ -6102,10 +6097,10 @@ function Interface:BuildAboutTab()
     Theme.AddStroke(btnGithub, Theme.BorderNeon, 1)
     btnGithub.Parent = devBtnBar
 
-    Theme.AnimateButton(btnGithub, function()
+    Theme.AnimateButton(btnGithub, function ()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
         btnGithub.Text = "✓ Perfil Copiado!"
-        task.delay(2, function()
+        task.delay(2, function ()
             btnGithub.Text = "🔗 GitHub Profile"
         end)
     end)
@@ -6123,10 +6118,10 @@ function Interface:BuildAboutTab()
     Theme.AddStroke(btnRepo, Theme.Border, 1)
     btnRepo.Parent = devBtnBar
 
-    Theme.AnimateButton(btnRepo, function()
+    Theme.AnimateButton(btnRepo, function ()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
         btnRepo.Text = "✓ Repo Copiado!"
-        task.delay(2, function()
+        task.delay(2, function ()
             btnRepo.Text = "⭐ Repositório"
         end)
     end)
@@ -6225,7 +6220,7 @@ function Interface:BuildAboutTab()
     featDesc.Parent = featCard
 end
 
-function Interface:Log(message: string, color: Color3?)
+function Interface:Log(message, color)
     local timestamp = os.date("%H:%M:%S")
     local line = string.format("[%s] %s", timestamp, message)
     table.insert(self.Logs, line)
@@ -6247,7 +6242,7 @@ function Interface:Log(message: string, color: Color3?)
 end
 
 function Interface:BindEngineEvents()
-    self.Engine:OnProgress(function(prog)
+    self.Engine:OnProgress(function (prog)
         if self.StatusHeader then
             self.StatusHeader.Text = "Status: " .. prog.Stage
         end
@@ -6272,7 +6267,7 @@ function Interface:BindEngineEvents()
             if self.CloneButton then
                 self.CloneButton.Text = "✓ CLONADO COM SUCESSO!"
                 Theme.AddGradient(self.CloneButton, Theme.AccentSuccess, Color3.fromRGB(16, 185, 129), 90)
-                task.delay(4, function()
+                task.delay(4, function ()
                     self.CloneButton.Text = " CLONAR JOGO INTEIRO (1-CLIQUE)"
                     Theme.AddGradient(self.CloneButton, Theme.AccentPrimary, Theme.AccentSecondary, 90)
                 end)
@@ -6300,7 +6295,7 @@ function Interface:StartClone()
         self.CloneButton.Text = " CLONANDO JOGO..."
     end
 
-    task.spawn(function()
+    task.spawn(function ()
         local success, result = self.Engine:Start()
         if not success then
             self:Log("Erro ao salvar: " .. tostring(result), Theme.AccentDanger)
@@ -6366,7 +6361,7 @@ local Theme = {
 }
 
 -- Tween animation helper
-function Theme.Tween(instance: Instance, duration: number, properties: {[string]: any}, easingStyle: Enum.EasingStyle?, easingDirection: Enum.EasingDirection?): Tween
+function Theme.Tween(instance, duration, properties, easingStyle, easingDirection)
     local tween = TweenService:Create(
         instance,
         TweenInfo.new(duration or 0.2, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out),
@@ -6377,7 +6372,7 @@ function Theme.Tween(instance: Instance, duration: number, properties: {[string]
 end
 
 -- Create rounded bubble corner
-function Theme.AddCorner(instance: Instance, radius: UDim?): UICorner
+function Theme.AddCorner(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = radius or Theme.CornerMedium
     corner.Parent = instance
@@ -6385,7 +6380,7 @@ function Theme.AddCorner(instance: Instance, radius: UDim?): UICorner
 end
 
 -- Create stroke / border
-function Theme.AddStroke(instance: Instance, color: Color3?, thickness: number?, transparency: number?): UIStroke
+function Theme.AddStroke(instance, color, thickness, transparency)
     local stroke = Instance.new("UIStroke")
     stroke.Color = color or Theme.Border
     stroke.Thickness = thickness or 1
@@ -6396,7 +6391,7 @@ function Theme.AddStroke(instance: Instance, color: Color3?, thickness: number?,
 end
 
 -- Create gradient
-function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation: number?): UIGradient
+function Theme.AddGradient(instance, c1, c2, rotation)
     local grad = Instance.new("UIGradient")
     grad.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, c1),
@@ -6407,37 +6402,43 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
     return grad
 end
 
--- Interactive Button Animation Helper (Hover Spring & Click Feedback)
-function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
+-- Interactive Button Animation Helper (Universal Mouse & Mobile Touch Support)
+function Theme.AnimateButton(btn, onClick) -> ())?)
     local origSize = btn.Size
     local origBg = btn.BackgroundColor3
-    
-    btn.MouseEnter:Connect(function()
-        Theme.Tween(btn, 0.15, {
-            BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
-        })
-    end)
 
-    btn.MouseLeave:Connect(function()
-        Theme.Tween(btn, 0.15, {
-            BackgroundColor3 = origBg
-        })
-    end)
+    pcall(function ()
+        btn.MouseEnter:Connect(function ()
+            Theme.Tween(btn, 0.15, {
+                BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
+            })
+        end)
 
-    btn.MouseButton1Down:Connect(function()
-        Theme.Tween(btn, 0.08, {
-            Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
-        })
-    end)
+        btn.MouseLeave:Connect(function ()
+            Theme.Tween(btn, 0.15, {
+                BackgroundColor3 = origBg
+            })
+        end)
 
-    btn.MouseButton1Up:Connect(function()
-        Theme.Tween(btn, 0.12, {
-            Size = origSize
-        })
+        btn.MouseButton1Down:Connect(function ()
+            Theme.Tween(btn, 0.08, {
+                Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
+            })
+        end)
+
+        btn.MouseButton1Up:Connect(function ()
+            Theme.Tween(btn, 0.12, {
+                Size = origSize
+            })
+        end)
     end)
 
     if onClick then
-        btn.MouseButton1Click:Connect(onClick)
+        if btn.Activated then
+            btn.Activated:Connect(onClick)
+        else
+            btn.MouseButton1Click:Connect(onClick)
+        end
     end
 end
 
@@ -6465,9 +6466,9 @@ function AntiAFK.Enable()
     local localPlayer = Players.LocalPlayer
     if not localPlayer then return end
 
-    idleConnection = localPlayer.Idled:Connect(function()
+    idleConnection = localPlayer.Idled:Connect(function ()
         if not isEnabled then return end
-        pcall(function()
+        pcall(function ()
             VirtualUser:CaptureController()
             VirtualUser:ClickButton2(Vector2.new(0, 0))
         end)
@@ -6482,12 +6483,7 @@ function AntiAFK.Disable()
     end
 end
 
-function AntiAFK.IsEnabled(): boolean
-    return isEnabled
-end
-
-return AntiAFK
-
+function AntiAFK.IsEnabled()
 end)
 
 __define__("Utils/Base64", function()
@@ -6510,7 +6506,7 @@ for i = 1, #b do
 end
 decodeTable[string.byte("=")] = 0
 
-function Base64.Encode(data: string): string
+function Base64.Encode(data)
     local bit = bit32 or bit
     local l = #data
     local result = table.create(math.ceil(l / 3) * 4)
@@ -6546,7 +6542,7 @@ function Base64.Encode(data: string): string
     return table.concat(result)
 end
 
-function Base64.Decode(data: string): string
+function Base64.Decode(data)
     local bit = bit32 or bit
     local clean = string.gsub(data, "%s+", "")
     local l = #clean
@@ -6600,15 +6596,25 @@ __define__("Utils/Environment", function()
 
 local Environment = {}
 
--- Service references
-local cloneref = cloneref or function(obj) return obj end
-local HttpService = cloneref(game:GetService("HttpService"))
-local Players = cloneref(game:GetService("Players"))
-local CoreGui = cloneref(game:GetService("CoreGui"))
+-- Service references (Safely wrapped in pcalls for all execution identities)
+local cloneref = cloneref or function (obj) return obj end
+local HttpService = nil
+pcall(function () HttpService = cloneref(game:GetService("HttpService")) end)
+local Players = nil
+pcall(function () Players = cloneref(game:GetService("Players")) end)
+local CoreGui = nil
+pcall(function () CoreGui = cloneref(game:GetService("CoreGui")) end)
+
+-- Universal Task polyfill
+local task = task or {
+    spawn = spawn or function (fn, ...) return coroutine.wrap(fn)(...) end,
+    wait = wait or function (t) return coroutine.yield(t) end,
+    delay = delay or function (t, fn) return task.spawn(function () task.wait(t); fn() end) end,
+    defer = function (fn, ...) return (spawn or task.spawn)(function (...) fn(...) end, ...) end
+}
 
 -- Identify executor & platform
-function Environment.GetExecutorName(): string
-    if identifyexecutor then
+function Environment.GetExecutorName()
         local name, ver = identifyexecutor()
         return tostring(name) .. (ver and (" " .. tostring(ver)) or "")
     elseif getexecutorname then
@@ -6632,7 +6638,7 @@ function Environment.GetExecutorName(): string
     end
 end
 
-function Environment.GetPlatform(): string
+function Environment.GetPlatform()
     local isMac = false
     local isWindows = false
     local isMobile = false
@@ -6661,12 +6667,11 @@ local _isfile = isfile or (syn and syn.isfile)
 local _delfile = delfile or (syn and syn.delfile) or (delfile)
 local _listfiles = listfiles or (syn and syn.listfiles)
 
-function Environment.HasFileSystem(): boolean
+function Environment.HasFileSystem()
     return type(_writefile) == "function"
 end
 
-function Environment.WriteFile(path: string, content: string): boolean
-    if _writefile then
+function Environment.WriteFile(path, content)
         local success, err = pcall(_writefile, path, content)
         if not success then
             warn("[HyperSaveInstance] WriteFile failed: " .. tostring(err))
@@ -6678,44 +6683,39 @@ function Environment.WriteFile(path: string, content: string): boolean
     return false
 end
 
-function Environment.AppendFile(path: string, content: string): boolean
-    if _appendfile then
+function Environment.AppendFile(path, content)
         local success, err = pcall(_appendfile, path, content)
         return success
     elseif _readfile and _writefile then
         local existing = ""
-        pcall(function() existing = _readfile(path) or "" end)
+        pcall(function () existing = _readfile(path) or "" end)
         return Environment.WriteFile(path, existing .. content)
     end
     return false
 end
 
-function Environment.ReadFile(path: string): string?
-    if _readfile then
+function Environment.ReadFile(path)
         local success, result = pcall(_readfile, path)
         if success then return result end
     end
     return nil
 end
 
-function Environment.MakeFolder(path: string): boolean
-    if _makefolder then
+function Environment.MakeFolder(path)
         local success = pcall(_makefolder, path)
         return success
     end
     return false
 end
 
-function Environment.IsFolder(path: string): boolean
-    if _isfolder then
+function Environment.IsFolder(path)
         local success, res = pcall(_isfolder, path)
         return success and (res == true)
     end
     return false
 end
 
-function Environment.IsFile(path: string): boolean
-    if _isfile then
+function Environment.IsFile(path)
         local success, res = pcall(_isfile, path)
         return success and (res == true)
     end
@@ -6771,12 +6771,12 @@ function Environment.GetBytecodeFunction()
     return nil
 end
 
-function Environment.HasDecompiler(): boolean
+function Environment.HasDecompiler()
     return Environment.GetDecompilerFunction() ~= nil or Environment.GetBytecodeFunction() ~= nil
 end
 
 -- Safe UI Parent (Protects GUI from detection/detection hooks, universal across Delta, Hydrogen, MacSploit, Solara, etc.)
-function Environment.GetSafeGuiParent(): Instance
+function Environment.GetSafeGuiParent()
     -- 1. Try gethui() if supported
     if gethui then
         local success, res = pcall(gethui)
@@ -6787,11 +6787,11 @@ function Environment.GetSafeGuiParent(): Instance
 
     -- 2. Try CoreGui if accessible
     local coreGui = nil
-    pcall(function()
+    pcall(function ()
         coreGui = game:GetService("CoreGui")
     end)
     if coreGui then
-        local canAccess = pcall(function()
+        local canAccess = pcall(function ()
             return coreGui.Name
         end)
         if canAccess then
@@ -6802,7 +6802,7 @@ function Environment.GetSafeGuiParent(): Instance
     -- 3. Fallback to LocalPlayer's PlayerGui
     local lp = Players.LocalPlayer
     if not lp then
-        pcall(function()
+        pcall(function ()
             lp = Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
         end)
     end
@@ -6817,7 +6817,7 @@ function Environment.GetSafeGuiParent(): Instance
 end
 
 -- Clipboard copy
-function Environment.SetClipboard(text: string): boolean
+function Environment.SetClipboard(text)
     local setclip = setclipboard or (syn and syn.setclipboard) or toclipboard or (Clipboard and Clipboard.set)
     if setclip then
         pcall(setclip, text)
@@ -6827,7 +6827,7 @@ function Environment.SetClipboard(text: string): boolean
 end
 
 -- Nil instances extraction
-function Environment.GetNilInstances(): {Instance}
+function Environment.GetNilInstances()
     local getnil = getnilinstances or (syn and syn.get_nil_instances) or (get_nil_instances)
     if getnil then
         local success, res = pcall(getnil)
@@ -6839,13 +6839,13 @@ function Environment.GetNilInstances(): {Instance}
 end
 
 -- Hidden UI elements / CorePackages check
-function Environment.GetHiddenProperties(instance: Instance, property: string): any
+function Environment.GetHiddenProperties(instance, property)
     local gethidden = gethiddenproperty or (syn and syn.get_hidden_property)
     if gethidden then
         local success, val = pcall(gethidden, instance, property)
         if success then return val end
     end
-    local s, v = pcall(function() return (instance :: any)[property] end)
+    local s, v = pcall(function () return (instance )[property] end)
     if s then return v end
     return nil
 end
@@ -6862,7 +6862,7 @@ __define__("Utils/LZ4", function()
 
 local LZ4 = {}
 
-function LZ4.Compress(input: string): string
+function LZ4.Compress(input)
     local bit = bit32 or bit
     local inputLen = #input
     if inputLen == 0 then return "" end
@@ -6959,7 +6959,7 @@ function LZ4.Compress(input: string): string
     return table.concat(out)
 end
 
-function LZ4.Decompress(compressed: string, uncompressedSize: number): string
+function LZ4.Decompress(compressed, uncompressedSize)
     local bit = bit32 or bit
     local out = {}
     local outLen = 0
@@ -7032,7 +7032,7 @@ __define__("Utils/Stealth", function()
 local Stealth = {}
 
 -- Generate random alphanumeric name
-function Stealth.GenerateRandomName(len: number?): string
+function Stealth.GenerateRandomName(len)
     local length = len or 16
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     local res = {}
@@ -7045,7 +7045,7 @@ end
 
 -- Safely elevate thread identity if supported by executor
 function Stealth.ElevateThread()
-    pcall(function()
+    pcall(function ()
         if syn and syn.set_thread_identity then
             syn.set_thread_identity(8)
         elseif setidentity then
@@ -7059,9 +7059,9 @@ function Stealth.ElevateThread()
 end
 
 -- Safely read property with error insulation
-function Stealth.SafeGetProperty(instance: Instance, property: string): any
-    local success, val = pcall(function()
-        return (instance :: any)[property]
+function Stealth.SafeGetProperty(instance, property)
+    local success, val = pcall(function ()
+        return (instance )[property]
     end)
     if success then return val end
     return nil
@@ -7079,7 +7079,7 @@ __define__("Utils/Stream", function()
 local Stream = {}
 Stream.__index = Stream
 
-function Stream.new(initialData: string?)
+function Stream.new(initialData)
     local self = setmetatable({}, Stream)
     self.Buffer = {}
     self.Position = 1
@@ -7093,17 +7093,17 @@ function Stream.new(initialData: string?)
     return self
 end
 
-function Stream:WriteByte(val: number)
+function Stream:WriteByte(val)
     table.insert(self.Buffer, string.char(val % 256))
     self.Length = self.Length + 1
 end
 
-function Stream:WriteBytes(bytes: string)
+function Stream:WriteBytes(bytes)
     table.insert(self.Buffer, bytes)
     self.Length = self.Length + #bytes
 end
 
-function Stream:WriteInt32LE(val: number)
+function Stream:WriteInt32LE(val)
     local bit = bit32 or bit
     local b1 = bit.band(val, 0xFF)
     local b2 = bit.band(bit.rshift(val, 8), 0xFF)
@@ -7113,7 +7113,7 @@ function Stream:WriteInt32LE(val: number)
     self.Length = self.Length + 4
 end
 
-function Stream:WriteInt32BE(val: number)
+function Stream:WriteInt32BE(val)
     local bit = bit32 or bit
     local b1 = bit.band(bit.rshift(val, 24), 0xFF)
     local b2 = bit.band(bit.rshift(val, 16), 0xFF)
@@ -7123,31 +7123,31 @@ function Stream:WriteInt32BE(val: number)
     self.Length = self.Length + 4
 end
 
-function Stream:WriteString(str: string)
+function Stream:WriteString(str)
     self:WriteInt32LE(#str)
     self:WriteBytes(str)
 end
 
-function Stream:ToString(): string
+function Stream:ToString()
     return table.concat(self.Buffer)
 end
 
 -- Reader methods
-function Stream:ReadByte(): number
+function Stream:ReadByte()
     if self.Position > self.Length then return 0 end
     local byte = string.byte(self.Source, self.Position)
     self.Position = self.Position + 1
     return byte
 end
 
-function Stream:ReadBytes(count: number): string
+function Stream:ReadBytes(count)
     if self.Position > self.Length then return "" end
     local chunk = string.sub(self.Source, self.Position, self.Position + count - 1)
     self.Position = self.Position + count
     return chunk
 end
 
-function Stream:ReadInt32LE(): number
+function Stream:ReadInt32LE()
     local bit = bit32 or bit
     local b1 = self:ReadByte()
     local b2 = self:ReadByte()
@@ -7156,7 +7156,7 @@ function Stream:ReadInt32LE(): number
     return bit.bor(b1, bit.lshift(b2, 8), bit.lshift(b3, 16), bit.lshift(b4, 24))
 end
 
-function Stream:ReadString(): string
+function Stream:ReadString()
     local len = self:ReadInt32LE()
     return self:ReadBytes(len)
 end
@@ -7202,61 +7202,61 @@ local HyperSaveInstance = {
 }
 
 -- Open interactive in-game HUD
-function HyperSaveInstance.OpenUI(customConfig: table?)
+function HyperSaveInstance.OpenUI(customConfig)
     local engine = Engine.new(customConfig)
     local ui = Interface.new(engine)
     return ui, engine
 end
 
 -- Save game programmatically (Headless or Scripted)
-function HyperSaveInstance.Save(customConfig: table?): (boolean, string)
+function HyperSaveInstance.Save(customConfig)
     local engine = Engine.new(customConfig)
     return engine:Start()
 end
 
 -- Save specific model or folder
-function HyperSaveInstance.SaveModel(targetInstance: Instance, customConfig: table?): (boolean, string)
+function HyperSaveInstance.SaveModel(targetInstance, customConfig)
     local engine = Engine.new(customConfig)
     return engine:SaveTarget(targetInstance, customConfig)
 end
 
 -- Export 3D Wavefront OBJ/MTL
-function HyperSaveInstance.ExportObj(targetRoot: Instance?, options: table?): (boolean, string)
+function HyperSaveInstance.ExportObj(targetRoot, options)
     return ObjExporter.Export(targetRoot, options)
 end
 
 -- Discover all Universe sub-places
-function HyperSaveInstance.GetUniverse(): {any}
+function HyperSaveInstance.GetUniverse()
     return UniverseTracker.GetUniversePlaces()
 end
 
 -- Rippers
-function HyperSaveInstance.RipAudio(): string
+function HyperSaveInstance.RipAudio()
     return AudioRipper.ExportSoundList()
 end
 
-function HyperSaveInstance.RipLighting(): (boolean, string)
+function HyperSaveInstance.RipLighting()
     return LightingRipper.ExportLightingPreset()
 end
 
-function HyperSaveInstance.RipGuis(options: table?): (boolean, string)
+function HyperSaveInstance.RipGuis(options)
     return GuiRipper.ExportAllGuis(options)
 end
 
 -- Preset shorthand helpers
-function HyperSaveInstance.SaveFast(customConfig: table?)
+function HyperSaveInstance.SaveFast(customConfig)
     local cfg = table.clone(customConfig or {})
     Defaults.ApplyPreset(cfg, "Fast")
     return HyperSaveInstance.Save(cfg)
 end
 
-function HyperSaveInstance.SaveVisuals(customConfig: table?)
+function HyperSaveInstance.SaveVisuals(customConfig)
     local cfg = table.clone(customConfig or {})
     Defaults.ApplyPreset(cfg, "VisualsOnly")
     return HyperSaveInstance.Save(cfg)
 end
 
-function HyperSaveInstance.SaveScripts(customConfig: table?)
+function HyperSaveInstance.SaveScripts(customConfig)
     local cfg = table.clone(customConfig or {})
     Defaults.ApplyPreset(cfg, "ScriptsOnly")
     return HyperSaveInstance.Save(cfg)
@@ -7280,9 +7280,9 @@ pcall(injectGlobals)
 print("[💀 HyperSaveInstance] Carregando HyperSaveInstance por Theo Lorentz Padilha...")
 
 if Defaults.ShowUI then
-    task.spawn(function()
+    task.spawn(function ()
         task.wait(0.05)
-        local success, result = pcall(function()
+        local success, result = pcall(function ()
             return HyperSaveInstance.OpenUI()
         end)
         if success then

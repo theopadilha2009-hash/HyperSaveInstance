@@ -98,12 +98,17 @@ function Interface:BuildUI()
         if self.MainFrame then self.MainFrame.Visible = true end
         floatingBtn.Visible = false
     end)
+    
+    local camera = workspace.CurrentCamera
+    local vpSize = (camera and camera.ViewportSize) or Vector2.new(1280, 720)
+    local winWidth = math.clamp(vpSize.X - 24, 320, 660)
+    local winHeight = math.clamp(vpSize.Y - 32, 280, 480)
 
     -- Main Container (Translucent Acrylic Bubble Theme, perfectly centered)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
-    main.Size = UDim2.new(0, 660, 0, 480)
+    main.Size = UDim2.new(0, winWidth, 0, winHeight)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Theme.Background
     main.BackgroundTransparency = Theme.BackgroundTransparency
@@ -140,33 +145,25 @@ function Interface:BuildUI()
         end
     end)
 
-    -- Top Header Bar
+    -- Window Header
     local header = Instance.new("Frame")
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 48)
     header.BackgroundColor3 = Theme.CardBg
-    header.BackgroundTransparency = Theme.CardTransparency
+    header.BackgroundTransparency = 0.1
     header.BorderSizePixel = 0
     header.Parent = main
 
-    local headerLine = Instance.new("Frame")
-    headerLine.Size = UDim2.new(1, 0, 0, 1)
-    headerLine.Position = UDim2.new(0, 0, 1, -1)
-    headerLine.BackgroundColor3 = Theme.Border
-    headerLine.BorderSizePixel = 0
-    headerLine.Parent = header
-
-    -- Title & Skull Logo
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Text = "💀 HyperSaveInstance"
-    titleLabel.Font = Theme.FontTitle
-    titleLabel.TextSize = 14
-    titleLabel.TextColor3 = Theme.AccentSkull
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(0, 175, 1, 0)
-    titleLabel.Position = UDim2.new(0, 16, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Parent = header
+    local title = Instance.new("TextLabel")
+    title.Text = "💀 HYPERSAVE"
+    title.Font = Theme.FontTitle
+    title.TextSize = 15
+    title.TextColor3 = Theme.TextPrimary
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Size = UDim2.new(0, 180, 1, 0)
+    title.Position = UDim2.new(0, 16, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Parent = header
 
     -- Platform & Creator Badge (Pill Badge)
     local badge = Instance.new("TextLabel")
@@ -211,7 +208,8 @@ function Interface:BuildUI()
     closeBtn.Parent = header
 
     Theme.AnimateButton(closeBtn, function()
-        screenGui:Destroy()
+        main.Visible = false
+        floatingBtn.Visible = true
     end)
 
     -- Tab Navigation Bar (Scrollable for all master tools)

@@ -24,10 +24,49 @@ function getAllFiles(dir, fileList = []) {
     return fileList;
 }
 
+function stripTypes(code) {
+    let result = code;
+
+    // 1. Remove export type and type declarations
+    result = result.replace(/^(export\s+)?type\s+\w+(\s*<[^>]+>)?\s*=\s*.*$/gm, '');
+
+    // 2. Remove return types from function headers (handling nested tuples, tables, and generics)
+    result = result.replace(/(\bfunction\s+[a-zA-Z0-9_.:]*\s*\([^)]*\))\s*:\s*(\([^)]*\)|{[^}]*(?:{[^}]*}[^}]*)*}|\[[^\]]+\]|[a-zA-Z0-9_?|<>,\s]+)(?=\s*(?:\n|\r|do|then|end|$))/g, '$1');
+
+    // 3. Remove parameter types inside function signatures: e.g. (a: number, b: string?) -> (a, b)
+    result = result.replace(/function\s*([a-zA-Z0-9_.:]*)\s*\(([^)]*)\)/g, (match, fnName, params) => {
+        if (!params.trim()) return `function ${fnName}()`;
+        const cleanedParams = params.split(',').map(p => {
+            const trimmed = p.trim();
+            const colonIdx = trimmed.indexOf(':');
+            if (colonIdx !== -1) {
+                return trimmed.substring(0, colonIdx).trim();
+            }
+            return trimmed;
+        }).join(', ');
+        return `function ${fnName}(${cleanedParams})`;
+    });
+
+    // 4. Remove local variable typed annotations (including nested tables e.g. {[type]: type})
+    result = result.replace(/\blocal\s+([a-zA-Z0-9_]+)\s*:\s*({[^}]*(?:{[^}]*}[^}]*)*}|\[[^\]]+\]|[a-zA-Z0-9_?|<>,.\s]+?)\s*(=|\n|\r|;|$)/g, (match, name, typeAnno, suffix) => {
+        if (suffix === '=') {
+            return `local ${name} =`;
+        } else {
+            return `local ${name}${suffix}`;
+        }
+    });
+
+    // 5. Remove type assertions: :: any, :: Instance, etc.
+    result = result.replace(/::\s*[a-zA-Z0-9_?{}|<>,.\s]+/g, '');
+
+    return result;
+}
+
 function transformRequires(code, modPath) {
     const modDir = path.dirname(modPath).replace(/\\/g, '/'); // "UI", "Core", "Utils", "Config" or "."
+    let cleaned = stripTypes(code);
 
-    return code
+    return cleaned
         // Triple parent / across domain
         .replace(/require\(script\.Parent\.Parent\.Core\.(\w+)\)/g, '__require__("Core/$1")')
         .replace(/require\(script\.Parent\.Parent\.UI\.(\w+)\)/g, '__require__("UI/$1")')

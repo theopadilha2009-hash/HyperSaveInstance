@@ -92,37 +92,43 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
     return grad
 end
 
--- Interactive Button Animation Helper (Hover Spring & Click Feedback)
+-- Interactive Button Animation Helper (Universal Mouse & Mobile Touch Support)
 function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
     local origSize = btn.Size
     local origBg = btn.BackgroundColor3
-    
-    btn.MouseEnter:Connect(function()
-        Theme.Tween(btn, 0.15, {
-            BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
-        })
-    end)
 
-    btn.MouseLeave:Connect(function()
-        Theme.Tween(btn, 0.15, {
-            BackgroundColor3 = origBg
-        })
-    end)
+    pcall(function()
+        btn.MouseEnter:Connect(function()
+            Theme.Tween(btn, 0.15, {
+                BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
+            })
+        end)
 
-    btn.MouseButton1Down:Connect(function()
-        Theme.Tween(btn, 0.08, {
-            Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
-        })
-    end)
+        btn.MouseLeave:Connect(function()
+            Theme.Tween(btn, 0.15, {
+                BackgroundColor3 = origBg
+            })
+        end)
 
-    btn.MouseButton1Up:Connect(function()
-        Theme.Tween(btn, 0.12, {
-            Size = origSize
-        })
+        btn.MouseButton1Down:Connect(function()
+            Theme.Tween(btn, 0.08, {
+                Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
+            })
+        end)
+
+        btn.MouseButton1Up:Connect(function()
+            Theme.Tween(btn, 0.12, {
+                Size = origSize
+            })
+        end)
     end)
 
     if onClick then
-        btn.MouseButton1Click:Connect(onClick)
+        if btn.Activated then
+            btn.Activated:Connect(onClick)
+        else
+            btn.MouseButton1Click:Connect(onClick)
+        end
     end
 end
 
