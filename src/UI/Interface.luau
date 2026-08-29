@@ -104,16 +104,78 @@ function Interface:BuildUI()
     local winWidth = math.clamp(vpSize.X - 24, 320, 660)
     local winHeight = math.clamp(vpSize.Y - 32, 280, 480)
 
+    -- Instant Splash Loading Card (Shows immediately when script is executed)
+    local splash = Instance.new("Frame")
+    splash.Name = "SplashCard"
+    splash.AnchorPoint = Vector2.new(0.5, 0.5)
+    splash.Size = UDim2.new(0, 360, 0, 175)
+    splash.Position = UDim2.new(0.5, 0, 0.5, 0)
+    splash.BackgroundColor3 = Theme.Background
+    splash.BackgroundTransparency = 0.05
+    splash.BorderSizePixel = 0
+    Theme.AddCorner(splash, Theme.CornerLarge)
+    Theme.AddStroke(splash, Theme.BorderNeon, 2)
+    splash.Parent = screenGui
+
+    local splashTitle = Instance.new("TextLabel")
+    splashTitle.Text = "💀 HYPERSAVE INSTANCE"
+    splashTitle.Font = Theme.FontTitle
+    splashTitle.TextSize = 16
+    splashTitle.TextColor3 = Theme.AccentSkull
+    splashTitle.Size = UDim2.new(1, 0, 0, 30)
+    splashTitle.Position = UDim2.new(0, 0, 0, 18)
+    splashTitle.BackgroundTransparency = 1
+    splashTitle.Parent = splash
+
+    local splashBadge = Instance.new("TextLabel")
+    splashBadge.Text = "✨ por Theo Lorentz Padilha"
+    splashBadge.Font = Theme.FontSemiBold
+    splashBadge.TextSize = 11
+    splashBadge.TextColor3 = Theme.AccentTheo
+    splashBadge.BackgroundColor3 = Color3.fromRGB(20, 15, 34)
+    splashBadge.Size = UDim2.new(0, 200, 0, 24)
+    splashBadge.Position = UDim2.new(0.5, -100, 0, 52)
+    Theme.AddCorner(splashBadge, Theme.CornerPill)
+    Theme.AddStroke(splashBadge, Theme.BorderNeon, 1)
+    splashBadge.Parent = splash
+
+    local splashStatus = Instance.new("TextLabel")
+    splashStatus.Text = "⚡ Inicializando HUD & Módulos..."
+    splashStatus.Font = Theme.FontRegular
+    splashStatus.TextSize = 11
+    splashStatus.TextColor3 = Theme.TextSecondary
+    splashStatus.Size = UDim2.new(1, 0, 0, 20)
+    splashStatus.Position = UDim2.new(0, 0, 0, 88)
+    splashStatus.BackgroundTransparency = 1
+    splashStatus.Parent = splash
+
+    local splashTrack = Instance.new("Frame")
+    splashTrack.Size = UDim2.new(1, -48, 0, 6)
+    splashTrack.Position = UDim2.new(0, 24, 0, 122)
+    splashTrack.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
+    Theme.AddCorner(splashTrack, Theme.CornerPill)
+    splashTrack.Parent = splash
+
+    local splashFill = Instance.new("Frame")
+    splashFill.Size = UDim2.new(0.2, 0, 1, 0)
+    splashFill.BackgroundColor3 = Theme.AccentSecondary
+    Theme.AddCorner(splashFill, Theme.CornerPill)
+    Theme.AddGradient(splashFill, Theme.AccentPrimary, Theme.AccentSecondary, 0)
+    splashFill.Parent = splashTrack
+    self.SplashFill = splashFill
+    self.SplashCard = splash
+
     -- Main Container (Translucent Acrylic Bubble Theme, perfectly centered)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
-    main.Size = UDim2.new(0, winWidth, 0, winHeight)
+    main.Size = UDim2.new(0, winWidth * 0.9, 0, winHeight * 0.9)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Theme.Background
     main.BackgroundTransparency = Theme.BackgroundTransparency
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
+    main.Visible = false
     Theme.AddCorner(main, Theme.CornerLarge)
     Theme.AddStroke(main, Theme.BorderLight, 1.5)
     main.Parent = screenGui
@@ -303,6 +365,38 @@ function Interface:BuildUI()
     pcall(function() self:BuildSettingsTab() end)
     pcall(function() self:BuildConsoleTab() end)
     pcall(function() self:BuildAboutTab() end)
+
+    -- Animate Splash Card completion and reveal Main Window
+    pcall(function()
+        if self.SplashFill then
+            Theme.Tween(self.SplashFill, 0.35, { Size = UDim2.new(1, 0, 1, 0) })
+        end
+        task.delay(0.4, function()
+            if self.SplashCard then
+                Theme.Tween(self.SplashCard, 0.2, {
+                    Size = UDim2.new(0, 320, 0, 150),
+                    BackgroundTransparency = 1
+                })
+                for _, child in ipairs(self.SplashCard:GetDescendants()) do
+                    if child:IsA("TextLabel") then
+                        Theme.Tween(child, 0.15, { TextTransparency = 1 })
+                    elseif child:IsA("Frame") or child:IsA("UIStroke") then
+                        Theme.Tween(child, 0.15, { Transparency = 1 })
+                    end
+                end
+                task.delay(0.2, function()
+                    pcall(function() self.SplashCard:Destroy() end)
+                end)
+            end
+
+            if self.MainFrame then
+                self.MainFrame.Visible = true
+                Theme.Tween(self.MainFrame, 0.3, {
+                    Size = UDim2.new(0, winWidth, 0, winHeight)
+                }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+            end
+        end)
+    end)
 end
 
 function Interface:SwitchTab(targetTab: string)

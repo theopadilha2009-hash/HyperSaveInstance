@@ -108,21 +108,27 @@ end
 
 pcall(injectGlobals)
 
--- Auto-initialize HUD if ShowUI is enabled
-print("[💀 HyperSaveInstance] Carregando HyperSaveInstance por Theo Lorentz Padilha...")
+-- Instant StarterGui Notification
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "💀 HyperSaveInstance",
+        Text = "Carregado por Theo Lorentz Padilha!",
+        Duration = 4
+    })
+end)
 
+print("[💀 HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
+
+-- Auto-initialize HUD if ShowUI is enabled
 if Defaults.ShowUI then
-    task.spawn(function()
-        task.wait(0.05)
-        local success, result = pcall(function()
-            return HyperSaveInstance.OpenUI()
-        end)
-        if success then
-            print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
-        else
-            warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
-        end
+    local success, result = pcall(function()
+        return HyperSaveInstance.OpenUI()
     end)
+    if success then
+        print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+    else
+        warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+    end
 end
 
 return HyperSaveInstance
