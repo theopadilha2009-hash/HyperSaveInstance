@@ -136,6 +136,31 @@ function testBundle() {
     assert(content.includes('HyperSaveInstance.Save'), 'Main Save API exported');
     assert(content.includes('HyperSaveInstance.OpenUI'), 'Main UI API exported');
     assert(content.includes('saveinstance'), 'Global saveinstance hook exported');
+
+    // Cross-reference all defines and requires
+    const definedModules = new Set();
+    const defineRegex = /__define__\("([^"]+)"/g;
+    let match;
+    while ((match = defineRegex.exec(content)) !== null) {
+        definedModules.add(match[1]);
+    }
+
+    assert(definedModules.size >= 25, `Virtual loader contains ${definedModules.size} defined modules`);
+
+    const requireRegex = /__require__\("([^"]+)"\)/g;
+    let allRequiresValid = true;
+    const missingRequires = [];
+    while ((match = requireRegex.exec(content)) !== null) {
+        if (!definedModules.has(match[1])) {
+            allRequiresValid = false;
+            missingRequires.push(match[1]);
+        }
+    }
+
+    assert(allRequiresValid, `All __require__() targets resolve to defined modules (Missing: ${missingRequires.join(', ') || 'none'})`);
+
+    const leftoverRequires = content.match(/require\s*\(\s*script[^)]*\)/g);
+    assert(!leftoverRequires, 'Zero leftover untransformed require() calls');
 }
 
 // Test Plugin

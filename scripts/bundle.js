@@ -24,6 +24,27 @@ function getAllFiles(dir, fileList = []) {
     return fileList;
 }
 
+function transformRequires(code, modPath) {
+    const modDir = path.dirname(modPath).replace(/\\/g, '/'); // "UI", "Core", "Utils", "Config" or "."
+
+    return code
+        // Triple parent / across domain
+        .replace(/require\(script\.Parent\.Parent\.Core\.(\w+)\)/g, '__require__("Core/$1")')
+        .replace(/require\(script\.Parent\.Parent\.UI\.(\w+)\)/g, '__require__("UI/$1")')
+        .replace(/require\(script\.Parent\.Parent\.Utils\.(\w+)\)/g, '__require__("Utils/$1")')
+        .replace(/require\(script\.Parent\.Parent\.Config\.(\w+)\)/g, '__require__("Config/$1")')
+        // Sibling in current directory (script.Parent.Module)
+        .replace(/require\(script\.Parent\.(\w+)\)/g, (match, p1) => {
+            const targetDir = (modDir === '.' || !modDir) ? 'Core' : modDir;
+            return `__require__("${targetDir}/${p1}")`;
+        })
+        // Submodules from root (script.Domain.Module)
+        .replace(/require\(script\.Core\.(\w+)\)/g, '__require__("Core/$1")')
+        .replace(/require\(script\.UI\.(\w+)\)/g, '__require__("UI/$1")')
+        .replace(/require\(script\.Config\.(\w+)\)/g, '__require__("Config/$1")')
+        .replace(/require\(script\.Utils\.(\w+)\)/g, '__require__("Utils/$1")');
+}
+
 function bundle() {
     console.log('[HyperSaveInstance Bundler] Starting build...');
 
@@ -46,7 +67,7 @@ function bundle() {
     ================================================================================
     HyperSaveInstance v2.0 - Standalone Production Bundle
     Universal Roblox Game Cloner & SaveInstance Engine
-    https://github.com/theopadilha2009-hash/HyperSaveInstance
+    Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     ================================================================================
 ]]
 
@@ -58,7 +79,7 @@ local function __define__(name, fn)
 end
 
 local function __require__(name)
-    if __cache__[name] then
+    if __cache__[name] ~= nil then
         return __cache__[name]
     end
     local modFn = __modules__[name]
@@ -75,29 +96,22 @@ end
 
     for (const [modName, modCode] of Object.entries(modules)) {
         if (modName === 'init') continue;
-
-        // Transform requires inside module to use virtual require
-        let transformed = modCode
-            .replace(/require\(script\.Parent\.Parent\.Utils\.(\w+)\)/g, '__require__("Utils/$1")')
-            .replace(/require\(script\.Parent\.Parent\.Config\.(\w+)\)/g, '__require__("Config/$1")')
-            .replace(/require\(script\.Parent\.(\w+)\)/g, '__require__("Core/$1")')
-            .replace(/require\(script\.Core\.(\w+)\)/g, '__require__("Core/$1")')
-            .replace(/require\(script\.UI\.(\w+)\)/g, '__require__("UI/$1")')
-            .replace(/require\(script\.Config\.(\w+)\)/g, '__require__("Config/$1")')
-            .replace(/require\(script\.Utils\.(\w+)\)/g, '__require__("Utils/$1")');
-
+        const transformed = transformRequires(modCode, modName);
         bundledCode += `\n__define__("${modName}", function()\n${transformed}\nend)\n`;
     }
 
     // Append main entry point
     const initCode = modules['init'] || '';
-    const transformedInit = initCode
-        .replace(/require\(script\.Core\.(\w+)\)/g, '__require__("Core/$1")')
-        .replace(/require\(script\.UI\.(\w+)\)/g, '__require__("UI/$1")')
-        .replace(/require\(script\.Config\.(\w+)\)/g, '__require__("Config/$1")')
-        .replace(/require\(script\.Utils\.(\w+)\)/g, '__require__("Utils/$1")');
+    const transformedInit = transformRequires(initCode, 'init');
 
     bundledCode += `\n-- Entry Point\n${transformedInit}\n`;
+
+    // Integrity Check: Verify that no untransformed require(script...) remains
+    const leftoverRequires = bundledCode.match(/require\s*\(\s*script[^)]*\)/g);
+    if (leftoverRequires) {
+        console.error('[HyperSaveInstance Bundler ERROR] Untransformed requires found in bundle:', leftoverRequires);
+        process.exit(1);
+    }
 
     fs.writeFileSync(OUTPUT_FILE, bundledCode, 'utf8');
     const stats = fs.statSync(OUTPUT_FILE);
@@ -105,3 +119,4 @@ end
 }
 
 bundle();
+

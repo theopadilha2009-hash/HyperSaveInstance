@@ -2,7 +2,7 @@
     ================================================================================
     HyperSaveInstance v2.0 - Standalone Production Bundle
     Universal Roblox Game Cloner & SaveInstance Engine
-    https://github.com/theopadilha2009-hash/HyperSaveInstance
+    Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
     ================================================================================
 ]]
 
@@ -14,7 +14,7 @@ local function __define__(name, fn)
 end
 
 local function __require__(name)
-    if __cache__[name] then
+    if __cache__[name] ~= nil then
         return __cache__[name]
     end
     local modFn = __modules__[name]
@@ -4300,16 +4300,16 @@ __define__("UI/Interface", function()
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 
-local Theme = __require__("Core/Theme")
+local Theme = __require__("UI/Theme")
 local Environment = __require__("Utils/Environment")
 local Defaults = __require__("Config/Defaults")
-local AudioRipper = require(script.Parent.Parent.Core.AudioRipper)
-local LightingRipper = require(script.Parent.Parent.Core.LightingRipper)
-local GuiRipper = require(script.Parent.Parent.Core.GuiRipper)
-local NetworkSniffer = require(script.Parent.Parent.Core.NetworkSniffer)
-local UniverseTracker = require(script.Parent.Parent.Core.UniverseTracker)
-local ObjExporter = require(script.Parent.Parent.Core.ObjExporter)
-local RaycastSelector = require(script.Parent.Parent.Core.RaycastSelector)
+local AudioRipper = __require__("Core/AudioRipper")
+local LightingRipper = __require__("Core/LightingRipper")
+local GuiRipper = __require__("Core/GuiRipper")
+local NetworkSniffer = __require__("Core/NetworkSniffer")
+local UniverseTracker = __require__("Core/UniverseTracker")
+local ObjExporter = __require__("Core/ObjExporter")
+local RaycastSelector = __require__("Core/RaycastSelector")
 
 local Interface = {}
 Interface.__index = Interface
