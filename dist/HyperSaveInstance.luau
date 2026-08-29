@@ -4350,15 +4350,26 @@ end
 function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
 
-    local old = parent:FindFirstChild("HyperSaveInstance_UI")
-    if old then old:Destroy() end
+    pcall(function()
+        local old = parent:FindFirstChild("HyperSaveInstance_UI")
+        if old then old:Destroy() end
+    end)
 
     -- ScreenGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "HyperSaveInstance_UI"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 999999
+    screenGui.IgnoreGuiInset = true
+    screenGui.Enabled = true
     self.ScreenGui = screenGui
+
+    if syn and syn.protect_gui then
+        pcall(syn.protect_gui, screenGui)
+    end
+
+    screenGui.Parent = parent
 
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
@@ -4382,11 +4393,12 @@ function Interface:BuildUI()
         floatingBtn.Visible = false
     end)
 
-    -- Main Container (Translucent Acrylic Bubble Theme)
+    -- Main Container (Translucent Acrylic Bubble Theme, perfectly centered)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Size = UDim2.new(0, 660, 0, 480)
-    main.Position = UDim2.new(0.5, -330, 0.5, -240)
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Theme.Background
     main.BackgroundTransparency = Theme.BackgroundTransparency
     main.BorderSizePixel = 0
@@ -4574,21 +4586,19 @@ function Interface:BuildUI()
         end)
     end
 
-    -- Build Individual Tab Pages
-    self:BuildDashboardTab()
-    self:BuildSelectorTab()
-    self:BuildAudioRipperTab()
-    self:BuildLightingRipperTab()
-    self:BuildGuiRipperTab()
-    self:BuildNetworkTab()
-    self:BuildUniverseTab()
-    self:BuildObjExportTab()
-    self:BuildTutorialTab()
-    self:BuildSettingsTab()
-    self:BuildConsoleTab()
-    self:BuildAboutTab()
-
-    screenGui.Parent = parent
+    -- Build Individual Tab Pages with error boundary protection
+    pcall(function() self:BuildDashboardTab() end)
+    pcall(function() self:BuildSelectorTab() end)
+    pcall(function() self:BuildAudioRipperTab() end)
+    pcall(function() self:BuildLightingRipperTab() end)
+    pcall(function() self:BuildGuiRipperTab() end)
+    pcall(function() self:BuildNetworkTab() end)
+    pcall(function() self:BuildUniverseTab() end)
+    pcall(function() self:BuildObjExportTab() end)
+    pcall(function() self:BuildTutorialTab() end)
+    pcall(function() self:BuildSettingsTab() end)
+    pcall(function() self:BuildConsoleTab() end)
+    pcall(function() self:BuildAboutTab() end)
 end
 
 function Interface:SwitchTab(targetTab: string)
@@ -6765,27 +6775,45 @@ function Environment.HasDecompiler(): boolean
     return Environment.GetDecompilerFunction() ~= nil or Environment.GetBytecodeFunction() ~= nil
 end
 
--- Safe UI Parent (Protects GUI from detection/detection hooks)
+-- Safe UI Parent (Protects GUI from detection/detection hooks, universal across Delta, Hydrogen, MacSploit, Solara, etc.)
 function Environment.GetSafeGuiParent(): Instance
-    local success, hui = pcall(function()
-        if gethui then
-            return gethui()
-        elseif syn and syn.protect_gui then
-            local folder = Instance.new("Folder")
-            syn.protect_gui(folder)
-            folder.Parent = CoreGui
-            return folder
-        elseif CoreGui and pcall(function() return CoreGui.Name end) then
-            return CoreGui
-        else
-            return Players.LocalPlayer:WaitForChild("PlayerGui")
+    -- 1. Try gethui() if supported
+    if gethui then
+        local success, res = pcall(gethui)
+        if success and res and typeof(res) == "Instance" then
+            return res
         end
-    end)
-
-    if success and hui then
-        return hui
     end
-    return Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    -- 2. Try CoreGui if accessible
+    local coreGui = nil
+    pcall(function()
+        coreGui = game:GetService("CoreGui")
+    end)
+    if coreGui then
+        local canAccess = pcall(function()
+            return coreGui.Name
+        end)
+        if canAccess then
+            return coreGui
+        end
+    end
+
+    -- 3. Fallback to LocalPlayer's PlayerGui
+    local lp = Players.LocalPlayer
+    if not lp then
+        pcall(function()
+            lp = Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+        end)
+    end
+    if lp then
+        local pgui = lp:FindFirstChildOfClass("PlayerGui") or lp:WaitForChild("PlayerGui", 3)
+        if pgui then
+            return pgui
+        end
+    end
+
+    return game:GetService("CoreGui")
 end
 
 -- Clipboard copy
@@ -7249,9 +7277,19 @@ end
 pcall(injectGlobals)
 
 -- Auto-initialize HUD if ShowUI is enabled
+print("[💀 HyperSaveInstance] Carregando HyperSaveInstance por Theo Lorentz Padilha...")
+
 if Defaults.ShowUI then
     task.spawn(function()
-        HyperSaveInstance.OpenUI()
+        task.wait(0.05)
+        local success, result = pcall(function()
+            return HyperSaveInstance.OpenUI()
+        end)
+        if success then
+            print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+        else
+            warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+        end
     end)
 end
 

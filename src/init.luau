@@ -109,9 +109,19 @@ end
 pcall(injectGlobals)
 
 -- Auto-initialize HUD if ShowUI is enabled
+print("[💀 HyperSaveInstance] Carregando HyperSaveInstance por Theo Lorentz Padilha...")
+
 if Defaults.ShowUI then
     task.spawn(function()
-        HyperSaveInstance.OpenUI()
+        task.wait(0.05)
+        local success, result = pcall(function()
+            return HyperSaveInstance.OpenUI()
+        end)
+        if success then
+            print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+        else
+            warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+        end
     end)
 end
 

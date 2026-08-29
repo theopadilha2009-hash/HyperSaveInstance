@@ -56,15 +56,26 @@ end
 function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
 
-    local old = parent:FindFirstChild("HyperSaveInstance_UI")
-    if old then old:Destroy() end
+    pcall(function()
+        local old = parent:FindFirstChild("HyperSaveInstance_UI")
+        if old then old:Destroy() end
+    end)
 
     -- ScreenGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "HyperSaveInstance_UI"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 999999
+    screenGui.IgnoreGuiInset = true
+    screenGui.Enabled = true
     self.ScreenGui = screenGui
+
+    if syn and syn.protect_gui then
+        pcall(syn.protect_gui, screenGui)
+    end
+
+    screenGui.Parent = parent
 
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
@@ -88,11 +99,12 @@ function Interface:BuildUI()
         floatingBtn.Visible = false
     end)
 
-    -- Main Container (Translucent Acrylic Bubble Theme)
+    -- Main Container (Translucent Acrylic Bubble Theme, perfectly centered)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Size = UDim2.new(0, 660, 0, 480)
-    main.Position = UDim2.new(0.5, -330, 0.5, -240)
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Theme.Background
     main.BackgroundTransparency = Theme.BackgroundTransparency
     main.BorderSizePixel = 0
@@ -280,21 +292,19 @@ function Interface:BuildUI()
         end)
     end
 
-    -- Build Individual Tab Pages
-    self:BuildDashboardTab()
-    self:BuildSelectorTab()
-    self:BuildAudioRipperTab()
-    self:BuildLightingRipperTab()
-    self:BuildGuiRipperTab()
-    self:BuildNetworkTab()
-    self:BuildUniverseTab()
-    self:BuildObjExportTab()
-    self:BuildTutorialTab()
-    self:BuildSettingsTab()
-    self:BuildConsoleTab()
-    self:BuildAboutTab()
-
-    screenGui.Parent = parent
+    -- Build Individual Tab Pages with error boundary protection
+    pcall(function() self:BuildDashboardTab() end)
+    pcall(function() self:BuildSelectorTab() end)
+    pcall(function() self:BuildAudioRipperTab() end)
+    pcall(function() self:BuildLightingRipperTab() end)
+    pcall(function() self:BuildGuiRipperTab() end)
+    pcall(function() self:BuildNetworkTab() end)
+    pcall(function() self:BuildUniverseTab() end)
+    pcall(function() self:BuildObjExportTab() end)
+    pcall(function() self:BuildTutorialTab() end)
+    pcall(function() self:BuildSettingsTab() end)
+    pcall(function() self:BuildConsoleTab() end)
+    pcall(function() self:BuildAboutTab() end)
 end
 
 function Interface:SwitchTab(targetTab: string)

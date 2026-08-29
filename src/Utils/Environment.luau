@@ -180,27 +180,45 @@ function Environment.HasDecompiler(): boolean
     return Environment.GetDecompilerFunction() ~= nil or Environment.GetBytecodeFunction() ~= nil
 end
 
--- Safe UI Parent (Protects GUI from detection/detection hooks)
+-- Safe UI Parent (Protects GUI from detection/detection hooks, universal across Delta, Hydrogen, MacSploit, Solara, etc.)
 function Environment.GetSafeGuiParent(): Instance
-    local success, hui = pcall(function()
-        if gethui then
-            return gethui()
-        elseif syn and syn.protect_gui then
-            local folder = Instance.new("Folder")
-            syn.protect_gui(folder)
-            folder.Parent = CoreGui
-            return folder
-        elseif CoreGui and pcall(function() return CoreGui.Name end) then
-            return CoreGui
-        else
-            return Players.LocalPlayer:WaitForChild("PlayerGui")
+    -- 1. Try gethui() if supported
+    if gethui then
+        local success, res = pcall(gethui)
+        if success and res and typeof(res) == "Instance" then
+            return res
         end
-    end)
-
-    if success and hui then
-        return hui
     end
-    return Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    -- 2. Try CoreGui if accessible
+    local coreGui = nil
+    pcall(function()
+        coreGui = game:GetService("CoreGui")
+    end)
+    if coreGui then
+        local canAccess = pcall(function()
+            return coreGui.Name
+        end)
+        if canAccess then
+            return coreGui
+        end
+    end
+
+    -- 3. Fallback to LocalPlayer's PlayerGui
+    local lp = Players.LocalPlayer
+    if not lp then
+        pcall(function()
+            lp = Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+        end)
+    end
+    if lp then
+        local pgui = lp:FindFirstChildOfClass("PlayerGui") or lp:WaitForChild("PlayerGui", 3)
+        if pgui then
+            return pgui
+        end
+    end
+
+    return game:GetService("CoreGui")
 end
 
 -- Clipboard copy
