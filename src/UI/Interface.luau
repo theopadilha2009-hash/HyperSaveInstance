@@ -94,6 +94,27 @@ function Interface:BuildUI()
     floatingBtn.Parent = screenGui
     self.FloatingToggle = floatingBtn
 
+    -- Make floating button draggable on touchscreen / mobile
+    local fDragging, fDragStart, fStartPos
+    floatingBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            fDragging = true
+            fDragStart = input.Position
+            fStartPos = floatingBtn.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    fDragging = false
+                end
+            end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and fDragging then
+            local delta = input.Position - fDragStart
+            floatingBtn.Position = UDim2.new(fStartPos.X.Scale, fStartPos.X.Offset + delta.X, fStartPos.Y.Scale, fStartPos.Y.Offset + delta.Y)
+        end
+    end)
+
     Theme.AnimateButton(floatingBtn, function()
         if self.MainFrame then self.MainFrame.Visible = true end
         floatingBtn.Visible = false
