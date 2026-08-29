@@ -9,6 +9,75 @@
 local __modules__ = {}
 local __cache__ = {}
 
+local function __showErrorGui__(errTitle, errDesc)
+    pcall(function()
+        local parent = (gethui and gethui()) or (game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
+        if not parent then return end
+
+        local sg = Instance.new("ScreenGui")
+        sg.Name = "HyperSave_ErrorAlert"
+        sg.DisplayOrder = 9999999
+        sg.ResetOnSpawn = false
+
+        local f = Instance.new("Frame")
+        f.Size = UDim2.new(0, 440, 0, 240)
+        f.AnchorPoint = Vector2.new(0.5, 0.5)
+        f.Position = UDim2.new(0.5, 0, 0.5, 0)
+        f.BackgroundColor3 = Color3.fromRGB(20, 8, 16)
+        f.BorderSizePixel = 0
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 14)
+        corner.Parent = f
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = Color3.fromRGB(244, 63, 94)
+        stroke.Thickness = 2
+        stroke.Parent = f
+
+        local title = Instance.new("TextLabel")
+        title.Text = "⚠️ " .. tostring(errTitle or "HYPERSAVE - ERRO")
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 13
+        title.TextColor3 = Color3.fromRGB(244, 63, 94)
+        title.Size = UDim2.new(1, -24, 0, 26)
+        title.Position = UDim2.new(0, 12, 0, 10)
+        title.BackgroundTransparency = 1
+        title.Parent = f
+
+        local desc = Instance.new("TextLabel")
+        desc.Text = tostring(errDesc or "Erro desconhecido")
+        desc.Font = Enum.Font.Code
+        desc.TextSize = 10
+        desc.TextColor3 = Color3.fromRGB(255, 230, 235)
+        desc.TextXAlignment = Enum.TextXAlignment.Left
+        desc.TextYAlignment = Enum.TextYAlignment.Top
+        desc.TextWrapped = true
+        desc.Size = UDim2.new(1, -24, 1, -84)
+        desc.Position = UDim2.new(0, 12, 0, 38)
+        desc.BackgroundTransparency = 1
+        desc.Parent = f
+
+        local btn = Instance.new("TextButton")
+        btn.Text = "FECHAR AVISO"
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 11
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BackgroundColor3 = Color3.fromRGB(244, 63, 94)
+        btn.Size = UDim2.new(1, -24, 0, 32)
+        btn.Position = UDim2.new(0, 12, 1, -40)
+        btn.BorderSizePixel = 0
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.Parent = btn
+        btn.Parent = f
+        btn.MouseButton1Click:Connect(function() sg:Destroy() end)
+
+        f.Parent = sg
+        sg.Parent = parent
+    end)
+end
+
 local function __define__(name, fn)
     __modules__[name] = fn
 end
@@ -19,9 +88,18 @@ local function __require__(name)
     end
     local modFn = __modules__[name]
     if not modFn then
-        error("[HyperSaveInstance] Module not found: " .. tostring(name))
+        local msg = "[HyperSaveInstance] Modulo nao encontrado: " .. tostring(name)
+        warn(msg)
+        __showErrorGui__("Modulo Faltando", msg)
+        error(msg)
     end
-    local result = modFn()
+    local success, result = pcall(modFn)
+    if not success then
+        local msg = "[HyperSaveInstance] Erro ao carregar modulo " .. tostring(name) .. ": " .. tostring(result)
+        warn(msg)
+        __showErrorGui__("Falha no Modulo: " .. tostring(name), tostring(result))
+        error(msg)
+    end
     __cache__[name] = result
     return result
 end
@@ -7281,6 +7359,7 @@ return Stream
 end)
 
 -- Entry Point
+local __mainSuccess__, __mainErr__ = pcall(function()
 --[[
     HyperSaveInstance v2.0 (Ultimate Master Suite) - Universal Roblox Game Cloner & Reverse-Engineering Suite
     Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
@@ -7416,3 +7495,8 @@ end
 
 return HyperSaveInstance
 
+end)
+if not __mainSuccess__ then
+    warn("[HyperSaveInstance Fatal Error] " .. tostring(__mainErr__))
+    __showErrorGui__("Erro Fatal na Execucao", tostring(__mainErr__))
+end
