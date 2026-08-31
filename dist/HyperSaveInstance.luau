@@ -6,6 +6,70 @@
     ================================================================================
 ]]
 
+local warn = warn or print
+local task = task or {
+    spawn = spawn or function(f, ...) return coroutine.wrap(f)(...) end,
+    delay = delay or function(t, f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
+    wait = wait or function(t) return coroutine.yield(t) end,
+    defer = function(f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
+}
+
+-- Table polyfills (Universal Luau runtime compatibility)
+table.clone = table.clone or function(t)
+    if type(t) ~= "table" then return t end
+    local clone = {}
+    for k, v in pairs(t) do
+        clone[k] = v
+    end
+    return clone
+end
+
+table.create = table.create or function(count, val)
+    local t = {}
+    for i = 1, (count or 0) do
+        t[i] = val
+    end
+    return t
+end
+
+table.clear = table.clear or function(t)
+    if type(t) ~= "table" then return end
+    for k in pairs(t) do
+        t[k] = nil
+    end
+end
+
+table.find = table.find or function(t, val, init)
+    if type(t) ~= "table" then return nil end
+    for i = (init or 1), #t do
+        if t[i] == val then return i end
+    end
+    return nil
+end
+
+table.freeze = table.freeze or function(t) return t end
+table.isfrozen = table.isfrozen or function(t) return false end
+
+-- Math polyfills
+math.clamp = math.clamp or function(x, min, max)
+    return math.max(min, math.min(max, x))
+end
+math.round = math.round or function(x)
+    return math.floor(x + 0.5)
+end
+math.sign = math.sign or function(x)
+    return (x > 0 and 1) or (x < 0 and -1) or 0
+end
+
+-- String polyfills
+string.split = string.split or function(str, sep)
+    sep = sep or ","
+    local fields = {}
+    local pattern = string.format("([^%s]+)", sep)
+    string.gsub(str, pattern, function(c) table.insert(fields, c) end)
+    return fields
+end
+
 local __modules__ = {}
 local __cache__ = {}
 
@@ -775,9 +839,13 @@ function AssetHandler.ProcessSurfaceAppearance(instance)
         ColorMap = "",
         NormalMap = "",
         RoughnessMap = "",
-        MetalnessMap = "",
-        AlphaMode = Enum.AlphaMode.Overlay
+        AlphaMode = 0
     }
+    pcall(function()
+        if Enum.AlphaMode and Enum.AlphaMode.Overlay then
+            pbr.AlphaMode = Enum.AlphaMode.Overlay
+        end
+    end)
     pcall(function() pbr.ColorMap = instance.ColorMap end)
     pcall(function() pbr.NormalMap = instance.NormalMap end)
     pcall(function() pbr.RoughnessMap = instance.RoughnessMap end)
@@ -2216,9 +2284,15 @@ function RaycastSelector:InitVisuals()
         hl.OutlineTransparency = 0.05
         hl.Enabled = false
         
-        -- Store in gethui, CoreGui or workspace
-        local parent = (gethui and gethui()) or game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
-        hl.Parent = parent
+        -- Store in gethui, CoreGui or workspace safely
+        local parent = nil
+        if gethui then
+            pcall(function() parent = gethui() end)
+        end
+        if not parent then
+            pcall(function() parent = game:GetService("CoreGui") end)
+        end
+        hl.Parent = parent or workspace
         self.Highlight = hl
     end)
 end
@@ -2252,7 +2326,9 @@ function RaycastSelector:RaycastMouse()
     local unitRay = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
 
     local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Exclude
+    pcall(function()
+        params.FilterType = (Enum.RaycastFilterType and (Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Blacklist)) or 0
+    end)
 
     local filterList = {}
     local localPlayer = Players.LocalPlayer
@@ -6646,15 +6722,18 @@ function AntiAFK.Enable()
     if isEnabled then return end
     isEnabled = true
 
-    local localPlayer = Players.LocalPlayer
-    if not localPlayer then return end
-
-    idleConnection = localPlayer.Idled:Connect(function()
-        if not isEnabled then return end
-        pcall(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new(0, 0))
-        end)
+    pcall(function()
+        local localPlayer = Players.LocalPlayer
+        if localPlayer and localPlayer.Idled then
+            idleConnection = localPlayer.Idled:Connect(function()
+                if not isEnabled then return end
+                pcall(function()
+                    local vu = game:GetService("VirtualUser")
+                    vu:CaptureController()
+                    vu:ClickButton2(Vector2.new(0, 0))
+                end)
+            end)
+        end
     end)
 end
 
@@ -6800,6 +6879,46 @@ local task = task or {
     delay = delay or function(t, fn) return task.spawn(function() task.wait(t); fn() end) end,
     defer = function(fn, ...) return (spawn or task.spawn)(function(...) fn(...) end, ...) end
 }
+
+-- Table & Math polyfills
+table.clone = table.clone or function(t)
+    if type(t) ~= "table" then return t end
+    local clone = {}
+    for k, v in pairs(t) do
+        clone[k] = v
+    end
+    return clone
+end
+
+table.create = table.create or function(count, val)
+    local t = {}
+    for i = 1, (count or 0) do
+        t[i] = val
+    end
+    return t
+end
+
+table.clear = table.clear or function(t)
+    if type(t) ~= "table" then return end
+    for k in pairs(t) do
+        t[k] = nil
+    end
+end
+
+table.find = table.find or function(t, val, init)
+    if type(t) ~= "table" then return nil end
+    for i = (init or 1), #t do
+        if t[i] == val then return i end
+    end
+    return nil
+end
+
+math.clamp = math.clamp or function(x, min, max)
+    return math.max(min, math.min(max, x))
+end
+math.round = math.round or function(x)
+    return math.floor(x + 0.5)
+end
 
 -- Identify executor & platform
 function Environment.GetExecutorName()

@@ -238,6 +238,70 @@ function bundle() {
     ================================================================================
 ]]
 
+local warn = warn or print
+local task = task or {
+    spawn = spawn or function(f, ...) return coroutine.wrap(f)(...) end,
+    delay = delay or function(t, f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
+    wait = wait or function(t) return coroutine.yield(t) end,
+    defer = function(f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
+}
+
+-- Table polyfills (Universal Luau runtime compatibility)
+table.clone = table.clone or function(t)
+    if type(t) ~= "table" then return t end
+    local clone = {}
+    for k, v in pairs(t) do
+        clone[k] = v
+    end
+    return clone
+end
+
+table.create = table.create or function(count, val)
+    local t = {}
+    for i = 1, (count or 0) do
+        t[i] = val
+    end
+    return t
+end
+
+table.clear = table.clear or function(t)
+    if type(t) ~= "table" then return end
+    for k in pairs(t) do
+        t[k] = nil
+    end
+end
+
+table.find = table.find or function(t, val, init)
+    if type(t) ~= "table" then return nil end
+    for i = (init or 1), #t do
+        if t[i] == val then return i end
+    end
+    return nil
+end
+
+table.freeze = table.freeze or function(t) return t end
+table.isfrozen = table.isfrozen or function(t) return false end
+
+-- Math polyfills
+math.clamp = math.clamp or function(x, min, max)
+    return math.max(min, math.min(max, x))
+end
+math.round = math.round or function(x)
+    return math.floor(x + 0.5)
+end
+math.sign = math.sign or function(x)
+    return (x > 0 and 1) or (x < 0 and -1) or 0
+end
+
+-- String polyfills
+string.split = string.split or function(str, sep)
+    sep = sep or ","
+    local fields = {}
+    local pattern = string.format("([^%s]+)", sep)
+    string.gsub(str, pattern, function(c) table.insert(fields, c) end)
+    return fields
+end
+
 local __modules__ = {}
 local __cache__ = {}
 

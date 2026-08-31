@@ -14,15 +14,18 @@ function AntiAFK.Enable()
     if isEnabled then return end
     isEnabled = true
 
-    local localPlayer = Players.LocalPlayer
-    if not localPlayer then return end
-
-    idleConnection = localPlayer.Idled:Connect(function()
-        if not isEnabled then return end
-        pcall(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new(0, 0))
-        end)
+    pcall(function()
+        local localPlayer = Players.LocalPlayer
+        if localPlayer and localPlayer.Idled then
+            idleConnection = localPlayer.Idled:Connect(function()
+                if not isEnabled then return end
+                pcall(function()
+                    local vu = game:GetService("VirtualUser")
+                    vu:CaptureController()
+                    vu:ClickButton2(Vector2.new(0, 0))
+                end)
+            end)
+        end
     end)
 end
 

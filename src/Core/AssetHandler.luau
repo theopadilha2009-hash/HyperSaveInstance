@@ -120,9 +120,13 @@ function AssetHandler.ProcessSurfaceAppearance(instance: SurfaceAppearance)
         ColorMap = "",
         NormalMap = "",
         RoughnessMap = "",
-        MetalnessMap = "",
-        AlphaMode = Enum.AlphaMode.Overlay
+        AlphaMode = 0
     }
+    pcall(function()
+        if Enum.AlphaMode and Enum.AlphaMode.Overlay then
+            pbr.AlphaMode = Enum.AlphaMode.Overlay
+        end
+    end)
     pcall(function() pbr.ColorMap = instance.ColorMap end)
     pcall(function() pbr.NormalMap = instance.NormalMap end)
     pcall(function() pbr.RoughnessMap = instance.RoughnessMap end)

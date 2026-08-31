@@ -22,6 +22,46 @@ local task = task or {
     defer = function(fn, ...) return (spawn or task.spawn)(function(...) fn(...) end, ...) end
 }
 
+-- Table & Math polyfills
+table.clone = table.clone or function(t)
+    if type(t) ~= "table" then return t end
+    local clone = {}
+    for k, v in pairs(t) do
+        clone[k] = v
+    end
+    return clone
+end
+
+table.create = table.create or function(count, val)
+    local t = {}
+    for i = 1, (count or 0) do
+        t[i] = val
+    end
+    return t
+end
+
+table.clear = table.clear or function(t)
+    if type(t) ~= "table" then return end
+    for k in pairs(t) do
+        t[k] = nil
+    end
+end
+
+table.find = table.find or function(t, val, init)
+    if type(t) ~= "table" then return nil end
+    for i = (init or 1), #t do
+        if t[i] == val then return i end
+    end
+    return nil
+end
+
+math.clamp = math.clamp or function(x, min, max)
+    return math.max(min, math.min(max, x))
+end
+math.round = math.round or function(x)
+    return math.floor(x + 0.5)
+end
+
 -- Identify executor & platform
 function Environment.GetExecutorName(): string
     if identifyexecutor then

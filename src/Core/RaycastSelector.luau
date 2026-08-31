@@ -38,9 +38,15 @@ function RaycastSelector:InitVisuals()
         hl.OutlineTransparency = 0.05
         hl.Enabled = false
         
-        -- Store in gethui, CoreGui or workspace
-        local parent = (gethui and gethui()) or game:GetService("CoreGui"):FindFirstChild("RobloxGui") or workspace
-        hl.Parent = parent
+        -- Store in gethui, CoreGui or workspace safely
+        local parent = nil
+        if gethui then
+            pcall(function() parent = gethui() end)
+        end
+        if not parent then
+            pcall(function() parent = game:GetService("CoreGui") end)
+        end
+        hl.Parent = parent or workspace
         self.Highlight = hl
     end)
 end
@@ -74,7 +80,9 @@ function RaycastSelector:RaycastMouse(): (Instance?, Vector3?)
     local unitRay = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
 
     local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Exclude
+    pcall(function()
+        params.FilterType = (Enum.RaycastFilterType and (Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Blacklist)) or 0
+    end)
 
     local filterList = {}
     local localPlayer = Players.LocalPlayer

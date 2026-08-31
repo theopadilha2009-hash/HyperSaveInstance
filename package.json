@@ -5,7 +5,8 @@
   "main": "dist/HyperSaveInstance.luau",
   "scripts": {
     "build": "node scripts/bundle.js",
-    "test": "node scripts/debug_suite.js",
+    "test": "node scripts/debug_suite.js && node scripts/simulate_roblox_runtime.js",
+    "test:sim": "node scripts/simulate_roblox_runtime.js",
     "install:plugin": "node scripts/install_plugin.js"
   },
   "keywords": [
@@ -27,6 +28,7 @@
     "url": "git+https://github.com/theopadilha2009-hash/HyperSaveInstance.git"
   },
   "devDependencies": {
+    "fengari": "^0.1.5",
     "luaparse": "^0.3.1"
   }
 }
