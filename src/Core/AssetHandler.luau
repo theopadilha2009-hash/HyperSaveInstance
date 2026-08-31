@@ -135,4 +135,26 @@ function AssetHandler.ProcessSurfaceAppearance(instance: SurfaceAppearance)
     return pbr
 end
 
+-- Preload & warm assets in memory
+function AssetHandler.WarmAssets(instances: {Instance})
+    pcall(function()
+        local ContentProvider = game:GetService("ContentProvider")
+        if not ContentProvider then return end
+
+        local batch = {}
+        for _, inst in ipairs(instances) do
+            if inst:IsA("MeshPart") or inst:IsA("Decal") or inst:IsA("Texture") or inst:IsA("SurfaceAppearance") or inst:IsA("SpecialMesh") then
+                table.insert(batch, inst)
+                if #batch >= 80 then
+                    pcall(function() ContentProvider:PreloadAsync(batch) end)
+                    table.clear(batch)
+                end
+            end
+        end
+        if #batch > 0 then
+            pcall(function() ContentProvider:PreloadAsync(batch) end)
+        end
+    end)
+end
+
 return AssetHandler

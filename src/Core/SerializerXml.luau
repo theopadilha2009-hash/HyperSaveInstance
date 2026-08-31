@@ -185,8 +185,12 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
                         append(string.format('%s\t\t<token name="%s">%d</token>\n', indent, propName, math.floor(tonumber(tokenNum) or 0)))
                     elseif propType == "Content" then
                         append(string.format('%s\t\t<Content name="%s"><url>%s</url></Content>\n', indent, propName, escapeXml(tostring(val))))
-                    elseif propType == "Ref" and typeof(val) == "Instance" then
-                        append(string.format('%s\t\t<Ref name="%s">%s</Ref>\n', indent, propName, getRef(val)))
+                    elseif propType == "Ref" then
+                        if typeof(val) == "Instance" then
+                            append(string.format('%s\t\t<Ref name="%s">%s</Ref>\n', indent, propName, getRef(val)))
+                        else
+                            append(string.format('%s\t\t<Ref name="%s">null</Ref>\n', indent, propName))
+                        end
                     elseif propType == "ColorSequence" and typeof(val) == "ColorSequence" then
                         append(string.format('%s\t\t<ColorSequence name="%s">%s</ColorSequence>\n', indent, propName, formatColorSequence(val)))
                     elseif propType == "NumberSequence" and typeof(val) == "NumberSequence" then
@@ -207,6 +211,18 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
                     end
                 end
             end
+        end
+
+        -- LocalizationTable entries dump
+        if inst:IsA("LocalizationTable") then
+            pcall(function()
+                local entries = (inst :: any):GetEntries()
+                if entries and #entries > 0 then
+                    local HttpService = game:GetService("HttpService")
+                    local json = HttpService:JSONEncode(entries)
+                    append(string.format('%s\t\t<string name="Contents">%s</string>\n', indent, escapeXml(json)))
+                end
+            end)
         end
 
         -- CollectionService Tags

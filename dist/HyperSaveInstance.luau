@@ -856,6 +856,28 @@ function AssetHandler.ProcessSurfaceAppearance(instance)
     return pbr
 end
 
+-- Preload & warm assets in memory
+function AssetHandler.WarmAssets(instances)
+    pcall(function()
+        local ContentProvider = game:GetService("ContentProvider")
+        if not ContentProvider then return end
+
+        local batch = {}
+        for _, inst in ipairs(instances) do
+            if inst:IsA("MeshPart") or inst:IsA("Decal") or inst:IsA("Texture") or inst:IsA("SurfaceAppearance") or inst:IsA("SpecialMesh") then
+                table.insert(batch, inst)
+                if #batch >= 80 then
+                    pcall(function() ContentProvider:PreloadAsync(batch) end)
+                    table.clear(batch)
+                end
+            end
+        end
+        if #batch > 0 then
+            pcall(function() ContentProvider:PreloadAsync(batch) end)
+        end
+    end)
+end
+
 return AssetHandler
 
 end)
@@ -1701,7 +1723,17 @@ function Engine:Start()
         Message = "Scanning place hierarchy & all instances...",
     })
 
+    local visited = {}
+    local scannedCounter = 0
     local function scan(inst)
+        if not inst or visited[inst] then return end
+        visited[inst] = true
+        scannedCounter = scannedCounter + 1
+
+        if scannedCounter % 250 == 0 then
+            task.wait()
+        end
+
         if not self:ShouldSaveInstance(inst) then return end
         table.insert(allInstances, inst)
 
@@ -1717,6 +1749,11 @@ function Engine:Start()
     for _, root in ipairs(rootInstances) do
         scan(root)
     end
+
+    -- Pre-warm asset cache for instant reflection read
+    pcall(function()
+        AssetHandler.WarmAssets(allInstances)
+    end)
 
     -- Step 1.5: Intelligent Server Synthesizer (Auto-generates ServerScriptService backend for Remotes)
     if self.Config.SaveServerScriptPlaceholders or self.Config.SynthesizeServer then
@@ -4241,8 +4278,12 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
                         append(string.format('%s\t\t<token name="%s">%d</token>\n', indent, propName, math.floor(tonumber(tokenNum) or 0)))
                     elseif propType == "Content" then
                         append(string.format('%s\t\t<Content name="%s"><url>%s</url></Content>\n', indent, propName, escapeXml(tostring(val))))
-                    elseif propType == "Ref" and typeof(val) == "Instance" then
-                        append(string.format('%s\t\t<Ref name="%s">%s</Ref>\n', indent, propName, getRef(val)))
+                    elseif propType == "Ref" then
+                        if typeof(val) == "Instance" then
+                            append(string.format('%s\t\t<Ref name="%s">%s</Ref>\n', indent, propName, getRef(val)))
+                        else
+                            append(string.format('%s\t\t<Ref name="%s">null</Ref>\n', indent, propName))
+                        end
                     elseif propType == "ColorSequence" and typeof(val) == "ColorSequence" then
                         append(string.format('%s\t\t<ColorSequence name="%s">%s</ColorSequence>\n', indent, propName, formatColorSequence(val)))
                     elseif propType == "NumberSequence" and typeof(val) == "NumberSequence" then
@@ -4263,6 +4304,18 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
                     end
                 end
             end
+        end
+
+        -- LocalizationTable entries dump
+        if inst:IsA("LocalizationTable") then
+            pcall(function()
+                local entries = (inst ):GetEntries()
+                if entries and #entries > 0 then
+                    local HttpService = game:GetService("HttpService")
+                    local json = HttpService:JSONEncode(entries)
+                    append(string.format('%s\t\t<string name="Contents">%s</string>\n', indent, escapeXml(json)))
+                end
+            end)
         end
 
         -- CollectionService Tags

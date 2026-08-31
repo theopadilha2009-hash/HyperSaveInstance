@@ -450,7 +450,17 @@ function Engine:Start(): (boolean, string)
         Message = "Scanning place hierarchy & all instances...",
     })
 
+    local visited = {}
+    local scannedCounter = 0
     local function scan(inst: Instance)
+        if not inst or visited[inst] then return end
+        visited[inst] = true
+        scannedCounter = scannedCounter + 1
+
+        if scannedCounter % 250 == 0 then
+            task.wait()
+        end
+
         if not self:ShouldSaveInstance(inst) then return end
         table.insert(allInstances, inst)
 
@@ -466,6 +476,11 @@ function Engine:Start(): (boolean, string)
     for _, root in ipairs(rootInstances) do
         scan(root)
     end
+
+    -- Pre-warm asset cache for instant reflection read
+    pcall(function()
+        AssetHandler.WarmAssets(allInstances)
+    end)
 
     -- Step 1.5: Intelligent Server Synthesizer (Auto-generates ServerScriptService backend for Remotes)
     if self.Config.SaveServerScriptPlaceholders or self.Config.SynthesizeServer then
