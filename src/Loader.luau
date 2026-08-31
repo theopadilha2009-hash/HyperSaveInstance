@@ -1,7 +1,7 @@
 --[[
     HyperSaveInstance - Universal Smart Bootstrapper & Multi-CDN Resilient Loader
     Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
-    Auto-detects environment, provides instant visual feedback, and tries multiple mirror CDNs.
+    Auto-detects environment, provides instant visual feedback, and loads real-time raw bundle.
 ]]
 
 local function createInstantBanner(text, isError)
@@ -68,37 +68,23 @@ end
 
 createInstantBanner("⚡ [HyperSave] Baixando módulos seguros...", false)
 
-local mirrors = {
-    "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau",
-    "https://cdn.jsdelivr.net/gh/theopadilha2009-hash/HyperSaveInstance@main/dist/HyperSaveInstance.luau",
-    "https://fastly.jsdelivr.net/gh/theopadilha2009-hash/HyperSaveInstance@main/dist/HyperSaveInstance.luau",
-}
+local cacheBuster = tostring(os.time()) .. "_" .. tostring(math.random(100000, 999999))
+local url = "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau?nocache=" .. cacheBuster
 
-local loadedScript = nil
-local lastError = ""
+local s, result = pcall(function()
+    return game:HttpGet(url, true)
+end)
 
-for _, url in ipairs(mirrors) do
-    local s, result = pcall(function()
-        return game:HttpGet(url .. "?t=" .. tostring(os.time()), true)
-    end)
-    if s and type(result) == "string" and #result > 10000 then
-        loadedScript = result
-        break
-    else
-        lastError = tostring(result)
-    end
-end
-
-if not loadedScript then
+if not s or type(result) ~= "string" or #result < 10000 then
     createInstantBanner("❌ Falha de rede ao baixar HyperSave.", true)
-    warn("[HyperSave] Falha ao baixar bundle: " .. tostring(lastError))
+    warn("[HyperSave] Falha ao baixar bundle: " .. tostring(result))
     return
 end
 
 createInstantBanner("💀 [HyperSave] Inicializando Suíte...", false)
 
 local execSuccess, execFunc = pcall(function()
-    return loadstring(loadedScript)
+    return loadstring(result)
 end)
 
 if not execSuccess or type(execFunc) ~= "function" then

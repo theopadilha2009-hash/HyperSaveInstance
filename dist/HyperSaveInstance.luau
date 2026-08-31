@@ -6,48 +6,6 @@
     ================================================================================
 ]]
 
-local warn = warn or print
-local task = task or {
-    spawn = spawn or function(f, ...) return coroutine.wrap(f)(...) end,
-    delay = delay or function(t, f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
-    wait = wait or function(t) return coroutine.yield(t) end,
-    defer = function(f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
-}
-
--- Polyfills wrapped safely for frozen/readonly Luau globals
-pcall(function()
-    if not table.clone then
-        table.clone = function(t)
-            if type(t) ~= "table" then return t end
-            local clone = {}
-            for k, v in pairs(t) do clone[k] = v end
-            return clone
-        end
-    end
-end)
-pcall(function()
-    if not table.find then
-        table.find = function(t, val, init)
-            if type(t) ~= "table" then return nil end
-            for i = (init or 1), #t do
-                if t[i] == val then return i end
-            end
-            return nil
-        end
-    end
-end)
-pcall(function()
-    if not string.split then
-        string.split = function(str, sep)
-            sep = sep or ","
-            local fields = {}
-            local pattern = string.format("([^%s]+)", sep)
-            string.gsub(str, pattern, function(c) table.insert(fields, c) end)
-            return fields
-        end
-    end
-end)
-
 local __modules__ = {}
 local __cache__ = {}
 
@@ -5217,7 +5175,7 @@ __define__("Loader", function()
 --[[
     HyperSaveInstance - Universal Smart Bootstrapper & Multi-CDN Resilient Loader
     Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
-    Auto-detects environment, provides instant visual feedback, and tries multiple mirror CDNs.
+    Auto-detects environment, provides instant visual feedback, and loads real-time raw bundle.
 ]]
 
 local function createInstantBanner(text, isError)
@@ -5284,37 +5242,23 @@ end
 
 createInstantBanner("⚡ [HyperSave] Baixando módulos seguros...", false)
 
-local mirrors = {
-    "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau",
-    "https://cdn.jsdelivr.net/gh/theopadilha2009-hash/HyperSaveInstance@main/dist/HyperSaveInstance.luau",
-    "https://fastly.jsdelivr.net/gh/theopadilha2009-hash/HyperSaveInstance@main/dist/HyperSaveInstance.luau",
-}
+local cacheBuster = tostring(os.time()) .. "_" .. tostring(math.random(100000, 999999))
+local url = "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau?nocache=" .. cacheBuster
 
-local loadedScript = nil
-local lastError = ""
+local s, result = pcall(function()
+    return game:HttpGet(url, true)
+end)
 
-for _, url in ipairs(mirrors) do
-    local s, result = pcall(function()
-        return game:HttpGet(url .. "?t=" .. tostring(os.time()), true)
-    end)
-    if s and type(result) == "string" and #result > 10000 then
-        loadedScript = result
-        break
-    else
-        lastError = tostring(result)
-    end
-end
-
-if not loadedScript then
+if not s or type(result) ~= "string" or #result < 10000 then
     createInstantBanner("❌ Falha de rede ao baixar HyperSave.", true)
-    warn("[HyperSave] Falha ao baixar bundle: " .. tostring(lastError))
+    warn("[HyperSave] Falha ao baixar bundle: " .. tostring(result))
     return
 end
 
 createInstantBanner("💀 [HyperSave] Inicializando Suíte...", false)
 
 local execSuccess, execFunc = pcall(function()
-    return loadstring(loadedScript)
+    return loadstring(result)
 end)
 
 if not execSuccess or type(execFunc) ~= "function" then

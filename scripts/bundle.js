@@ -238,48 +238,6 @@ function bundle() {
     ================================================================================
 ]]
 
-local warn = warn or print
-local task = task or {
-    spawn = spawn or function(f, ...) return coroutine.wrap(f)(...) end,
-    delay = delay or function(t, f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
-    wait = wait or function(t) return coroutine.yield(t) end,
-    defer = function(f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
-}
-
--- Polyfills wrapped safely for frozen/readonly Luau globals
-pcall(function()
-    if not table.clone then
-        table.clone = function(t)
-            if type(t) ~= "table" then return t end
-            local clone = {}
-            for k, v in pairs(t) do clone[k] = v end
-            return clone
-        end
-    end
-end)
-pcall(function()
-    if not table.find then
-        table.find = function(t, val, init)
-            if type(t) ~= "table" then return nil end
-            for i = (init or 1), #t do
-                if t[i] == val then return i end
-            end
-            return nil
-        end
-    end
-end)
-pcall(function()
-    if not string.split then
-        string.split = function(str, sep)
-            sep = sep or ","
-            local fields = {}
-            local pattern = string.format("([^%s]+)", sep)
-            string.gsub(str, pattern, function(c) table.insert(fields, c) end)
-            return fields
-        end
-    end
-end)
-
 local __modules__ = {}
 local __cache__ = {}
 
