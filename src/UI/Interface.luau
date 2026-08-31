@@ -77,7 +77,17 @@ function Interface:BuildUI()
         pcall(syn.protect_gui, screenGui)
     end
 
-    screenGui.Parent = parent
+    local ok = pcall(function() screenGui.Parent = parent end)
+    if not ok or not screenGui.Parent then
+        pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
+        if not screenGui.Parent then
+            pcall(function()
+                local plrs = game:GetService("Players")
+                local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
+                screenGui.Parent = lp and lp:FindFirstChildOfClass("PlayerGui")
+            end)
+        end
+    end
 
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
@@ -192,13 +202,13 @@ function Interface:BuildUI()
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
-    main.Size = UDim2.new(0, winWidth * 0.9, 0, winHeight * 0.9)
+    main.Size = UDim2.new(0, winWidth, 0, winHeight)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Theme.Background
     main.BackgroundTransparency = Theme.BackgroundTransparency
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
-    main.Visible = false
+    main.Visible = true
     Theme.AddCorner(main, Theme.CornerLarge)
     Theme.AddStroke(main, Theme.BorderLight, 1.5)
     main.Parent = screenGui
