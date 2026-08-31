@@ -579,6 +579,108 @@ if not engine then
 end
 print("  ✓ Engine Defaults validated (ShowUI: " .. tostring(hsi.Defaults.ShowUI) .. ", Mode: " .. tostring(hsi.Defaults.Mode) .. ")")
 
+-- 3. End-to-End Game Cloning Simulation (Bee Swarm Simulator Map)
+print("--- 3. Testing Real-Time Full Place Cloning & XML Serialization ---")
+
+-- Populate realistic game instances
+local hive = Instance.new("Model", workspace)
+hive.Name = "BeeHive_Slot1"
+
+local hiveBase = Instance.new("Part", hive)
+hiveBase.Name = "HiveBase"
+hiveBase.Size = Vector3.new(12, 1, 12)
+hiveBase.Position = Vector3.new(0, 0, 0)
+hiveBase.Color = Color3.fromRGB(245, 158, 11)
+
+local honeyComb = Instance.new("MeshPart", hive)
+honeyComb.Name = "HoneyCombCell"
+honeyComb.MeshId = "rbxassetid://123456789"
+honeyComb.TextureId = "rbxassetid://987654321"
+
+local beeSound = Instance.new("Sound", hive)
+beeSound.Name = "BuzzSound"
+beeSound.SoundId = "rbxassetid://55555555"
+beeSound.Volume = 0.8
+
+-- Lighting
+local lighting = game:GetService("Lighting")
+local atmosphere = Instance.new("Atmosphere", lighting)
+atmosphere.Name = "SunnyAtmosphere"
+atmosphere.Density = 0.35
+
+local sky = Instance.new("Sky", lighting)
+sky.Name = "BlueSky"
+
+-- Scripts
+local repStorage = game:GetService("ReplicatedStorage")
+local honeyModule = Instance.new("ModuleScript", repStorage)
+honeyModule.Name = "HoneyManager"
+honeyModule.Source = [[local Honey = {}; Honey.Total = 1000; return Honey]]
+
+local starterPlayer = game:GetService("StarterPlayer")
+local spScripts = Instance.new("StarterPlayerScripts", starterPlayer)
+spScripts.Name = "StarterPlayerScripts"
+local beeClient = Instance.new("LocalScript", spScripts)
+beeClient.Name = "BeeFlightController"
+beeClient.Source = [[print("Bee Swarm Controller Active!")]]
+
+print("  ✓ Mock Bee Swarm Map populated with Models, MeshParts, Sounds, Lighting & Scripts")
+
+-- Execute full place save
+print("  ⏳ Executing hsi.Save({ Mode = 'Full' })...")
+local saveSuccess, saveResult = hsi.Save({
+    Mode = "Full",
+    Decompile = false,
+    DownloadAssets = false,
+    SaveNonCreatable = false,
+    ShowUI = false
+})
+
+if not saveSuccess then
+    error("hsi.Save failed: " .. tostring(saveResult))
+end
+
+print("  ✓ hsi.Save finished successfully! Result: " .. tostring(saveResult))
+
+local fileName = "HyperSave_Place_1537690962.rbxlx"
+local savedXml = readfile(fileName)
+if not savedXml or #savedXml < 500 then
+    error("Saved RBXLX file is empty or too small (" .. tostring(savedXml and #savedXml) .. " bytes)!")
+end
+
+print("  ✓ Generated .RBXLX size: " .. tostring((#savedXml / 1024)) .. " KB")
+
+-- Validate XML structure
+if not string.find(savedXml, "<roblox") or not string.find(savedXml, "</roblox>") then
+    error("Saved file is not a valid Roblox XML place!")
+end
+print("  ✓ Valid <roblox> root XML tags confirmed")
+
+if not string.find(savedXml, 'class="Workspace"') then
+    error("Workspace is missing from saved XML!")
+end
+print("  ✓ Workspace service serialized")
+
+if not string.find(savedXml, 'BeeHive_Slot1') then
+    error("BeeHive_Slot1 model is missing from saved XML!")
+end
+print("  ✓ BeeHive_Slot1 Model serialized")
+
+if not string.find(savedXml, 'HoneyCombCell') then
+    error("HoneyCombCell MeshPart is missing from saved XML!")
+end
+print("  ✓ HoneyCombCell MeshPart serialized")
+
+if not string.find(savedXml, 'HoneyManager') then
+    error("HoneyManager ModuleScript is missing from saved XML!")
+end
+print("  ✓ HoneyManager ModuleScript serialized")
+
+if not string.find(savedXml, 'SunnyAtmosphere') then
+    error("SunnyAtmosphere is missing from saved XML!")
+end
+print("  ✓ SunnyAtmosphere Lighting effect serialized")
+
 return "ALL_ROBLOX_CHECKS_PASSED"
 `;
 

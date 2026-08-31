@@ -153,33 +153,38 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 
                 if success and val ~= nil then
                     if propType == "string" then
-                        append(string.format('%s\t\t<string name="%s">%s</string>\n', indent, propName, escapeXml(val)))
+                        append(string.format('%s\t\t<string name="%s">%s</string>\n', indent, propName, escapeXml(tostring(val))))
                     elseif propType == "bool" then
                         append(string.format('%s\t\t<bool name="%s">%s</bool>\n', indent, propName, val and "true" or "false"))
                     elseif propType == "float" then
-                        append(string.format('%s\t\t<float name="%s">%.7g</float>\n', indent, propName, val))
+                        append(string.format('%s\t\t<float name="%s">%.7g</float>\n', indent, propName, tonumber(val) or 0))
                     elseif propType == "double" then
-                        append(string.format('%s\t\t<double name="%s">%.15g</double>\n', indent, propName, val))
+                        append(string.format('%s\t\t<double name="%s">%.15g</double>\n', indent, propName, tonumber(val) or 0))
                     elseif propType == "int" then
-                        append(string.format('%s\t\t<int name="%s">%d</int>\n', indent, propName, math.floor(val)))
+                        append(string.format('%s\t\t<int name="%s">%d</int>\n', indent, propName, math.floor(tonumber(val) or 0)))
                     elseif propType == "int64" then
-                        append(string.format('%s\t\t<int64 name="%s">%d</int64>\n', indent, propName, math.floor(val)))
-                    elseif propType == "Vector3" then
-                        append(string.format('%s\t\t<Vector3 name="%s"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n', indent, propName, val.X, val.Y, val.Z))
-                    elseif propType == "Vector2" then
-                        append(string.format('%s\t\t<Vector2 name="%s"><X>%.7g</X><Y>%.7g</Y></Vector2>\n', indent, propName, val.X, val.Y))
-                    elseif propType == "CoordinateFrame" then
+                        append(string.format('%s\t\t<int64 name="%s">%d</int64>\n', indent, propName, math.floor(tonumber(val) or 0)))
+                    elseif propType == "Vector3" and typeof(val) == "Vector3" then
+                        append(string.format('%s\t\t<Vector3 name="%s"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n', indent, propName, tonumber(val.X) or 0, tonumber(val.Y) or 0, tonumber(val.Z) or 0))
+                    elseif propType == "Vector2" and typeof(val) == "Vector2" then
+                        append(string.format('%s\t\t<Vector2 name="%s"><X>%.7g</X><Y>%.7g</Y></Vector2>\n', indent, propName, tonumber(val.X) or 0, tonumber(val.Y) or 0))
+                    elseif propType == "CoordinateFrame" and typeof(val) == "CFrame" then
                         append(string.format('%s\t\t<CoordinateFrame name="%s">%s</CoordinateFrame>\n', indent, propName, formatCFrame(val)))
-                    elseif propType == "Color3" then
-                        append(string.format('%s\t\t<Color3 name="%s"><R>%.7g</R><G>%.7g</G><B>%.7g</B></Color3>\n', indent, propName, val.R, val.G, val.B))
-                    elseif propType == "UDim" then
-                        append(string.format('%s\t\t<UDim name="%s"><S>%.7g</S><O>%d</O></UDim>\n', indent, propName, val.Scale, val.Offset))
-                    elseif propType == "UDim2" then
-                        append(string.format('%s\t\t<UDim2 name="%s"><XS>%.7g</XS><XO>%d</XO><YS>%.7g</YS><YO>%d</YO></UDim2>\n', indent, propName, val.X.Scale, val.X.Offset, val.Y.Scale, val.Y.Offset))
-                    elseif propType == "token" and typeof(val) == "EnumItem" then
-                        append(string.format('%s\t\t<token name="%s">%d</token>\n', indent, propName, val.Value))
+                    elseif propType == "Color3" and typeof(val) == "Color3" then
+                        append(string.format('%s\t\t<Color3 name="%s"><R>%.7g</R><G>%.7g</G><B>%.7g</B></Color3>\n', indent, propName, tonumber(val.R) or 0, tonumber(val.G) or 0, tonumber(val.B) or 0))
+                    elseif propType == "UDim" and typeof(val) == "UDim" then
+                        append(string.format('%s\t\t<UDim name="%s"><S>%.7g</S><O>%d</O></UDim>\n', indent, propName, tonumber(val.Scale) or 0, math.floor(tonumber(val.Offset) or 0)))
+                    elseif propType == "UDim2" and typeof(val) == "UDim2" then
+                        local xs = (type(val.X) == "table" and val.X.Scale) or (typeof(val.X) == "UDim" and val.X.Scale) or 0
+                        local xo = (type(val.X) == "table" and val.X.Offset) or (typeof(val.X) == "UDim" and val.X.Offset) or 0
+                        local ys = (type(val.Y) == "table" and val.Y.Scale) or (typeof(val.Y) == "UDim" and val.Y.Scale) or 0
+                        local yo = (type(val.Y) == "table" and val.Y.Offset) or (typeof(val.Y) == "UDim" and val.Y.Offset) or 0
+                        append(string.format('%s\t\t<UDim2 name="%s"><XS>%.7g</XS><XO>%d</XO><YS>%.7g</YS><YO>%d</YO></UDim2>\n', indent, propName, tonumber(xs) or 0, math.floor(tonumber(xo) or 0), tonumber(ys) or 0, math.floor(tonumber(yo) or 0)))
+                    elseif propType == "token" then
+                        local tokenNum = (typeof(val) == "EnumItem" and val.Value) or (type(val) == "table" and val.Value) or tonumber(val) or 0
+                        append(string.format('%s\t\t<token name="%s">%d</token>\n', indent, propName, math.floor(tonumber(tokenNum) or 0)))
                     elseif propType == "Content" then
-                        append(string.format('%s\t\t<Content name="%s"><url>%s</url></Content>\n', indent, propName, escapeXml(val)))
+                        append(string.format('%s\t\t<Content name="%s"><url>%s</url></Content>\n', indent, propName, escapeXml(tostring(val))))
                     elseif propType == "Ref" and typeof(val) == "Instance" then
                         append(string.format('%s\t\t<Ref name="%s">%s</Ref>\n', indent, propName, getRef(val)))
                     elseif propType == "ColorSequence" and typeof(val) == "ColorSequence" then
@@ -187,18 +192,18 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
                     elseif propType == "NumberSequence" and typeof(val) == "NumberSequence" then
                         append(string.format('%s\t\t<NumberSequence name="%s">%s</NumberSequence>\n', indent, propName, formatNumberSequence(val)))
                     elseif propType == "NumberRange" and typeof(val) == "NumberRange" then
-                        append(string.format('%s\t\t<NumberRange name="%s">%.7g %.7g</NumberRange>\n', indent, propName, val.Min, val.Max))
+                        append(string.format('%s\t\t<NumberRange name="%s">%.7g %.7g</NumberRange>\n', indent, propName, tonumber(val.Min) or 0, tonumber(val.Max) or 0))
                     elseif propType == "Rect" and typeof(val) == "Rect" then
-                        append(string.format('%s\t\t<Rect2D name="%s"><min><X>%.7g</X><Y>%.7g</Y></min><max><X>%.7g</X><Y>%.7g</Y></max></Rect2D>\n', indent, propName, val.Min.X, val.Min.Y, val.Max.X, val.Max.Y))
+                        append(string.format('%s\t\t<Rect2D name="%s"><min><X>%.7g</X><Y>%.7g</Y></min><max><X>%.7g</X><Y>%.7g</Y></max></Rect2D>\n', indent, propName, tonumber(val.Min.X) or 0, tonumber(val.Min.Y) or 0, tonumber(val.Max.X) or 0, tonumber(val.Max.Y) or 0))
                     elseif propType == "Font" and typeof(val) == "Font" then
                         append(string.format('%s\t\t<Font name="%s">\n%s\t\t\t<Family><url>%s</url></Family>\n%s\t\t\t<Weight>%d</Weight>\n%s\t\t\t<Style>%s</Style>\n%s\t\t</Font>\n',
-                            indent, propName, indent, escapeXml(val.Family), indent, (val.Weight and val.Weight.Value) or 400, indent, (val.Style and val.Style.Name) or "Normal", indent))
+                            indent, propName, indent, escapeXml(tostring(val.Family)), indent, (val.Weight and tonumber(val.Weight.Value)) or 400, indent, (val.Style and tostring(val.Style.Name)) or "Normal", indent))
                     elseif propType == "PhysicalProperties" and typeof(val) == "PhysicalProperties" then
                         append(string.format('%s\t\t<PhysicalProperties name="%s">\n%s\t\t\t<CustomPhysics>true</CustomPhysics>\n%s\t\t\t<Density>%.7g</Density>\n%s\t\t\t<Friction>%.7g</Friction>\n%s\t\t\t<Elasticity>%.7g</Elasticity>\n%s\t\t\t<FrictionWeight>%.7g</FrictionWeight>\n%s\t\t\t<ElasticityWeight>%.7g</ElasticityWeight>\n%s\t\t</PhysicalProperties>\n',
-                            indent, propName, indent, indent, val.Density, indent, val.Friction, indent, val.Elasticity, indent, val.FrictionWeight, indent, val.ElasticityWeight, indent))
+                            indent, propName, indent, indent, tonumber(val.Density) or 0, indent, tonumber(val.Friction) or 0, indent, tonumber(val.Elasticity) or 0, indent, tonumber(val.FrictionWeight) or 0, indent, tonumber(val.ElasticityWeight) or 0, indent))
                     elseif propType == "Ray" and typeof(val) == "Ray" then
                         append(string.format('%s\t\t<Ray name="%s"><origin><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></origin><direction><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></direction></Ray>\n',
-                            indent, propName, val.Origin.X, val.Origin.Y, val.Origin.Z, val.Direction.X, val.Direction.Y, val.Direction.Z))
+                            indent, propName, tonumber(val.Origin.X) or 0, tonumber(val.Origin.Y) or 0, tonumber(val.Origin.Z) or 0, tonumber(val.Direction.X) or 0, tonumber(val.Direction.Y) or 0, tonumber(val.Direction.Z) or 0))
                     end
                 end
             end
