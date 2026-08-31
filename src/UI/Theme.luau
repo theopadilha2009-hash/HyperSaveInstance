@@ -132,4 +132,30 @@ function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
     end
 end
 
+-- Animated Neon Pulse Glow for Hero Buttons
+function Theme.StartNeonPulse(stroke: UIStroke, baseColor: Color3?, neonColor: Color3?, speed: number?)
+    local RunService = game:GetService("RunService")
+    local c1 = baseColor or Theme.BorderLight
+    local c2 = neonColor or Theme.BorderNeon
+    local spd = speed or 2.5
+    
+    local conn
+    pcall(function()
+        conn = RunService.RenderStepped:Connect(function()
+            if not stroke or not stroke.Parent then
+                if conn then conn:Disconnect() end
+                return
+            end
+            local t = (math.sin(os.clock() * spd) + 1) * 0.5
+            stroke.Color = Color3.new(
+                c1.R + (c2.R - c1.R) * t,
+                c1.G + (c2.G - c1.G) * t,
+                c1.B + (c2.B - c1.B) * t
+            )
+            stroke.Thickness = 1.2 + t * 0.8
+        end)
+    end)
+    return conn
+end
+
 return Theme

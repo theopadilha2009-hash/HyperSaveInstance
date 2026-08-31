@@ -452,13 +452,17 @@ function Engine:Start(): (boolean, string)
 
     local visited = {}
     local scannedCounter = 0
+    local lastYield = os.clock()
+
     local function scan(inst: Instance)
         if not inst or visited[inst] then return end
         visited[inst] = true
         scannedCounter = scannedCounter + 1
 
-        if scannedCounter % 250 == 0 then
+        -- Adaptive FPS Guard: yields if frame duration exceeds 10ms to keep 60 FPS silky smooth
+        if (os.clock() - lastYield) > 0.010 or scannedCounter % 350 == 0 then
             task.wait()
+            lastYield = os.clock()
         end
 
         if not self:ShouldSaveInstance(inst) then return end
@@ -646,6 +650,49 @@ function Engine:Start(): (boolean, string)
 
         if self.Config.CopyToClipboardOnComplete then
             Environment.SetClipboard(fullPathHint)
+        end
+
+        -- Dispatch Discord Webhook if configured
+        if self.Config.DiscordWebhookUrl and #self.Config.DiscordWebhookUrl > 15 then
+            task.spawn(function()
+                pcall(function()
+                    local req = (syn and syn.request) or (http and http.request) or http_request or request
+                    if not req then return end
+
+                    local MarketplaceService = game:GetService("MarketplaceService")
+                    local placeInfo = pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
+                    local placeName = (type(placeInfo) == "table" and placeInfo.Name) or (workspace and workspace.Name) or "Roblox Place"
+
+                    local payload = {
+                        username = "HyperSaveInstance",
+                        embeds = {
+                            {
+                                title = "PLACE CLONED SUCCESSFULLY",
+                                description = string.format("**Map:** `%s`\n**Place ID:** `%d`\n**Output File:** `%s`", tostring(placeName), game.PlaceId, targetFileName),
+                                color = 11022583,
+                                fields = {
+                                    { name = "Instances", value = tostring(totalInstances), inline = true },
+                                    { name = "Scripts", value = tostring(totalScripts), inline = true },
+                                    { name = "Raw Assets", value = tostring(downloadedCount), inline = true },
+                                    { name = "Elapsed Time", value = string.format("%.2fs", elapsed), inline = true },
+                                    { name = "Format", value = string.upper(tostring(self.Config.Format)), inline = true },
+                                    { name = "Author", value = "Theo Lorentz Padilha", inline = true },
+                                },
+                                footer = { text = "HyperSaveInstance v2.1 // Gothic Cyberpunk Engine" },
+                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                            }
+                        }
+                    }
+
+                    local json = game:GetService("HttpService"):JSONEncode(payload)
+                    req({
+                        Url = self.Config.DiscordWebhookUrl,
+                        Method = "POST",
+                        Headers = { ["Content-Type"] = "application/json" },
+                        Body = json
+                    })
+                end)
+            end)
         end
 
         self:PlayChime()

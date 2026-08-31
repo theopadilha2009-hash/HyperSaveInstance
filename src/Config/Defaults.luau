@@ -62,11 +62,13 @@ local Defaults = {
     ChunkSize = 250,                       -- Instances processed per frame/tick to prevent lag/freeze
     YieldInterval = 0.01,                  -- task.wait() interval between batches
     MaxMemoryBudgetMB = 1024,              -- Memory limit safety check
+    AssetDownloadWorkers = 8,              -- Concurrent workers for asset downloader pool
 
     -- Logging & Notifications
     VerboseLogs = true,                    -- Detailed console logs
     PlaySoundOnComplete = true,            -- Play audio chime when save completes
     CopyToClipboardOnComplete = true,      -- Copy file path to clipboard on complete
+    DiscordWebhookUrl = "",                -- Optional Discord Webhook URL for clone notifications
 }
 
 -- Preset configurations

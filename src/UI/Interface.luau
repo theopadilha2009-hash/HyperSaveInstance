@@ -287,6 +287,18 @@ function Interface:BuildUI()
     Theme.AddStroke(badge, Theme.BorderNeon, 1)
     badge.Parent = header
 
+    -- Compact Mode Button (Switches to minimal horizontal HUD bar)
+    local compactBtn = Instance.new("TextButton")
+    compactBtn.Text = "▫"
+    compactBtn.Font = Theme.FontTitle
+    compactBtn.TextSize = 14
+    compactBtn.TextColor3 = Theme.TextSecondary
+    compactBtn.BackgroundColor3 = Theme.CardHover
+    compactBtn.Size = UDim2.new(0, 28, 0, 28)
+    compactBtn.Position = UDim2.new(1, -102, 0.5, -14)
+    Theme.AddCorner(compactBtn, Theme.CornerSmall)
+    compactBtn.Parent = header
+
     -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Text = "–"
@@ -299,11 +311,6 @@ function Interface:BuildUI()
     Theme.AddCorner(minBtn, Theme.CornerSmall)
     minBtn.Parent = header
 
-    Theme.AnimateButton(minBtn, function()
-        main.Visible = false
-        floatingBtn.Visible = true
-    end)
-
     -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Text = "✕"
@@ -315,6 +322,90 @@ function Interface:BuildUI()
     closeBtn.Position = UDim2.new(1, -38, 0.5, -14)
     Theme.AddCorner(closeBtn, Theme.CornerSmall)
     closeBtn.Parent = header
+
+    -- Compact In-Game HUD Widget (Minimalist floating bar)
+    local compactBar = Instance.new("Frame")
+    compactBar.Name = "HyperSave_CompactHUD"
+    compactBar.Size = UDim2.new(0, 390, 0, 38)
+    compactBar.Position = UDim2.new(0.5, -195, 0, 16)
+    compactBar.BackgroundColor3 = Theme.Background
+    compactBar.BackgroundTransparency = 0.08
+    compactBar.Visible = false
+    Theme.AddCorner(compactBar, Theme.CornerMedium)
+    Theme.AddStroke(compactBar, Theme.BorderNeon, 1.5)
+    compactBar.Parent = safeContainer
+    self.CompactHUD = compactBar
+
+    local cStats = Instance.new("TextLabel")
+    cStats.Text = "FPS: 60 | PING: --"
+    cStats.Font = Theme.FontCode
+    cStats.TextSize = 11
+    cStats.TextColor3 = Theme.AccentCyan
+    cStats.Size = UDim2.new(0, 140, 1, 0)
+    cStats.Position = UDim2.new(0, 12, 0, 0)
+    cStats.BackgroundTransparency = 1
+    cStats.Parent = compactBar
+
+    local cCloneBtn = Instance.new("TextButton")
+    cCloneBtn.Text = "CLONE [1-CLICK]"
+    cCloneBtn.Font = Theme.FontTitle
+    cCloneBtn.TextSize = 10
+    cCloneBtn.TextColor3 = Theme.AccentGothic
+    cCloneBtn.BackgroundColor3 = Theme.AccentPrimary
+    cCloneBtn.Size = UDim2.new(0, 120, 0, 26)
+    cCloneBtn.Position = UDim2.new(0, 155, 0.5, -13)
+    Theme.AddCorner(cCloneBtn, Theme.CornerSmall)
+    Theme.AddStroke(cCloneBtn, Theme.BorderNeon, 1)
+    Theme.AddGradient(cCloneBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
+    cCloneBtn.Parent = compactBar
+    Theme.AnimateButton(cCloneBtn, function() self:StartClone() end)
+
+    local cExpandBtn = Instance.new("TextButton")
+    cExpandBtn.Text = "EXPAND ↗"
+    cExpandBtn.Font = Theme.FontSemiBold
+    cExpandBtn.TextSize = 10
+    cExpandBtn.TextColor3 = Theme.TextSecondary
+    cExpandBtn.BackgroundColor3 = Theme.CardHover
+    cExpandBtn.Size = UDim2.new(0, 85, 0, 26)
+    cExpandBtn.Position = UDim2.new(1, -95, 0.5, -13)
+    Theme.AddCorner(cExpandBtn, Theme.CornerSmall)
+    cExpandBtn.Parent = compactBar
+    Theme.AnimateButton(cExpandBtn, function()
+        compactBar.Visible = false
+        main.Visible = true
+    end)
+
+    -- Live FPS & Ping monitor loop
+    task.spawn(function()
+        local Stats = game:GetService("Stats")
+        local fpsCount = 0
+        local lastUpdate = os.clock()
+        local runServ = game:GetService("RunService")
+        runServ.RenderStepped:Connect(function()
+            fpsCount = fpsCount + 1
+            local now = os.clock()
+            if now - lastUpdate >= 0.5 then
+                local fps = math.round(fpsCount / (now - lastUpdate))
+                fpsCount = 0
+                lastUpdate = now
+                local ping = 0
+                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                if compactBar and compactBar.Visible then
+                    cStats.Text = string.format("FPS: %d | PING: %dms", fps, ping)
+                end
+            end
+        end)
+    end)
+
+    Theme.AnimateButton(compactBtn, function()
+        main.Visible = false
+        compactBar.Visible = true
+    end)
+
+    Theme.AnimateButton(minBtn, function()
+        main.Visible = false
+        floatingBtn.Visible = true
+    end)
 
     Theme.AnimateButton(closeBtn, function()
         main.Visible = false
@@ -482,7 +573,8 @@ function Interface:BuildDashboardTab()
     cloneBtn.Size = UDim2.new(1, -32, 0, 52)
     cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
-    Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.5)
+    local cloneStroke = Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.5)
+    Theme.StartNeonPulse(cloneStroke, Theme.BorderLight, Theme.BorderNeon, 2.5)
     Theme.AddGradient(cloneBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(76, 29, 149), 90)
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
@@ -926,8 +1018,23 @@ function Interface:BuildSelectorTab()
                     targetDims.Text = string.format("📐 Dimensões: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
 
                     local maxDim = math.max(sz.X, sz.Y, sz.Z)
-                    local camDist = maxDim * 1.6
-                    vpCam.CFrame = CFrame.new(cf.Position + Vector3.new(camDist, camDist * 0.7, camDist), cf.Position)
+                    local camDist = math.clamp(maxDim * 1.5, 4, 250)
+
+                    if self.VpRotationConn then
+                        self.VpRotationConn:Disconnect()
+                        self.VpRotationConn = nil
+                    end
+
+                    local runServ = game:GetService("RunService")
+                    self.VpRotationConn = runServ.RenderStepped:Connect(function()
+                        if not vpFrame or not vpFrame.Parent or not self.CurrentTargetInstance then
+                            if self.VpRotationConn then self.VpRotationConn:Disconnect() end
+                            return
+                        end
+                        local angle = os.clock() * 0.9
+                        local eyePos = cf.Position + Vector3.new(math.cos(angle) * camDist, camDist * 0.45, math.sin(angle) * camDist)
+                        vpCam.CFrame = CFrame.new(eyePos, cf.Position)
+                    end)
                 end
             else
                 targetDims.Text = "📐 Tipo: " .. inst.ClassName
@@ -2017,8 +2124,49 @@ function Interface:BuildSettingsTab()
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarThickness = 4
     scroll.ScrollBarImageColor3 = Theme.BorderLight
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 720)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 820)
     scroll.Parent = parent
+
+    -- Discord Webhook URL Row
+    local webhookRow = Instance.new("Frame")
+    webhookRow.Size = UDim2.new(1, -12, 0, 42)
+    webhookRow.Position = UDim2.new(0, 0, 0, 0)
+    webhookRow.BackgroundColor3 = Theme.CardBg
+    webhookRow.BackgroundTransparency = Theme.CardTransparency
+    Theme.AddCorner(webhookRow, Theme.CornerMedium)
+    Theme.AddStroke(webhookRow, Theme.BorderNeon, 1.2)
+    webhookRow.Parent = scroll
+
+    local webhookLbl = Instance.new("TextLabel")
+    webhookLbl.Text = "DISCORD WEBHOOK URL (NOTIFICAÇÃO):"
+    webhookLbl.Font = Theme.FontSemiBold
+    webhookLbl.TextSize = 10
+    webhookLbl.TextColor3 = Theme.AccentCyan
+    webhookLbl.TextXAlignment = Enum.TextXAlignment.Left
+    webhookLbl.Size = UDim2.new(0.45, 0, 1, 0)
+    webhookLbl.Position = UDim2.new(0, 10, 0, 0)
+    webhookLbl.BackgroundTransparency = 1
+    webhookLbl.Parent = webhookRow
+
+    local webhookBox = Instance.new("TextBox")
+    webhookBox.PlaceholderText = "https://discord.com/api/webhooks/..."
+    webhookBox.Text = self.Config.DiscordWebhookUrl or ""
+    webhookBox.Font = Theme.FontCode
+    webhookBox.TextSize = 10
+    webhookBox.TextColor3 = Theme.TextPrimary
+    webhookBox.PlaceholderColor3 = Theme.TextMuted
+    webhookBox.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
+    webhookBox.Size = UDim2.new(0.52, 0, 0, 26)
+    webhookBox.Position = UDim2.new(0.46, 0, 0.5, -13)
+    webhookBox.ClearTextOnFocus = false
+    Theme.AddCorner(webhookBox, Theme.CornerSmall)
+    Theme.AddStroke(webhookBox, Theme.Border, 1)
+    webhookBox.Parent = webhookRow
+
+    webhookBox.FocusLost:Connect(function()
+        self.Config.DiscordWebhookUrl = webhookBox.Text
+        self:Log("Discord Webhook atualizado.")
+    end)
 
     local toggles = {
         {"AutoAntiAFK", "Proteção Anti-AFK (Evita Desconexão por Inatividade)", self.Config.AutoAntiAFK},
@@ -2046,7 +2194,7 @@ function Interface:BuildSettingsTab()
 
         local row = Instance.new("Frame")
         row.Size = UDim2.new(1, -12, 0, 34)
-        row.Position = UDim2.new(0, 0, 0, (i - 1) * 38)
+        row.Position = UDim2.new(0, 0, 0, 48 + (i - 1) * 38)
         row.BackgroundColor3 = Theme.CardBg
         row.BackgroundTransparency = Theme.CardTransparency
         Theme.AddCorner(row, Theme.CornerMedium)

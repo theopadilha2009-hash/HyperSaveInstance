@@ -100,9 +100,8 @@ function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type:
     return assets
 end
 
--- Download all collected assets to local folder structure
+-- Download all collected assets to local folder structure using 8-Worker Parallel Pool
 function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: string, options: table, progressCallback: (current: number, total: number, asset: table) -> ()): (number, number)
-    -- Create subdirectories
     Environment.MakeFolder(baseFolder)
     Environment.MakeFolder(baseFolder .. "/audios")
     Environment.MakeFolder(baseFolder .. "/textures")
@@ -115,15 +114,17 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
     end
 
     local total = #assetList
+    if total == 0 then return 0, 0 end
+
     local downloaded = 0
     local failed = 0
     local currentIndex = 1
 
-    local workers = math.clamp(options.AssetDownloadWorkers or 6, 1, 12)
-    local threads = {}
+    local workers = math.clamp(options.AssetDownloadWorkers or 8, 2, 16)
+    local activeWorkers = workers
 
     for w = 1, workers do
-        local t = task.spawn(function()
+        task.spawn(function()
             while currentIndex <= total do
                 local myIndex = currentIndex
                 currentIndex = currentIndex + 1
@@ -149,8 +150,13 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
 
                     local fileName = string.format("%s/%s/%s_%s%s", baseFolder, subDir, item.Id, string.gsub(item.SourceName, "[^%w_%-]", "_"), extension)
 
-                    -- Download raw bytes
+                    -- Try primary url then v2 fallback
                     local body = httpRequest(item.Url)
+                    if not body or #body == 0 then
+                        local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
+                        body = httpRequest(v2Url)
+                    end
+
                     if body and #body > 0 then
                         local writeOk = Environment.WriteFile(fileName, body)
                         if writeOk then
@@ -166,14 +172,14 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
                         pcall(progressCallback, downloaded + failed, total, item)
                     end
                 end
-                task.wait(0.02)
+                task.wait(0.01)
             end
+            activeWorkers = activeWorkers - 1
         end)
-        table.insert(threads, t)
     end
 
-    while (downloaded + failed) < total do
-        task.wait(0.1)
+    while activeWorkers > 0 and (downloaded + failed) < total do
+        task.wait(0.05)
     end
 
     return downloaded, failed
