@@ -3,7 +3,8 @@
     Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation, Anti-AFK and file export.
 ]]
 
-local SoundService = game:GetService("SoundService")
+local SoundService = nil
+pcall(function() SoundService = game:GetService("SoundService") end)
 
 local Environment = require(script.Parent.Parent.Utils.Environment)
 local AntiAFK = require(script.Parent.Parent.Utils.AntiAFK)

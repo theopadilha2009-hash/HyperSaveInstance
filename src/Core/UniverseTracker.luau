@@ -3,9 +3,6 @@
     Discovers all sub-places in multi-place experiences (Dungeons, Lobbies, Arenas, Sub-maps).
 ]]
 
-local AssetService = game:GetService("AssetService")
-local HttpService = game:GetService("HttpService")
-
 local UniverseTracker = {}
 
 export type SubPlaceInfo = {
@@ -21,7 +18,10 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
     local rootName = "Root Place"
 
     pcall(function()
-        rootName = game:GetService("MarketplaceService"):GetProductInfo(currentPlaceId).Name
+        local mp = game:GetService("MarketplaceService")
+        if mp then
+            rootName = mp:GetProductInfo(currentPlaceId).Name
+        end
     end)
 
     -- Add current place
@@ -33,7 +33,8 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
 
     -- Query AssetService for places in universe
     local success, pages = pcall(function()
-        return AssetService:GetGamePlacesAsync()
+        local assetService = game:GetService("AssetService")
+        return assetService and assetService:GetGamePlacesAsync()
     end)
 
     if success and pages then

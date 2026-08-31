@@ -3,8 +3,8 @@
     Prevents Roblox Error 268/273 (20-minute idle disconnection) during long save sessions.
 ]]
 
-local VirtualUser = game:GetService("VirtualUser")
-local Players = game:GetService("Players")
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local AntiAFK = {}
 local isEnabled = false
@@ -15,14 +15,17 @@ function AntiAFK.Enable()
     isEnabled = true
 
     pcall(function()
-        local localPlayer = Players.LocalPlayer
+        local plrs = Players or game:GetService("Players")
+        local localPlayer = plrs and plrs.LocalPlayer
         if localPlayer and localPlayer.Idled then
             idleConnection = localPlayer.Idled:Connect(function()
                 if not isEnabled then return end
                 pcall(function()
-                    local vu = game:GetService("VirtualUser")
-                    vu:CaptureController()
-                    vu:ClickButton2(Vector2.new(0, 0))
+                    local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
+                    if vu and vu.CaptureController then
+                        vu:CaptureController()
+                        vu:ClickButton2(Vector2.new(0, 0))
+                    end
                 end)
             end)
         end

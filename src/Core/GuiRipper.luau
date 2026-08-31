@@ -3,8 +3,10 @@
     Extracts all ScreenGuis, Menus, Inventories, Health Bars, and HUDs to a standalone UI Pack.
 ]]
 
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
+local StarterGui = nil
+pcall(function() StarterGui = game:GetService("StarterGui") end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 local SerializerXml = require(script.Parent.SerializerXml)
 local Decompiler = require(script.Parent.Decompiler)

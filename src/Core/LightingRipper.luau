@@ -3,7 +3,8 @@
     Extracts realistic Skyboxes, Atmospheres, ColorCorrections, SunRays, and Post-Processing to a standalone preset.
 ]]
 
-local Lighting = game:GetService("Lighting")
+local Lighting = nil
+pcall(function() Lighting = game:GetService("Lighting") end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 local SerializerXml = require(script.Parent.SerializerXml)
 

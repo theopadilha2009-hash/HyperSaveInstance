@@ -4,9 +4,12 @@
     in the game world to inspect its hierarchy and save it with all internal scripts.
 ]]
 
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
+local UserInputService = nil
+pcall(function() UserInputService = game:GetService("UserInputService") end)
+local RunService = nil
+pcall(function() RunService = game:GetService("RunService") end)
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local RaycastSelector = {}
 RaycastSelector.__index = RaycastSelector

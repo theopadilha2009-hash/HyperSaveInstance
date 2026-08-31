@@ -3,7 +3,8 @@
     Preserves 100% of properties, meshes, textures, materials, sounds, terrain, physics, PBR, UI, attributes and tags.
 ]]
 
-local CollectionService = game:GetService("CollectionService")
+local CollectionService = nil
+pcall(function() CollectionService = game:GetService("CollectionService") end)
 
 local Reflection = {}
 

@@ -4,7 +4,8 @@
     newly added instances, modified scripts, and removed models in game updates.
 ]]
 
-local HttpService = game:GetService("HttpService")
+local HttpService = nil
+pcall(function() HttpService = game:GetService("HttpService") end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local PlaceDiffTracker = {}

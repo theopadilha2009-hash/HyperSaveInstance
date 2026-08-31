@@ -405,8 +405,10 @@ __define__("Core/AnimationRecorder", function()
     native KeyframeSequence instances that can be published to the user's account in Studio.
 ]]
 
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
+local RunService = nil
+pcall(function() RunService = game:GetService("RunService") end)
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local AnimationRecorder = {}
 AnimationRecorder.IsRecording = false
@@ -864,7 +866,8 @@ __define__("Core/AudioRipper", function()
     Scans, previews, plays and extracts all music tracks and sound effects in the game.
 ]]
 
-local SoundService = game:GetService("SoundService")
+local SoundService = nil
+pcall(function() SoundService = game:GetService("SoundService") end)
 local Environment = __require__("Utils/Environment")
 
 local AudioRipper = {}
@@ -1259,7 +1262,8 @@ __define__("Core/Engine", function()
     Coordinates scanning, raw asset downloading, terrain voxel extraction, script decompilation, Anti-AFK and file export.
 ]]
 
-local SoundService = game:GetService("SoundService")
+local SoundService = nil
+pcall(function() SoundService = game:GetService("SoundService") end)
 
 local Environment = __require__("Utils/Environment")
 local AntiAFK = __require__("Utils/AntiAFK")
@@ -1907,8 +1911,10 @@ __define__("Core/GuiRipper", function()
     Extracts all ScreenGuis, Menus, Inventories, Health Bars, and HUDs to a standalone UI Pack.
 ]]
 
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
+local StarterGui = nil
+pcall(function() StarterGui = game:GetService("StarterGui") end)
 local Environment = __require__("Utils/Environment")
 local SerializerXml = __require__("Core/SerializerXml")
 local Decompiler = __require__("Core/Decompiler")
@@ -1983,7 +1989,8 @@ __define__("Core/LightingRipper", function()
     Extracts realistic Skyboxes, Atmospheres, ColorCorrections, SunRays, and Post-Processing to a standalone preset.
 ]]
 
-local Lighting = game:GetService("Lighting")
+local Lighting = nil
+pcall(function() Lighting = game:GetService("Lighting") end)
 local Environment = __require__("Utils/Environment")
 local SerializerXml = __require__("Core/SerializerXml")
 
@@ -2023,7 +2030,8 @@ __define__("Core/NetworkSniffer", function()
     Logs and intercepts RemoteEvent / RemoteFunction calls to reverse-engineer client-server network protocols.
 ]]
 
-local HttpService = game:GetService("HttpService")
+local HttpService = nil
+pcall(function() HttpService = game:GetService("HttpService") end)
 local Environment = __require__("Utils/Environment")
 
 local NetworkSniffer = {}
@@ -2347,7 +2355,8 @@ __define__("Core/PlaceDiffTracker", function()
     newly added instances, modified scripts, and removed models in game updates.
 ]]
 
-local HttpService = game:GetService("HttpService")
+local HttpService = nil
+pcall(function() HttpService = game:GetService("HttpService") end)
 local Environment = __require__("Utils/Environment")
 
 local PlaceDiffTracker = {}
@@ -2534,9 +2543,12 @@ __define__("Core/RaycastSelector", function()
     in the game world to inspect its hierarchy and save it with all internal scripts.
 ]]
 
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
+local UserInputService = nil
+pcall(function() UserInputService = game:GetService("UserInputService") end)
+local RunService = nil
+pcall(function() RunService = game:GetService("RunService") end)
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local RaycastSelector = {}
 RaycastSelector.__index = RaycastSelector
@@ -2723,7 +2735,8 @@ __define__("Core/Reflection", function()
     Preserves 100% of properties, meshes, textures, materials, sounds, terrain, physics, PBR, UI, attributes and tags.
 ]]
 
-local CollectionService = game:GetService("CollectionService")
+local CollectionService = nil
+pcall(function() CollectionService = game:GetService("CollectionService") end)
 
 local Reflection = {}
 
@@ -4454,7 +4467,8 @@ __define__("Core/StreamExplorer", function()
     Sweeps spatial coordinates across the map to force server chunk replication into memory.
 ]]
 
-local Players = game:GetService("Players")
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local StreamExplorer = {}
 
@@ -4668,9 +4682,6 @@ __define__("Core/UniverseTracker", function()
     Discovers all sub-places in multi-place experiences (Dungeons, Lobbies, Arenas, Sub-maps).
 ]]
 
-local AssetService = game:GetService("AssetService")
-local HttpService = game:GetService("HttpService")
-
 local UniverseTracker = {}
 
 
@@ -4682,7 +4693,10 @@ function UniverseTracker.GetUniversePlaces()
     local rootName = "Root Place"
 
     pcall(function()
-        rootName = game:GetService("MarketplaceService"):GetProductInfo(currentPlaceId).Name
+        local mp = game:GetService("MarketplaceService")
+        if mp then
+            rootName = mp:GetProductInfo(currentPlaceId).Name
+        end
     end)
 
     -- Add current place
@@ -4694,7 +4708,8 @@ function UniverseTracker.GetUniversePlaces()
 
     -- Query AssetService for places in universe
     local success, pages = pcall(function()
-        return AssetService:GetGamePlacesAsync()
+        local assetService = game:GetService("AssetService")
+        return assetService and assetService:GetGamePlacesAsync()
     end)
 
     if success and pages then
@@ -7622,8 +7637,8 @@ __define__("Utils/AntiAFK", function()
     Prevents Roblox Error 268/273 (20-minute idle disconnection) during long save sessions.
 ]]
 
-local VirtualUser = game:GetService("VirtualUser")
-local Players = game:GetService("Players")
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local AntiAFK = {}
 local isEnabled = false
@@ -7634,14 +7649,17 @@ function AntiAFK.Enable()
     isEnabled = true
 
     pcall(function()
-        local localPlayer = Players.LocalPlayer
+        local plrs = Players or game:GetService("Players")
+        local localPlayer = plrs and plrs.LocalPlayer
         if localPlayer and localPlayer.Idled then
             idleConnection = localPlayer.Idled:Connect(function()
                 if not isEnabled then return end
                 pcall(function()
-                    local vu = game:GetService("VirtualUser")
-                    vu:CaptureController()
-                    vu:ClickButton2(Vector2.new(0, 0))
+                    local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
+                    if vu and vu.CaptureController then
+                        vu:CaptureController()
+                        vu:ClickButton2(Vector2.new(0, 0))
+                    end
                 end)
             end)
         end

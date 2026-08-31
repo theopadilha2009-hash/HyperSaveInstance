@@ -3,7 +3,8 @@
     Scans, previews, plays and extracts all music tracks and sound effects in the game.
 ]]
 
-local SoundService = game:GetService("SoundService")
+local SoundService = nil
+pcall(function() SoundService = game:GetService("SoundService") end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local AudioRipper = {}

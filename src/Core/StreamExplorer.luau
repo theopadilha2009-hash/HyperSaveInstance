@@ -3,7 +3,8 @@
     Sweeps spatial coordinates across the map to force server chunk replication into memory.
 ]]
 
-local Players = game:GetService("Players")
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local StreamExplorer = {}
 

@@ -1,12 +1,14 @@
-﻿--[[
+--[[
     HyperSaveInstance - Live Animation Keyframe Capturer
     Solves the Roblox Asset Permission / HTTP 403 issue for Animations by capturing
     real-time Motor6D joint transformations (CFrame / Transform) and baking them into
     native KeyframeSequence instances that can be published to the user's account in Studio.
 ]]
 
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
+local RunService = nil
+pcall(function() RunService = game:GetService("RunService") end)
+local Players = nil
+pcall(function() Players = game:GetService("Players") end)
 
 local AnimationRecorder = {}
 AnimationRecorder.IsRecording = false

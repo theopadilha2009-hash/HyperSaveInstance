@@ -3,7 +3,8 @@
     Logs and intercepts RemoteEvent / RemoteFunction calls to reverse-engineer client-server network protocols.
 ]]
 
-local HttpService = game:GetService("HttpService")
+local HttpService = nil
+pcall(function() HttpService = game:GetService("HttpService") end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local NetworkSniffer = {}
