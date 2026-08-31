@@ -14,61 +14,39 @@ local task = task or {
     defer = function(f, ...) return (spawn or function(fn) fn() end)(function(...) f(...) end) end,
 }
 
--- Table polyfills (Universal Luau runtime compatibility)
-table.clone = table.clone or function(t)
-    if type(t) ~= "table" then return t end
-    local clone = {}
-    for k, v in pairs(t) do
-        clone[k] = v
+-- Polyfills wrapped safely for frozen/readonly Luau globals
+pcall(function()
+    if not table.clone then
+        table.clone = function(t)
+            if type(t) ~= "table" then return t end
+            local clone = {}
+            for k, v in pairs(t) do clone[k] = v end
+            return clone
+        end
     end
-    return clone
-end
-
-table.create = table.create or function(count, val)
-    local t = {}
-    for i = 1, (count or 0) do
-        t[i] = val
+end)
+pcall(function()
+    if not table.find then
+        table.find = function(t, val, init)
+            if type(t) ~= "table" then return nil end
+            for i = (init or 1), #t do
+                if t[i] == val then return i end
+            end
+            return nil
+        end
     end
-    return t
-end
-
-table.clear = table.clear or function(t)
-    if type(t) ~= "table" then return end
-    for k in pairs(t) do
-        t[k] = nil
+end)
+pcall(function()
+    if not string.split then
+        string.split = function(str, sep)
+            sep = sep or ","
+            local fields = {}
+            local pattern = string.format("([^%s]+)", sep)
+            string.gsub(str, pattern, function(c) table.insert(fields, c) end)
+            return fields
+        end
     end
-end
-
-table.find = table.find or function(t, val, init)
-    if type(t) ~= "table" then return nil end
-    for i = (init or 1), #t do
-        if t[i] == val then return i end
-    end
-    return nil
-end
-
-table.freeze = table.freeze or function(t) return t end
-table.isfrozen = table.isfrozen or function(t) return false end
-
--- Math polyfills
-math.clamp = math.clamp or function(x, min, max)
-    return math.max(min, math.min(max, x))
-end
-math.round = math.round or function(x)
-    return math.floor(x + 0.5)
-end
-math.sign = math.sign or function(x)
-    return (x > 0 and 1) or (x < 0 and -1) or 0
-end
-
--- String polyfills
-string.split = string.split or function(str, sep)
-    sep = sep or ","
-    local fields = {}
-    local pattern = string.format("([^%s]+)", sep)
-    string.gsub(str, pattern, function(c) table.insert(fields, c) end)
-    return fields
-end
+end)
 
 local __modules__ = {}
 local __cache__ = {}
@@ -8179,45 +8157,42 @@ local task = task or {
     defer = function(fn, ...) return (spawn or task.spawn)(function(...) fn(...) end, ...) end
 }
 
--- Table & Math polyfills
-table.clone = table.clone or function(t)
-    if type(t) ~= "table" then return t end
-    local clone = {}
-    for k, v in pairs(t) do
-        clone[k] = v
+-- Table & Math polyfills wrapped safely for readonly Luau environment
+pcall(function()
+    if not table.clone then
+        table.clone = function(t)
+            if type(t) ~= "table" then return t end
+            local clone = {}
+            for k, v in pairs(t) do clone[k] = v end
+            return clone
+        end
     end
-    return clone
-end
-
-table.create = table.create or function(count, val)
-    local t = {}
-    for i = 1, (count or 0) do
-        t[i] = val
+end)
+pcall(function()
+    if not table.find then
+        table.find = function(t, val, init)
+            if type(t) ~= "table" then return nil end
+            for i = (init or 1), #t do
+                if t[i] == val then return i end
+            end
+            return nil
+        end
     end
-    return t
-end
-
-table.clear = table.clear or function(t)
-    if type(t) ~= "table" then return end
-    for k in pairs(t) do
-        t[k] = nil
+end)
+pcall(function()
+    if not math.clamp then
+        math.clamp = function(x, min, max)
+            return math.max(min, math.min(max, x))
+        end
     end
-end
-
-table.find = table.find or function(t, val, init)
-    if type(t) ~= "table" then return nil end
-    for i = (init or 1), #t do
-        if t[i] == val then return i end
+end)
+pcall(function()
+    if not math.round then
+        math.round = function(x)
+            return math.floor(x + 0.5)
+        end
     end
-    return nil
-end
-
-math.clamp = math.clamp or function(x, min, max)
-    return math.max(min, math.min(max, x))
-end
-math.round = math.round or function(x)
-    return math.floor(x + 0.5)
-end
+end)
 
 -- Identify executor & platform
 function Environment.GetExecutorName()
