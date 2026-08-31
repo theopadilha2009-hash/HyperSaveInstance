@@ -7,32 +7,42 @@
 ]]
 
 local function __launch__()
-    local rawUrl = "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"
-    local cacheBustedUrl = rawUrl .. "?t=" .. tostring(os.time())
-    
-    local content = nil
-    local getSuccess, getErr = pcall(function()
-        content = game:HttpGet(cacheBustedUrl)
-    end)
-    
-    if not getSuccess or not content or #content == 0 then
-        -- Fallback to direct raw url without query param if executor has strict HttpGet
-        local fbSuccess, fbContent = pcall(function()
-            return game:HttpGet(rawUrl)
+    local sources = {
+        "https://cdn.jsdelivr.net/gh/theopadilha2009-hash/HyperSaveInstance@main/dist/HyperSaveInstance.luau",
+        "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau",
+        "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/e2d629c/dist/HyperSaveInstance.luau",
+    }
+
+    local code = nil
+    local lastErr = nil
+
+    for _, url in ipairs(sources) do
+        local ok, res = pcall(function()
+            return game:HttpGet(url .. "?t=" .. tostring(os.time()))
         end)
-        if fbSuccess and fbContent and #fbContent > 0 then
-            content = fbContent
+        if not ok or not res or #res == 0 then
+            ok, res = pcall(function()
+                return game:HttpGet(url)
+            end)
+        end
+        if ok and res and #res > 1000 then
+            local fn, syntaxErr = loadstring(res)
+            if fn then
+                code = fn
+                break
+            else
+                lastErr = "Sintaxe: " .. tostring(syntaxErr)
+            end
         else
-            error("Falha ao baixar HyperSaveInstance do GitHub: " .. tostring(getErr))
+            lastErr = "Download: " .. tostring(res)
         end
     end
 
-    local execFn, syntaxErr = loadstring(content)
-    if not execFn then
-        error("Erro ao compilar HyperSaveInstance: " .. tostring(syntaxErr))
+    if not code then
+        error(lastErr or "Não foi possível carregar HyperSaveInstance de nenhuma fonte.")
     end
 
-    return execFn()
+    return code()
 end
 
 local ok, err = pcall(__launch__)
