@@ -218,6 +218,17 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
             end
         end
 
+        -- Instance Attributes (inst:GetAttributes())
+        if opts.SaveAttributes ~= false and inst.GetAttributes then
+            local s, attrs = pcall(function() return inst:GetAttributes() end)
+            if s and attrs and next(attrs) ~= nil then
+                local b64Attrs = serializeAttributes(attrs)
+                if #b64Attrs > 0 then
+                    append(string.format('%s\t\t<BinaryString name="Attributes">%s</BinaryString>\n', indent, b64Attrs))
+                end
+            end
+        end
+
         append(string.format('%s\t</Properties>\n', indent))
 
         -- Children

@@ -297,6 +297,17 @@ function Instance.new(className, parent)
         end
     end
 
+    obj._attributes = {}
+    function obj:SetAttribute(name, val)
+        self._attributes[name] = val
+    end
+    function obj:GetAttributes()
+        return self._attributes
+    end
+    function obj:GetAttribute(name)
+        return self._attributes[name]
+    end
+
     function obj:GetFullName()
         if self.Parent and self.Parent.Name then
             return self.Parent:GetFullName() .. "." .. self.Name
@@ -612,6 +623,7 @@ print("--- 3. Testing Real-Time Full Place Cloning & XML Serialization ---")
 -- Populate realistic game instances
 local hive = Instance.new("Model", workspace)
 hive.Name = "BeeHive_Slot1"
+hive:SetAttribute("HoneyCapacity", 500000)
 
 local hiveBase = Instance.new("Part", hive)
 hiveBase.Name = "HiveBase"
@@ -692,6 +704,11 @@ if not string.find(savedXml, 'BeeHive_Slot1') then
     error("BeeHive_Slot1 model is missing from saved XML!")
 end
 print("  ✓ BeeHive_Slot1 Model serialized")
+
+if not string.find(savedXml, 'name="Attributes"') then
+    error("Attributes tag is missing from saved XML!")
+end
+print("  ✓ Attributes serialized successfully into XML")
 
 if not string.find(savedXml, 'HoneyCombCell') then
     error("HoneyCombCell MeshPart is missing from saved XML!")
