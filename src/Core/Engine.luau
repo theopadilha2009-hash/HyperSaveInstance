@@ -33,14 +33,59 @@ export type SaveProgress = {
     AssetsFolder: string?,
 }
 
-function Engine.new(customConfig: table?)
-    local self = setmetatable({}, Engine)
-    self.Config = table.clone(Defaults)
-    if customConfig then
-        for k, v in pairs(customConfig) do
-            self.Config[k] = v
+function Engine.NormalizeOptions(rawOptions: table?): table
+    local opts = table.clone(Defaults)
+    if not rawOptions or type(rawOptions) ~= "table" then return opts end
+
+    for k, v in pairs(rawOptions) do
+        local lk = string.lower(tostring(k))
+        if lk == "noscripts" then
+            opts.DecompileScripts = not (v == true)
+        elseif lk == "mode" then
+            local lm = string.lower(tostring(v))
+            if lm == "full" then opts.Mode = "Full"
+            elseif lm == "fast" then opts.Mode = "Fast"
+            elseif lm == "visualsonly" or lm == "visuals" then opts.Mode = "VisualsOnly"
+            elseif lm == "scriptsonly" or lm == "scripts" then opts.Mode = "ScriptsOnly"
+            elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
+            else opts.Mode = v end
+        elseif lk == "decompileignore" or lk == "decompile_ignore" then
+            opts.DecompileIgnore = v
+        elseif lk == "savebytecode" or lk == "save_bytecode" then
+            opts.SaveBytecode = (v == true)
+        elseif lk == "safemode" or lk == "safe_mode" then
+            opts.SafeMode = (v == true)
+        elseif lk == "timeout" or lk == "decompiletimeout" or lk == "decompile_timeout" then
+            opts.DecompileTimeout = tonumber(v) or 12
+        elseif lk == "ignorelist" or lk == "ignore_list" then
+            opts.IgnoreList = v
+        elseif lk == "isolatestarterplayer" or lk == "isolate_starter_player" or lk == "isolatelocalplayer" or lk == "isolate_local_player" then
+            opts.IsolateStarterPlayer = (v == true)
+        elseif lk == "filepath" or lk == "file_path" or lk == "filename" or lk == "file_name" then
+            opts.FilePath = tostring(v)
+        elseif lk == "downloadassets" or lk == "download_assets" or lk == "downloadrawassets" or lk == "download_raw_assets" then
+            opts.DownloadRawAssets = (v == true)
+        elseif lk == "saveterrain" or lk == "save_terrain" then
+            opts.SaveTerrain = (v == true)
+        elseif lk == "saveterrainvoxels" or lk == "save_terrain_voxels" then
+            opts.SaveTerrainVoxels = (v == true)
+        elseif lk == "savenilinstances" or lk == "save_nil_instances" or lk == "nilinstances" or lk == "nil_instances" then
+            opts.SaveNilInstances = (v == true)
+        elseif lk == "stealthmode" or lk == "stealth_mode" or lk == "anonymous" then
+            opts.StealthMode = (v == true)
+        elseif lk == "showui" or lk == "show_ui" then
+            opts.ShowUI = (v == true)
+        else
+            opts[k] = v
         end
     end
+
+    return opts
+end
+
+function Engine.new(customConfig: table?)
+    local self = setmetatable({}, Engine)
+    self.Config = Engine.NormalizeOptions(customConfig)
     self.ProgressListeners = {}
     self.IsRunning = false
     self.CancelRequested = false

@@ -159,11 +159,16 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         return directSource
     end
 
-    -- Check DecompileIgnore rules (USSI parity)
+    -- Check DecompileIgnore rules (USSI / Synapse X / Dino-V parity)
     if options.DecompileIgnore and type(options.DecompileIgnore) == "table" then
         local fullName = scriptInstance:GetFullName()
-        for _, pattern in ipairs(options.DecompileIgnore) do
-            if string.find(scriptInstance.Name, pattern) or string.find(fullName, pattern) then
+        for k, v in pairs(options.DecompileIgnore) do
+            local pattern = (type(k) == "string" and k) or (type(v) == "string" and v) or nil
+            local targetInst = (typeof(k) == "Instance" and k) or (typeof(v) == "Instance" and v) or nil
+            if targetInst and (scriptInstance == targetInst or scriptInstance:IsDescendantOf(targetInst)) then
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
+                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", targetInst:GetFullName())
+            elseif pattern and (string.find(scriptInstance.Name, pattern, 1, true) or string.find(fullName, pattern, 1, true)) then
                 return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
                     string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
             end
