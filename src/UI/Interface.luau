@@ -461,7 +461,7 @@ function Interface:BuildDashboardTab()
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
-    cloneBtn.MouseButton1Click:Connect(function()
+    Theme.AnimateButton(cloneBtn, function()
         self:StartClone()
     end)
 
@@ -1049,7 +1049,13 @@ function Interface:BuildSelectorTab()
                 Environment.SetClipboard(msg)
             else
                 resultLabel.Text = "❌ Erro ao salvar pacote: " .. tostring(msg)
-                resultfunction Interface:BuildAudioRipperTab()
+                resultLabel.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+end
+
+function Interface:BuildAudioRipperTab()
     local parent = self.TabFrames["AudioRipper"]
 
     local topBar = Instance.new("Frame")

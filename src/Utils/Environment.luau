@@ -193,7 +193,7 @@ end
 
 -- Safe UI Parent (Protects GUI from detection/detection hooks, universal across Delta, Hydrogen, MacSploit, Solara, etc.)
 function Environment.GetSafeGuiParent(): Instance
-    -- 1. Try gethui() if supported
+    -- 1. Try gethui() if supported (Delta, Wave, Hydrogen, MacSploit)
     if gethui then
         local success, res = pcall(gethui)
         if success and res and typeof(res) == "Instance" then
@@ -207,29 +207,29 @@ function Environment.GetSafeGuiParent(): Instance
         coreGui = game:GetService("CoreGui")
     end)
     if coreGui then
-        local canAccess = pcall(function()
+        local canAccess, name = pcall(function()
             return coreGui.Name
         end)
-        if canAccess then
+        if canAccess and name then
             return coreGui
         end
     end
 
-    -- 3. Fallback to LocalPlayer's PlayerGui
-    local lp = Players.LocalPlayer
-    if not lp then
-        pcall(function()
-            lp = Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
-        end)
-    end
-    if lp then
-        local pgui = lp:FindFirstChildOfClass("PlayerGui") or lp:WaitForChild("PlayerGui", 3)
-        if pgui then
-            return pgui
+    -- 3. Fallback to LocalPlayer's PlayerGui (Safe non-blocking)
+    local pgui = nil
+    pcall(function()
+        local plrs = game:GetService("Players")
+        local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
+        if lp then
+            pgui = lp:FindFirstChildOfClass("PlayerGui")
         end
+    end)
+    if pgui then
+        return pgui
     end
 
-    return game:GetService("CoreGui")
+    -- 4. Fallback to CoreGui or return game
+    return coreGui or game
 end
 
 -- Clipboard copy

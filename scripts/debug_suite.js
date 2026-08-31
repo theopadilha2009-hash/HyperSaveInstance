@@ -161,6 +161,18 @@ function testBundle() {
 
     const leftoverRequires = content.match(/require\s*\(\s*script[^)]*\)/g);
     assert(!leftoverRequires, 'Zero leftover untransformed require() calls');
+
+    // AST syntax validation
+    const luaparse = require('luaparse');
+    let astValid = false;
+    let parseErr = '';
+    try {
+        luaparse.parse(content, { luaVersion: '5.1', extendedIdentifiers: true });
+        astValid = true;
+    } catch(err) {
+        parseErr = `${err.line}:${err.column} -> ${err.message}`;
+    }
+    assert(astValid, 'Bundle AST Syntax Validation (Lua 5.1/LuaJIT VM)', parseErr);
 }
 
 // Test Plugin

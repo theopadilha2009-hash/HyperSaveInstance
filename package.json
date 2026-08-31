@@ -25,5 +25,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/theopadilha2009-hash/HyperSaveInstance.git"
+  },
+  "devDependencies": {
+    "luaparse": "^0.3.1"
   }
 }

@@ -1,10 +1,11 @@
 /**
- * HyperSaveInstance - Production Bundler
+ * HyperSaveInstance - Production Bundler & AST Verifier
  * Compiles all modular Luau source files into a single standalone production script (dist/HyperSaveInstance.luau).
  */
 
 const fs = require('fs');
 const path = require('path');
+const luaparse = require('luaparse');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const SRC_DIR = path.join(ROOT_DIR, 'src');
@@ -24,47 +25,174 @@ function getAllFiles(dir, fileList = []) {
     return fileList;
 }
 
-function stripTypes(code) {
+function cleanLuauCode(code) {
     let result = code;
 
-    // 1. Remove export type and type declarations
+    // Remove BOM if present
+    if (result.charCodeAt(0) === 0xFEFF) {
+        result = result.slice(1);
+    }
+
+    // 1. Remove multiline export type / type declarations:
+    // export type Name = { ... } or type Name = ...
+    result = result.replace(/^(export\s+)?type\s+\w+(\s*<[^>]+>)?\s*=\s*\{[\s\S]*?\n\}/gm, '');
     result = result.replace(/^(export\s+)?type\s+\w+(\s*<[^>]+>)?\s*=\s*.*$/gm, '');
 
-    // 2. Remove return types from function headers (handling nested tuples, tables, and generics)
-    result = result.replace(/(\bfunction\s+[a-zA-Z0-9_.:]*\s*\([^)]*\))\s*:\s*(\([^)]*\)|{[^}]*(?:{[^}]*}[^}]*)*}|\[[^\]]+\]|[a-zA-Z0-9_?|<>,\s]+)(?=\s*(?:\n|\r|do|then|end|$))/g, '$1');
-
-    // 3. Remove parameter types inside function signatures: e.g. (a: number, b: string?) -> (a, b)
-    result = result.replace(/function\s*([a-zA-Z0-9_.:]*)\s*\(([^)]*)\)/g, (match, fnName, params) => {
-        if (!params.trim()) return `function ${fnName}()`;
-        const cleanedParams = params.split(',').map(p => {
-            const trimmed = p.trim();
-            const colonIdx = trimmed.indexOf(':');
-            if (colonIdx !== -1) {
-                return trimmed.substring(0, colonIdx).trim();
+    // 2. Remove function signatures and return types with full balanced parenthesis/bracket matching
+    let i = 0;
+    let out = '';
+    while (i < result.length) {
+        if (result.startsWith('function', i) && (i === 0 || /[^a-zA-Z0-9_]/.test(result[i-1])) && (i + 8 >= result.length || /[^a-zA-Z0-9_]/.test(result[i+8]))) {
+            out += 'function';
+            i += 8;
+            let fnName = '';
+            while (i < result.length && result[i] !== '(') {
+                if (result[i] === '\n' || result[i] === ';') break;
+                fnName += result[i];
+                i++;
             }
-            return trimmed;
-        }).join(', ');
-        return `function ${fnName}(${cleanedParams})`;
-    });
+            if (i < result.length && result[i] === '(') {
+                fnName = fnName.replace(/<[^>]+>/g, '');
+                out += fnName + '(';
+                i++; // skip '('
+                
+                let parenDepth = 1;
+                let paramStr = '';
+                let inStr = false;
+                let strChar = '';
+                while (i < result.length && parenDepth > 0) {
+                    let c = result[i];
+                    if (inStr) {
+                        paramStr += c;
+                        if (c === strChar && result[i-1] !== '\\') inStr = false;
+                    } else {
+                        if (c === '"' || c === "'") {
+                            inStr = true;
+                            strChar = c;
+                            paramStr += c;
+                        } else if (c === '(') {
+                            parenDepth++;
+                            paramStr += c;
+                        } else if (c === ')') {
+                            parenDepth--;
+                            if (parenDepth > 0) paramStr += c;
+                        } else {
+                            paramStr += c;
+                        }
+                    }
+                    i++;
+                }
 
-    // 4. Remove local variable typed annotations (including nested tables e.g. {[type]: type})
+                let params = [];
+                let currentParam = '';
+                let pDepth = 0, bDepth = 0, brDepth = 0, gDepth = 0;
+                for (let j = 0; j < paramStr.length; j++) {
+                    let ch = paramStr[j];
+                    if (ch === '(') pDepth++;
+                    else if (ch === ')') pDepth--;
+                    else if (ch === '[') bDepth++;
+                    else if (ch === ']') bDepth--;
+                    else if (ch === '{') brDepth++;
+                    else if (ch === '}') brDepth--;
+                    else if (ch === '<') gDepth++;
+                    else if (ch === '>') gDepth--;
+                    else if (ch === ',' && pDepth === 0 && bDepth === 0 && brDepth === 0 && gDepth === 0) {
+                        params.push(currentParam.trim());
+                        currentParam = '';
+                        continue;
+                    }
+                    currentParam += ch;
+                }
+                if (currentParam.trim()) params.push(currentParam.trim());
+
+                let cleanedParams = params.map(p => {
+                    let colonIdx = -1;
+                    let pd = 0, bd = 0, brd = 0, gd = 0;
+                    for (let k = 0; k < p.length; k++) {
+                        let c = p[k];
+                        if (c === '(') pd++;
+                        else if (c === ')') pd--;
+                        else if (c === '[') bd++;
+                        else if (c === ']') bd--;
+                        else if (c === '{') brd++;
+                        else if (c === '}') brd--;
+                        else if (c === '<') gd++;
+                        else if (c === '>') gd--;
+                        else if (c === ':' && pd === 0 && bd === 0 && brd === 0 && gd === 0) {
+                            colonIdx = k;
+                            break;
+                        }
+                    }
+                    if (colonIdx !== -1) {
+                        return p.substring(0, colonIdx).trim();
+                    }
+                    return p.trim();
+                }).filter(p => p.length > 0);
+
+                out += cleanedParams.join(', ') + ')';
+
+                let ws = '';
+                while (i < result.length && (result[i] === ' ' || result[i] === '\t')) {
+                    ws += result[i];
+                    i++;
+                }
+                if (i < result.length && (result[i] === ':' || result.startsWith('->', i))) {
+                    let retParen = 0, retBrace = 0, retBracket = 0;
+                    while (i < result.length) {
+                        let c = result[i];
+                        if (c === '(') retParen++;
+                        else if (c === ')') retParen--;
+                        else if (c === '{') retBrace++;
+                        else if (c === '}') retBrace--;
+                        else if (c === '[') retBracket++;
+                        else if (c === ']') retBracket--;
+                        else if (retParen === 0 && retBrace === 0 && retBracket === 0) {
+                            if (c === '\n' || c === '\r' || c === ';') break;
+                            if (result.startsWith('do', i) && /[^a-zA-Z0-9_]/.test(result[i+2] || ' ')) break;
+                            if (result.startsWith('then', i) && /[^a-zA-Z0-9_]/.test(result[i+4] || ' ')) break;
+                            if (result.startsWith('end', i) && /[^a-zA-Z0-9_]/.test(result[i+3] || ' ')) break;
+                        }
+                        i++;
+                    }
+                } else {
+                    out += ws;
+                }
+            } else {
+                out += fnName;
+            }
+        } else {
+            out += result[i];
+            i++;
+        }
+    }
+
+    result = out;
+
+    // 3. Remove local variable type annotations: local a: Type = ... -> local a = ...
     result = result.replace(/\blocal\s+([a-zA-Z0-9_]+)\s*:\s*({[^}]*(?:{[^}]*}[^}]*)*}|\[[^\]]+\]|[a-zA-Z0-9_?|<>,.\s]+?)\s*(=|\n|\r|;|$)/g, (match, name, typeAnno, suffix) => {
         if (suffix === '=') {
-            return `local ${name} =`;
+            return 'local ' + name + ' =';
         } else {
-            return `local ${name}${suffix}`;
+            return 'local ' + name + suffix;
         }
     });
 
-    // 5. Remove type assertions: :: any, :: Instance, etc.
+    // 4. Remove type assertions: :: any, :: Instance, etc.
     result = result.replace(/::\s*[a-zA-Z0-9_?{}|<>,.\s]+/g, '');
+
+    // 5. Replace compound assignments (+=, -=, *=, /=, ..=) with standard lua syntax
+    result = result.replace(/^(\s*)([a-zA-Z0-9_.\[\]'"\\]+)\s*\+=\s*(.+)$/gm, '$1$2 = $2 + ($3)');
+    result = result.replace(/^(\s*)([a-zA-Z0-9_.\[\]'"\\]+)\s*-=\s*(.+)$/gm, '$1$2 = $2 - ($3)');
+    result = result.replace(/^(\s*)([a-zA-Z0-9_.\[\]'"\\]+)\s*\*=\s*(.+)$/gm, '$1$2 = $2 * ($3)');
+    result = result.replace(/^(\s*)([a-zA-Z0-9_.\[\]'"\\]+)\s*\/=\s*(.+)$/gm, '$1$2 = $2 / ($3)');
+    result = result.replace(/^(\s*)([a-zA-Z0-9_.\[\]'"\\]+)\s*\.\.=\s*(.+)$/gm, '$1$2 = $2 .. ($3)');
 
     return result;
 }
 
 function transformRequires(code, modPath) {
     const modDir = path.dirname(modPath).replace(/\\/g, '/'); // "UI", "Core", "Utils", "Config" or "."
-    let cleaned = stripTypes(code);
+    let cleaned = cleanLuauCode(code);
 
     return cleaned
         // Triple parent / across domain
@@ -223,10 +351,23 @@ end
 
     bundledCode += `\n-- Entry Point\nlocal __mainSuccess__, __mainErr__ = pcall(function()\n${transformedInit}\nend)\nif not __mainSuccess__ then\n    warn("[HyperSaveInstance Fatal Error] " .. tostring(__mainErr__))\n    __showErrorGui__("Erro Fatal na Execucao", tostring(__mainErr__))\nend\n`;
 
-    // Integrity Check: Verify that no untransformed require(script...) remains
+    // Integrity Check 1: Verify that no untransformed require(script...) remains
     const leftoverRequires = bundledCode.match(/require\s*\(\s*script[^)]*\)/g);
     if (leftoverRequires) {
         console.error('[HyperSaveInstance Bundler ERROR] Untransformed requires found in bundle:', leftoverRequires);
+        process.exit(1);
+    }
+
+    // Integrity Check 2: Parse entire bundle with luaparse to ensure 0 syntax errors!
+    try {
+        luaparse.parse(bundledCode, { luaVersion: '5.1', extendedIdentifiers: true });
+        console.log('  ✓ [AST CHECK] Bundle passed Lua 5.1/LuaJIT syntax validation with 0 errors!');
+    } catch(err) {
+        console.error(`[HyperSaveInstance Bundler ERROR] Bundle has Lua syntax error at line ${err.line}:${err.column}: ${err.message}`);
+        const lines = bundledCode.split('\n');
+        for (let j = Math.max(0, err.line - 5); j <= Math.min(lines.length - 1, err.line + 5); j++) {
+            console.error(`  ${j+1}: ${lines[j]}`);
+        }
         process.exit(1);
     }
 
@@ -236,4 +377,3 @@ end
 }
 
 bundle();
-
