@@ -103,20 +103,21 @@ function Interface:BuildUI()
         safeContainer = screenGui
     end
 
-    -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
+    -- Floating Mini Toggle Button (Cyber-Tribal Rootkit Marker)
     local floatingBtn = Instance.new("TextButton")
     floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = "// HYPERSAVE [THEO]"
+    floatingBtn.Text = "[!] HYPERSAVE::THEO [0x00]"
     floatingBtn.Font = Theme.FontTitle
-    floatingBtn.TextSize = 11
+    floatingBtn.TextSize = 10
     floatingBtn.TextColor3 = Theme.AccentGothic
     floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 160, 0, 34)
+    floatingBtn.Size = UDim2.new(0, 170, 0, 32)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerMedium)
-    Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
-    Theme.AddGradient(floatingBtn, Color3.fromRGB(11, 9, 18), Color3.fromRGB(38, 20, 64), 45)
+    local fStroke = Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
+    Theme.StartNeonPulse(fStroke, Theme.BorderLight, Theme.BorderNeon, 3.0)
+    Theme.AddGradient(floatingBtn, Color3.fromRGB(8, 7, 14), Color3.fromRGB(38, 12, 58), 45)
     floatingBtn.Parent = safeContainer
     self.FloatingToggle = floatingBtn
 
@@ -148,58 +149,59 @@ function Interface:BuildUI()
     
     local camera = workspace.CurrentCamera
     local vpSize = (camera and camera.ViewportSize) or Vector2.new(1280, 720)
-    local winWidth = math.clamp(vpSize.X - 24, 320, 660)
+    local winWidth = math.clamp(vpSize.X - 24, 320, 670)
     local winHeight = math.clamp(vpSize.Y - 32, 280, 480)
 
     -- Instant Splash Loading Card (Shows immediately when script is executed)
     local splash = Instance.new("Frame")
     splash.Name = "SplashCard"
     splash.AnchorPoint = Vector2.new(0.5, 0.5)
-    splash.Size = UDim2.new(0, 360, 0, 175)
+    splash.Size = UDim2.new(0, 380, 0, 175)
     splash.Position = UDim2.new(0.5, 0, 0.5, 0)
     splash.BackgroundColor3 = Theme.Background
-    splash.BackgroundTransparency = 0.05
+    splash.BackgroundTransparency = 0.02
     splash.BorderSizePixel = 0
     Theme.AddCorner(splash, Theme.CornerLarge)
-    Theme.AddStroke(splash, Theme.BorderNeon, 2)
+    local spStroke = Theme.AddStroke(splash, Theme.BorderNeon, 2)
+    Theme.StartNeonPulse(spStroke, Theme.BorderLight, Theme.BorderNeon, 3.5)
     splash.Parent = safeContainer
 
     local splashTitle = Instance.new("TextLabel")
-    splashTitle.Text = "// HYPERSAVE MASTER SUITE"
+    splashTitle.Text = "[†] ROOTKIT://HYPERSAVE_V2 [0xDEADBEEF]"
     splashTitle.Font = Theme.FontTitle
-    splashTitle.TextSize = 15
-    splashTitle.TextColor3 = Theme.AccentGothic
+    splashTitle.TextSize = 13
+    splashTitle.TextColor3 = Theme.AccentDanger
     splashTitle.Size = UDim2.new(1, 0, 0, 30)
-    splashTitle.Position = UDim2.new(0, 0, 0, 18)
+    splashTitle.Position = UDim2.new(0, 0, 0, 16)
     splashTitle.BackgroundTransparency = 1
     splashTitle.Parent = splash
 
     local splashBadge = Instance.new("TextLabel")
-    splashBadge.Text = "THEO LORENTZ PADILHA // V2.0"
+    splashBadge.Text = "THEO LORENTZ PADILHA // KERNEL_OVERRIDE"
     splashBadge.Font = Theme.FontSemiBold
-    splashBadge.TextSize = 11
+    splashBadge.TextSize = 10
     splashBadge.TextColor3 = Theme.AccentTheo
-    splashBadge.BackgroundColor3 = Color3.fromRGB(15, 12, 24)
-    splashBadge.Size = UDim2.new(0, 220, 0, 24)
-    splashBadge.Position = UDim2.new(0.5, -110, 0, 52)
+    splashBadge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
+    splashBadge.Size = UDim2.new(0, 260, 0, 24)
+    splashBadge.Position = UDim2.new(0.5, -130, 0, 50)
     Theme.AddCorner(splashBadge, Theme.CornerMedium)
-    Theme.AddStroke(splashBadge, Theme.BorderNeon, 1)
+    Theme.AddStroke(splashBadge, Theme.BorderLight, 1)
     splashBadge.Parent = splash
 
     local splashStatus = Instance.new("TextLabel")
-    splashStatus.Text = "SYSTEM_INITIALIZING :: RUNTIME_OK"
+    splashStatus.Text = "[0x00] ALLOCATING MEMORY HOOKS & DECOMPILER..."
     splashStatus.Font = Theme.FontCode
-    splashStatus.TextSize = 11
-    splashStatus.TextColor3 = Theme.TextSecondary
+    splashStatus.TextSize = 10
+    splashStatus.TextColor3 = Theme.TextAcid
     splashStatus.Size = UDim2.new(1, 0, 0, 20)
-    splashStatus.Position = UDim2.new(0, 0, 0, 88)
+    splashStatus.Position = UDim2.new(0, 0, 0, 86)
     splashStatus.BackgroundTransparency = 1
     splashStatus.Parent = splash
 
     local splashTrack = Instance.new("Frame")
-    splashTrack.Size = UDim2.new(1, -48, 0, 6)
+    splashTrack.Size = UDim2.new(1, -48, 0, 5)
     splashTrack.Position = UDim2.new(0, 24, 0, 122)
-    splashTrack.BackgroundColor3 = Color3.fromRGB(11, 9, 18)
+    splashTrack.BackgroundColor3 = Color3.fromRGB(8, 7, 14)
     Theme.AddCorner(splashTrack, Theme.CornerPill)
     splashTrack.Parent = splash
 
@@ -212,7 +214,7 @@ function Interface:BuildUI()
     self.SplashFill = splashFill
     self.SplashCard = splash
 
-    -- Main Container (Dark Gothic Cyberpunk Theme, perfectly centered)
+    -- Main Container (Cyber-Tribal Rootkit Theme, razor-sharp edges)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -224,7 +226,8 @@ function Interface:BuildUI()
     main.ClipsDescendants = true
     main.Visible = true
     Theme.AddCorner(main, Theme.CornerLarge)
-    Theme.AddStroke(main, Theme.BorderLight, 1.5)
+    local mStroke = Theme.AddStroke(main, Theme.BorderNeon, 1.5)
+    Theme.StartNeonPulse(mStroke, Theme.BorderLight, Theme.BorderNeon, 2.8)
     main.Parent = safeContainer
     self.MainFrame = main
 
@@ -259,32 +262,32 @@ function Interface:BuildUI()
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 48)
     header.BackgroundColor3 = Theme.CardBg
-    header.BackgroundTransparency = 0.1
+    header.BackgroundTransparency = 0.05
     header.BorderSizePixel = 0
     header.Parent = main
 
     local title = Instance.new("TextLabel")
-    title.Text = "// HYPERSAVE"
+    title.Text = "[†] ROOTKIT://HYPERSAVE_V2"
     title.Font = Theme.FontTitle
-    title.TextSize = 15
-    title.TextColor3 = Theme.AccentGothic
+    title.TextSize = 13
+    title.TextColor3 = Theme.AccentDanger
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Size = UDim2.new(0, 160, 1, 0)
-    title.Position = UDim2.new(0, 16, 0, 0)
+    title.Size = UDim2.new(0, 190, 1, 0)
+    title.Position = UDim2.new(0, 14, 0, 0)
     title.BackgroundTransparency = 1
     title.Parent = header
 
     -- Platform & Creator Badge
     local badge = Instance.new("TextLabel")
-    badge.Text = "THEO LORENTZ PADILHA // [RightShift]"
+    badge.Text = "THEO LORENTZ PADILHA // [0xDEADBEEF]"
     badge.Font = Theme.FontSemiBold
-    badge.TextSize = 11
+    badge.TextSize = 10
     badge.TextColor3 = Theme.AccentTheo
-    badge.BackgroundColor3 = Color3.fromRGB(15, 12, 24)
-    badge.Size = UDim2.new(0, 240, 0, 26)
-    badge.Position = UDim2.new(0, 175, 0.5, -13)
+    badge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
+    badge.Size = UDim2.new(0, 240, 0, 24)
+    badge.Position = UDim2.new(0, 205, 0.5, -12)
     Theme.AddCorner(badge, Theme.CornerMedium)
-    Theme.AddStroke(badge, Theme.BorderNeon, 1)
+    Theme.AddStroke(badge, Theme.BorderLight, 1)
     badge.Parent = header
 
     -- Compact Mode Button (Switches to minimal horizontal HUD bar)
@@ -294,8 +297,8 @@ function Interface:BuildUI()
     compactBtn.TextSize = 14
     compactBtn.TextColor3 = Theme.TextSecondary
     compactBtn.BackgroundColor3 = Theme.CardHover
-    compactBtn.Size = UDim2.new(0, 28, 0, 28)
-    compactBtn.Position = UDim2.new(1, -102, 0.5, -14)
+    compactBtn.Size = UDim2.new(0, 26, 0, 26)
+    compactBtn.Position = UDim2.new(1, -98, 0.5, -13)
     Theme.AddCorner(compactBtn, Theme.CornerSmall)
     compactBtn.Parent = header
 
@@ -306,8 +309,8 @@ function Interface:BuildUI()
     minBtn.TextSize = 14
     minBtn.TextColor3 = Theme.TextSecondary
     minBtn.BackgroundColor3 = Theme.CardHover
-    minBtn.Size = UDim2.new(0, 28, 0, 28)
-    minBtn.Position = UDim2.new(1, -70, 0.5, -14)
+    minBtn.Size = UDim2.new(0, 26, 0, 26)
+    minBtn.Position = UDim2.new(1, -68, 0.5, -13)
     Theme.AddCorner(minBtn, Theme.CornerSmall)
     minBtn.Parent = header
 
@@ -318,45 +321,46 @@ function Interface:BuildUI()
     closeBtn.TextSize = 14
     closeBtn.TextColor3 = Theme.TextSecondary
     closeBtn.BackgroundColor3 = Theme.CardHover
-    closeBtn.Size = UDim2.new(0, 28, 0, 28)
-    closeBtn.Position = UDim2.new(1, -38, 0.5, -14)
+    closeBtn.Size = UDim2.new(0, 26, 0, 26)
+    closeBtn.Position = UDim2.new(1, -38, 0.5, -13)
     Theme.AddCorner(closeBtn, Theme.CornerSmall)
     closeBtn.Parent = header
 
     -- Compact In-Game HUD Widget (Minimalist floating bar)
     local compactBar = Instance.new("Frame")
     compactBar.Name = "HyperSave_CompactHUD"
-    compactBar.Size = UDim2.new(0, 390, 0, 38)
-    compactBar.Position = UDim2.new(0.5, -195, 0, 16)
+    compactBar.Size = UDim2.new(0, 420, 0, 36)
+    compactBar.Position = UDim2.new(0.5, -210, 0, 14)
     compactBar.BackgroundColor3 = Theme.Background
-    compactBar.BackgroundTransparency = 0.08
+    compactBar.BackgroundTransparency = 0.05
     compactBar.Visible = false
     Theme.AddCorner(compactBar, Theme.CornerMedium)
-    Theme.AddStroke(compactBar, Theme.BorderNeon, 1.5)
+    local cbStroke = Theme.AddStroke(compactBar, Theme.BorderNeon, 1.5)
+    Theme.StartNeonPulse(cbStroke, Theme.BorderLight, Theme.BorderNeon, 3.0)
     compactBar.Parent = safeContainer
     self.CompactHUD = compactBar
 
     local cStats = Instance.new("TextLabel")
-    cStats.Text = "FPS: 60 | PING: --"
+    cStats.Text = "[ROOT] FPS: 60 | PING: -- | MEM: 0x7FFF"
     cStats.Font = Theme.FontCode
-    cStats.TextSize = 11
-    cStats.TextColor3 = Theme.AccentCyan
-    cStats.Size = UDim2.new(0, 140, 1, 0)
-    cStats.Position = UDim2.new(0, 12, 0, 0)
+    cStats.TextSize = 10
+    cStats.TextColor3 = Theme.AccentAcid
+    cStats.Size = UDim2.new(0, 180, 1, 0)
+    cStats.Position = UDim2.new(0, 10, 0, 0)
     cStats.BackgroundTransparency = 1
     cStats.Parent = compactBar
 
     local cCloneBtn = Instance.new("TextButton")
-    cCloneBtn.Text = "CLONE [1-CLICK]"
+    cCloneBtn.Text = "[†] OVERRIDE DUMP"
     cCloneBtn.Font = Theme.FontTitle
     cCloneBtn.TextSize = 10
     cCloneBtn.TextColor3 = Theme.AccentGothic
-    cCloneBtn.BackgroundColor3 = Theme.AccentPrimary
-    cCloneBtn.Size = UDim2.new(0, 120, 0, 26)
-    cCloneBtn.Position = UDim2.new(0, 155, 0.5, -13)
+    cCloneBtn.BackgroundColor3 = Theme.AccentSecondary
+    cCloneBtn.Size = UDim2.new(0, 130, 0, 24)
+    cCloneBtn.Position = UDim2.new(0, 195, 0.5, -12)
     Theme.AddCorner(cCloneBtn, Theme.CornerSmall)
     Theme.AddStroke(cCloneBtn, Theme.BorderNeon, 1)
-    Theme.AddGradient(cCloneBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
+    Theme.AddGradient(cCloneBtn, Color3.fromRGB(255, 0, 60), Color3.fromRGB(120, 0, 200), 45)
     cCloneBtn.Parent = compactBar
     Theme.AnimateButton(cCloneBtn, function() self:StartClone() end)
 
@@ -366,8 +370,8 @@ function Interface:BuildUI()
     cExpandBtn.TextSize = 10
     cExpandBtn.TextColor3 = Theme.TextSecondary
     cExpandBtn.BackgroundColor3 = Theme.CardHover
-    cExpandBtn.Size = UDim2.new(0, 85, 0, 26)
-    cExpandBtn.Position = UDim2.new(1, -95, 0.5, -13)
+    cExpandBtn.Size = UDim2.new(0, 80, 0, 24)
+    cExpandBtn.Position = UDim2.new(1, -88, 0.5, -12)
     Theme.AddCorner(cExpandBtn, Theme.CornerSmall)
     cExpandBtn.Parent = compactBar
     Theme.AnimateButton(cExpandBtn, function()
@@ -391,7 +395,7 @@ function Interface:BuildUI()
                 local ping = 0
                 pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
                 if compactBar and compactBar.Visible then
-                    cStats.Text = string.format("FPS: %d | PING: %dms", fps, ping)
+                    cStats.Text = string.format("[ROOT] FPS: %d | PING: %dms | 0x%X", fps, ping, math.random(0x1000, 0xFFFF))
                 end
             end
         end)
@@ -415,7 +419,7 @@ function Interface:BuildUI()
     -- Tab Navigation Bar (Scrollable for all master tools)
     local navBar = Instance.new("ScrollingFrame")
     navBar.Name = "NavBar"
-    navBar.Size = UDim2.new(0, 148, 1, -48)
+    navBar.Size = UDim2.new(0, 156, 1, -48)
     navBar.Position = UDim2.new(0, 0, 0, 48)
     navBar.BackgroundColor3 = Theme.CardBg
     navBar.BackgroundTransparency = Theme.CardTransparency
@@ -435,26 +439,26 @@ function Interface:BuildUI()
     -- Content Area
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -148, 1, -48)
-    contentArea.Position = UDim2.new(0, 148, 0, 48)
+    contentArea.Size = UDim2.new(1, -156, 1, -48)
+    contentArea.Position = UDim2.new(0, 156, 0, 48)
     contentArea.BackgroundTransparency = 1
     contentArea.Parent = main
     self.ContentArea = contentArea
 
-    -- Navigation buttons (Gothic Cyberpunk, Zero Emojis)
+    -- Navigation buttons (Cyber-Tribal Rootkit Monospace Hex Navigation)
     local tabs = {
-        {"Dashboard", "OVERVIEW"},
-        {"Selector", "TARGET ISOLATOR"},
-        {"AudioRipper", "AUDIO EXTRACTION"},
-        {"LightingRipper", "LIGHTING PRESET"},
-        {"GuiRipper", "INTERFACE RIPPER"},
-        {"Network", "NETWORK SNIFFER"},
-        {"Universe", "UNIVERSE MAPPER"},
-        {"ObjExport", "3D OBJ EXPORTER"},
-        {"Tutorial", "DOCUMENTATION"},
-        {"Settings", "ENGINE CONFIG"},
-        {"Console", "SYSTEM LOGS"},
-        {"About", "ABOUT // DEV"}
+        {"Dashboard", "[0x01] PLACE_OVERRIDE"},
+        {"Selector", "[0x02] RAYCAST_ISOLATOR"},
+        {"AudioRipper", "[0x03] AUDIO_DESTRUCTOR"},
+        {"LightingRipper", "[0x04] ATMOS_PRESET"},
+        {"GuiRipper", "[0x05] GUI_DECOMPILER"},
+        {"Network", "[0x06] PACKET_SNIFFER"},
+        {"Universe", "[0x07] UNIVERSE_HIJACK"},
+        {"ObjExport", "[0x08] OBJ_3D_EXTRACT"},
+        {"Tutorial", "[0x09] RUNTIME_MANUAL"},
+        {"Settings", "[0x0A] ROOT_CONFIG"},
+        {"Console", "[0x0B] RAW_SYS_LOGS"},
+        {"About", "[0x0C] KERNEL_INFO"}
     }
 
     self.TabFrames = {}
@@ -562,20 +566,20 @@ end
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
-    -- Big Action Clone Button (1-Click Purple & Black)
+    -- Big Action Clone Button (Cyber-Tribal Rootkit Overdrive Button)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = "CLONE FULL PLACE // 1-CLICK"
+    cloneBtn.Text = "[ † EXECUTAR CLONE TOTAL // OVERRIDE RAW MEMORY † ]"
     cloneBtn.Font = Theme.FontTitle
-    cloneBtn.TextSize = 14
-    cloneBtn.TextColor3 = Theme.AccentSkull
-    cloneBtn.BackgroundColor3 = Theme.AccentPrimary
+    cloneBtn.TextSize = 12
+    cloneBtn.TextColor3 = Theme.AccentGothic
+    cloneBtn.BackgroundColor3 = Theme.AccentSecondary
     cloneBtn.Size = UDim2.new(1, -32, 0, 52)
     cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
-    local cloneStroke = Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.5)
-    Theme.StartNeonPulse(cloneStroke, Theme.BorderLight, Theme.BorderNeon, 2.5)
-    Theme.AddGradient(cloneBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(76, 29, 149), 90)
+    local cloneStroke = Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.8)
+    Theme.StartNeonPulse(cloneStroke, Theme.BorderLight, Theme.BorderNeon, 3.5)
+    Theme.AddGradient(cloneBtn, Color3.fromRGB(255, 0, 60), Color3.fromRGB(110, 0, 190), 45)
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
@@ -585,9 +589,9 @@ function Interface:BuildDashboardTab()
 
     -- Preset Selection Container
     local presetLabel = Instance.new("TextLabel")
-    presetLabel.Text = "MODO DE CLONAGEM:"
+    presetLabel.Text = "[CONFIG_PROFILE] SELECIONE O MODO DE EXTRAÇÃO:"
     presetLabel.Font = Theme.FontSemiBold
-    presetLabel.TextSize = 11
+    presetLabel.TextSize = 10
     presetLabel.TextColor3 = Theme.TextMuted
     presetLabel.TextXAlignment = Enum.TextXAlignment.Left
     presetLabel.Size = UDim2.new(1, -32, 0, 18)
@@ -596,23 +600,23 @@ function Interface:BuildDashboardTab()
     presetLabel.Parent = parent
 
     local presetContainer = Instance.new("Frame")
-    presetContainer.Size = UDim2.new(1, -32, 0, 36)
+    presetContainer.Size = UDim2.new(1, -32, 0, 34)
     presetContainer.Position = UDim2.new(0, 16, 0, 96)
     presetContainer.BackgroundTransparency = 1
     presetContainer.Parent = parent
 
     local presetLayout = Instance.new("UIListLayout")
     presetLayout.FillDirection = Enum.FillDirection.Horizontal
-    presetLayout.Padding = UDim.new(0, 8)
+    presetLayout.Padding = UDim.new(0, 6)
     presetLayout.SortOrder = Enum.SortOrder.LayoutOrder
     presetLayout.Parent = presetContainer
 
     local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
     local presetDisplay = {
-        Full = "FULL DUMP (10/10)",
-        Fast = "FAST STREAM",
-        VisualsOnly = "VISUALS ONLY",
-        ScriptsOnly = "SCRIPTS ONLY"
+        Full = "[0x01] FULL_DUMP",
+        Fast = "[0x02] FAST_STREAM",
+        VisualsOnly = "[0x03] VISUAL_ONLY",
+        ScriptsOnly = "[0x04] BYTECODE_ONLY"
     }
 
     self.PresetButtons = {}
@@ -620,11 +624,11 @@ function Interface:BuildDashboardTab()
         local btn = Instance.new("TextButton")
         btn.Text = presetDisplay[pKey]
         btn.Font = Theme.FontSemiBold
-        btn.TextSize = 10
-        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentSkull or Theme.TextSecondary
+        btn.TextSize = 9
+        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentDanger or Theme.TextSecondary
         btn.BackgroundColor3 = (self.Config.Mode == pKey) and Theme.CardActive or Theme.CardBg
         btn.BackgroundTransparency = (self.Config.Mode == pKey) and 0 or Theme.CardTransparency
-        btn.Size = UDim2.new(0.25, -6, 1, 0)
+        btn.Size = UDim2.new(0.25, -5, 1, 0)
         btn.LayoutOrder = i
         Theme.AddCorner(btn, Theme.CornerSmall)
         Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.BorderNeon or Theme.Border, 1)
@@ -636,7 +640,7 @@ function Interface:BuildDashboardTab()
             for k, b in pairs(self.PresetButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
                 if k == pKey then
-                    b.TextColor3 = Theme.AccentSkull
+                    b.TextColor3 = Theme.AccentDanger
                     b.BackgroundColor3 = Theme.CardActive
                     b.BackgroundTransparency = 0
                     if stroke then stroke.Color = Theme.BorderNeon end
@@ -653,32 +657,32 @@ function Interface:BuildDashboardTab()
 
     -- Format Selector Container
     local formatLabel = Instance.new("TextLabel")
-    formatLabel.Text = "FORMATO DE ARQUIVO:"
+    formatLabel.Text = "[OUTPUT_TYPE] FORMATO DO ARQUIVO SERIALIZADO:"
     formatLabel.Font = Theme.FontSemiBold
-    formatLabel.TextSize = 11
+    formatLabel.TextSize = 10
     formatLabel.TextColor3 = Theme.TextMuted
     formatLabel.TextXAlignment = Enum.TextXAlignment.Left
     formatLabel.Size = UDim2.new(1, -32, 0, 18)
-    formatLabel.Position = UDim2.new(0, 16, 0, 142)
+    formatLabel.Position = UDim2.new(0, 16, 0, 138)
     formatLabel.BackgroundTransparency = 1
     formatLabel.Parent = parent
 
     local formatContainer = Instance.new("Frame")
-    formatContainer.Size = UDim2.new(1, -32, 0, 32)
-    formatContainer.Position = UDim2.new(0, 16, 0, 162)
+    formatContainer.Size = UDim2.new(1, -32, 0, 30)
+    formatContainer.Position = UDim2.new(0, 16, 0, 158)
     formatContainer.BackgroundTransparency = 1
     formatContainer.Parent = parent
 
     local formatLayout = Instance.new("UIListLayout")
     formatLayout.FillDirection = Enum.FillDirection.Horizontal
-    formatLayout.Padding = UDim.new(0, 8)
+    formatLayout.Padding = UDim.new(0, 6)
     formatLayout.SortOrder = Enum.SortOrder.LayoutOrder
     formatLayout.Parent = formatContainer
 
     local formats = {
-        {"rbxlx", "RBXLX [XML]"},
-        {"rbxl", "RBXL [BINARY]"},
-        {"lua", "LUAU [SCRIPT]"}
+        {"rbxlx", "[0x01] RBXLX (XML)"},
+        {"rbxl", "[0x02] RBXL (BINARY)"},
+        {"lua", "[0x03] LUAU (STUDIO SCRIPT)"}
     }
     self.FormatButtons = {}
 
@@ -687,11 +691,11 @@ function Interface:BuildDashboardTab()
         local fBtn = Instance.new("TextButton")
         fBtn.Text = fLabel
         fBtn.Font = Theme.FontSemiBold
-        fBtn.TextSize = 10
-        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.AccentSkull or Theme.TextSecondary
+        fBtn.TextSize = 9
+        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.AccentDanger or Theme.TextSecondary
         fBtn.BackgroundColor3 = (self.Config.Format == fKey) and Theme.CardActive or Theme.CardBg
         fBtn.BackgroundTransparency = (self.Config.Format == fKey) and 0 or Theme.CardTransparency
-        fBtn.Size = UDim2.new(0.333, -6, 1, 0)
+        fBtn.Size = UDim2.new(0.333, -5, 1, 0)
         fBtn.LayoutOrder = i
         Theme.AddCorner(fBtn, Theme.CornerSmall)
         Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.BorderNeon or Theme.Border, 1)
@@ -703,7 +707,7 @@ function Interface:BuildDashboardTab()
             for k, b in pairs(self.FormatButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
                 if k == fKey then
-                    b.TextColor3 = Theme.AccentSkull
+                    b.TextColor3 = Theme.AccentDanger
                     b.BackgroundColor3 = Theme.CardActive
                     b.BackgroundTransparency = 0
                     if stroke then stroke.Color = Theme.BorderNeon end
@@ -718,25 +722,25 @@ function Interface:BuildDashboardTab()
         end)
     end
 
-    -- Progress Container (Frosted Glass Acrylic Card)
+    -- Progress Container (Industrial Alloy Card)
     local progressCard = Instance.new("Frame")
-    progressCard.Size = UDim2.new(1, -32, 0, 106)
-    progressCard.Position = UDim2.new(0, 16, 0, 204)
+    progressCard.Size = UDim2.new(1, -32, 0, 114)
+    progressCard.Position = UDim2.new(0, 16, 0, 196)
     progressCard.BackgroundColor3 = Theme.CardBg
-    progressCard.BackgroundTransparency = Theme.CardTransparency
+    progressCard.BackgroundTransparency = 0.05
     Theme.AddCorner(progressCard, Theme.CornerMedium)
     Theme.AddStroke(progressCard, Theme.Border, 1)
     progressCard.Parent = parent
 
     local statusHeader = Instance.new("TextLabel")
     statusHeader.Name = "StatusHeader"
-    statusHeader.Text = "STATUS: IDLE // READY TO DUMP"
+    statusHeader.Text = "[SYS_STATUS] IDLE // READY FOR RAW DUMP"
     statusHeader.Font = Theme.FontSemiBold
-    statusHeader.TextSize = 12
-    statusHeader.TextColor3 = Theme.TextPrimary
+    statusHeader.TextSize = 11
+    statusHeader.TextColor3 = Theme.AccentAcid
     statusHeader.TextXAlignment = Enum.TextXAlignment.Left
     statusHeader.Size = UDim2.new(0.7, 0, 0, 20)
-    statusHeader.Position = UDim2.new(0, 16, 0, 12)
+    statusHeader.Position = UDim2.new(0, 12, 0, 10)
     statusHeader.BackgroundTransparency = 1
     statusHeader.Parent = progressCard
     self.StatusHeader = statusHeader
@@ -745,66 +749,79 @@ function Interface:BuildDashboardTab()
     pctLabel.Name = "PctLabel"
     pctLabel.Text = "0%"
     pctLabel.Font = Theme.FontTitle
-    pctLabel.TextSize = 14
+    pctLabel.TextSize = 13
     pctLabel.TextColor3 = Theme.AccentCyan
     pctLabel.TextXAlignment = Enum.TextXAlignment.Right
     pctLabel.Size = UDim2.new(0.25, 0, 0, 20)
-    pctLabel.Position = UDim2.new(0.72, 0, 0, 12)
+    pctLabel.Position = UDim2.new(0.72, 0, 0, 10)
     pctLabel.BackgroundTransparency = 1
     pctLabel.Parent = progressCard
     self.PctLabel = pctLabel
 
     -- Progress Bar Track & Fill
     local barTrack = Instance.new("Frame")
-    barTrack.Size = UDim2.new(1, -32, 0, 8)
-    barTrack.Position = UDim2.new(0, 16, 0, 40)
-    barTrack.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
+    barTrack.Size = UDim2.new(1, -24, 0, 6)
+    barTrack.Position = UDim2.new(0, 12, 0, 36)
+    barTrack.BackgroundColor3 = Color3.fromRGB(6, 5, 10)
     Theme.AddCorner(barTrack, Theme.CornerPill)
     barTrack.Parent = progressCard
 
     local barFill = Instance.new("Frame")
     barFill.Size = UDim2.new(0, 0, 1, 0)
-    barFill.BackgroundColor3 = Theme.AccentCyan
+    barFill.BackgroundColor3 = Theme.AccentSecondary
     Theme.AddCorner(barFill, Theme.CornerPill)
-    Theme.AddGradient(barFill, Theme.AccentCyan, Theme.AccentPrimary, 0)
+    Theme.AddGradient(barFill, Theme.AccentSecondary, Theme.AccentPrimary, 0)
     barFill.Parent = barTrack
     self.ProgressBarFill = barFill
 
     local statusDetail = Instance.new("TextLabel")
     statusDetail.Name = "StatusDetail"
-    statusDetail.Text = "Basta dar 1 clique no botão roxo acima para salvar o jogo inteiro."
-    statusDetail.Font = Theme.FontRegular
-    statusDetail.TextSize = 11
+    statusDetail.Text = "[RAW_STREAM] 0x4F 0xAA 0x12 0xFF 0x00 0x8C 0xDE 0xAD"
+    statusDetail.Font = Theme.FontCode
+    statusDetail.TextSize = 9
     statusDetail.TextColor3 = Theme.TextMuted
     statusDetail.TextXAlignment = Enum.TextXAlignment.Left
-    statusDetail.Size = UDim2.new(1, -32, 0, 20)
-    statusDetail.Position = UDim2.new(0, 16, 0, 58)
+    statusDetail.Size = UDim2.new(1, -24, 0, 18)
+    statusDetail.Position = UDim2.new(0, 12, 0, 48)
     statusDetail.BackgroundTransparency = 1
     statusDetail.Parent = progressCard
     self.StatusDetail = statusDetail
 
-    -- Quick Action Copy Buttons (UIListLayout Grid)
+    -- Live Hex Stream Ticker Animation
+    local lastTicker = os.clock()
+    local runServ = game:GetService("RunService")
+    runServ.RenderStepped:Connect(function()
+        local now = os.clock()
+        if (now - lastTicker) >= 0.35 then
+            lastTicker = now
+            if statusDetail and statusDetail.Parent and not self.Engine.IsRunning then
+                statusDetail.Text = "[RAW_STREAM] " .. Theme.GenerateHexStream(7)
+            end
+        end
+    end)
+
+    -- Quick Action Copy Buttons
     local copyBar = Instance.new("Frame")
-    copyBar.Size = UDim2.new(1, -32, 0, 24)
-    copyBar.Position = UDim2.new(0, 16, 0, 78)
+    copyBar.Size = UDim2.new(1, -24, 0, 26)
+    copyBar.Position = UDim2.new(0, 12, 0, 76)
     copyBar.BackgroundTransparency = 1
     copyBar.Parent = progressCard
 
     local copyLayout = Instance.new("UIListLayout")
     copyLayout.FillDirection = Enum.FillDirection.Horizontal
-    copyLayout.Padding = UDim.new(0, 8)
+    copyLayout.Padding = UDim.new(0, 6)
     copyLayout.SortOrder = Enum.SortOrder.LayoutOrder
     copyLayout.Parent = copyBar
 
     local copyFilePathBtn = Instance.new("TextButton")
-    copyFilePathBtn.Text = "COPY FILE NAME"
+    copyFilePathBtn.Text = "[ 0x01: COPY FILE ]"
     copyFilePathBtn.Font = Theme.FontSemiBold
-    copyFilePathBtn.TextSize = 10
+    copyFilePathBtn.TextSize = 9
     copyFilePathBtn.TextColor3 = Theme.TextSecondary
     copyFilePathBtn.BackgroundColor3 = Theme.CardHover
-    copyFilePathBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    copyFilePathBtn.Size = UDim2.new(0.5, -3, 1, 0)
     copyFilePathBtn.LayoutOrder = 1
-    Theme.AddCorner(copyFilePathBtn, Theme.CornerPill)
+    Theme.AddCorner(copyFilePathBtn, Theme.CornerSmall)
     Theme.AddStroke(copyFilePathBtn, Theme.Border, 1)
     copyFilePathBtn.Parent = copyBar
 
@@ -812,19 +829,19 @@ function Interface:BuildDashboardTab()
         local name = self.SavedFilePath
         if #name == 0 then name = self.Engine:GetDefaultFileName() end
         Environment.SetClipboard(name)
-        copyFilePathBtn.Text = "COPIED TO CLIPBOARD"
-        task.delay(2, function() copyFilePathBtn.Text = "COPY FILE NAME" end)
+        copyFilePathBtn.Text = "[OK] COPIED!"
+        task.delay(2, function() copyFilePathBtn.Text = "[ 0x01: COPY FILE ]" end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
-    copyAssetsPathBtn.Text = "COPY ASSETS PATH"
+    copyAssetsPathBtn.Text = "[ 0x02: COPY ASSETS ]"
     copyAssetsPathBtn.Font = Theme.FontSemiBold
-    copyAssetsPathBtn.TextSize = 10
+    copyAssetsPathBtn.TextSize = 9
     copyAssetsPathBtn.TextColor3 = Theme.TextSecondary
     copyAssetsPathBtn.BackgroundColor3 = Theme.CardHover
-    copyAssetsPathBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    copyAssetsPathBtn.Size = UDim2.new(0.5, -3, 1, 0)
     copyAssetsPathBtn.LayoutOrder = 2
-    Theme.AddCorner(copyAssetsPathBtn, Theme.CornerPill)
+    Theme.AddCorner(copyAssetsPathBtn, Theme.CornerSmall)
     Theme.AddStroke(copyAssetsPathBtn, Theme.Border, 1)
     copyAssetsPathBtn.Parent = copyBar
 
@@ -832,8 +849,8 @@ function Interface:BuildDashboardTab()
         local name = self.SavedAssetPath
         if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
         Environment.SetClipboard(name)
-        copyAssetsPathBtn.Text = "COPIED TO CLIPBOARD"
-        task.delay(2, function() copyAssetsPathBtn.Text = "COPY ASSETS PATH" end)
+        copyAssetsPathBtn.Text = "[OK] COPIED!"
+        task.delay(2, function() copyAssetsPathBtn.Text = "[ 0x02: COPY ASSETS ]" end)
     end)
 end
 
