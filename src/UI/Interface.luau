@@ -106,17 +106,17 @@ function Interface:BuildUI()
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
     local floatingBtn = Instance.new("TextButton")
     floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = "💀 HYPERSAVE • THEO"
+    floatingBtn.Text = "// HYPERSAVE [THEO]"
     floatingBtn.Font = Theme.FontTitle
     floatingBtn.TextSize = 11
-    floatingBtn.TextColor3 = Theme.AccentSkull
+    floatingBtn.TextColor3 = Theme.AccentGothic
     floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 154, 0, 36)
+    floatingBtn.Size = UDim2.new(0, 160, 0, 34)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
-    Theme.AddCorner(floatingBtn, Theme.CornerPill)
+    Theme.AddCorner(floatingBtn, Theme.CornerMedium)
     Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
-    Theme.AddGradient(floatingBtn, Color3.fromRGB(16, 12, 28), Color3.fromRGB(48, 28, 78), 45)
+    Theme.AddGradient(floatingBtn, Color3.fromRGB(11, 9, 18), Color3.fromRGB(38, 20, 64), 45)
     floatingBtn.Parent = safeContainer
     self.FloatingToggle = floatingBtn
 
@@ -165,30 +165,30 @@ function Interface:BuildUI()
     splash.Parent = safeContainer
 
     local splashTitle = Instance.new("TextLabel")
-    splashTitle.Text = "💀 HYPERSAVE INSTANCE"
+    splashTitle.Text = "// HYPERSAVE MASTER SUITE"
     splashTitle.Font = Theme.FontTitle
-    splashTitle.TextSize = 16
-    splashTitle.TextColor3 = Theme.AccentSkull
+    splashTitle.TextSize = 15
+    splashTitle.TextColor3 = Theme.AccentGothic
     splashTitle.Size = UDim2.new(1, 0, 0, 30)
     splashTitle.Position = UDim2.new(0, 0, 0, 18)
     splashTitle.BackgroundTransparency = 1
     splashTitle.Parent = splash
 
     local splashBadge = Instance.new("TextLabel")
-    splashBadge.Text = "✨ por Theo Lorentz Padilha"
+    splashBadge.Text = "THEO LORENTZ PADILHA // V2.0"
     splashBadge.Font = Theme.FontSemiBold
     splashBadge.TextSize = 11
     splashBadge.TextColor3 = Theme.AccentTheo
-    splashBadge.BackgroundColor3 = Color3.fromRGB(20, 15, 34)
-    splashBadge.Size = UDim2.new(0, 200, 0, 24)
-    splashBadge.Position = UDim2.new(0.5, -100, 0, 52)
-    Theme.AddCorner(splashBadge, Theme.CornerPill)
+    splashBadge.BackgroundColor3 = Color3.fromRGB(15, 12, 24)
+    splashBadge.Size = UDim2.new(0, 220, 0, 24)
+    splashBadge.Position = UDim2.new(0.5, -110, 0, 52)
+    Theme.AddCorner(splashBadge, Theme.CornerMedium)
     Theme.AddStroke(splashBadge, Theme.BorderNeon, 1)
     splashBadge.Parent = splash
 
     local splashStatus = Instance.new("TextLabel")
-    splashStatus.Text = "⚡ Inicializando HUD & Módulos..."
-    splashStatus.Font = Theme.FontRegular
+    splashStatus.Text = "SYSTEM_INITIALIZING :: RUNTIME_OK"
+    splashStatus.Font = Theme.FontCode
     splashStatus.TextSize = 11
     splashStatus.TextColor3 = Theme.TextSecondary
     splashStatus.Size = UDim2.new(1, 0, 0, 20)
@@ -199,7 +199,7 @@ function Interface:BuildUI()
     local splashTrack = Instance.new("Frame")
     splashTrack.Size = UDim2.new(1, -48, 0, 6)
     splashTrack.Position = UDim2.new(0, 24, 0, 122)
-    splashTrack.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
+    splashTrack.BackgroundColor3 = Color3.fromRGB(11, 9, 18)
     Theme.AddCorner(splashTrack, Theme.CornerPill)
     splashTrack.Parent = splash
 
@@ -212,7 +212,7 @@ function Interface:BuildUI()
     self.SplashFill = splashFill
     self.SplashCard = splash
 
-    -- Main Container (Translucent Acrylic Bubble Theme, perfectly centered)
+    -- Main Container (Dark Gothic Cyberpunk Theme, perfectly centered)
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -264,30 +264,30 @@ function Interface:BuildUI()
     header.Parent = main
 
     local title = Instance.new("TextLabel")
-    title.Text = "💀 HYPERSAVE"
+    title.Text = "// HYPERSAVE"
     title.Font = Theme.FontTitle
     title.TextSize = 15
-    title.TextColor3 = Theme.TextPrimary
+    title.TextColor3 = Theme.AccentGothic
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Size = UDim2.new(0, 180, 1, 0)
+    title.Size = UDim2.new(0, 160, 1, 0)
     title.Position = UDim2.new(0, 16, 0, 0)
     title.BackgroundTransparency = 1
     title.Parent = header
 
-    -- Platform & Creator Badge (Pill Badge)
+    -- Platform & Creator Badge
     local badge = Instance.new("TextLabel")
-    badge.Text = "por Theo Lorentz Padilha • [RightShift]"
+    badge.Text = "THEO LORENTZ PADILHA // [RightShift]"
     badge.Font = Theme.FontSemiBold
     badge.TextSize = 11
     badge.TextColor3 = Theme.AccentTheo
-    badge.BackgroundColor3 = Color3.fromRGB(20, 15, 34)
-    badge.Size = UDim2.new(0, 230, 0, 26)
-    badge.Position = UDim2.new(0, 195, 0.5, -13)
-    Theme.AddCorner(badge, Theme.CornerPill)
+    badge.BackgroundColor3 = Color3.fromRGB(15, 12, 24)
+    badge.Size = UDim2.new(0, 240, 0, 26)
+    badge.Position = UDim2.new(0, 175, 0.5, -13)
+    Theme.AddCorner(badge, Theme.CornerMedium)
     Theme.AddStroke(badge, Theme.BorderNeon, 1)
     badge.Parent = header
 
-    -- Minimize Button (Bubble Pill)
+    -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Text = "–"
     minBtn.Font = Theme.FontTitle
@@ -296,7 +296,7 @@ function Interface:BuildUI()
     minBtn.BackgroundColor3 = Theme.CardHover
     minBtn.Size = UDim2.new(0, 28, 0, 28)
     minBtn.Position = UDim2.new(1, -70, 0.5, -14)
-    Theme.AddCorner(minBtn, Theme.CornerPill)
+    Theme.AddCorner(minBtn, Theme.CornerSmall)
     minBtn.Parent = header
 
     Theme.AnimateButton(minBtn, function()
@@ -304,7 +304,7 @@ function Interface:BuildUI()
         floatingBtn.Visible = true
     end)
 
-    -- Close Button (Bubble Pill)
+    -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Text = "✕"
     closeBtn.Font = Theme.FontTitle
@@ -313,7 +313,7 @@ function Interface:BuildUI()
     closeBtn.BackgroundColor3 = Theme.CardHover
     closeBtn.Size = UDim2.new(0, 28, 0, 28)
     closeBtn.Position = UDim2.new(1, -38, 0.5, -14)
-    Theme.AddCorner(closeBtn, Theme.CornerPill)
+    Theme.AddCorner(closeBtn, Theme.CornerSmall)
     closeBtn.Parent = header
 
     Theme.AnimateButton(closeBtn, function()
@@ -328,8 +328,8 @@ function Interface:BuildUI()
     navBar.Position = UDim2.new(0, 0, 0, 48)
     navBar.BackgroundColor3 = Theme.CardBg
     navBar.BackgroundTransparency = Theme.CardTransparency
-    navBar.ScrollBarThickness = 3
-    navBar.ScrollBarImageColor3 = Theme.BorderLight
+    navBar.ScrollBarThickness = 2
+    navBar.ScrollBarImageColor3 = Theme.BorderNeon
     navBar.CanvasSize = UDim2.new(0, 0, 0, 420)
     navBar.BorderSizePixel = 0
     navBar.Parent = main
@@ -350,20 +350,20 @@ function Interface:BuildUI()
     contentArea.Parent = main
     self.ContentArea = contentArea
 
-    -- Navigation buttons
+    -- Navigation buttons (Gothic Cyberpunk, Zero Emojis)
     local tabs = {
-        {"Dashboard", "🚀 Clonar Tudo"},
-        {"Selector", "🎯 Salvar Modelo"},
-        {"AudioRipper", "🎵 Músicas & Sons"},
-        {"LightingRipper", "✨ Iluminação"},
-        {"GuiRipper", "🖥️ Interfaces (UI)"},
-        {"Network", "📡 Rede / Remotes"},
-        {"Universe", "🌌 Universo"},
-        {"ObjExport", "🧊 Exportar 3D"},
-        {"Tutorial", "📖 Como Usar"},
-        {"Settings", "⚙️ Configurações"},
-        {"Console", "💻 Console"},
-        {"About", "👑 Informações"}
+        {"Dashboard", "OVERVIEW"},
+        {"Selector", "TARGET ISOLATOR"},
+        {"AudioRipper", "AUDIO EXTRACTION"},
+        {"LightingRipper", "LIGHTING PRESET"},
+        {"GuiRipper", "INTERFACE RIPPER"},
+        {"Network", "NETWORK SNIFFER"},
+        {"Universe", "UNIVERSE MAPPER"},
+        {"ObjExport", "3D OBJ EXPORTER"},
+        {"Tutorial", "DOCUMENTATION"},
+        {"Settings", "ENGINE CONFIG"},
+        {"Console", "SYSTEM LOGS"},
+        {"About", "ABOUT // DEV"}
     }
 
     self.TabFrames = {}
@@ -474,7 +474,7 @@ function Interface:BuildDashboardTab()
     -- Big Action Clone Button (1-Click Purple & Black)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = "💀 CLONAR JOGO INTEIRO (1-CLIQUE)"
+    cloneBtn.Text = "CLONE FULL PLACE // 1-CLICK"
     cloneBtn.Font = Theme.FontTitle
     cloneBtn.TextSize = 14
     cloneBtn.TextColor3 = Theme.AccentSkull
@@ -517,10 +517,10 @@ function Interface:BuildDashboardTab()
 
     local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
     local presetDisplay = {
-        Full = "⭐ Completo 10/10",
-        Fast = "⚡ Rápido",
-        VisualsOnly = "🎨 Apenas Visual",
-        ScriptsOnly = "📜 Apenas Scripts"
+        Full = "FULL DUMP (10/10)",
+        Fast = "FAST STREAM",
+        VisualsOnly = "VISUALS ONLY",
+        ScriptsOnly = "SCRIPTS ONLY"
     }
 
     self.PresetButtons = {}
@@ -584,9 +584,9 @@ function Interface:BuildDashboardTab()
     formatLayout.Parent = formatContainer
 
     local formats = {
-        {"rbxlx", "Roblox XML (.rbxlx)"},
-        {"rbxl", "Roblox Binário (.rbxl)"},
-        {"lua", "Script Studio (.lua)"}
+        {"rbxlx", "RBXLX [XML]"},
+        {"rbxl", "RBXL [BINARY]"},
+        {"lua", "LUAU [SCRIPT]"}
     }
     self.FormatButtons = {}
 
@@ -638,7 +638,7 @@ function Interface:BuildDashboardTab()
 
     local statusHeader = Instance.new("TextLabel")
     statusHeader.Name = "StatusHeader"
-    statusHeader.Text = "Status: Anti-AFK Ativo • Pronto para clonar"
+    statusHeader.Text = "STATUS: IDLE // READY TO DUMP"
     statusHeader.Font = Theme.FontSemiBold
     statusHeader.TextSize = 12
     statusHeader.TextColor3 = Theme.TextPrimary
@@ -705,7 +705,7 @@ function Interface:BuildDashboardTab()
     copyLayout.Parent = copyBar
 
     local copyFilePathBtn = Instance.new("TextButton")
-    copyFilePathBtn.Text = "📁 Copiar Nome do Arquivo"
+    copyFilePathBtn.Text = "COPY FILE NAME"
     copyFilePathBtn.Font = Theme.FontSemiBold
     copyFilePathBtn.TextSize = 10
     copyFilePathBtn.TextColor3 = Theme.TextSecondary
@@ -720,12 +720,12 @@ function Interface:BuildDashboardTab()
         local name = self.SavedFilePath
         if #name == 0 then name = self.Engine:GetDefaultFileName() end
         Environment.SetClipboard(name)
-        copyFilePathBtn.Text = "✓ Nome Copiado!"
-        task.delay(2, function() copyFilePathBtn.Text = "📁 Copiar Nome do Arquivo" end)
+        copyFilePathBtn.Text = "COPIED TO CLIPBOARD"
+        task.delay(2, function() copyFilePathBtn.Text = "COPY FILE NAME" end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
-    copyAssetsPathBtn.Text = "📦 Copiar Pasta de Assets"
+    copyAssetsPathBtn.Text = "COPY ASSETS PATH"
     copyAssetsPathBtn.Font = Theme.FontSemiBold
     copyAssetsPathBtn.TextSize = 10
     copyAssetsPathBtn.TextColor3 = Theme.TextSecondary
@@ -740,8 +740,8 @@ function Interface:BuildDashboardTab()
         local name = self.SavedAssetPath
         if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
         Environment.SetClipboard(name)
-        copyAssetsPathBtn.Text = "✓ Pasta Copiada!"
-        task.delay(2, function() copyAssetsPathBtn.Text = "📦 Copiar Pasta de Assets" end)
+        copyAssetsPathBtn.Text = "COPIED TO CLIPBOARD"
+        task.delay(2, function() copyAssetsPathBtn.Text = "COPY ASSETS PATH" end)
     end)
 end
 
@@ -762,7 +762,7 @@ function Interface:BuildSelectorTab()
     scroll.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "🎯 SELETOR DE MODELOS & MULTI-SELEÇÃO"
+    headerLbl.Text = "TARGET ISOLATOR // 3D RAYCAST"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -774,7 +774,7 @@ function Interface:BuildSelectorTab()
 
     -- 1. In-World 3D Raycast Click Selector Button (Bubble Button)
     local raycastBtn = Instance.new("TextButton")
-    raycastBtn.Text = "🎯 CLICAR NO OBJETO NO MUNDO 3D (SELETOR VISUAL)"
+    raycastBtn.Text = "ENABLE 3D RAYCAST SELECTOR"
     raycastBtn.Font = Theme.FontTitle
     raycastBtn.TextSize = 11
     raycastBtn.TextColor3 = Theme.AccentSkull
@@ -900,7 +900,7 @@ function Interface:BuildSelectorTab()
         if inst:IsA("BasePart") then parts = parts + 1 end
         if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
 
-        targetTitle.Text = string.format("📦 %s (%s)", inst.Name, inst.ClassName)
+        targetTitle.Text = string.format(" %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.AccentCyan
         targetStats.Text = string.format("📊 %d Peças • %d Malhas 3D • %d Scripts", parts, meshes, scripts)
         targetStats.TextColor3 = Theme.AccentSuccess
@@ -995,7 +995,7 @@ function Interface:BuildSelectorTab()
     packCard.Parent = scroll
 
     local packTitle = Instance.new("TextLabel")
-    packTitle.Text = "📦 PACOTE MULTI-SELEÇÃO: 0 ITENS"
+    packTitle.Text = "MULTI-TARGET PACKAGE: 0 ITENS"
     packTitle.Font = Theme.FontSemiBold
     packTitle.TextSize = 11
     packTitle.TextColor3 = Theme.AccentCyan
@@ -1018,7 +1018,7 @@ function Interface:BuildSelectorTab()
     btnClearPack.Parent = packCard
 
     local btnSavePack = Instance.new("TextButton")
-    btnSavePack.Text = "🚀 BAIXAR PACOTE COMPLETO (.rbxm)"
+    btnSavePack.Text = "EXPORT BATCH PACKAGE (.rbxm)"
     btnSavePack.Font = Theme.FontTitle
     btnSavePack.TextSize = 11
     btnSavePack.TextColor3 = Theme.AccentSkull
@@ -1045,13 +1045,13 @@ function Interface:BuildSelectorTab()
 
     -- Update pack counter UI
     local function updatePackUI()
-        packTitle.Text = string.format("📦 PACOTE MULTI-SELEÇÃO: %d ITENS", #self.SelectedTargets)
+        packTitle.Text = string.format("MULTI-TARGET PACKAGE: %d ITENS", #self.SelectedTargets)
     end
 
     -- Event: 3D Raycast click button
     Theme.AnimateButton(raycastBtn, function()
         if self.MainFrame then self.MainFrame.Visible = false end
-        resultLabel.Text = "🎯 Modo 3D ativo! Clique em qualquer objeto no mundo para selecionar."
+        resultLabel.Text = "3D Raycast active. Click any object in game to inspect."
         resultLabel.TextColor3 = Theme.AccentCyan
 
         self.Raycast:Start(function(selected)
@@ -1059,7 +1059,7 @@ function Interface:BuildSelectorTab()
             if selected then
                 searchBox.Text = selected.Name
                 inspectInstance(selected)
-                resultLabel.Text = "✓ Objeto selecionado: " .. selected.Name
+                resultLabel.Text = "[SELECTED] " .. selected.Name
                 resultLabel.TextColor3 = Theme.AccentSuccess
             end
         end)
@@ -1072,11 +1072,11 @@ function Interface:BuildSelectorTab()
             local found = workspace:FindFirstChild(text, true) or game:GetService("ReplicatedStorage"):FindFirstChild(text, true)
             if found then
                 inspectInstance(found)
-                resultLabel.Text = "✓ Objeto encontrado: " .. found.Name
+                resultLabel.Text = "[FOUND] " .. found.Name
                 resultLabel.TextColor3 = Theme.AccentSuccess
             else
                 inspectInstance(nil)
-                resultLabel.Text = "❌ Objeto não encontrado no jogo!"
+                resultLabel.Text = "[ERROR] Object not found in hierarchy."
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
         end
@@ -1086,7 +1086,7 @@ function Interface:BuildSelectorTab()
     Theme.AnimateButton(btnSaveSingle, function()
         local target = self.CurrentTargetInstance
         if not target then
-            resultLabel.Text = "❌ Selecione um modelo antes de salvar!"
+            resultLabel.Text = "[ERROR] Select a target first."
             resultLabel.TextColor3 = Theme.AccentWarning
             return
         end
@@ -1097,11 +1097,11 @@ function Interface:BuildSelectorTab()
         task.spawn(function()
             local success, msg = self.Engine:SaveTarget(target)
             if success then
-                resultLabel.Text = "✓ Modelo salvo com sucesso: " .. msg
+                resultLabel.Text = "[SUCCESS] Model saved: " .. msg
                 resultLabel.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(msg)
             else
-                resultLabel.Text = "❌ Erro ao salvar: " .. tostring(msg)
+                resultLabel.Text = "[ERROR] Failed to save: " .. tostring(msg)
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1111,7 +1111,7 @@ function Interface:BuildSelectorTab()
     Theme.AnimateButton(btnExportWeb3D, function()
         local target = self.CurrentTargetInstance
         if not target then
-            resultLabel.Text = "❌ Selecione um modelo antes de exportar para Web 3D!"
+            resultLabel.Text = "[ERROR] Select a target before Web 3D export!"
             resultLabel.TextColor3 = Theme.AccentWarning
             return
         end
@@ -1122,11 +1122,11 @@ function Interface:BuildSelectorTab()
         task.spawn(function()
             local success, msg = Web3DExporter.ExportModelToHTML(target)
             if success then
-                resultLabel.Text = "✓ Web 3D salvo: " .. msg .. " (Caminho copiado!)"
+                resultLabel.Text = "[SUCCESS] Web 3D exported: " .. msg .. " (Caminho copiado!)"
                 resultLabel.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(msg)
             else
-                resultLabel.Text = "❌ Erro ao exportar Web 3D: " .. tostring(msg)
+                resultLabel.Text = "[ERROR] Web 3D export failed: " .. tostring(msg)
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1136,14 +1136,14 @@ function Interface:BuildSelectorTab()
     Theme.AnimateButton(btnAddToPack, function()
         local target = self.CurrentTargetInstance
         if not target then
-            resultLabel.Text = "❌ Selecione um modelo para adicionar ao pacote!"
+            resultLabel.Text = "[ERROR] Select a target to add to batch!"
             resultLabel.TextColor3 = Theme.AccentWarning
             return
         end
 
         table.insert(self.SelectedTargets, target)
         updatePackUI()
-        resultLabel.Text = string.format("✓ '%s' adicionado ao pacote (%d no total)!", target.Name, #self.SelectedTargets)
+        resultLabel.Text = string.format("[SUCCESS] Added to batch: %s (%d items)", target.Name, #self.SelectedTargets)
         resultLabel.TextColor3 = Theme.AccentSuccess
     end)
 
@@ -1158,7 +1158,7 @@ function Interface:BuildSelectorTab()
     -- Event: Save full multi-pack
     Theme.AnimateButton(btnSavePack, function()
         if #self.SelectedTargets == 0 then
-            resultLabel.Text = "❌ O pacote está vazio! Adicione itens primeiro."
+            resultLabel.Text = "[ERROR] Batch is empty!"
             resultLabel.TextColor3 = Theme.AccentWarning
             return
         end
@@ -1169,11 +1169,11 @@ function Interface:BuildSelectorTab()
         task.spawn(function()
             local success, msg = self.Engine:SaveTargetBatch(self.SelectedTargets)
             if success then
-                resultLabel.Text = "✓ Pacote salvo com sucesso: " .. msg
+                resultLabel.Text = "[SUCCESS] Batch saved: " .. msg
                 resultLabel.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(msg)
             else
-                resultLabel.Text = "❌ Erro ao salvar pacote: " .. tostring(msg)
+                resultLabel.Text = "[ERROR] Failed to save batch: " .. tostring(msg)
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1196,7 +1196,7 @@ function Interface:BuildAudioRipperTab()
     topLayout.Parent = topBar
 
     local scanAudioBtn = Instance.new("TextButton")
-    scanAudioBtn.Text = "🎵 ESCANEAR SONS"
+    scanAudioBtn.Text = "SCAN ALL AUDIO"
     scanAudioBtn.Font = Theme.FontSemiBold
     scanAudioBtn.TextSize = 10
     scanAudioBtn.TextColor3 = Theme.AccentSkull
@@ -1288,7 +1288,7 @@ function Interface:BuildAudioRipperTab()
 
         task.spawn(function()
             local list = AudioRipper.ScanSounds()
-            scanAudioBtn.Text = string.format("✓ %d sons", #list)
+            scanAudioBtn.Text = string.format("%d tracks found", #list)
 
             for _, snd in ipairs(list) do
                 local row = Instance.new("Frame")
@@ -1300,7 +1300,7 @@ function Interface:BuildAudioRipperTab()
                 row.Parent = audioScroll
 
                 local sndLbl = Instance.new("TextLabel")
-                sndLbl.Text = string.format("🎵 %s (ID: %s)", snd.Name, snd.CleanId)
+                sndLbl.Text = string.format("[AUDIO] %s (ID: %s)", snd.Name, snd.CleanId)
                 sndLbl.Font = Theme.FontRegular
                 sndLbl.TextSize = 10
                 sndLbl.TextColor3 = Theme.TextPrimary
@@ -1338,7 +1338,7 @@ function Interface:BuildAudioRipperTab()
 
                 Theme.AnimateButton(copyBtn, function()
                     Environment.SetClipboard(snd.CleanId)
-                    copyBtn.Text = "✓"
+                    copyBtn.Text = "[OK]"
                     task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
                 end)
 
@@ -1358,13 +1358,13 @@ function Interface:BuildAudioRipperTab()
                 end
             end
         end)
-        stopAudioBtn.Text = "✓ Parado"
+        stopAudioBtn.Text = "STOPPED"
         task.delay(1, function() stopAudioBtn.Text = "⏹ PARAR" end)
     end)
 
     Theme.AnimateButton(exportAudioListBtn, function()
         local file = AudioRipper.ExportSoundList()
-        exportAudioListBtn.Text = "✓ Exportado!"
+        exportAudioListBtn.Text = "EXPORTED"
         Environment.SetClipboard(file)
         task.delay(2, function()
             exportAudioListBtn.Text = "📄 EXPORTAR TXT"
@@ -1386,7 +1386,7 @@ function Interface:BuildLightingRipperTab()
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "✨ EXTRATOR DE ILUMINAÇÃO & ATMOSFERA"
+    headerLbl.Text = "LIGHTING & ATMOSPHERE EXTRACTOR"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -1410,7 +1410,7 @@ function Interface:BuildLightingRipperTab()
     desc.Parent = card
 
     local exportLightBtn = Instance.new("TextButton")
-    exportLightBtn.Text = "✨ SALVAR PRESET DE ILUMINAÇÃO (.rbxmx)"
+    exportLightBtn.Text = "EXPORT LIGHTING PRESET (.rbxmx)"
     exportLightBtn.Font = Theme.FontTitle
     exportLightBtn.TextSize = 12
     exportLightBtn.TextColor3 = Theme.AccentSkull
@@ -1440,11 +1440,11 @@ function Interface:BuildLightingRipperTab()
         task.spawn(function()
             local success, file = LightingRipper.ExportLightingPreset()
             if success then
-                lightStatus.Text = "✓ Iluminação salva com sucesso: " .. file
+                lightStatus.Text = "[SUCCESS] Lighting preset saved: " .. file
                 lightStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                lightStatus.Text = "❌ Erro: " .. tostring(file)
+                lightStatus.Text = "[ERROR] " .. tostring(file)
                 lightStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1465,7 +1465,7 @@ function Interface:BuildGuiRipperTab()
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "🖥️ EXTRATOR DE INTERFACES (GUIs & HUDs)"
+    headerLbl.Text = "USER INTERFACE (GUI) RIPPER"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -1489,7 +1489,7 @@ function Interface:BuildGuiRipperTab()
     desc.Parent = card
 
     local exportGuiBtn = Instance.new("TextButton")
-    exportGuiBtn.Text = "🖥️ SALVAR TODAS AS GUIs (.rbxmx)"
+    exportGuiBtn.Text = "EXPORT ALL INTERFACES (.rbxmx)"
     exportGuiBtn.Font = Theme.FontTitle
     exportGuiBtn.TextSize = 12
     exportGuiBtn.TextColor3 = Theme.AccentSkull
@@ -1519,11 +1519,11 @@ function Interface:BuildGuiRipperTab()
         task.spawn(function()
             local success, file = GuiRipper.ExportAllGuis(self.Config)
             if success then
-                guiStatus.Text = "✓ Pacote de GUIs salvo com sucesso: " .. file
+                guiStatus.Text = "[SUCCESS] UI Pack saved: " .. file
                 guiStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                guiStatus.Text = "❌ Erro: " .. tostring(file)
+                guiStatus.Text = "[ERROR] " .. tostring(file)
                 guiStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1547,7 +1547,7 @@ function Interface:BuildNetworkTab()
     netLayout.Parent = topBar
 
     local toggleSnifferBtn = Instance.new("TextButton")
-    toggleSnifferBtn.Text = "📡 INICIAR GRAVAÇÃO"
+    toggleSnifferBtn.Text = "START PACKET SNIFFER"
     toggleSnifferBtn.Font = Theme.FontSemiBold
     toggleSnifferBtn.TextSize = 11
     toggleSnifferBtn.TextColor3 = Theme.AccentSkull
@@ -1591,7 +1591,7 @@ function Interface:BuildNetworkTab()
     Theme.AnimateButton(toggleSnifferBtn, function()
         if NetworkSniffer.IsActive then
             NetworkSniffer.Stop()
-            toggleSnifferBtn.Text = "📡 INICIAR GRAVAÇÃO"
+            toggleSnifferBtn.Text = "START PACKET SNIFFER"
             toggleSnifferBtn.TextColor3 = Theme.AccentSkull
             toggleSnifferBtn.BackgroundColor3 = Theme.AccentPrimary
         else
@@ -1604,7 +1604,7 @@ function Interface:BuildNetworkTab()
 
     Theme.AnimateButton(exportSnifferBtn, function()
         local file = NetworkSniffer.ExportLogs()
-        exportSnifferBtn.Text = "✓ Salvo: " .. file
+        exportSnifferBtn.Text = "[SUCCESS] Saved: " .. file
         Environment.SetClipboard(file)
         task.delay(2, function()
             exportSnifferBtn.Text = "📄 EXPORTAR (.json)"
@@ -1641,7 +1641,7 @@ function Interface:BuildUniverseTab()
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "🌌 RASTREADOR DE UNIVERSO (MULTI-PLACES)"
+    headerLbl.Text = "UNIVERSE SUB-PLACE DISCOVERY"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -1664,7 +1664,7 @@ function Interface:BuildUniverseTab()
     uniLayout.Parent = uniBtnContainer
 
     local scanBtn = Instance.new("TextButton")
-    scanBtn.Text = "🌌 SUB-PLACES"
+    scanBtn.Text = "SCAN SUB-PLACES"
     scanBtn.Font = Theme.FontTitle
     scanBtn.TextSize = 10
     scanBtn.TextColor3 = Theme.AccentSkull
@@ -1723,7 +1723,7 @@ function Interface:BuildUniverseTab()
 
         task.spawn(function()
             local list = UniverseTracker.GetUniversePlaces()
-            scanBtn.Text = string.format("✓ %d sub-places", #list)
+            scanBtn.Text = string.format("[OK] %d sub-places", #list)
 
             for idx, pInfo in ipairs(list) do
                 local row = Instance.new("Frame")
@@ -1758,7 +1758,7 @@ function Interface:BuildUniverseTab()
 
                 Theme.AnimateButton(copyIdBtn, function()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
-                    copyIdBtn.Text = "✓ Copiado"
+                    copyIdBtn.Text = "[OK] Copiado"
                     task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
                 end)
             end
@@ -1772,10 +1772,10 @@ function Interface:BuildUniverseTab()
         task.spawn(function()
             local success, snapFile = PlaceDiffTracker.SaveSnapshot()
             if success then
-                snapshotBtn.Text = "✓ Salvo!"
+                snapshotBtn.Text = "[OK] Salvo!"
                 Environment.SetClipboard(snapFile)
             else
-                snapshotBtn.Text = "❌ Erro"
+                snapshotBtn.Text = "[ERR] Erro"
             end
             task.delay(2, function() snapshotBtn.Text = "📸 SNAPSHOT" end)
         end)
@@ -1803,7 +1803,7 @@ function Interface:BuildUniverseTab()
             lbl.Parent = placeScroll
 
             if s then Environment.SetClipboard(reportFile) end
-            compareDiffBtn.Text = "✓ Concluído"
+            compareDiffBtn.Text = "[OK] Concluído"
             task.delay(2, function() compareDiffBtn.Text = "🔍 COMPARAR DIFF" end)
         end)
     end)
@@ -1823,7 +1823,7 @@ function Interface:BuildObjExportTab()
     card.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "🧊 EXPORTADOR 3D WAVEFRONT (.OBJ + .MTL)"
+    headerLbl.Text = " EXPORTADOR 3D WAVEFRONT (.OBJ + .MTL)"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -1859,7 +1859,7 @@ function Interface:BuildObjExportTab()
     btnLayout.Parent = exportBtnContainer
 
     local exportObjBtn = Instance.new("TextButton")
-    exportObjBtn.Text = "🧊 EXPORTAR .OBJ + .MTL"
+    exportObjBtn.Text = " EXPORTAR .OBJ + .MTL"
     exportObjBtn.Font = Theme.FontTitle
     exportObjBtn.TextSize = 11
     exportObjBtn.TextColor3 = Theme.AccentSkull
@@ -1902,11 +1902,11 @@ function Interface:BuildObjExportTab()
         task.spawn(function()
             local success, file = ObjExporter.ExportWorkspaceToObj()
             if success then
-                objStatus.Text = "✓ Exportado com sucesso: " .. file
+                objStatus.Text = "[OK] Exportado com sucesso: " .. file
                 objStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                objStatus.Text = "❌ Erro ao exportar: " .. tostring(file)
+                objStatus.Text = "[ERR] Erro ao exportar: " .. tostring(file)
                 objStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1919,11 +1919,11 @@ function Interface:BuildObjExportTab()
         task.spawn(function()
             local success, file = Web3DExporter.ExportModelToHTML(workspace)
             if success then
-                objStatus.Text = "✓ Web 3D salvo: " .. file .. " (Abra no navegador!)"
+                objStatus.Text = "[SUCCESS] Web 3D exported: " .. file .. " (Abra no navegador!)"
                 objStatus.TextColor3 = Theme.AccentSuccess
                 Environment.SetClipboard(file)
             else
-                objStatus.Text = "❌ Erro ao exportar Web 3D: " .. tostring(file)
+                objStatus.Text = "[ERROR] Web 3D export failed: " .. tostring(file)
                 objStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -1946,8 +1946,8 @@ function Interface:BuildTutorialTab()
     local steps = {
         {"📌 Passo 1: Iniciar a Cópia", "Basta ir na aba ' Clonar Tudo' e clicar no botão roxo 'CLONAR JOGO INTEIRO'. O HyperSaveInstance vai começar a varrer o mapa."},
         {"⏳ Passo 2: Aguardar o Progresso", "A barra de progresso vai indicar o que está sendo salvo em tempo real: áudios, texturas, meshes 3D, terreno e scripts descompilados."},
-        {"📁 Passo 3: Onde o Arquivo Fica?", "O arquivo .rbxlx e a pasta de assets são salvos automaticamente dentro da pasta 'workspace' do seu executor no seu computador."},
-        {"🚀 Passo 4: Como Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' (Arquivo) -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. Pronto! O jogo inteiro abrirá 100% editável!"},
+        {" Passo 3: Onde o Arquivo Fica?", "O arquivo .rbxlx e a pasta de assets são salvos automaticamente dentro da pasta 'workspace' do seu executor no seu computador."},
+        {" Passo 4: Como Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' (Arquivo) -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. Pronto! O jogo inteiro abrirá 100% editável!"},
     }
 
     for i, step in ipairs(steps) do
@@ -2000,7 +2000,7 @@ function Interface:BuildTutorialTab()
 
     Theme.AnimateButton(copyScriptCard, function()
         Environment.SetClipboard('loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()')
-        copyScriptCard.Text = "✓ Comando Copiado!"
+        copyScriptCard.Text = "[OK] Comando Copiado!"
         task.delay(2, function()
             copyScriptCard.Text = "📋 Copiar Comando de Execução (loadstring) para a Área de Transferência"
         end)
@@ -2129,7 +2129,7 @@ function Interface:BuildConsoleTab()
     Theme.AnimateButton(copyLogsBtn, function()
         local fullLog = table.concat(self.Logs, "\n")
         Environment.SetClipboard(fullLog)
-        copyLogsBtn.Text = "✓ Logs Copiados!"
+        copyLogsBtn.Text = "[OK] Logs Copiados!"
         task.delay(2, function()
             copyLogsBtn.Text = "📋 Copiar Logs para Área de Transferência"
         end)
@@ -2194,7 +2194,7 @@ function Interface:BuildAboutTab()
     devName.Parent = devCard
 
     local devRole = Instance.new("TextLabel")
-    devRole.Text = "⭐ Criador & Engenheiro Principal • HyperSaveInstance"
+    devRole.Text = " Criador & Engenheiro Principal • HyperSaveInstance"
     devRole.Font = Theme.FontSemiBold
     devRole.TextSize = 11
     devRole.TextColor3 = Theme.TextTheo
@@ -2232,7 +2232,7 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
-        btnGithub.Text = "✓ Perfil Copiado!"
+        btnGithub.Text = "[OK] Perfil Copiado!"
         task.delay(2, function()
             btnGithub.Text = "🔗 GitHub Profile"
         end)
@@ -2240,7 +2240,7 @@ function Interface:BuildAboutTab()
 
     -- Repository Link Button
     local btnRepo = Instance.new("TextButton")
-    btnRepo.Text = "⭐ Repositório"
+    btnRepo.Text = " Repositório"
     btnRepo.Font = Theme.FontSemiBold
     btnRepo.TextSize = 10
     btnRepo.TextColor3 = Theme.TextPrimary
@@ -2253,9 +2253,9 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
-        btnRepo.Text = "✓ Repo Copiado!"
+        btnRepo.Text = "[OK] Repo Copiado!"
         task.delay(2, function()
-            btnRepo.Text = "⭐ Repositório"
+            btnRepo.Text = " Repositório"
         end)
     end)
 
@@ -2330,7 +2330,7 @@ function Interface:BuildAboutTab()
     featCard.Parent = scroll
 
     local featTitle = Instance.new("TextLabel")
-    featTitle.Text = "⚡ RECURSOS EXCLUSIVOS INCLUÍDOS"
+    featTitle.Text = " RECURSOS EXCLUSIVOS INCLUÍDOS"
     featTitle.Font = Theme.FontTitle
     featTitle.TextSize = 12
     featTitle.TextColor3 = Theme.AccentCyan
@@ -2341,7 +2341,7 @@ function Interface:BuildAboutTab()
     featTitle.Parent = featCard
 
     local featDesc = Instance.new("TextLabel")
-    featDesc.Text = "✓ Seletor 3D com Mira no Mundo & Multi-Seleção em Lote\n✓ Extração de Terreno SmoothVoxels 3D, Iluminação PBR & Sons\n✓ Plugin Oficial de Roblox Studio com Reparo Mestre 1-Clique\n✓ Desofuscador de Variáveis de Scripts e Proteção Anti-AFK"
+    featDesc.Text = "[OK] Seletor 3D com Mira no Mundo & Multi-Seleção em Lote\n[OK] Extração de Terreno SmoothVoxels 3D, Iluminação PBR & Sons\n[OK] Plugin Oficial de Roblox Studio com Reparo Mestre 1-Clique\n[OK] Desofuscador de Variáveis de Scripts e Proteção Anti-AFK"
     featDesc.Font = Theme.FontRegular
     featDesc.TextSize = 11
     featDesc.TextColor3 = Theme.TextSecondary
@@ -2398,7 +2398,7 @@ function Interface:BindEngineEvents()
             if prog.AssetsFolder then self.SavedAssetPath = prog.AssetsFolder end
 
             if self.CloneButton then
-                self.CloneButton.Text = "✓ CLONADO COM SUCESSO!"
+                self.CloneButton.Text = "[OK] CLONADO COM SUCESSO!"
                 Theme.AddGradient(self.CloneButton, Theme.AccentSuccess, Color3.fromRGB(16, 185, 129), 90)
                 task.delay(4, function()
                     self.CloneButton.Text = " CLONAR JOGO INTEIRO (1-CLIQUE)"

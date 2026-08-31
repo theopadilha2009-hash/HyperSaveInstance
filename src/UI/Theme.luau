@@ -1,52 +1,52 @@
 --[[
-    HyperSaveInstance - Bubble UI & Translucent Acrylic Design System
-    Created by Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
+    HyperSaveInstance - High-End Dark Gothic Cyberpunk & Neon Design System
+    Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
 ]]
 
 local TweenService = game:GetService("TweenService")
 
 local Theme = {
-    -- Pure Purple & Black Translucent Acrylic Palette
-    Background = Color3.fromRGB(7, 5, 13),          -- Deep Obsidian Black
-    BackgroundTransparency = 0.06,                  -- Frosted Glass Depth
-    CardBg = Color3.fromRGB(16, 12, 28),            -- Translucent Purple-Black
-    CardTransparency = 0.2,                         -- Acrylic Window Effect
-    CardHover = Color3.fromRGB(30, 22, 52),         -- Smooth Violet Hover
-    CardActive = Color3.fromRGB(48, 32, 82),        -- Solid Active Violet
-    Border = Color3.fromRGB(56, 40, 88),            -- Subtle Purple Border
-    BorderTransparency = 0.35,                      -- Soft Border Blend
-    BorderLight = Color3.fromRGB(139, 92, 246),     -- Electric Violet Stroke
-    BorderNeon = Color3.fromRGB(168, 85, 247),      -- Glowing Purple Neon
+    -- Dark Gothic Cyberpunk Palette (Deep Obsidian, Pitch Black & Vivid Ultraviolet Neon)
+    Background = Color3.fromRGB(5, 4, 9),             -- Ultra-deep Void Black (#050409)
+    BackgroundTransparency = 0.04,                   -- Dense frosted dark glass
+    CardBg = Color3.fromRGB(11, 9, 18),               -- Dark Obsidian Panel (#0b0912)
+    CardTransparency = 0.1,                          -- High opacity solid glass
+    CardHover = Color3.fromRGB(26, 18, 44),          -- Subtle Ultraviolet hover
+    CardActive = Color3.fromRGB(46, 20, 80),         -- Active glowing violet
+    Border = Color3.fromRGB(38, 26, 62),             -- Dark alloy border
+    BorderTransparency = 0.2,
+    BorderLight = Color3.fromRGB(147, 51, 234),      -- Vivid Purple Stroke (#9333ea)
+    BorderNeon = Color3.fromRGB(168, 85, 247),       -- Ultra Neon Violet Glow (#a855f7)
+    BorderCyber = Color3.fromRGB(192, 132, 252),     -- Electric Lavender (#c084fc)
     
-    -- Solid, Rich Accent Colors
-    AccentPrimary = Color3.fromRGB(139, 92, 246),   -- Electric Royal Purple (#8b5cf6)
-    AccentSecondary = Color3.fromRGB(168, 85, 247), -- Bright Radiant Violet (#a855f7)
-    AccentDark = Color3.fromRGB(91, 33, 182),       -- Deep Amethyst (#5b21b6)
-    AccentCyan = Color3.fromRGB(216, 180, 254),     -- Light Lavender (#d8b4fe)
-    AccentSuccess = Color3.fromRGB(168, 85, 247),   -- Solid Purple (#a855f7)
+    -- Accents
+    AccentPrimary = Color3.fromRGB(126, 34, 206),    -- Deep Electric Purple (#7e22ce)
+    AccentSecondary = Color3.fromRGB(168, 85, 247),  -- Neon Violet (#a855f7)
+    AccentDark = Color3.fromRGB(59, 7, 100),         -- Midnight Amethyst (#3b0764)
+    AccentGothic = Color3.fromRGB(248, 250, 252),    -- Razor Crisp Bone White (#f8fafc)
+    AccentSuccess = Color3.fromRGB(168, 85, 247),    -- Neon Purple
     AccentWarning = Color3.fromRGB(232, 121, 249),   -- Vivid Magenta (#e879f9)
-    AccentDanger = Color3.fromRGB(244, 63, 94),     -- Vivid Rose (#f43f5e)
-    AccentTheo = Color3.fromRGB(240, 171, 252),     -- Hot Lavender (#f0abfc)
-    AccentSkull = Color3.fromRGB(255, 255, 255),    -- Crisp Pure White (#ffffff)
+    AccentDanger = Color3.fromRGB(244, 63, 94),      -- Neon Crimson (#f43f5e)
+    AccentTheo = Color3.fromRGB(216, 180, 254),      -- Glowing Cyber Lavender (#d8b4fe)
+    AccentSkull = Color3.fromRGB(255, 255, 255),     -- Pure White
 
-    -- Modern Crisp Typography
-    TextPrimary = Color3.fromRGB(255, 255, 255),    -- Pure White
-    TextSecondary = Color3.fromRGB(216, 180, 254),  -- Soft Lilac
-    TextMuted = Color3.fromRGB(156, 140, 180),      -- Muted Ash Violet
-    TextAccent = Color3.fromRGB(192, 132, 252),     -- Bright Violet
-    TextCyan = Color3.fromRGB(233, 213, 255),       -- Pale Lavender
-    TextTheo = Color3.fromRGB(245, 208, 254),       -- Glowing Lavender
+    -- High-Contrast Typography
+    TextPrimary = Color3.fromRGB(255, 255, 255),     -- Crisp Bone White
+    TextSecondary = Color3.fromRGB(203, 185, 235),   -- Muted Violet Silver
+    TextMuted = Color3.fromRGB(130, 115, 160),       -- Shadow Violet
+    TextAccent = Color3.fromRGB(192, 132, 252),      -- Cyber Violet
+    TextTheo = Color3.fromRGB(233, 213, 255),        -- Pale Lavender
 
-    -- Fonts
+    -- Modern Fonts
     FontTitle = Enum.Font.GothamBold,
     FontSemiBold = Enum.Font.GothamSemibold,
     FontRegular = Enum.Font.Gotham,
     FontCode = Enum.Font.Code,
 
-    -- Smooth Bubble Radii ("Mais Bolha")
-    CornerLarge = UDim.new(0, 16),
-    CornerMedium = UDim.new(0, 12),
-    CornerSmall = UDim.new(0, 8),
+    -- Sharp Geometric Radii (Sleek, High-Tech Gothic Curves)
+    CornerLarge = UDim.new(0, 10),
+    CornerMedium = UDim.new(0, 7),
+    CornerSmall = UDim.new(0, 5),
     CornerPill = UDim.new(1, 0),
 }
 
@@ -54,14 +54,14 @@ local Theme = {
 function Theme.Tween(instance: Instance, duration: number, properties: {[string]: any}, easingStyle: Enum.EasingStyle?, easingDirection: Enum.EasingDirection?): Tween
     local tween = TweenService:Create(
         instance,
-        TweenInfo.new(duration or 0.2, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out),
+        TweenInfo.new(duration or 0.18, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out),
         properties
     )
     tween:Play()
     return tween
 end
 
--- Create rounded bubble corner
+-- Create rounded corner
 function Theme.AddCorner(instance: Instance, radius: UDim?): UICorner
     local corner = Instance.new("UICorner")
     corner.CornerRadius = radius or Theme.CornerMedium
@@ -92,7 +92,7 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
     return grad
 end
 
--- Interactive Button Animation Helper (Universal Mouse & Mobile Touch Support)
+-- Interactive Button Animation Helper
 function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
     local origSize = btn.Size
     local origBg = btn.BackgroundColor3
@@ -111,13 +111,13 @@ function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
         end)
 
         btn.MouseButton1Down:Connect(function()
-            Theme.Tween(btn, 0.08, {
+            Theme.Tween(btn, 0.06, {
                 Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
             })
         end)
 
         btn.MouseButton1Up:Connect(function()
-            Theme.Tween(btn, 0.12, {
+            Theme.Tween(btn, 0.1, {
                 Size = origSize
             })
         end)
