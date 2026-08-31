@@ -5244,28 +5244,40 @@ __define__("Loader", function()
 
 local function createInstantBanner(text, isError)
     pcall(function()
-        local parent = (gethui and gethui())
-        if not parent then
+        local rawParent = (gethui and gethui())
+        if not rawParent then
             local plrs = game:GetService("Players")
             local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
-            parent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
+            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
         end
-        if not parent then return end
+        if not rawParent then return end
 
-        local old = parent:FindFirstChild("HSI_BootBanner")
-        if old then old:Destroy() end
+        local container = nil
+        if rawParent:IsA("LayerCollector") or rawParent:IsA("ScreenGui") then
+            container = rawParent
+        else
+            local old = rawParent:FindFirstChild("HSI_BootBanner")
+            if old then old:Destroy() end
 
-        local sg = Instance.new("ScreenGui")
-        sg.Name = "HSI_BootBanner"
-        sg.DisplayOrder = 9999999
-        sg.ResetOnSpawn = false
+            local sg = Instance.new("ScreenGui")
+            sg.Name = "HSI_BootBanner"
+            sg.DisplayOrder = 9999999
+            sg.ResetOnSpawn = false
+            sg.Enabled = true
+            sg.Parent = rawParent
+            container = sg
+        end
+
+        local oldF = container:FindFirstChild("HSI_BannerFrame")
+        if oldF then oldF:Destroy() end
 
         local f = Instance.new("Frame")
-        f.Size = UDim2.new(0, 320, 0, 48)
-        f.Position = UDim2.new(0.5, -160, 0, 24)
+        f.Name = "HSI_BannerFrame"
+        f.Size = UDim2.new(0, 340, 0, 48)
+        f.Position = UDim2.new(0.5, -170, 0, 24)
         f.BackgroundColor3 = isError and Color3.fromRGB(40, 10, 20) or Color3.fromRGB(16, 12, 28)
         f.BorderSizePixel = 0
-        f.Parent = sg
+        f.Parent = container
 
         local c = Instance.new("UICorner")
         c.CornerRadius = UDim.new(0, 10)
@@ -5286,10 +5298,8 @@ local function createInstantBanner(text, isError)
         l.BackgroundTransparency = 1
         l.Parent = f
 
-        sg.Parent = parent
-
-        task.delay(isError and 6 or 3, function()
-            pcall(function() sg:Destroy() end)
+        task.delay(isError and 6 or 3.5, function()
+            pcall(function() f:Destroy() end)
         end)
     end)
 end
@@ -5318,7 +5328,7 @@ for _, url in ipairs(mirrors) do
 end
 
 if not loadedScript then
-    createInstantBanner("❌ Falha de rede ao baixar HyperSave. Verifique sua conexão.", true)
+    createInstantBanner("❌ Falha de rede ao baixar HyperSave.", true)
     warn("[HyperSave] Falha ao baixar bundle: " .. tostring(lastError))
     return
 end
@@ -5406,36 +5416,50 @@ end
 
 function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
+    local safeContainer = nil
 
-    pcall(function()
-        local old = parent:FindFirstChild("HyperSaveInstance_UI")
-        if old then old:Destroy() end
-    end)
+    if parent and (parent:IsA("LayerCollector") or parent:IsA("ScreenGui")) then
+        pcall(function()
+            local old = parent:FindFirstChild("HyperSave_Container")
+            if old then old:Destroy() end
+        end)
+        local container = Instance.new("Frame")
+        container.Name = "HyperSave_Container"
+        container.Size = UDim2.new(1, 0, 1, 0)
+        container.BackgroundTransparency = 1
+        container.Parent = parent
+        safeContainer = container
+    else
+        pcall(function()
+            local old = parent:FindFirstChild("HyperSaveInstance_UI")
+            if old then old:Destroy() end
+        end)
 
-    -- ScreenGui
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "HyperSaveInstance_UI"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.DisplayOrder = 999999
-    screenGui.IgnoreGuiInset = true
-    screenGui.Enabled = true
-    self.ScreenGui = screenGui
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "HyperSaveInstance_UI"
+        screenGui.ResetOnSpawn = false
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        screenGui.DisplayOrder = 999999
+        screenGui.IgnoreGuiInset = true
+        screenGui.Enabled = true
+        self.ScreenGui = screenGui
 
-    if syn and syn.protect_gui then
-        pcall(syn.protect_gui, screenGui)
-    end
-
-    local ok = pcall(function() screenGui.Parent = parent end)
-    if not ok or not screenGui.Parent then
-        pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
-        if not screenGui.Parent then
-            pcall(function()
-                local plrs = game:GetService("Players")
-                local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
-                screenGui.Parent = lp and lp:FindFirstChildOfClass("PlayerGui")
-            end)
+        if syn and syn.protect_gui then
+            pcall(syn.protect_gui, screenGui)
         end
+
+        local ok = pcall(function() screenGui.Parent = parent end)
+        if not ok or not screenGui.Parent then
+            pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
+            if not screenGui.Parent then
+                pcall(function()
+                    local plrs = game:GetService("Players")
+                    local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
+                    screenGui.Parent = lp and lp:FindFirstChildOfClass("PlayerGui")
+                end)
+            end
+        end
+        safeContainer = screenGui
     end
 
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
@@ -5452,7 +5476,7 @@ function Interface:BuildUI()
     Theme.AddCorner(floatingBtn, Theme.CornerPill)
     Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
     Theme.AddGradient(floatingBtn, Color3.fromRGB(16, 12, 28), Color3.fromRGB(48, 28, 78), 45)
-    floatingBtn.Parent = screenGui
+    floatingBtn.Parent = safeContainer
     self.FloatingToggle = floatingBtn
 
     -- Make floating button draggable on touchscreen / mobile
@@ -5497,7 +5521,7 @@ function Interface:BuildUI()
     splash.BorderSizePixel = 0
     Theme.AddCorner(splash, Theme.CornerLarge)
     Theme.AddStroke(splash, Theme.BorderNeon, 2)
-    splash.Parent = screenGui
+    splash.Parent = safeContainer
 
     local splashTitle = Instance.new("TextLabel")
     splashTitle.Text = "💀 HYPERSAVE INSTANCE"
@@ -5560,7 +5584,7 @@ function Interface:BuildUI()
     main.Visible = true
     Theme.AddCorner(main, Theme.CornerLarge)
     Theme.AddStroke(main, Theme.BorderLight, 1.5)
-    main.Parent = screenGui
+    main.Parent = safeContainer
     self.MainFrame = main
 
     -- Dragging logic

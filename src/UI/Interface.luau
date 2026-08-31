@@ -57,36 +57,50 @@ end
 
 function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
+    local safeContainer = nil
 
-    pcall(function()
-        local old = parent:FindFirstChild("HyperSaveInstance_UI")
-        if old then old:Destroy() end
-    end)
+    if parent and (parent:IsA("LayerCollector") or parent:IsA("ScreenGui")) then
+        pcall(function()
+            local old = parent:FindFirstChild("HyperSave_Container")
+            if old then old:Destroy() end
+        end)
+        local container = Instance.new("Frame")
+        container.Name = "HyperSave_Container"
+        container.Size = UDim2.new(1, 0, 1, 0)
+        container.BackgroundTransparency = 1
+        container.Parent = parent
+        safeContainer = container
+    else
+        pcall(function()
+            local old = parent:FindFirstChild("HyperSaveInstance_UI")
+            if old then old:Destroy() end
+        end)
 
-    -- ScreenGui
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "HyperSaveInstance_UI"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.DisplayOrder = 999999
-    screenGui.IgnoreGuiInset = true
-    screenGui.Enabled = true
-    self.ScreenGui = screenGui
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "HyperSaveInstance_UI"
+        screenGui.ResetOnSpawn = false
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        screenGui.DisplayOrder = 999999
+        screenGui.IgnoreGuiInset = true
+        screenGui.Enabled = true
+        self.ScreenGui = screenGui
 
-    if syn and syn.protect_gui then
-        pcall(syn.protect_gui, screenGui)
-    end
-
-    local ok = pcall(function() screenGui.Parent = parent end)
-    if not ok or not screenGui.Parent then
-        pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
-        if not screenGui.Parent then
-            pcall(function()
-                local plrs = game:GetService("Players")
-                local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
-                screenGui.Parent = lp and lp:FindFirstChildOfClass("PlayerGui")
-            end)
+        if syn and syn.protect_gui then
+            pcall(syn.protect_gui, screenGui)
         end
+
+        local ok = pcall(function() screenGui.Parent = parent end)
+        if not ok or not screenGui.Parent then
+            pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
+            if not screenGui.Parent then
+                pcall(function()
+                    local plrs = game:GetService("Players")
+                    local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
+                    screenGui.Parent = lp and lp:FindFirstChildOfClass("PlayerGui")
+                end)
+            end
+        end
+        safeContainer = screenGui
     end
 
     -- Floating Mini Toggle Button (Always accessible if minimized or on mobile)
@@ -103,7 +117,7 @@ function Interface:BuildUI()
     Theme.AddCorner(floatingBtn, Theme.CornerPill)
     Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
     Theme.AddGradient(floatingBtn, Color3.fromRGB(16, 12, 28), Color3.fromRGB(48, 28, 78), 45)
-    floatingBtn.Parent = screenGui
+    floatingBtn.Parent = safeContainer
     self.FloatingToggle = floatingBtn
 
     -- Make floating button draggable on touchscreen / mobile
@@ -148,7 +162,7 @@ function Interface:BuildUI()
     splash.BorderSizePixel = 0
     Theme.AddCorner(splash, Theme.CornerLarge)
     Theme.AddStroke(splash, Theme.BorderNeon, 2)
-    splash.Parent = screenGui
+    splash.Parent = safeContainer
 
     local splashTitle = Instance.new("TextLabel")
     splashTitle.Text = "💀 HYPERSAVE INSTANCE"
@@ -211,7 +225,7 @@ function Interface:BuildUI()
     main.Visible = true
     Theme.AddCorner(main, Theme.CornerLarge)
     Theme.AddStroke(main, Theme.BorderLight, 1.5)
-    main.Parent = screenGui
+    main.Parent = safeContainer
     self.MainFrame = main
 
     -- Dragging logic

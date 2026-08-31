@@ -6,28 +6,40 @@
 
 local function createInstantBanner(text, isError)
     pcall(function()
-        local parent = (gethui and gethui())
-        if not parent then
+        local rawParent = (gethui and gethui())
+        if not rawParent then
             local plrs = game:GetService("Players")
             local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
-            parent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
+            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
         end
-        if not parent then return end
+        if not rawParent then return end
 
-        local old = parent:FindFirstChild("HSI_BootBanner")
-        if old then old:Destroy() end
+        local container = nil
+        if rawParent:IsA("LayerCollector") or rawParent:IsA("ScreenGui") then
+            container = rawParent
+        else
+            local old = rawParent:FindFirstChild("HSI_BootBanner")
+            if old then old:Destroy() end
 
-        local sg = Instance.new("ScreenGui")
-        sg.Name = "HSI_BootBanner"
-        sg.DisplayOrder = 9999999
-        sg.ResetOnSpawn = false
+            local sg = Instance.new("ScreenGui")
+            sg.Name = "HSI_BootBanner"
+            sg.DisplayOrder = 9999999
+            sg.ResetOnSpawn = false
+            sg.Enabled = true
+            sg.Parent = rawParent
+            container = sg
+        end
+
+        local oldF = container:FindFirstChild("HSI_BannerFrame")
+        if oldF then oldF:Destroy() end
 
         local f = Instance.new("Frame")
-        f.Size = UDim2.new(0, 320, 0, 48)
-        f.Position = UDim2.new(0.5, -160, 0, 24)
+        f.Name = "HSI_BannerFrame"
+        f.Size = UDim2.new(0, 340, 0, 48)
+        f.Position = UDim2.new(0.5, -170, 0, 24)
         f.BackgroundColor3 = isError and Color3.fromRGB(40, 10, 20) or Color3.fromRGB(16, 12, 28)
         f.BorderSizePixel = 0
-        f.Parent = sg
+        f.Parent = container
 
         local c = Instance.new("UICorner")
         c.CornerRadius = UDim.new(0, 10)
@@ -48,10 +60,8 @@ local function createInstantBanner(text, isError)
         l.BackgroundTransparency = 1
         l.Parent = f
 
-        sg.Parent = parent
-
-        task.delay(isError and 6 or 3, function()
-            pcall(function() sg:Destroy() end)
+        task.delay(isError and 6 or 3.5, function()
+            pcall(function() f:Destroy() end)
         end)
     end)
 end
@@ -80,7 +90,7 @@ for _, url in ipairs(mirrors) do
 end
 
 if not loadedScript then
-    createInstantBanner("❌ Falha de rede ao baixar HyperSave. Verifique sua conexão.", true)
+    createInstantBanner("❌ Falha de rede ao baixar HyperSave.", true)
     warn("[HyperSave] Falha ao baixar bundle: " .. tostring(lastError))
     return
 end
