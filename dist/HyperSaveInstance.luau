@@ -2094,21 +2094,49 @@ local ObjExporter = {}
 
 -- Generate standard cube vertices & faces for BasePart
 local function getBoxGeometry(cf, size, vertOffset)
-    local hx, hy, hz = size.X / 2, size.Y / 2, size.Z / 2
-    local corners = {
-        cf:PointToWorldSpace(Vector3.new(-hx, -hy, -hz)),
-        cf:PointToWorldSpace(Vector3.new(hx, -hy, -hz)),
-        cf:PointToWorldSpace(Vector3.new(hx, hy, -hz)),
-        cf:PointToWorldSpace(Vector3.new(-hx, hy, -hz)),
-        cf:PointToWorldSpace(Vector3.new(-hx, -hy, hz)),
-        cf:PointToWorldSpace(Vector3.new(hx, -hy, hz)),
-        cf:PointToWorldSpace(Vector3.new(hx, hy, hz)),
-        cf:PointToWorldSpace(Vector3.new(-hx, hy, hz)),
-    }
+    local hx = ((size and tonumber(size.X)) or 2) / 2
+    local hy = ((size and tonumber(size.Y)) or 2) / 2
+    local hz = ((size and tonumber(size.Z)) or 2) / 2
+
+    local corners = {}
+    if cf and type(cf.PointToWorldSpace) == "function" then
+        local s, c = pcall(function()
+            return {
+                cf:PointToWorldSpace(Vector3.new(-hx, -hy, -hz)),
+                cf:PointToWorldSpace(Vector3.new(hx, -hy, -hz)),
+                cf:PointToWorldSpace(Vector3.new(hx, hy, -hz)),
+                cf:PointToWorldSpace(Vector3.new(-hx, hy, -hz)),
+                cf:PointToWorldSpace(Vector3.new(-hx, -hy, hz)),
+                cf:PointToWorldSpace(Vector3.new(hx, -hy, hz)),
+                cf:PointToWorldSpace(Vector3.new(hx, hy, hz)),
+                cf:PointToWorldSpace(Vector3.new(-hx, hy, hz)),
+            }
+        end)
+        if s and c then corners = c end
+    end
+
+    if #corners == 0 then
+        local px = (cf and cf.Position and tonumber(cf.Position.X)) or (cf and tonumber(cf.X)) or 0
+        local py = (cf and cf.Position and tonumber(cf.Position.Y)) or (cf and tonumber(cf.Y)) or 0
+        local pz = (cf and cf.Position and tonumber(cf.Position.Z)) or (cf and tonumber(cf.Z)) or 0
+        corners = {
+            Vector3.new(px - hx, py - hy, pz - hz),
+            Vector3.new(px + hx, py - hy, pz - hz),
+            Vector3.new(px + hx, py + hy, pz - hz),
+            Vector3.new(px - hx, py + hy, pz - hz),
+            Vector3.new(px - hx, py - hy, pz + hz),
+            Vector3.new(px + hx, py - hy, pz + hz),
+            Vector3.new(px + hx, py + hy, pz + hz),
+            Vector3.new(px - hx, py + hy, pz + hz),
+        }
+    end
 
     local vLines = {}
     for _, pt in ipairs(corners) do
-        table.insert(vLines, string.format("v %.4f %.4f %.4f", pt.X, pt.Y, pt.Z))
+        local vx = (pt and tonumber(pt.X)) or 0
+        local vy = (pt and tonumber(pt.Y)) or 0
+        local vz = (pt and tonumber(pt.Z)) or 0
+        table.insert(vLines, string.format("v %.4f %.4f %.4f", vx, vy, vz))
     end
 
     local o = vertOffset
@@ -2130,15 +2158,15 @@ local function getBoxGeometry(cf, size, vertOffset)
     return table.concat(vLines, "\n"), table.concat(fLines, "\n"), vertOffset + 8
 end
 
--- Export entire workspace or model to .obj + .mtl
-function ObjExporter.Export(targetRoot, options)
+-- Generate raw OBJ and MTL string representations in-memory
+function ObjExporter.GenerateObj(targetRoot, options)
     local root = targetRoot or workspace
     local placeId = game.PlaceId or 0
     local baseName = string.format("HyperSave_Map3D_%d", placeId)
 
     local objLines = {
         "# HyperSaveInstance - Wavefront 3D OBJ Export",
-        "# Exported from Roblox Experience",
+        "# Exported by Theo Lorentz Padilha",
         "mtllib " .. baseName .. ".mtl",
         ""
     }
@@ -2154,21 +2182,30 @@ function ObjExporter.Export(targetRoot, options)
 
     local function processInstance(inst)
         if inst:IsA("BasePart") and not inst:IsA("Terrain") then
-            local color = inst.Color
-            local matName = string.format("mat_%d_%d_%d", math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255))
+            local color = inst.Color or Color3.fromRGB(168, 85, 247)
+            local cr = math.floor(((color and tonumber(color.R)) or 0.5) * 255)
+            local cg = math.floor(((color and tonumber(color.G)) or 0.5) * 255)
+            local cb = math.floor(((color and tonumber(color.B)) or 0.5) * 255)
+            local matName = string.format("mat_%d_%d_%d", cr, cg, cb)
 
             if not materialsSeen[matName] then
                 materialsSeen[matName] = true
+                local r = (color and tonumber(color.R)) or 0.5
+                local g = (color and tonumber(color.G)) or 0.5
+                local b = (color and tonumber(color.B)) or 0.5
+                local trans = tonumber(inst.Transparency) or 0
                 table.insert(mtlLines, string.format("newmtl %s", matName))
-                table.insert(mtlLines, string.format("Kd %.4f %.4f %.4f", color.R, color.G, color.B))
-                table.insert(mtlLines, string.format("d %.4f", 1 - inst.Transparency))
+                table.insert(mtlLines, string.format("Kd %.4f %.4f %.4f", r, g, b))
+                table.insert(mtlLines, string.format("d %.4f", 1 - trans))
                 table.insert(mtlLines, "")
             end
 
-            table.insert(objLines, string.format("o %s_%d", string.gsub(inst.Name, "[^%w_]", "_"), partCount))
+            table.insert(objLines, string.format("o %s_%d", string.gsub(inst.Name or "Part", "[^%w_]", "_"), partCount))
             table.insert(objLines, "usemtl " .. matName)
 
-            local vStr, fStr, newOffset = getBoxGeometry(inst.CFrame, inst.Size, vertOffset)
+            local cf = inst.CFrame or CFrame.new()
+            local sz = inst.Size or Vector3.new(2, 2, 2)
+            local vStr, fStr, newOffset = getBoxGeometry(cf, sz, vertOffset)
             table.insert(objLines, vStr)
             table.insert(objLines, fStr)
             table.insert(objLines, "")
@@ -2184,10 +2221,16 @@ function ObjExporter.Export(targetRoot, options)
 
     processInstance(root)
 
-    -- Write files
-    local objContent = table.concat(objLines, "\n")
-    local mtlContent = table.concat(mtlLines, "\n")
+    return table.concat(objLines, "\n"), table.concat(mtlLines, "\n")
+end
 
+-- Export entire workspace or model to .obj + .mtl files
+function ObjExporter.Export(targetRoot, options)
+    local root = targetRoot or workspace
+    local placeId = game.PlaceId or 0
+    local baseName = string.format("HyperSave_Map3D_%d", placeId)
+
+    local objContent, mtlContent = ObjExporter.GenerateObj(root, options)
     local objPath = baseName .. ".obj"
     local mtlPath = baseName .. ".mtl"
 
@@ -2195,6 +2238,10 @@ function ObjExporter.Export(targetRoot, options)
     Environment.WriteFile(mtlPath, mtlContent)
 
     return true, objPath
+end
+
+function ObjExporter.ExportWorkspaceToObj()
+    return ObjExporter.Export(workspace)
 end
 
 return ObjExporter
@@ -2240,6 +2287,193 @@ function Optimizer.OptimizeHierarchy(rootInstances, options)
 end
 
 return Optimizer
+
+end)
+
+__define__("Core/PlaceDiffTracker", function()
+--[[
+    HyperSaveInstance - Map & Update Diff Tracker
+    Compares the current place hierarchy against a previous snapshot to identify
+    newly added instances, modified scripts, and removed models in game updates.
+]]
+
+local HttpService = game:GetService("HttpService")
+local Environment = __require__("Utils/Environment")
+
+local PlaceDiffTracker = {}
+
+-- Create a lightweight signature dictionary of all instances in a target container
+function PlaceDiffTracker.CreateSnapshot(root)
+    local target = root or game
+    local snapshot = {
+        PlaceId = game.PlaceId or 0,
+        Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        InstanceCount = 0,
+        Instances = {}
+    }
+
+    local function scan(inst, path)
+        local curPath = path .. "/" .. inst.Name
+        local class = inst.ClassName
+        local childrenCount = #inst:GetChildren()
+        
+        local info = {
+            Class = class,
+            Children = childrenCount
+        }
+
+        if inst:IsA("LuaSourceContainer") then
+            local s, src = pcall(function() return (inst ).Source end)
+            if s and src then
+                info.SourceLen = #src
+            end
+        end
+
+        snapshot.Instances[curPath] = info
+        snapshot.InstanceCount = snapshot.InstanceCount + 1
+
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child, curPath)
+        end
+    end
+
+    for _, serv in ipairs(target:GetChildren()) do
+        if not string.find(serv.ClassName, "Core") and not string.find(serv.Name, "Roblox") then
+            pcall(function() scan(serv, "") end)
+        end
+    end
+
+    return snapshot
+end
+
+-- Save snapshot to executor storage
+function PlaceDiffTracker.SaveSnapshot(name, root)
+    local snapName = name or string.format("HyperSave_Snapshot_%d_%s.json", game.PlaceId or 0, os.date("%Y%m%d_%H%M%S"))
+    local snapData = PlaceDiffTracker.CreateSnapshot(root)
+    
+    local s, json = pcall(function()
+        return HttpService:JSONEncode(snapData)
+    end)
+
+    if not s or not json then
+        return false, "Falha ao codificar snapshot JSON."
+    end
+
+    local wrote = Environment.WriteFile(snapName, json)
+    if wrote then
+        return true, snapName
+    end
+    return false, "Falha ao gravar arquivo de snapshot."
+end
+
+-- Compare two snapshots or compare current place against a saved snapshot file
+function PlaceDiffTracker.Compare(prevSnapshotOrFile, curSnapshot)
+    local prev = prevSnapshotOrFile
+    if type(prev) == "string" then
+        local content = Environment.ReadFile(prev)
+        if not content then
+            return { Success = false, Error = "Arquivo de snapshot anterior não encontrado." }
+        end
+        local s, parsed = pcall(function() return HttpService:JSONDecode(content) end)
+        if not s or not parsed then
+            return { Success = false, Error = "JSON de snapshot anterior inválido." }
+        end
+        prev = parsed
+    end
+
+    local curr = curSnapshot or PlaceDiffTracker.CreateSnapshot()
+
+    local diff = {
+        Success = true,
+        PlaceId = curr.PlaceId,
+        Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        PreviousTimestamp = prev.Timestamp or "Desconhecido",
+        Added = {},
+        Removed = {},
+        Modified = {},
+        Summary = ""
+    }
+
+    -- Detect added and modified
+    for path, info in pairs(curr.Instances) do
+        local old = prev.Instances[path]
+        if not old then
+            table.insert(diff.Added, { Path = path, Class = info.Class })
+        else
+            if old.Class ~= info.Class or (info.SourceLen and old.SourceLen ~= info.SourceLen) then
+                table.insert(diff.Modified, { Path = path, Class = info.Class, OldClass = old.Class, Diff = "Script/Propriedade alterada" })
+            end
+        end
+    end
+
+    -- Detect removed
+    for path, oldInfo in pairs(prev.Instances) do
+        if not curr.Instances[path] then
+            table.insert(diff.Removed, { Path = path, Class = oldInfo.Class })
+        end
+    end
+
+    diff.Summary = string.format("Diff: +%d adicionados, -%d removidos, ~%d modificados (Total Atual: %d)",
+        #diff.Added, #diff.Removed, #diff.Modified, curr.InstanceCount)
+
+    return diff
+end
+
+-- Export comparison report as human-readable markdown / text
+function PlaceDiffTracker.ExportDiffReport(diff)
+    if not diff.Success then
+        return false, diff.Error or "Erro desconhecido"
+    end
+
+    local fileName = string.format("HyperSave_DiffReport_%d.txt", diff.PlaceId or 0)
+    local lines = {
+        "================================================================================",
+        "💀 HYPERSAVEINSTANCE - RELATÓRIO DE ATUALIZAÇÃO DO MAPA (PLACE DIFF)",
+        "Desenvolvido por Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)",
+        "================================================================================",
+        string.format("Place ID: %d", diff.PlaceId or 0),
+        string.format("Data da Comparação: %s", diff.Timestamp),
+        string.format("Snapshot Anterior: %s", diff.PreviousTimestamp),
+        string.format("Resumo: %s", diff.Summary),
+        "================================================================================",
+        "",
+        string.format("--- [1] NOVAS INSTÂNCIAS ADICIONADAS (%d) ---", #diff.Added)
+    }
+
+    for i, item in ipairs(diff.Added) do
+        if i <= 200 then
+            table.insert(lines, string.format("  [+] (%s) %s", item.Class, item.Path))
+        end
+    end
+    if #diff.Added > 200 then
+        table.insert(lines, string.format("  ... e mais %d itens adicionados.", #diff.Added - 200))
+    end
+
+    table.insert(lines, "")
+    table.insert(lines, string.format("--- [2] INSTÂNCIAS MODIFICADAS (%d) ---", #diff.Modified))
+    for i, item in ipairs(diff.Modified) do
+        if i <= 200 then
+            table.insert(lines, string.format("  [~] (%s) %s -> %s", item.Class, item.Path, item.Diff))
+        end
+    end
+
+    table.insert(lines, "")
+    table.insert(lines, string.format("--- [3] INSTÂNCIAS REMOVIDAS (%d) ---", #diff.Removed))
+    for i, item in ipairs(diff.Removed) do
+        if i <= 200 then
+            table.insert(lines, string.format("  [-] (%s) %s", item.Class, item.Path))
+        end
+    end
+
+    local content = table.concat(lines, "\n")
+    local success = Environment.WriteFile(fileName, content)
+    if success then
+        return true, fileName
+    end
+    return false, "Falha ao gravar relatório de diff."
+end
+
+return PlaceDiffTracker
 
 end)
 
@@ -4431,6 +4665,328 @@ return UniverseTracker
 
 end)
 
+__define__("Core/Web3DExporter", function()
+--[[
+    HyperSaveInstance - Standalone Web 3D (HTML / Three.js) Exporter
+    Exports any 3D Model, Map or Weapon into a single standalone interactive HTML file
+    with WebGL, OrbitControls, studio lighting, wireframe view, and Theo Lorentz glassmorphic HUD.
+]]
+
+local Environment = __require__("Utils/Environment")
+local ObjExporter = __require__("Core/ObjExporter")
+
+local Web3DExporter = {}
+
+function Web3DExporter.ExportModelToHTML(targetRoot, options)
+    local root = targetRoot or workspace
+    local opts = options or {}
+    local placeId = game.PlaceId or 0
+    local safeName = string.gsub(root.Name, "[^%w_%-]", "_")
+    local fileName = string.format("HyperSave_Web3D_%s_%d.html", safeName, placeId)
+
+    -- Export raw OBJ/MTL geometry first
+    local success, objStr, mtlStr = pcall(function()
+        return ObjExporter.GenerateObj(root, opts)
+    end)
+
+    if not success then
+        return false, "Erro ao gerar geometria 3D: " .. tostring(objStr)
+    end
+    if not objStr or #objStr < 10 then
+        return false, "Nenhuma peça 3D encontrada no modelo para exportar."
+    end
+
+    local escapedObj = string.gsub(objStr, "\\", "\\\\")
+    escapedObj = string.gsub(escapedObj, "`", "\\`")
+    escapedObj = string.gsub(escapedObj, "%$", "\\$")
+
+    local htmlParts = {
+        [==[<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💀 HyperSaveInstance 3D Web Viewer - ]==], safeName, [==[</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #07050d;
+            color: #ffffff;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        #webgl-canvas { width: 100%; height: 100%; display: block; }
+        .glass-panel {
+            position: absolute;
+            background: rgba(16, 12, 28, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 16px 20px;
+            z-index: 100;
+        }
+        #header-card {
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f3e8ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid #8b5cf6;
+            color: #d8b4fe;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .subtitle { font-size: 11px; color: #a78bfa; }
+        #controls-card {
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            background: rgba(30, 22, 52, 0.8);
+            color: #ffffff;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background: #8b5cf6;
+            border-color: #c084fc;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+        }
+        .btn.active {
+            background: #a855f7;
+            border-color: #f0abfc;
+        }
+        #stats-card {
+            top: 20px;
+            right: 20px;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #e9d5ff;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15px;
+            font-weight: 600;
+            color: #d8b4fe;
+            background: rgba(16, 12, 28, 0.85);
+            padding: 16px 28px;
+            border-radius: 12px;
+            border: 1px solid #8b5cf6;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+    </style>
+    <!-- Three.js and OBJLoader CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+</head>
+<body>
+    <div id="header-card" class="glass-panel">
+        <div class="title">
+            <span>💀 HYPERSAVE 3D</span>
+            <span class="badge">]==], safeName, [==[</span>
+        </div>
+        <div class="subtitle">Extraído por Theo Lorentz Padilha • WebGL 3D Viewer</div>
+    </div>
+
+    <div id="stats-card" class="glass-panel">
+        <div><strong>Status:</strong> <span style="color:#4ade80">Carregado</span></div>
+        <div><strong>Place ID:</strong> ]==], tostring(placeId), [==[</div>
+        <div><strong>Controles:</strong> Botão esquerdo (Girar) | Direito (Pan) | Scroll (Zoom)</div>
+    </div>
+
+    <div id="controls-card" class="glass-panel">
+        <button id="btn-wireframe" class="btn">Linhas (Wireframe)</button>
+        <button id="btn-rotate" class="btn active">Auto-Rotação: ON</button>
+        <button id="btn-reset" class="btn">Resetar Câmera</button>
+    </div>
+
+    <div id="loading">⚡ Renderizando Geometria 3D...</div>
+    <div id="webgl-canvas"></div>
+
+    <script>
+        const rawObjData = `]==], escapedObj, [==[`;
+
+        let scene, camera, renderer, controls, currentMeshGroup;
+        let isWireframe = false;
+        let isAutoRotate = true;
+
+        function init() {
+            const container = document.getElementById('webgl-canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x07050d);
+            scene.fog = new THREE.FogExp2(0x07050d, 0.005);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 5000);
+            camera.position.set(25, 20, 35);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Lights
+            const ambient = new THREE.AmbientLight(0xd8b4fe, 0.7);
+            scene.add(ambient);
+
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.4);
+            sunLight.position.set(50, 80, 50);
+            scene.add(sunLight);
+
+            const fillLight = new THREE.DirectionalLight(0x8b5cf6, 0.8);
+            fillLight.position.set(-50, -20, -50);
+            scene.add(fillLight);
+
+            const grid = new THREE.GridHelper(200, 50, 0x8b5cf6, 0x1e1634);
+            grid.position.y = -0.01;
+            scene.add(grid);
+
+            // Load OBJ from embedded string
+            const loader = new THREE.OBJLoader();
+            try {
+                const object = loader.parse(rawObjData);
+                currentMeshGroup = object;
+
+                // Center object
+                const box = new THREE.Box3().setFromObject(object);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                object.position.sub(center);
+
+                // Default material
+                const purpleMat = new THREE.MeshStandardMaterial({
+                    color: 0xa855f7,
+                    roughness: 0.35,
+                    metalness: 0.2
+                });
+
+                object.traverse(child => {
+                    if (child.isMesh) {
+                        child.material = purpleMat;
+                    }
+                });
+
+                scene.add(object);
+
+                // Adjust camera distance
+                const maxDim = Math.max(size.x, size.y, size.z);
+                camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.8);
+                controls.target.set(0, 0, 0);
+
+                document.getElementById('loading').style.display = 'none';
+            } catch (err) {
+                console.error("Erro ao processar OBJ:", err);
+                document.getElementById('loading').innerText = "Erro ao renderizar modelo: " + err.message;
+            }
+
+            // Events
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('btn-wireframe').addEventListener('click', toggleWireframe);
+            document.getElementById('btn-rotate').addEventListener('click', toggleAutoRotate);
+            document.getElementById('btn-reset').addEventListener('click', resetCamera);
+
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function toggleWireframe() {
+            isWireframe = !isWireframe;
+            const btn = document.getElementById('btn-wireframe');
+            btn.classList.toggle('active', isWireframe);
+            if (currentMeshGroup) {
+                currentMeshGroup.traverse(child => {
+                    if (child.isMesh && child.material) {
+                        child.material.wireframe = isWireframe;
+                    }
+                });
+            }
+        }
+
+        function toggleAutoRotate() {
+            isAutoRotate = !isAutoRotate;
+            const btn = document.getElementById('btn-rotate');
+            btn.innerText = isAutoRotate ? "Auto-Rotação: ON" : "Auto-Rotação: OFF";
+            btn.classList.toggle('active', isAutoRotate);
+        }
+
+        function resetCamera() {
+            if (currentMeshGroup) {
+                const box = new THREE.Box3().setFromObject(currentMeshGroup);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z) || 20;
+                camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.8);
+                controls.target.set(0, 0, 0);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (isAutoRotate && currentMeshGroup) {
+                currentMeshGroup.rotation.y = currentMeshGroup.rotation.y + (0.005;)
+            }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>]==]
+    }
+
+    local htmlContent = table.concat(htmlParts, "")
+    local wrote = Environment.WriteFile(fileName, htmlContent)
+    if wrote then
+        return true, fileName
+    end
+    return false, "Falha ao gravar arquivo Web 3D (.html)."
+end
+
+return Web3DExporter
+
+end)
+
 __define__("UI/Interface", function()
 --[[
     HyperSaveInstance - Modern Glassmorphic HUD & Master In-Game Suite
@@ -4450,6 +5006,8 @@ local NetworkSniffer = __require__("Core/NetworkSniffer")
 local UniverseTracker = __require__("Core/UniverseTracker")
 local ObjExporter = __require__("Core/ObjExporter")
 local RaycastSelector = __require__("Core/RaycastSelector")
+local PlaceDiffTracker = __require__("Core/PlaceDiffTracker")
+local Web3DExporter = __require__("Core/Web3DExporter")
 
 local Interface = {}
 Interface.__index = Interface
@@ -5208,9 +5766,9 @@ function Interface:BuildSelectorTab()
     Theme.AddStroke(searchBox, Theme.Border, 1)
     searchBox.Parent = scroll
 
-    -- 3. Selected Target Info Card (Frosted Acrylic)
+    -- 3. Selected Target Info Card (Frosted Acrylic with Real-Time ViewportFrame)
     local infoCard = Instance.new("Frame")
-    infoCard.Size = UDim2.new(1, -24, 0, 88)
+    infoCard.Size = UDim2.new(1, -24, 0, 106)
     infoCard.Position = UDim2.new(0, 12, 0, 132)
     infoCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
     infoCard.BackgroundTransparency = 0.3
@@ -5218,24 +5776,38 @@ function Interface:BuildSelectorTab()
     Theme.AddStroke(infoCard, Theme.Border, 1)
     infoCard.Parent = scroll
 
+    -- Embedded 3D ViewportFrame
+    local vpFrame = Instance.new("ViewportFrame")
+    vpFrame.Size = UDim2.new(0, 90, 0, 90)
+    vpFrame.Position = UDim2.new(1, -98, 0, 8)
+    vpFrame.BackgroundColor3 = Color3.fromRGB(8, 6, 14)
+    vpFrame.BackgroundTransparency = 0.2
+    Theme.AddCorner(vpFrame, Theme.CornerSmall)
+    Theme.AddStroke(vpFrame, Theme.BorderNeon, 1, 0.5)
+    vpFrame.Parent = infoCard
+
+    local vpCam = Instance.new("Camera")
+    vpCam.Parent = vpFrame
+    vpFrame.CurrentCamera = vpCam
+
     local targetTitle = Instance.new("TextLabel")
-    targetTitle.Text = "Nenhum objeto selecionado no momento"
+    targetTitle.Text = "Nenhum objeto selecionado"
     targetTitle.Font = Theme.FontSemiBold
     targetTitle.TextSize = 11
     targetTitle.TextColor3 = Theme.TextPrimary
     targetTitle.TextXAlignment = Enum.TextXAlignment.Left
-    targetTitle.Size = UDim2.new(1, -20, 0, 20)
+    targetTitle.Size = UDim2.new(1, -112, 0, 20)
     targetTitle.Position = UDim2.new(0, 10, 0, 8)
     targetTitle.BackgroundTransparency = 1
     targetTitle.Parent = infoCard
 
     local targetStats = Instance.new("TextLabel")
-    targetStats.Text = "Mire no jogo com o botão acima ou digite o nome para inspecionar."
+    targetStats.Text = "Mire no jogo com o botão acima ou digite o nome."
     targetStats.Font = Theme.FontRegular
     targetStats.TextSize = 10
     targetStats.TextColor3 = Theme.TextSecondary
     targetStats.TextXAlignment = Enum.TextXAlignment.Left
-    targetStats.Size = UDim2.new(1, -20, 0, 20)
+    targetStats.Size = UDim2.new(1, -112, 0, 20)
     targetStats.Position = UDim2.new(0, 10, 0, 32)
     targetStats.BackgroundTransparency = 1
     targetStats.Parent = infoCard
@@ -5246,19 +5818,39 @@ function Interface:BuildSelectorTab()
     targetPath.TextSize = 10
     targetPath.TextColor3 = Theme.TextMuted
     targetPath.TextXAlignment = Enum.TextXAlignment.Left
-    targetPath.Size = UDim2.new(1, -20, 0, 20)
+    targetPath.Size = UDim2.new(1, -112, 0, 20)
     targetPath.Position = UDim2.new(0, 10, 0, 56)
     targetPath.BackgroundTransparency = 1
     targetPath.Parent = infoCard
 
-    -- Helper to update info display
+    local targetDims = Instance.new("TextLabel")
+    targetDims.Text = "Dimensões: -"
+    targetDims.Font = Theme.FontRegular
+    targetDims.TextSize = 10
+    targetDims.TextColor3 = Theme.AccentCyan
+    targetDims.TextXAlignment = Enum.TextXAlignment.Left
+    targetDims.Size = UDim2.new(1, -112, 0, 20)
+    targetDims.Position = UDim2.new(0, 10, 0, 78)
+    targetDims.BackgroundTransparency = 1
+    targetDims.Parent = infoCard
+
+    -- Helper to update info display & ViewportFrame
     local function inspectInstance(inst)
         self.CurrentTargetInstance = inst
+        
+        -- Clear previous 3D viewport clones
+        pcall(function()
+            for _, c in ipairs(vpFrame:GetChildren()) do
+                if c:IsA("Instance") and not c:IsA("Camera") then c:Destroy() end
+            end
+        end)
+
         if not inst then
             targetTitle.Text = "Nenhum objeto selecionado"
             targetTitle.TextColor3 = Theme.TextMuted
             targetStats.Text = "Use o botão 3D ou digite o nome acima."
             targetPath.Text = "Caminho: -"
+            targetDims.Text = "Dimensões: -"
             return
         end
 
@@ -5276,44 +5868,84 @@ function Interface:BuildSelectorTab()
 
         targetTitle.Text = string.format("📦 %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.AccentCyan
-        targetStats.Text = string.format("📊 %d Peças • %d Malhas 3D • %d Scripts Descompiláveis", parts, meshes, scripts)
+        targetStats.Text = string.format("📊 %d Peças • %d Malhas 3D • %d Scripts", parts, meshes, scripts)
         targetStats.TextColor3 = Theme.AccentSuccess
         targetPath.Text = "📍 Caminho: " .. inst:GetFullName()
+
+        -- Populate ViewportFrame with 3D model clone
+        pcall(function()
+            if inst:IsA("Model") or inst:IsA("BasePart") then
+                local clone = inst:Clone()
+                if clone then
+                    clone.Parent = vpFrame
+                    local cf = CFrame.new()
+                    local sz = Vector3.new(4, 4, 4)
+
+                    if clone:IsA("Model") then
+                        cf = clone:GetBoundingBox()
+                        sz = clone:GetExtentsSize()
+                    elseif clone:IsA("BasePart") then
+                        cf = clone.CFrame
+                        sz = clone.Size
+                    end
+
+                    targetDims.Text = string.format("📐 Dimensões: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
+
+                    local maxDim = math.max(sz.X, sz.Y, sz.Z)
+                    local camDist = maxDim * 1.6
+                    vpCam.CFrame = CFrame.new(cf.Position + Vector3.new(camDist, camDist * 0.7, camDist), cf.Position)
+                end
+            else
+                targetDims.Text = "📐 Tipo: " .. inst.ClassName
+            end
+        end)
     end
 
     -- 4. Action Buttons Container (UIListLayout Pixel-Perfect Horizontal Grid)
     local actionBtnContainer = Instance.new("Frame")
     actionBtnContainer.Size = UDim2.new(1, -24, 0, 38)
-    actionBtnContainer.Position = UDim2.new(0, 12, 0, 228)
+    actionBtnContainer.Position = UDim2.new(0, 12, 0, 246)
     actionBtnContainer.BackgroundTransparency = 1
     actionBtnContainer.Parent = scroll
 
     local actionLayout = Instance.new("UIListLayout")
     actionLayout.FillDirection = Enum.FillDirection.Horizontal
-    actionLayout.Padding = UDim.new(0, 8)
+    actionLayout.Padding = UDim.new(0, 6)
     actionLayout.SortOrder = Enum.SortOrder.LayoutOrder
     actionLayout.Parent = actionBtnContainer
 
     local btnSaveSingle = Instance.new("TextButton")
-    btnSaveSingle.Text = "💾 SALVAR ESTE MODELO (.rbxm)"
+    btnSaveSingle.Text = "💾 Salvar (.rbxm)"
     btnSaveSingle.Font = Theme.FontTitle
     btnSaveSingle.TextSize = 11
     btnSaveSingle.TextColor3 = Theme.AccentSkull
     btnSaveSingle.BackgroundColor3 = Theme.AccentPrimary
-    btnSaveSingle.Size = UDim2.new(0.5, -4, 1, 0)
+    btnSaveSingle.Size = UDim2.new(0.35, -4, 1, 0)
     btnSaveSingle.LayoutOrder = 1
     Theme.AddCorner(btnSaveSingle, Theme.CornerMedium)
     Theme.AddStroke(btnSaveSingle, Theme.BorderNeon, 1)
     btnSaveSingle.Parent = actionBtnContainer
 
+    local btnExportWeb3D = Instance.new("TextButton")
+    btnExportWeb3D.Text = "🌐 3D Web (HTML)"
+    btnExportWeb3D.Font = Theme.FontTitle
+    btnExportWeb3D.TextSize = 11
+    btnExportWeb3D.TextColor3 = Theme.AccentSkull
+    btnExportWeb3D.BackgroundColor3 = Color3.fromRGB(168, 85, 247)
+    btnExportWeb3D.Size = UDim2.new(0.33, -4, 1, 0)
+    btnExportWeb3D.LayoutOrder = 2
+    Theme.AddCorner(btnExportWeb3D, Theme.CornerMedium)
+    Theme.AddStroke(btnExportWeb3D, Theme.BorderNeon, 1)
+    btnExportWeb3D.Parent = actionBtnContainer
+
     local btnAddToPack = Instance.new("TextButton")
-    btnAddToPack.Text = "➕ ADICIONAR AO PACOTE"
+    btnAddToPack.Text = "➕ Pacote"
     btnAddToPack.Font = Theme.FontTitle
     btnAddToPack.TextSize = 11
     btnAddToPack.TextColor3 = Theme.AccentSkull
     btnAddToPack.BackgroundColor3 = Theme.CardActive
-    btnAddToPack.Size = UDim2.new(0.5, -4, 1, 0)
-    btnAddToPack.LayoutOrder = 2
+    btnAddToPack.Size = UDim2.new(0.32, -4, 1, 0)
+    btnAddToPack.LayoutOrder = 3
     Theme.AddCorner(btnAddToPack, Theme.CornerMedium)
     Theme.AddStroke(btnAddToPack, Theme.BorderLight, 1)
     btnAddToPack.Parent = actionBtnContainer
@@ -5321,7 +5953,7 @@ function Interface:BuildSelectorTab()
     -- 5. Multi-Select Package Card (Frosted Acrylic)
     local packCard = Instance.new("Frame")
     packCard.Size = UDim2.new(1, -24, 0, 110)
-    packCard.Position = UDim2.new(0, 12, 0, 274)
+    packCard.Position = UDim2.new(0, 12, 0, 292)
     packCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
     packCard.BackgroundTransparency = 0.3
     Theme.AddCorner(packCard, Theme.CornerMedium)
@@ -5441,6 +6073,31 @@ function Interface:BuildSelectorTab()
         end)
     end)
 
+    -- Event: Export 3D Web HTML
+    Theme.AnimateButton(btnExportWeb3D, function()
+        local target = self.CurrentTargetInstance
+        if not target then
+            resultLabel.Text = "❌ Selecione um modelo antes de exportar para Web 3D!"
+            resultLabel.TextColor3 = Theme.AccentWarning
+            return
+        end
+
+        resultLabel.Text = "🌐 Gerando arquivo Web 3D (.html / Three.js)..."
+        resultLabel.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, msg = Web3DExporter.ExportModelToHTML(target)
+            if success then
+                resultLabel.Text = "✓ Web 3D salvo: " .. msg .. " (Caminho copiado!)"
+                resultLabel.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(msg)
+            else
+                resultLabel.Text = "❌ Erro ao exportar Web 3D: " .. tostring(msg)
+                resultLabel.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+
     -- Event: Add to pack
     Theme.AnimateButton(btnAddToPack, function()
         local target = self.CurrentTargetInstance
@@ -5493,45 +6150,71 @@ function Interface:BuildAudioRipperTab()
     local parent = self.TabFrames["AudioRipper"]
 
     local topBar = Instance.new("Frame")
-    topBar.Size = UDim2.new(1, -32, 0, 36)
-    topBar.Position = UDim2.new(0, 16, 0, 12)
+    topBar.Size = UDim2.new(1, -32, 0, 34)
+    topBar.Position = UDim2.new(0, 16, 0, 10)
     topBar.BackgroundTransparency = 1
     topBar.Parent = parent
 
     local topLayout = Instance.new("UIListLayout")
     topLayout.FillDirection = Enum.FillDirection.Horizontal
-    topLayout.Padding = UDim.new(0, 8)
+    topLayout.Padding = UDim.new(0, 6)
     topLayout.SortOrder = Enum.SortOrder.LayoutOrder
     topLayout.Parent = topBar
 
     local scanAudioBtn = Instance.new("TextButton")
-    scanAudioBtn.Text = "🎵 ESCANEAR SONS DO JOGO"
+    scanAudioBtn.Text = "🎵 ESCANEAR SONS"
     scanAudioBtn.Font = Theme.FontSemiBold
-    scanAudioBtn.TextSize = 11
+    scanAudioBtn.TextSize = 10
     scanAudioBtn.TextColor3 = Theme.AccentSkull
     scanAudioBtn.BackgroundColor3 = Theme.AccentPrimary
-    scanAudioBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    scanAudioBtn.Size = UDim2.new(0.38, -4, 1, 0)
     scanAudioBtn.LayoutOrder = 1
     Theme.AddCorner(scanAudioBtn, Theme.CornerMedium)
     Theme.AddStroke(scanAudioBtn, Theme.BorderNeon, 1)
     scanAudioBtn.Parent = topBar
 
     local exportAudioListBtn = Instance.new("TextButton")
-    exportAudioListBtn.Text = "📄 EXPORTAR LISTA (.txt)"
+    exportAudioListBtn.Text = "📄 EXPORTAR TXT"
     exportAudioListBtn.Font = Theme.FontSemiBold
-    exportAudioListBtn.TextSize = 11
+    exportAudioListBtn.TextSize = 10
     exportAudioListBtn.TextColor3 = Theme.TextPrimary
     exportAudioListBtn.BackgroundColor3 = Theme.CardBg
     exportAudioListBtn.BackgroundTransparency = Theme.CardTransparency
-    exportAudioListBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    exportAudioListBtn.Size = UDim2.new(0.38, -4, 1, 0)
     exportAudioListBtn.LayoutOrder = 2
     Theme.AddCorner(exportAudioListBtn, Theme.CornerMedium)
     Theme.AddStroke(exportAudioListBtn, Theme.Border, 1)
     exportAudioListBtn.Parent = topBar
 
+    local stopAudioBtn = Instance.new("TextButton")
+    stopAudioBtn.Text = "⏹ PARAR"
+    stopAudioBtn.Font = Theme.FontSemiBold
+    stopAudioBtn.TextSize = 10
+    stopAudioBtn.TextColor3 = Theme.AccentDanger
+    stopAudioBtn.BackgroundColor3 = Color3.fromRGB(24, 14, 22)
+    stopAudioBtn.Size = UDim2.new(0.24, -4, 1, 0)
+    stopAudioBtn.LayoutOrder = 3
+    Theme.AddCorner(stopAudioBtn, Theme.CornerMedium)
+    Theme.AddStroke(stopAudioBtn, Theme.AccentDanger, 1, 0.4)
+    stopAudioBtn.Parent = topBar
+
+    -- Audio Search Filter
+    local searchBox = Instance.new("TextBox")
+    searchBox.PlaceholderText = "🔍 Filtrar sons por nome ou ID..."
+    searchBox.Font = Theme.FontRegular
+    searchBox.TextSize = 11
+    searchBox.TextColor3 = Theme.TextPrimary
+    searchBox.PlaceholderColor3 = Theme.TextMuted
+    searchBox.BackgroundColor3 = Color3.fromRGB(10, 8, 16)
+    searchBox.Size = UDim2.new(1, -32, 0, 30)
+    searchBox.Position = UDim2.new(0, 16, 0, 48)
+    Theme.AddCorner(searchBox, Theme.CornerSmall)
+    Theme.AddStroke(searchBox, Theme.Border, 1)
+    searchBox.Parent = parent
+
     local audioScroll = Instance.new("ScrollingFrame")
-    audioScroll.Size = UDim2.new(1, -32, 1, -64)
-    audioScroll.Position = UDim2.new(0, 16, 0, 56)
+    audioScroll.Size = UDim2.new(1, -32, 1, -90)
+    audioScroll.Position = UDim2.new(0, 16, 0, 84)
     audioScroll.BackgroundColor3 = Theme.CardBg
     audioScroll.BackgroundTransparency = Theme.CardTransparency
     audioScroll.ScrollBarThickness = 4
@@ -5545,15 +6228,33 @@ function Interface:BuildAudioRipperTab()
     audioLayout.Padding = UDim.new(0, 6)
     audioLayout.Parent = audioScroll
 
+    local allSoundRows = {}
+
+    local function filterSounds(query)
+        local q = string.lower(query or "")
+        local visibleCount = 0
+        for _, item in ipairs(allSoundRows) do
+            local match = (q == "") or string.find(string.lower(item.Data.Name), q, 1, true) or string.find(string.lower(item.Data.CleanId), q, 1, true)
+            item.Row.Visible = match
+            if match then visibleCount = visibleCount + 1 end
+        end
+        audioScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 38)
+    end
+
+    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        filterSounds(searchBox.Text)
+    end)
+
     Theme.AnimateButton(scanAudioBtn, function()
-        scanAudioBtn.Text = "Escaneando sons..."
+        scanAudioBtn.Text = "Escaneando..."
+        allSoundRows = {}
         for _, child in ipairs(audioScroll:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
 
         task.spawn(function()
             local list = AudioRipper.ScanSounds()
-            scanAudioBtn.Text = string.format("✓ %d sons encontrados", #list)
+            scanAudioBtn.Text = string.format("✓ %d sons", #list)
 
             for _, snd in ipairs(list) do
                 local row = Instance.new("Frame")
@@ -5570,7 +6271,7 @@ function Interface:BuildAudioRipperTab()
                 sndLbl.TextSize = 10
                 sndLbl.TextColor3 = Theme.TextPrimary
                 sndLbl.TextXAlignment = Enum.TextXAlignment.Left
-                sndLbl.Size = UDim2.new(0.65, 0, 1, 0)
+                sndLbl.Size = UDim2.new(0.62, 0, 1, 0)
                 sndLbl.Position = UDim2.new(0, 10, 0, 0)
                 sndLbl.BackgroundTransparency = 1
                 sndLbl.Parent = row
@@ -5606,18 +6307,33 @@ function Interface:BuildAudioRipperTab()
                     copyBtn.Text = "✓"
                     task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
                 end)
+
+                table.insert(allSoundRows, { Row = row, Data = snd })
             end
 
             audioScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 38)
         end)
     end)
 
+    Theme.AnimateButton(stopAudioBtn, function()
+        pcall(function()
+            for _, s in ipairs(game:GetService("SoundService"):GetChildren()) do
+                if s:IsA("Sound") and string.find(s.Name, "Preview") then
+                    s:Stop()
+                    s:Destroy()
+                end
+            end
+        end)
+        stopAudioBtn.Text = "✓ Parado"
+        task.delay(1, function() stopAudioBtn.Text = "⏹ PARAR" end)
+    end)
+
     Theme.AnimateButton(exportAudioListBtn, function()
         local file = AudioRipper.ExportSoundList()
-        exportAudioListBtn.Text = "✓ Lista Exportada!"
+        exportAudioListBtn.Text = "✓ Exportado!"
         Environment.SetClipboard(file)
         task.delay(2, function()
-            exportAudioListBtn.Text = "📄 EXPORTAR LISTA (.txt)"
+            exportAudioListBtn.Text = "📄 EXPORTAR TXT"
         end)
     end)
 end
@@ -5901,17 +6617,53 @@ function Interface:BuildUniverseTab()
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = card
 
+    local uniBtnContainer = Instance.new("Frame")
+    uniBtnContainer.Size = UDim2.new(1, -32, 0, 36)
+    uniBtnContainer.Position = UDim2.new(0, 16, 0, 46)
+    uniBtnContainer.BackgroundTransparency = 1
+    uniBtnContainer.Parent = card
+
+    local uniLayout = Instance.new("UIListLayout")
+    uniLayout.FillDirection = Enum.FillDirection.Horizontal
+    uniLayout.Padding = UDim.new(0, 6)
+    uniLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    uniLayout.Parent = uniBtnContainer
+
     local scanBtn = Instance.new("TextButton")
-    scanBtn.Text = "🌌 BUSCAR SUB-PLACES DO UNIVERSO"
+    scanBtn.Text = "🌌 SUB-PLACES"
     scanBtn.Font = Theme.FontTitle
-    scanBtn.TextSize = 11
+    scanBtn.TextSize = 10
     scanBtn.TextColor3 = Theme.AccentSkull
     scanBtn.BackgroundColor3 = Theme.AccentPrimary
-    scanBtn.Size = UDim2.new(1, -32, 0, 36)
-    scanBtn.Position = UDim2.new(0, 16, 0, 46)
+    scanBtn.Size = UDim2.new(0.34, -4, 1, 0)
+    scanBtn.LayoutOrder = 1
     Theme.AddCorner(scanBtn, Theme.CornerMedium)
     Theme.AddStroke(scanBtn, Theme.BorderNeon, 1)
-    scanBtn.Parent = card
+    scanBtn.Parent = uniBtnContainer
+
+    local snapshotBtn = Instance.new("TextButton")
+    snapshotBtn.Text = "📸 SNAPSHOT"
+    snapshotBtn.Font = Theme.FontTitle
+    snapshotBtn.TextSize = 10
+    snapshotBtn.TextColor3 = Theme.AccentSkull
+    snapshotBtn.BackgroundColor3 = Color3.fromRGB(168, 85, 247)
+    snapshotBtn.Size = UDim2.new(0.33, -4, 1, 0)
+    snapshotBtn.LayoutOrder = 2
+    Theme.AddCorner(snapshotBtn, Theme.CornerMedium)
+    Theme.AddStroke(snapshotBtn, Theme.BorderNeon, 1)
+    snapshotBtn.Parent = uniBtnContainer
+
+    local compareDiffBtn = Instance.new("TextButton")
+    compareDiffBtn.Text = "🔍 COMPARAR DIFF"
+    compareDiffBtn.Font = Theme.FontTitle
+    compareDiffBtn.TextSize = 10
+    compareDiffBtn.TextColor3 = Theme.AccentSkull
+    compareDiffBtn.BackgroundColor3 = Theme.CardActive
+    compareDiffBtn.Size = UDim2.new(0.33, -4, 1, 0)
+    compareDiffBtn.LayoutOrder = 3
+    Theme.AddCorner(compareDiffBtn, Theme.CornerMedium)
+    Theme.AddStroke(compareDiffBtn, Theme.BorderLight, 1)
+    compareDiffBtn.Parent = uniBtnContainer
 
     local placeScroll = Instance.new("ScrollingFrame")
     placeScroll.Size = UDim2.new(1, -32, 1, -100)
@@ -5930,14 +6682,14 @@ function Interface:BuildUniverseTab()
     placeLayout.Parent = placeScroll
 
     Theme.AnimateButton(scanBtn, function()
-        scanBtn.Text = "Buscando sub-places..."
+        scanBtn.Text = "Buscando..."
         for _, child in ipairs(placeScroll:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
+            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
         end
 
         task.spawn(function()
             local list = UniverseTracker.GetUniversePlaces()
-            scanBtn.Text = string.format("✓ %d lugares encontrados no Universo", #list)
+            scanBtn.Text = string.format("✓ %d sub-places", #list)
 
             for idx, pInfo in ipairs(list) do
                 local row = Instance.new("Frame")
@@ -5980,6 +6732,47 @@ function Interface:BuildUniverseTab()
             placeScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 40)
         end)
     end)
+
+    Theme.AnimateButton(snapshotBtn, function()
+        snapshotBtn.Text = "Gravando..."
+        task.spawn(function()
+            local success, snapFile = PlaceDiffTracker.SaveSnapshot()
+            if success then
+                snapshotBtn.Text = "✓ Salvo!"
+                Environment.SetClipboard(snapFile)
+            else
+                snapshotBtn.Text = "❌ Erro"
+            end
+            task.delay(2, function() snapshotBtn.Text = "📸 SNAPSHOT" end)
+        end)
+    end)
+
+    Theme.AnimateButton(compareDiffBtn, function()
+        compareDiffBtn.Text = "Comparando..."
+        for _, child in ipairs(placeScroll:GetChildren()) do
+            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+        end
+
+        task.spawn(function()
+            local diff = PlaceDiffTracker.Compare({ Instances = {}, PlaceId = game.PlaceId or 0, InstanceCount = 0 })
+            local s, reportFile = PlaceDiffTracker.ExportDiffReport(diff)
+            
+            local lbl = Instance.new("TextLabel")
+            lbl.Text = "📊 " .. diff.Summary .. (s and ("\n📄 Relatório salvo: " .. reportFile) or "")
+            lbl.Font = Theme.FontRegular
+            lbl.TextSize = 11
+            lbl.TextColor3 = Theme.AccentCyan
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.TextWrapped = true
+            lbl.Size = UDim2.new(1, -12, 0, 60)
+            lbl.BackgroundTransparency = 1
+            lbl.Parent = placeScroll
+
+            if s then Environment.SetClipboard(reportFile) end
+            compareDiffBtn.Text = "✓ Concluído"
+            task.delay(2, function() compareDiffBtn.Text = "🔍 COMPARAR DIFF" end)
+        end)
+    end)
 end
 
 -- 8. OBJ Export Tab (Blender / Unity 3D)
@@ -6019,18 +6812,43 @@ function Interface:BuildObjExportTab()
     desc.BackgroundTransparency = 1
     desc.Parent = card
 
+    local exportBtnContainer = Instance.new("Frame")
+    exportBtnContainer.Size = UDim2.new(1, -32, 0, 44)
+    exportBtnContainer.Position = UDim2.new(0, 16, 0, 106)
+    exportBtnContainer.BackgroundTransparency = 1
+    exportBtnContainer.Parent = card
+
+    local btnLayout = Instance.new("UIListLayout")
+    btnLayout.FillDirection = Enum.FillDirection.Horizontal
+    btnLayout.Padding = UDim.new(0, 8)
+    btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    btnLayout.Parent = exportBtnContainer
+
     local exportObjBtn = Instance.new("TextButton")
-    exportObjBtn.Text = "🧊 EXPORTAR MAPA 3D (.OBJ + .MTL)"
+    exportObjBtn.Text = "🧊 EXPORTAR .OBJ + .MTL"
     exportObjBtn.Font = Theme.FontTitle
-    exportObjBtn.TextSize = 12
+    exportObjBtn.TextSize = 11
     exportObjBtn.TextColor3 = Theme.AccentSkull
     exportObjBtn.BackgroundColor3 = Theme.AccentPrimary
-    exportObjBtn.Size = UDim2.new(1, -32, 0, 46)
-    exportObjBtn.Position = UDim2.new(0, 16, 0, 108)
+    exportObjBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    exportObjBtn.LayoutOrder = 1
     Theme.AddCorner(exportObjBtn, Theme.CornerMedium)
     Theme.AddStroke(exportObjBtn, Theme.BorderNeon, 1.2)
     Theme.AddGradient(exportObjBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
-    exportObjBtn.Parent = card
+    exportObjBtn.Parent = exportBtnContainer
+
+    local exportWebBtn = Instance.new("TextButton")
+    exportWebBtn.Text = "🌐 EXPORTAR 3D WEB (HTML)"
+    exportWebBtn.Font = Theme.FontTitle
+    exportWebBtn.TextSize = 11
+    exportWebBtn.TextColor3 = Theme.AccentSkull
+    exportWebBtn.BackgroundColor3 = Color3.fromRGB(168, 85, 247)
+    exportWebBtn.Size = UDim2.new(0.5, -4, 1, 0)
+    exportWebBtn.LayoutOrder = 2
+    Theme.AddCorner(exportWebBtn, Theme.CornerMedium)
+    Theme.AddStroke(exportWebBtn, Theme.BorderNeon, 1.2)
+    Theme.AddGradient(exportWebBtn, Color3.fromRGB(192, 132, 252), Color3.fromRGB(126, 34, 206), 45)
+    exportWebBtn.Parent = exportBtnContainer
 
     local objStatus = Instance.new("TextLabel")
     objStatus.Text = "Status: Pronto para exportar"
@@ -6039,7 +6857,7 @@ function Interface:BuildObjExportTab()
     objStatus.TextColor3 = Theme.TextMuted
     objStatus.TextXAlignment = Enum.TextXAlignment.Left
     objStatus.Size = UDim2.new(1, -32, 0, 24)
-    objStatus.Position = UDim2.new(0, 16, 0, 166)
+    objStatus.Position = UDim2.new(0, 16, 0, 160)
     objStatus.BackgroundTransparency = 1
     objStatus.Parent = card
 
@@ -6055,6 +6873,23 @@ function Interface:BuildObjExportTab()
                 Environment.SetClipboard(file)
             else
                 objStatus.Text = "❌ Erro ao exportar: " .. tostring(file)
+                objStatus.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
+
+    Theme.AnimateButton(exportWebBtn, function()
+        objStatus.Text = "🌐 Gerando visualizador 3D Web standalone (.html)..."
+        objStatus.TextColor3 = Theme.AccentCyan
+
+        task.spawn(function()
+            local success, file = Web3DExporter.ExportModelToHTML(workspace)
+            if success then
+                objStatus.Text = "✓ Web 3D salvo: " .. file .. " (Abra no navegador!)"
+                objStatus.TextColor3 = Theme.AccentSuccess
+                Environment.SetClipboard(file)
+            else
+                objStatus.Text = "❌ Erro ao exportar Web 3D: " .. tostring(file)
                 objStatus.TextColor3 = Theme.AccentDanger
             end
         end)
@@ -7505,6 +8340,8 @@ local Optimizer = __require__("Core/Optimizer")
 local AudioRipper = __require__("Core/AudioRipper")
 local LightingRipper = __require__("Core/LightingRipper")
 local GuiRipper = __require__("Core/GuiRipper")
+local PlaceDiffTracker = __require__("Core/PlaceDiffTracker")
+local Web3DExporter = __require__("Core/Web3DExporter")
 
 local HyperSaveInstance = {
     Version = "2.0.0",
@@ -7515,6 +8352,8 @@ local HyperSaveInstance = {
     NetworkSniffer = NetworkSniffer,
     UniverseTracker = UniverseTracker,
     ObjExporter = ObjExporter,
+    Web3DExporter = Web3DExporter,
+    PlaceDiffTracker = PlaceDiffTracker,
     Optimizer = Optimizer,
     AudioRipper = AudioRipper,
     LightingRipper = LightingRipper,
@@ -7526,6 +8365,20 @@ function HyperSaveInstance.OpenUI(customConfig)
     local engine = Engine.new(customConfig)
     local ui = Interface.new(engine)
     return ui, engine
+end
+
+-- Export Standalone Web 3D HTML Viewer (Three.js)
+function HyperSaveInstance.ExportWeb3D(targetRoot, options)
+    return Web3DExporter.ExportModelToHTML(targetRoot, options)
+end
+
+-- Snapshot and Track Update Diff
+function HyperSaveInstance.Snapshot(name, root)
+    return PlaceDiffTracker.SaveSnapshot(name, root)
+end
+
+function HyperSaveInstance.CompareDiff(snapshotFile)
+    return PlaceDiffTracker.Compare(snapshotFile)
 end
 
 -- Save game programmatically (Headless or Scripted)

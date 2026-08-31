@@ -110,12 +110,28 @@ end
 
 CFrame = {}
 CFrame.__index = CFrame
-CFrame.identity = setmetatable({ __typeof = "CFrame" }, CFrame)
-function CFrame.new(...)
-    return setmetatable({ __typeof = "CFrame" }, CFrame)
+CFrame.identity = setmetatable({ Position = Vector3.new(0, 0, 0), __typeof = "CFrame" }, CFrame)
+function CFrame.new(x, y, z)
+    local pos = (type(x) == "table" and x.X and x) or Vector3.new(x or 0, y or 0, z or 0)
+    return setmetatable({ Position = pos, __typeof = "CFrame" }, CFrame)
 end
 function CFrame.Angles(...)
-    return setmetatable({ __typeof = "CFrame" }, CFrame)
+    return setmetatable({ Position = Vector3.new(0, 0, 0), __typeof = "CFrame" }, CFrame)
+end
+function CFrame:PointToWorldSpace(v)
+    local px = (self.Position and self.Position.X) or 0
+    local py = (self.Position and self.Position.Y) or 0
+    local pz = (self.Position and self.Position.Z) or 0
+    local vx = (v and v.X) or 0
+    local vy = (v and v.Y) or 0
+    local vz = (v and v.Z) or 0
+    return Vector3.new(px + vx, py + vy, pz + vz)
+end
+function CFrame:GetComponents()
+    local px = (self.Position and self.Position.X) or 0
+    local py = (self.Position and self.Position.Y) or 0
+    local pz = (self.Position and self.Position.Z) or 0
+    return px, py, pz, 1, 0, 0, 0, 1, 0, 0, 0, 1
 end
 
 -- Enum table hierarchy
@@ -370,6 +386,17 @@ function httpService:JSONEncode(tbl)
         end
     end
     return ser(tbl)
+end
+
+function httpService:JSONDecode(str)
+    -- Simple mock parser for snapshot tables
+    local res = {
+        PlaceId = game.PlaceId or 0,
+        Timestamp = "2026-08-31T15:00:00Z",
+        InstanceCount = 26,
+        Instances = {}
+    }
+    return res
 end
 
 local starterGui = Instance.new("StarterGui", game)
@@ -680,6 +707,38 @@ if not string.find(savedXml, 'SunnyAtmosphere') then
     error("SunnyAtmosphere is missing from saved XML!")
 end
 print("  ✓ SunnyAtmosphere Lighting effect serialized")
+
+-- 4. Testing Standalone Web 3D HTML / Three.js Exporter
+print("--- 4. Testing Standalone Web 3D (HTML / Three.js) Exporter ---")
+local web3dSuccess, web3dFile = hsi.ExportWeb3D(workspace)
+if not web3dSuccess then
+    error("ExportWeb3D failed: " .. tostring(web3dFile))
+end
+local htmlContent = readfile(web3dFile)
+if not htmlContent or not string.find(htmlContent, "THREE.WebGLRenderer") or not string.find(htmlContent, "OrbitControls") then
+    error("Generated HTML 3D file is missing WebGL / Three.js engine!")
+end
+print("  ✓ Standalone Web 3D Viewer generated successfully: " .. web3dFile .. " (" .. tostring(#htmlContent) .. " bytes)")
+
+-- 5. Testing Map Snapshot & Update Diff Tracker
+print("--- 5. Testing Place Snapshot & Update Diff Tracker ---")
+local snapSuccess, snapFile = hsi.Snapshot()
+if not snapSuccess then
+    error("hsi.Snapshot failed: " .. tostring(snapFile))
+end
+print("  ✓ Place snapshot captured and saved to: " .. snapFile)
+
+local diff = hsi.CompareDiff(snapFile)
+if not diff or not diff.Success then
+    error("hsi.CompareDiff failed: " .. tostring(diff and diff.Error))
+end
+print("  ✓ Place Diff analysis verified: " .. tostring(diff.Summary))
+
+local diffRepSuccess, diffRepFile = hsi.PlaceDiffTracker.ExportDiffReport(diff)
+if not diffRepSuccess then
+    error("ExportDiffReport failed: " .. tostring(diffRepFile))
+end
+print("  ✓ Place Update Diff Report exported: " .. diffRepFile)
 
 return "ALL_ROBLOX_CHECKS_PASSED"
 `;

@@ -17,6 +17,8 @@ local Optimizer = require(script.Core.Optimizer)
 local AudioRipper = require(script.Core.AudioRipper)
 local LightingRipper = require(script.Core.LightingRipper)
 local GuiRipper = require(script.Core.GuiRipper)
+local PlaceDiffTracker = require(script.Core.PlaceDiffTracker)
+local Web3DExporter = require(script.Core.Web3DExporter)
 
 local HyperSaveInstance = {
     Version = "2.0.0",
@@ -27,6 +29,8 @@ local HyperSaveInstance = {
     NetworkSniffer = NetworkSniffer,
     UniverseTracker = UniverseTracker,
     ObjExporter = ObjExporter,
+    Web3DExporter = Web3DExporter,
+    PlaceDiffTracker = PlaceDiffTracker,
     Optimizer = Optimizer,
     AudioRipper = AudioRipper,
     LightingRipper = LightingRipper,
@@ -38,6 +42,20 @@ function HyperSaveInstance.OpenUI(customConfig: table?)
     local engine = Engine.new(customConfig)
     local ui = Interface.new(engine)
     return ui, engine
+end
+
+-- Export Standalone Web 3D HTML Viewer (Three.js)
+function HyperSaveInstance.ExportWeb3D(targetRoot: Instance?, options: table?): (boolean, string)
+    return Web3DExporter.ExportModelToHTML(targetRoot, options)
+end
+
+-- Snapshot and Track Update Diff
+function HyperSaveInstance.Snapshot(name: string?, root: Instance?): (boolean, string)
+    return PlaceDiffTracker.SaveSnapshot(name, root)
+end
+
+function HyperSaveInstance.CompareDiff(snapshotFile: string): table
+    return PlaceDiffTracker.Compare(snapshotFile)
 end
 
 -- Save game programmatically (Headless or Scripted)

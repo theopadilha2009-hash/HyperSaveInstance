@@ -103,6 +103,8 @@ function testSourceFiles() {
         'src/Core/NetworkSniffer.luau',
         'src/Core/UniverseTracker.luau',
         'src/Core/ObjExporter.luau',
+        'src/Core/Web3DExporter.luau',
+        'src/Core/PlaceDiffTracker.luau',
         'src/Core/Optimizer.luau',
         'src/Core/SerializerXml.luau',
         'src/Core/SerializerBinary.luau',
