@@ -7765,10 +7765,10 @@ function Interface:BuildAboutTab()
     local btnGithub = Instance.new("TextButton")
     btnGithub.Text = "[ 0x01: GITHUB ]"
     btnGithub.Font = Theme.FontSemiBold
-    btnGithub.TextSize = 9
+    btnGithub.TextSize = 8
     btnGithub.TextColor3 = Theme.AccentSkull
     btnGithub.BackgroundColor3 = Theme.CardBg
-    btnGithub.Size = UDim2.new(0.333, -4, 1, 0)
+    btnGithub.Size = UDim2.new(0.25, -4, 1, 0)
     btnGithub.LayoutOrder = 1
     Theme.AddCorner(btnGithub, Theme.CornerSmall)
     Theme.AddStroke(btnGithub, Theme.Border, 1)
@@ -7780,15 +7780,34 @@ function Interface:BuildAboutTab()
         task.delay(2, function() btnGithub.Text = "[ 0x01: GITHUB ]" end)
     end)
 
+    -- LinkedIn Profile Button
+    local btnLinkedIn = Instance.new("TextButton")
+    btnLinkedIn.Text = "[ 0x02: LINKEDIN ]"
+    btnLinkedIn.Font = Theme.FontSemiBold
+    btnLinkedIn.TextSize = 8
+    btnLinkedIn.TextColor3 = Theme.AccentCyan
+    btnLinkedIn.BackgroundColor3 = Theme.CardBg
+    btnLinkedIn.Size = UDim2.new(0.25, -4, 1, 0)
+    btnLinkedIn.LayoutOrder = 2
+    Theme.AddCorner(btnLinkedIn, Theme.CornerSmall)
+    Theme.AddStroke(btnLinkedIn, Theme.Border, 1)
+    btnLinkedIn.Parent = devBtnBar
+
+    Theme.AnimateButton(btnLinkedIn, function()
+        Environment.SetClipboard("https://www.linkedin.com/in/theo-lorentz-padilha-0b9b99287/")
+        btnLinkedIn.Text = "[OK] COPIED!"
+        task.delay(2, function() btnLinkedIn.Text = "[ 0x02: LINKEDIN ]" end)
+    end)
+
     -- Repository Link Button
     local btnRepo = Instance.new("TextButton")
-    btnRepo.Text = "[ 0x02: REPO ]"
+    btnRepo.Text = "[ 0x03: REPO ]"
     btnRepo.Font = Theme.FontSemiBold
-    btnRepo.TextSize = 9
+    btnRepo.TextSize = 8
     btnRepo.TextColor3 = Theme.TextPrimary
     btnRepo.BackgroundColor3 = Theme.CardBg
-    btnRepo.Size = UDim2.new(0.333, -4, 1, 0)
-    btnRepo.LayoutOrder = 2
+    btnRepo.Size = UDim2.new(0.25, -4, 1, 0)
+    btnRepo.LayoutOrder = 3
     Theme.AddCorner(btnRepo, Theme.CornerSmall)
     Theme.AddStroke(btnRepo, Theme.Border, 1)
     btnRepo.Parent = devBtnBar
@@ -7796,18 +7815,18 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
         btnRepo.Text = "[OK] COPIED!"
-        task.delay(2, function() btnRepo.Text = "[ 0x02: REPO ]" end)
+        task.delay(2, function() btnRepo.Text = "[ 0x03: REPO ]" end)
     end)
 
     -- Discord Server Button
     local btnDiscord = Instance.new("TextButton")
-    btnDiscord.Text = "[ 0x03: DISCORD ]"
+    btnDiscord.Text = "[ 0x04: DISCORD ]"
     btnDiscord.Font = Theme.FontSemiBold
-    btnDiscord.TextSize = 9
+    btnDiscord.TextSize = 8
     btnDiscord.TextColor3 = Theme.AccentGothic
     btnDiscord.BackgroundColor3 = Theme.AccentSecondary
-    btnDiscord.Size = UDim2.new(0.333, -4, 1, 0)
-    btnDiscord.LayoutOrder = 3
+    btnDiscord.Size = UDim2.new(0.25, -4, 1, 0)
+    btnDiscord.LayoutOrder = 4
     Theme.AddCorner(btnDiscord, Theme.CornerSmall)
     Theme.AddStroke(btnDiscord, Theme.BorderNeon, 1)
     Theme.AddGradient(btnDiscord, Color3.fromRGB(255, 0, 60), Color3.fromRGB(130, 0, 220), 45)
@@ -7816,7 +7835,7 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnDiscord, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance#discord")
         btnDiscord.Text = "[OK] COPIED!"
-        task.delay(2, function() btnDiscord.Text = "[ 0x03: DISCORD ]" end)
+        task.delay(2, function() btnDiscord.Text = "[ 0x04: DISCORD ]" end)
     end)
 
     -- System Diagnostics Card
