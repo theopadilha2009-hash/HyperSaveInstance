@@ -2410,44 +2410,60 @@ function Interface:BuildAboutTab()
 
     -- GitHub Link Button
     local btnGithub = Instance.new("TextButton")
-    btnGithub.Text = "🔗 GitHub Profile"
+    btnGithub.Text = "[ 0x01: GITHUB ]"
     btnGithub.Font = Theme.FontSemiBold
-    btnGithub.TextSize = 10
+    btnGithub.TextSize = 9
     btnGithub.TextColor3 = Theme.AccentSkull
-    btnGithub.BackgroundColor3 = Theme.AccentPrimary
-    btnGithub.Size = UDim2.new(0.5, -4, 1, 0)
+    btnGithub.BackgroundColor3 = Theme.CardBg
+    btnGithub.Size = UDim2.new(0.333, -4, 1, 0)
     btnGithub.LayoutOrder = 1
-    Theme.AddCorner(btnGithub, Theme.CornerPill)
-    Theme.AddStroke(btnGithub, Theme.BorderNeon, 1)
+    Theme.AddCorner(btnGithub, Theme.CornerSmall)
+    Theme.AddStroke(btnGithub, Theme.Border, 1)
     btnGithub.Parent = devBtnBar
 
     Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
-        btnGithub.Text = "[OK] Perfil Copiado!"
-        task.delay(2, function()
-            btnGithub.Text = "🔗 GitHub Profile"
-        end)
+        btnGithub.Text = "[OK] COPIED!"
+        task.delay(2, function() btnGithub.Text = "[ 0x01: GITHUB ]" end)
     end)
 
     -- Repository Link Button
     local btnRepo = Instance.new("TextButton")
-    btnRepo.Text = " Repositório"
+    btnRepo.Text = "[ 0x02: REPO ]"
     btnRepo.Font = Theme.FontSemiBold
-    btnRepo.TextSize = 10
+    btnRepo.TextSize = 9
     btnRepo.TextColor3 = Theme.TextPrimary
-    btnRepo.BackgroundColor3 = Theme.CardHover
-    btnRepo.Size = UDim2.new(0.5, -4, 1, 0)
+    btnRepo.BackgroundColor3 = Theme.CardBg
+    btnRepo.Size = UDim2.new(0.333, -4, 1, 0)
     btnRepo.LayoutOrder = 2
-    Theme.AddCorner(btnRepo, Theme.CornerPill)
+    Theme.AddCorner(btnRepo, Theme.CornerSmall)
     Theme.AddStroke(btnRepo, Theme.Border, 1)
     btnRepo.Parent = devBtnBar
 
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
-        btnRepo.Text = "[OK] Repo Copiado!"
-        task.delay(2, function()
-            btnRepo.Text = " Repositório"
-        end)
+        btnRepo.Text = "[OK] COPIED!"
+        task.delay(2, function() btnRepo.Text = "[ 0x02: REPO ]" end)
+    end)
+
+    -- Discord Server Button
+    local btnDiscord = Instance.new("TextButton")
+    btnDiscord.Text = "[ 0x03: DISCORD ]"
+    btnDiscord.Font = Theme.FontSemiBold
+    btnDiscord.TextSize = 9
+    btnDiscord.TextColor3 = Theme.AccentGothic
+    btnDiscord.BackgroundColor3 = Theme.AccentSecondary
+    btnDiscord.Size = UDim2.new(0.333, -4, 1, 0)
+    btnDiscord.LayoutOrder = 3
+    Theme.AddCorner(btnDiscord, Theme.CornerSmall)
+    Theme.AddStroke(btnDiscord, Theme.BorderNeon, 1)
+    Theme.AddGradient(btnDiscord, Color3.fromRGB(255, 0, 60), Color3.fromRGB(130, 0, 220), 45)
+    btnDiscord.Parent = devBtnBar
+
+    Theme.AnimateButton(btnDiscord, function()
+        Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance#discord")
+        btnDiscord.Text = "[OK] COPIED!"
+        task.delay(2, function() btnDiscord.Text = "[ 0x03: DISCORD ]" end)
     end)
 
     -- System Diagnostics Card
