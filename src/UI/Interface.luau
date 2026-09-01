@@ -544,15 +544,22 @@ end
 function Interface:SwitchTab(targetTab: string)
     self.ActiveTab = targetTab
     for k, frame in pairs(self.TabFrames) do
-        frame.Visible = (k == targetTab)
+        if k == targetTab then
+            frame.Visible = true
+            frame.Position = UDim2.new(0, 8, 0, 0)
+            Theme.Tween(frame, 0.12, { Position = UDim2.new(0, 0, 0, 0) })
+        else
+            frame.Visible = false
+        end
     end
     for k, btn in pairs(self.NavButtons) do
         local stroke = btn:FindFirstChildOfClass("UIStroke")
         if k == targetTab then
-            btn.TextColor3 = Theme.AccentSkull
+            btn.TextColor3 = Theme.AccentDanger
             btn.BackgroundColor3 = Theme.CardActive
             btn.BackgroundTransparency = 0
             if stroke then stroke.Color = Theme.BorderNeon end
+            Theme.ScrambleText(btn, btn.Text, 0.14)
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
@@ -1009,11 +1016,30 @@ function Interface:BuildSelectorTab()
         if inst:IsA("BasePart") then parts = parts + 1 end
         if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
 
-        targetTitle.Text = string.format(" %s (%s)", inst.Name, inst.ClassName)
+        targetTitle.Text = string.format("[TARGET] %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.AccentCyan
-        targetStats.Text = string.format("📊 %d Peças • %d Malhas 3D • %d Scripts", parts, meshes, scripts)
-        targetStats.TextColor3 = Theme.AccentSuccess
-        targetPath.Text = "📍 Caminho: " .. inst:GetFullName()
+        targetStats.Text = string.format("[STATS] %d Parts • %d Meshes • %d Scripts", parts, meshes, scripts)
+        targetStats.TextColor3 = Theme.AccentAcid
+        targetPath.Text = "[PATH] " .. inst:GetFullName()
+
+        -- In-game visual neon bounding highlight
+        pcall(function()
+            if self.CurrentHighlight then
+                self.CurrentHighlight:Destroy()
+                self.CurrentHighlight = nil
+            end
+            if inst:IsA("Model") or inst:IsA("BasePart") then
+                local h = Instance.new("Highlight")
+                h.Name = "HSI_TargetHighlight"
+                h.FillColor = Theme.AccentSecondary
+                h.FillTransparency = 0.65
+                h.OutlineColor = Theme.BorderNeon
+                h.OutlineTransparency = 0.1
+                h.Adornee = inst
+                h.Parent = safeContainer
+                self.CurrentHighlight = h
+            end
+        end)
 
         -- Populate ViewportFrame with 3D model clone
         pcall(function()

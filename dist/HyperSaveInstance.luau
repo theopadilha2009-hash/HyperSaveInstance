@@ -5893,15 +5893,22 @@ end
 function Interface:SwitchTab(targetTab)
     self.ActiveTab = targetTab
     for k, frame in pairs(self.TabFrames) do
-        frame.Visible = (k == targetTab)
+        if k == targetTab then
+            frame.Visible = true
+            frame.Position = UDim2.new(0, 8, 0, 0)
+            Theme.Tween(frame, 0.12, { Position = UDim2.new(0, 0, 0, 0) })
+        else
+            frame.Visible = false
+        end
     end
     for k, btn in pairs(self.NavButtons) do
         local stroke = btn:FindFirstChildOfClass("UIStroke")
         if k == targetTab then
-            btn.TextColor3 = Theme.AccentSkull
+            btn.TextColor3 = Theme.AccentDanger
             btn.BackgroundColor3 = Theme.CardActive
             btn.BackgroundTransparency = 0
             if stroke then stroke.Color = Theme.BorderNeon end
+            Theme.ScrambleText(btn, btn.Text, 0.14)
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
@@ -6358,11 +6365,30 @@ function Interface:BuildSelectorTab()
         if inst:IsA("BasePart") then parts = parts + 1 end
         if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
 
-        targetTitle.Text = string.format(" %s (%s)", inst.Name, inst.ClassName)
+        targetTitle.Text = string.format("[TARGET] %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.AccentCyan
-        targetStats.Text = string.format("📊 %d Peças • %d Malhas 3D • %d Scripts", parts, meshes, scripts)
-        targetStats.TextColor3 = Theme.AccentSuccess
-        targetPath.Text = "📍 Caminho: " .. inst:GetFullName()
+        targetStats.Text = string.format("[STATS] %d Parts • %d Meshes • %d Scripts", parts, meshes, scripts)
+        targetStats.TextColor3 = Theme.AccentAcid
+        targetPath.Text = "[PATH] " .. inst:GetFullName()
+
+        -- In-game visual neon bounding highlight
+        pcall(function()
+            if self.CurrentHighlight then
+                self.CurrentHighlight:Destroy()
+                self.CurrentHighlight = nil
+            end
+            if inst:IsA("Model") or inst:IsA("BasePart") then
+                local h = Instance.new("Highlight")
+                h.Name = "HSI_TargetHighlight"
+                h.FillColor = Theme.AccentSecondary
+                h.FillTransparency = 0.65
+                h.OutlineColor = Theme.BorderNeon
+                h.OutlineTransparency = 0.1
+                h.Adornee = inst
+                h.Parent = safeContainer
+                self.CurrentHighlight = h
+            end
+        end)
 
         -- Populate ViewportFrame with 3D model clone
         pcall(function()
@@ -7963,6 +7989,7 @@ __define__("UI/Theme", function()
 
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 
 local Theme = {
     -- Void Carbon & Corrosive Dark Palettes
@@ -8056,7 +8083,32 @@ function Theme.AddGradient(instance, c1, c2, rotation)
     return grad
 end
 
--- Interactive Button Animation Helper with Glitch Micro-Snap
+-- Audio SFX feedback
+function Theme.PlayClick()
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://9069609200"
+        s.Volume = 0.25
+        s.Pitch = 1.6
+        s.Parent = SoundService
+        s:Play()
+        task.delay(1, function() s:Destroy() end)
+    end)
+end
+
+function Theme.PlayGlitch()
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://9114223170"
+        s.Volume = 0.35
+        s.Pitch = 1.2
+        s.Parent = SoundService
+        s:Play()
+        task.delay(1.5, function() s:Destroy() end)
+    end)
+end
+
+-- Interactive Button Animation Helper with Glitch Micro-Snap and Sound
 function Theme.AnimateButton(btn, onClick)
     local origSize = btn.Size
     local origBg = btn.BackgroundColor3
@@ -8078,6 +8130,7 @@ function Theme.AnimateButton(btn, onClick)
             Theme.Tween(btn, 0.04, {
                 Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
             })
+            Theme.PlayClick()
         end)
 
         btn.MouseButton1Up:Connect(function()
@@ -8130,6 +8183,42 @@ function Theme.GenerateHexStream(length)
         table.insert(out, "0x" .. HEX_CHARS[math.random(1, 16)] .. HEX_CHARS[math.random(1, 16)])
     end
     return table.concat(out, " ")
+end
+
+-- Live ASCII Oscilloscope / Memory Activity Waveform
+local WAVE_GLYPHS = {" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
+function Theme.GenerateActivityGraph()
+    local out = {}
+    for i = 1, 8 do
+        table.insert(out, WAVE_GLYPHS[math.random(1, #WAVE_GLYPHS)])
+    end
+    return table.concat(out, "")
+end
+
+-- Hacker Text Scramble / Decrypt Animation
+local SCRAMBLE_CHARS = {"#", "$", "%", "&", "!", "?", "*", "/", "\\", "0", "1", "X", "Z", "†", "‡", "§"}
+function Theme.ScrambleText(label, targetText, duration)
+    local dur = duration or 0.18
+    local steps = 6
+    local stepTime = dur / steps
+
+    task.spawn(function()
+        local len = #targetText
+        for s = 1, steps - 1 do
+            local scrambled = {}
+            for i = 1, len do
+                local char = string.sub(targetText, i, i)
+                if char == " " or char == "[" or char == "]" or char == "/" or char == ":" then
+                    table.insert(scrambled, char)
+                else
+                    table.insert(scrambled, SCRAMBLE_CHARS[math.random(1, #SCRAMBLE_CHARS)])
+                end
+            end
+            pcall(function() label.Text = table.concat(scrambled, "") end)
+            task.wait(stepTime)
+        end
+        pcall(function() label.Text = targetText end)
+    end)
 end
 
 return Theme

@@ -6,6 +6,7 @@
 
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 
 local Theme = {
     -- Void Carbon & Corrosive Dark Palettes
@@ -99,7 +100,32 @@ function Theme.AddGradient(instance: Instance, c1: Color3, c2: Color3, rotation:
     return grad
 end
 
--- Interactive Button Animation Helper with Glitch Micro-Snap
+-- Audio SFX feedback
+function Theme.PlayClick()
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://9069609200"
+        s.Volume = 0.25
+        s.Pitch = 1.6
+        s.Parent = SoundService
+        s:Play()
+        task.delay(1, function() s:Destroy() end)
+    end)
+end
+
+function Theme.PlayGlitch()
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://9114223170"
+        s.Volume = 0.35
+        s.Pitch = 1.2
+        s.Parent = SoundService
+        s:Play()
+        task.delay(1.5, function() s:Destroy() end)
+    end)
+end
+
+-- Interactive Button Animation Helper with Glitch Micro-Snap and Sound
 function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
     local origSize = btn.Size
     local origBg = btn.BackgroundColor3
@@ -121,6 +147,7 @@ function Theme.AnimateButton(btn: TextButton, onClick: (() -> ())?)
             Theme.Tween(btn, 0.04, {
                 Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
             })
+            Theme.PlayClick()
         end)
 
         btn.MouseButton1Up:Connect(function()
@@ -173,6 +200,42 @@ function Theme.GenerateHexStream(length: number?): string
         table.insert(out, "0x" .. HEX_CHARS[math.random(1, 16)] .. HEX_CHARS[math.random(1, 16)])
     end
     return table.concat(out, " ")
+end
+
+-- Live ASCII Oscilloscope / Memory Activity Waveform
+local WAVE_GLYPHS = {" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
+function Theme.GenerateActivityGraph(): string
+    local out = {}
+    for i = 1, 8 do
+        table.insert(out, WAVE_GLYPHS[math.random(1, #WAVE_GLYPHS)])
+    end
+    return table.concat(out, "")
+end
+
+-- Hacker Text Scramble / Decrypt Animation
+local SCRAMBLE_CHARS = {"#", "$", "%", "&", "!", "?", "*", "/", "\\", "0", "1", "X", "Z", "†", "‡", "§"}
+function Theme.ScrambleText(label: TextLabel, targetText: string, duration: number?)
+    local dur = duration or 0.18
+    local steps = 6
+    local stepTime = dur / steps
+
+    task.spawn(function()
+        local len = #targetText
+        for s = 1, steps - 1 do
+            local scrambled = {}
+            for i = 1, len do
+                local char = string.sub(targetText, i, i)
+                if char == " " or char == "[" or char == "]" or char == "/" or char == ":" then
+                    table.insert(scrambled, char)
+                else
+                    table.insert(scrambled, SCRAMBLE_CHARS[math.random(1, #SCRAMBLE_CHARS)])
+                end
+            end
+            pcall(function() label.Text = table.concat(scrambled, "") end)
+            task.wait(stepTime)
+        end
+        pcall(function() label.Text = targetText end)
+    end)
 end
 
 return Theme
