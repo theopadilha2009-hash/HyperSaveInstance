@@ -75,11 +75,12 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
     local opts = options or {}
     local refMap = {}
     local refCounter = 0
+    local processedCount = 0
 
     local function getRef(inst: Instance): string
         if not refMap[inst] then
-            refMap[inst] = "RBX" .. tostring(refCounter)
             refCounter = refCounter + 1
+            refMap[inst] = "RBX" .. tostring(refCounter)
         end
         return refMap[inst]
     end
@@ -94,8 +95,18 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
 	<Meta name="ExplicitAutoJoints">true</Meta>
 ]])
 
+    -- Forward declaration
+    local serializeInstance
+
     -- Recursive instance serializer
-    local function serializeInstance(inst: Instance, depth: number)
+    serializeInstance = function(inst: Instance, depth: number)
+        if not inst or (inst.Parent == nil and depth > 1) then return end
+        
+        processedCount = processedCount + 1
+        if processedCount % 400 == 0 then
+            task.wait(0.001) -- Micro-yield to prevent FPS crash on massive games
+        end
+
         local indent = string.rep("\t", depth)
         local className = inst.ClassName
         local ref = getRef(inst)

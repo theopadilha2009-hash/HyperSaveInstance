@@ -18,6 +18,18 @@ local ObjExporter = require(script.Parent.Parent.Core.ObjExporter)
 local RaycastSelector = require(script.Parent.Parent.Core.RaycastSelector)
 local PlaceDiffTracker = require(script.Parent.Parent.Core.PlaceDiffTracker)
 local Web3DExporter = require(script.Parent.Parent.Core.Web3DExporter)
+local LicenseManager = require(script.Parent.Parent.Utils.LicenseManager)
+
+-- Attempt auto-load of saved enterprise key
+pcall(function()
+    local fn = Environment.GetReadFileFunction()
+    if fn then
+        local content = fn("HyperSave_License.key")
+        if content and #content > 0 then
+            LicenseManager.ApplyKey(content)
+        end
+    end
+end)
 
 local Interface = {}
 Interface.__index = Interface
@@ -277,18 +289,138 @@ function Interface:BuildUI()
     title.BackgroundTransparency = 1
     title.Parent = header
 
-    -- Platform & Creator Badge
-    local badge = Instance.new("TextLabel")
-    badge.Text = "THEO LORENTZ PADILHA // [0xDEADBEEF]"
+    -- Platform & License Badge (Interactive Key Activation)
+    local badge = Instance.new("TextButton")
+    local isEnt = LicenseManager.IsEnterprise()
+    badge.Text = isEnt and "[ 👑 ENTERPRISE ACTIVE ]" or "[ 🔑 FREE // UNLOCK $570 VIP ]"
     badge.Font = Theme.FontSemiBold
-    badge.TextSize = 10
-    badge.TextColor3 = Theme.AccentTheo
+    badge.TextSize = 9
+    badge.TextColor3 = isEnt and Theme.AccentSuccess or Theme.AccentTheo
     badge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
-    badge.Size = UDim2.new(0, 240, 0, 24)
-    badge.Position = UDim2.new(0, 205, 0.5, -12)
+    badge.Size = UDim2.new(0, 210, 0, 24)
+    badge.Position = UDim2.new(0, 195, 0.5, -12)
     Theme.AddCorner(badge, Theme.CornerMedium)
-    Theme.AddStroke(badge, Theme.BorderLight, 1)
+    local bStroke = Theme.AddStroke(badge, isEnt and Theme.AccentSuccess or Theme.BorderLight, 1)
     badge.Parent = header
+
+    -- License Activation Modal Dialog
+    local keyModal = Instance.new("Frame")
+    keyModal.Size = UDim2.new(1, 0, 1, 0)
+    keyModal.BackgroundColor3 = Color3.fromRGB(2, 2, 6)
+    keyModal.BackgroundTransparency = 0.25
+    keyModal.Visible = false
+    keyModal.ZIndex = 50
+    keyModal.Parent = main
+
+    local keyCard = Instance.new("Frame")
+    keyCard.Size = UDim2.new(0, 360, 0, 180)
+    keyCard.Position = UDim2.new(0.5, -180, 0.5, -90)
+    keyCard.BackgroundColor3 = Theme.Background
+    keyCard.ZIndex = 51
+    Theme.AddCorner(keyCard, Theme.CornerMedium)
+    Theme.AddStroke(keyCard, Theme.BorderNeon, 1.5)
+    keyCard.Parent = keyModal
+
+    local kTitle = Instance.new("TextLabel")
+    kTitle.Text = "[ 🔑 ENTERPRISE KEY ACTIVATION ]"
+    kTitle.Font = Theme.FontTitle
+    kTitle.TextSize = 12
+    kTitle.TextColor3 = Theme.AccentCyan
+    kTitle.Size = UDim2.new(1, -24, 0, 24)
+    kTitle.Position = UDim2.new(0, 12, 0, 12)
+    kTitle.BackgroundTransparency = 1
+    kTitle.ZIndex = 52
+    kTitle.Parent = keyCard
+
+    local kDesc = Instance.new("TextLabel")
+    kDesc.Text = "Enter your license key (e.g. THEO-ENT-XXXX-XXXX-XXXX):"
+    kDesc.Font = Theme.FontRegular
+    kDesc.TextSize = 10
+    kDesc.TextColor3 = Theme.TextSecondary
+    kDesc.Size = UDim2.new(1, -24, 0, 18)
+    kDesc.Position = UDim2.new(0, 12, 0, 38)
+    kDesc.BackgroundTransparency = 1
+    kDesc.ZIndex = 52
+    kDesc.Parent = keyCard
+
+    local kInput = Instance.new("TextBox")
+    kInput.PlaceholderText = "Paste License Key Here..."
+    kInput.Font = Theme.FontCode
+    kInput.TextSize = 11
+    kInput.TextColor3 = Theme.AccentAcid
+    kInput.BackgroundColor3 = Theme.CardBg
+    kInput.Size = UDim2.new(1, -24, 0, 32)
+    kInput.Position = UDim2.new(0, 12, 0, 64)
+    kInput.ZIndex = 52
+    Theme.AddCorner(kInput, Theme.CornerSmall)
+    Theme.AddStroke(kInput, Theme.Border, 1)
+    kInput.Parent = keyCard
+
+    local kStatus = Instance.new("TextLabel")
+    kStatus.Text = ""
+    kStatus.Font = Theme.FontSemiBold
+    kStatus.TextSize = 10
+    kStatus.Size = UDim2.new(1, -24, 0, 18)
+    kStatus.Position = UDim2.new(0, 12, 0, 102)
+    kStatus.BackgroundTransparency = 1
+    kStatus.ZIndex = 52
+    kStatus.Parent = keyCard
+
+    local kSubmit = Instance.new("TextButton")
+    kSubmit.Text = "⚡ ACTIVATE KEY"
+    kSubmit.Font = Theme.FontTitle
+    kSubmit.TextSize = 10
+    kSubmit.TextColor3 = Theme.AccentSkull
+    kSubmit.BackgroundColor3 = Theme.AccentPrimary
+    kSubmit.Size = UDim2.new(0.5, -16, 0, 30)
+    kSubmit.Position = UDim2.new(0, 12, 0, 130)
+    kSubmit.ZIndex = 52
+    Theme.AddCorner(kSubmit, Theme.CornerSmall)
+    kSubmit.Parent = keyCard
+
+    local kClose = Instance.new("TextButton")
+    kClose.Text = "✕ CANCEL"
+    kClose.Font = Theme.FontTitle
+    kClose.TextSize = 10
+    kClose.TextColor3 = Theme.TextSecondary
+    kClose.BackgroundColor3 = Theme.CardBg
+    kClose.Size = UDim2.new(0.5, -16, 0, 30)
+    kClose.Position = UDim2.new(0.5, 4, 0, 130)
+    kClose.ZIndex = 52
+    Theme.AddCorner(kClose, Theme.CornerSmall)
+    kClose.Parent = keyCard
+
+    Theme.AnimateButton(badge, function()
+        keyModal.Visible = true
+        kStatus.Text = ""
+    end)
+
+    Theme.AnimateButton(kClose, function()
+        keyModal.Visible = false
+    end)
+
+    Theme.AnimateButton(kSubmit, function()
+        local success, msg = LicenseManager.ApplyKey(kInput.Text)
+        if success then
+            kStatus.Text = "[✓] " .. msg
+            kStatus.TextColor3 = Theme.AccentSuccess
+            badge.Text = "[ 👑 ENTERPRISE ACTIVE ]"
+            badge.TextColor3 = Theme.AccentSuccess
+            bStroke.Color = Theme.AccentSuccess
+            
+            pcall(function()
+                local wfn = Environment.GetWriteFileFunction()
+                if wfn then wfn("HyperSave_License.key", kInput.Text) end
+            end)
+
+            task.delay(1.5, function()
+                keyModal.Visible = false
+            end)
+        else
+            kStatus.Text = "[!] " .. msg
+            kStatus.TextColor3 = Theme.AccentDanger
+        end
+    end)
 
     -- Compact Mode Button (Switches to minimal horizontal HUD bar)
     local compactBtn = Instance.new("TextButton")

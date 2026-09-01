@@ -117,6 +117,7 @@ function testSourceFiles() {
         'src/Utils/Base64.luau',
         'src/Utils/LZ4.luau',
         'src/Utils/Stream.luau',
+        'src/Utils/LicenseManager.luau',
     ];
 
     for (const relPath of modules) {
