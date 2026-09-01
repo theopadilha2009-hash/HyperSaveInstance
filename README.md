@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://github.com/theopadilha2009-hash"><img src="https://img.shields.io/badge/Author-Theo%20Lorentz%20Padilha-ff007f?style=for-the-badge&logo=github" alt="Author"></a>
   <a href="https://github.com/theopadilha2009-hash/HyperSaveInstance"><img src="https://img.shields.io/badge/Release-v2.1.0%20Cyber--Tribal-7c3aed?style=for-the-badge" alt="Release"></a>
-  <a href="https://discord.com"><img src="https://img.shields.io/badge/Discord-Theo%20Dev%20Hub-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://discord.gg/Tk5zyA83UZ"><img src="https://img.shields.io/badge/Discord-Theo%20Dev%20Hub-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   <a href="https://luau.org/"><img src="https://img.shields.io/badge/Language-Luau-00E5FF?style=for-the-badge&logo=lua" alt="Luau"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge" alt="License"></a>
 </p>

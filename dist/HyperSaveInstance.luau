@@ -7833,7 +7833,7 @@ function Interface:BuildAboutTab()
     btnDiscord.Parent = devBtnBar
 
     Theme.AnimateButton(btnDiscord, function()
-        Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance#discord")
+        Environment.SetClipboard("https://discord.gg/Tk5zyA83UZ")
         btnDiscord.Text = "[OK] COPIED!"
         task.delay(2, function() btnDiscord.Text = "[ 0x04: DISCORD ]" end)
     end)
