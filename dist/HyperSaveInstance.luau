@@ -5945,7 +5945,7 @@ function Interface:BuildDashboardTab()
 
     -- Preset Selection Container
     local presetLabel = Instance.new("TextLabel")
-    presetLabel.Text = "[CONFIG_PROFILE] SELECIONE O MODO DE EXTRAÇÃO:"
+    presetLabel.Text = "[CONFIG_PROFILE] SELECT DUMP EXTRACTION MODE:"
     presetLabel.Font = Theme.FontSemiBold
     presetLabel.TextSize = 10
     presetLabel.TextColor3 = Theme.TextMuted
@@ -6007,13 +6007,13 @@ function Interface:BuildDashboardTab()
                     if stroke then stroke.Color = Theme.Border end
                 end
             end
-            self:Log("Modo selecionado: " .. pKey)
+            self:Log("Dump mode set to: " .. pKey)
         end)
     end
 
     -- Format Selector Container
     local formatLabel = Instance.new("TextLabel")
-    formatLabel.Text = "[OUTPUT_TYPE] FORMATO DO ARQUIVO SERIALIZADO:"
+    formatLabel.Text = "[OUTPUT_TYPE] SERIALIZATION FILE FORMAT:"
     formatLabel.Font = Theme.FontSemiBold
     formatLabel.TextSize = 10
     formatLabel.TextColor3 = Theme.TextMuted
@@ -6074,7 +6074,7 @@ function Interface:BuildDashboardTab()
                     if stroke then stroke.Color = Theme.Border end
                 end
             end
-            self:Log("Formato definido para: ." .. fKey)
+            self:Log("Format set to: ." .. fKey)
         end)
     end
 
@@ -6407,7 +6407,7 @@ function Interface:BuildSelectorTab()
                         sz = clone.Size
                     end
 
-                    targetDims.Text = string.format("📐 Dimensões: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
+                    targetDims.Text = string.format("📐 Dimensions: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
 
                     local maxDim = math.max(sz.X, sz.Y, sz.Z)
                     local camDist = math.clamp(maxDim * 1.5, 4, 250)
@@ -6429,7 +6429,7 @@ function Interface:BuildSelectorTab()
                     end)
                 end
             else
-                targetDims.Text = "📐 Tipo: " .. inst.ClassName
+                targetDims.Text = "📐 Type: " .. inst.ClassName
             end
         end)
     end
@@ -6448,9 +6448,9 @@ function Interface:BuildSelectorTab()
     actionLayout.Parent = actionBtnContainer
 
     local btnSaveSingle = Instance.new("TextButton")
-    btnSaveSingle.Text = "💾 Salvar (.rbxm)"
+    btnSaveSingle.Text = "💾 Save Model (.rbxm)"
     btnSaveSingle.Font = Theme.FontTitle
-    btnSaveSingle.TextSize = 11
+    btnSaveSingle.TextSize = 10
     btnSaveSingle.TextColor3 = Theme.AccentSkull
     btnSaveSingle.BackgroundColor3 = Theme.AccentPrimary
     btnSaveSingle.Size = UDim2.new(0.35, -4, 1, 0)
@@ -6460,19 +6460,23 @@ function Interface:BuildSelectorTab()
     btnSaveSingle.Parent = actionBtnContainer
 
     local btnExportWeb3D = Instance.new("TextButton")
-    btnExportWeb3D.Text = "🌐 3D Web (HTML)"
+    btnExportWeb3D.Text = "🌐 3D Web Viewer"
     btnExportWeb3D.Font = Theme.FontTitle
-    btnExportWeb3D.TextSize = 11
+    btnExportWeb3D.TextSize = 10
     btnExportWeb3D.TextColor3 = Theme.AccentSkull
-    btnExportWeb3D.BackgroundColor3 = Color3.fromRGB(168, 85, 247)
-    btnExportWeb3D.Size = UDim2.new(0.33, -4, 1, 0)
+    btnExportWeb3D.BackgroundColor3 = Color3.fromRGB(15, 12, 28)
+    btnExportWeb3D.Size = UDim2.new(0.35, -4, 1, 0)
     btnExportWeb3D.LayoutOrder = 2
     Theme.AddCorner(btnExportWeb3D, Theme.CornerMedium)
-    Theme.AddStroke(btnExportWeb3D, Theme.BorderNeon, 1)
+    Theme.AddStroke(btnExportWeb3D, Theme.BorderLight, 1)
     btnExportWeb3D.Parent = actionBtnContainer
 
+    local btnCopyCode = Instance.new("TextButton")
+    btnCopyCode.Text = "📋 Copy Luau Code"
+    btnCopyCode.Parent = actionBtnContainer
+
     local btnAddToPack = Instance.new("TextButton")
-    btnAddToPack.Text = "➕ Pacote"
+    btnAddToPack.Text = "➕ Add to Batch"
     btnAddToPack.Font = Theme.FontTitle
     btnAddToPack.TextSize = 11
     btnAddToPack.TextColor3 = Theme.AccentSkull
@@ -6922,7 +6926,7 @@ function Interface:BuildLightingRipperTab()
     exportLightBtn.Parent = card
 
     local lightStatus = Instance.new("TextLabel")
-    lightStatus.Text = "Status: Pronto para salvar iluminação"
+    lightStatus.Text = "Status: Ready to dump lighting preset"
     lightStatus.Font = Theme.FontRegular
     lightStatus.TextSize = 11
     lightStatus.TextColor3 = Theme.TextMuted
@@ -6933,7 +6937,7 @@ function Interface:BuildLightingRipperTab()
     lightStatus.Parent = card
 
     Theme.AnimateButton(exportLightBtn, function()
-        lightStatus.Text = "Extraindo efeitos e skyboxes..."
+        lightStatus.Text = "Extracting atmospheric effects and skyboxes..."
         lightStatus.TextColor3 = Theme.AccentCyan
 
         task.spawn(function()
@@ -6975,7 +6979,7 @@ function Interface:BuildGuiRipperTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Extrai todas as ScreenGuis, Menus, Lojas, Inventários, Barras de Vida e HUDs com seus respectivos cantos arredondados (UICorner), gradientes (UIGradient) e scripts de interface para um pacote de UI independente (.rbxmx)!"
+    desc.Text = "Extracts all active ScreenGuis, Menus, Stores, Inventories, Health Bars and HUDs with their respective UICorners, UIGradients, and interface scripts into a standalone UI package (.rbxmx)!"
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -7001,7 +7005,7 @@ function Interface:BuildGuiRipperTab()
     exportGuiBtn.Parent = card
 
     local guiStatus = Instance.new("TextLabel")
-    guiStatus.Text = "Status: Pronto para salvar GUIs"
+    guiStatus.Text = "Status: Ready to dump active GUIs"
     guiStatus.Font = Theme.FontRegular
     guiStatus.TextSize = 11
     guiStatus.TextColor3 = Theme.TextMuted
@@ -7012,7 +7016,7 @@ function Interface:BuildGuiRipperTab()
     guiStatus.Parent = card
 
     Theme.AnimateButton(exportGuiBtn, function()
-        guiStatus.Text = "Extraindo e descompilando interfaces..."
+        guiStatus.Text = "Extracting player interfaces..."
         guiStatus.TextColor3 = Theme.AccentCyan
 
         task.spawn(function()
@@ -7561,24 +7565,24 @@ function Interface:BuildSettingsTab()
     end)
 
     local toggles = {
-        {"AutoAntiAFK", "Proteção Anti-AFK (Evita Desconexão por Inatividade)", self.Config.AutoAntiAFK},
-        {"AutoExploreStreaming", "Varrer Mapa Inteiro (Bypass de StreamingEnabled)", self.Config.AutoExploreStreaming},
-        {"StealthMode", "Modo Furtivo (Proteção contra Anti-Cheats do Jogo)", self.Config.StealthMode},
-        {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh) para Pasta Local", self.Config.DownloadRawAssets},
-        {"OptimizeGeometry", "Otimizador de Arquivo (Deduplicação de Estruturas - Opcional)", self.Config.OptimizeGeometry},
-        {"SaveTerrain", "Preservar Terreno Completo (Propriedades & Água)", self.Config.SaveTerrain},
-        {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
-        {"SaveLighting", "Preservar Iluminação, Céu & Efeitos de Atmosfera", self.Config.SaveLighting},
-        {"SaveSounds", "Preservar Efeitos de Áudio, Reverbs & SoundGroups", self.Config.SaveSounds},
-        {"SaveUnions", "Preservar CSG Unions & NegateOperations (Physics & ChildData)", self.Config.SaveUnions},
-        {"SaveSurfaceAppearance", "Preservar Texturas PBR & SurfaceAppearances", self.Config.SaveSurfaceAppearance},
-        {"DecompileScripts", "Descompilar Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
-        {"IsolateStarterPlayer", "Extrair Scripts & GUIs Ativos do Jogador para o StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
-        {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Backend para Scripts de Servidor", self.Config.SaveServerScriptPlaceholders},
-        {"SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer},
-        {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
-        {"SaveAttributes", "Salvar Atributos Modernos de Instância", self.Config.SaveAttributes},
-        {"SaveTags", "Salvar Tags de CollectionService", self.Config.SaveTags},
+        {"AutoAntiAFK", "Anti-AFK Protection (Prevents Idle Disconnections)", self.Config.AutoAntiAFK},
+        {"AutoExploreStreaming", "Full Map Explorer (StreamingEnabled Spatial Bypass)", self.Config.AutoExploreStreaming},
+        {"StealthMode", "Stealth Mode (Anti-Cheat Client Evasion)", self.Config.StealthMode},
+        {"DownloadRawAssets", "Download Raw Assets (.mp3, .png, .mesh) to Local Folder", self.Config.DownloadRawAssets},
+        {"OptimizeGeometry", "File Geometry Optimizer (Mesh Deduplication)", self.Config.OptimizeGeometry},
+        {"SaveTerrain", "Preserve Full Terrain (Properties & Water Materials)", self.Config.SaveTerrain},
+        {"SaveTerrainVoxels", "Extract Terrain SmoothVoxels (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
+        {"SaveLighting", "Preserve Lighting, Skybox & Atmospheric Effects", self.Config.SaveLighting},
+        {"SaveSounds", "Preserve Audio Effects, Reverbs & SoundGroups", self.Config.SaveSounds},
+        {"SaveUnions", "Preserve CSG Unions & NegateOperations (Physics & ChildData)", self.Config.SaveUnions},
+        {"SaveSurfaceAppearance", "Preserve PBR Textures & SurfaceAppearances", self.Config.SaveSurfaceAppearance},
+        {"DecompileScripts", "Decompile Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
+        {"IsolateStarterPlayer", "Extract Active Player Scripts & GUIs to StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
+        {"SaveServerScriptPlaceholders", "Smart Backend Reconstruction for Server Scripts", self.Config.SaveServerScriptPlaceholders},
+        {"SynthesizeServer", "Automated Backend Synthesizer for RemoteEvents", self.Config.SynthesizeServer},
+        {"SaveNilInstances", "Save Isolated Instances (Nil Instances)", self.Config.SaveNilInstances},
+        {"SaveAttributes", "Save Modern Instance Attributes", self.Config.SaveAttributes},
+        {"SaveTags", "Save CollectionService Tags", self.Config.SaveTags},
     }
 
     for i, item in ipairs(toggles) do
@@ -7886,7 +7890,7 @@ function Interface:BuildAboutTab()
     featCard.Parent = scroll
 
     local featTitle = Instance.new("TextLabel")
-    featTitle.Text = " RECURSOS EXCLUSIVOS INCLUÍDOS"
+    featTitle.Text = " EXCLUSIVE MASTER FEATURES INCLUDED"
     featTitle.Font = Theme.FontTitle
     featTitle.TextSize = 12
     featTitle.TextColor3 = Theme.AccentCyan
@@ -7897,7 +7901,7 @@ function Interface:BuildAboutTab()
     featTitle.Parent = featCard
 
     local featDesc = Instance.new("TextLabel")
-    featDesc.Text = "[OK] Seletor 3D com Mira no Mundo & Multi-Seleção em Lote\n[OK] Extração de Terreno SmoothVoxels 3D, Iluminação PBR & Sons\n[OK] Plugin Oficial de Roblox Studio com Reparo Mestre 1-Clique\n[OK] Desofuscador de Variáveis de Scripts e Proteção Anti-AFK"
+    featDesc.Text = "[OK] 3D Raycast World Target Isolator & Batch Multi-Select\n[OK] 3D SmoothVoxels Terrain, PBR Lighting & Audio Extraction\n[OK] Official Roblox Studio Importer with 1-Click Master Fix\n[OK] Luau Bytecode Decompiler & Adaptive Anti-AFK Guard"
     featDesc.Font = Theme.FontRegular
     featDesc.TextSize = 11
     featDesc.TextColor3 = Theme.TextSecondary
