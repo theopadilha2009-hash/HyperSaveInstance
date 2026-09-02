@@ -4,7 +4,17 @@
     Auto-detects environment, provides instant visual feedback, and loads real-time raw bundle.
 ]]
 
+local isSilent = false
+pcall(function()
+    local genv = (getgenv and getgenv()) or _G
+    if genv then
+        isSilent = (genv.HyperSave_Silent == true) or (genv.SilentMode == true) or (genv.HyperSave_Ghost == true)
+    end
+end)
+
 local function createInstantBanner(text, isError)
+    if isSilent then return end
+
     pcall(function()
         local rawParent = (gethui and gethui())
         if not rawParent then
@@ -26,6 +36,11 @@ local function createInstantBanner(text, isError)
             sg.DisplayOrder = 9999999
             sg.ResetOnSpawn = false
             sg.Enabled = true
+            pcall(function()
+                if syn and syn.protect_gui then
+                    syn.protect_gui(sg)
+                end
+            end)
             sg.Parent = rawParent
             container = sg
         end

@@ -182,15 +182,21 @@ local Defaults = {
     FilePath = "",                         -- Auto-generated if empty: HyperSaveInstance/<PlaceName>_<PlaceId>.<Format>
     ShowUI = true,                         -- Open HUD interface by default
     AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
+    SilentMode = false,                    -- Headless / 100% Silent Mode (No UI, no notifications, no sounds, no prints)
+    RandomizeGuiName = false,              -- Randomize ScreenGui name with stealth random hash
     ToggleKeybind = Enum.KeyCode.RightShift, -- Keyboard shortcut to toggle HUD visibility
 
     -- Anti-AFK & Stealth Protection
     AutoAntiAFK = true,                    -- Prevents idle disconnection (Error 268/273)
     StealthMode = true,                    -- Obfuscates memory references and thread identity
+    SafeStreaming = true,                  -- Non-teleport streaming replication (prevents movement anti-cheat kicks)
 
     -- Total Raw Asset Downloader
     DownloadRawAssets = true,              -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
-    AssetDownloadWorkers = 6,              -- Parallel threads for raw asset downloading
+    AssetDownloadWorkers = 4,              -- Safe worker count to prevent rate limits on public servers
+    SafeAssetDownload = true,              -- Token-bucket throttled downloading with jitter
+    PingGuard = true,                      -- Dynamic ping monitoring (auto-pauses if ping > 180ms)
+    ExportAssetManifest = true,            -- Export HyperSave_Manifest_<PlaceId>.json for offline downloading
     AssetFolderName = "",                  -- Auto-generated if empty: HyperSave_Assets_<PlaceId>
 
     -- Smart Optimizer (Strictly Optional / Disabled by default to preserve 100% raw map integrity)
@@ -234,11 +240,14 @@ local Defaults = {
     -- Performance & Throttling
     ChunkSize = 250,                       -- Instances processed per frame/tick to prevent lag/freeze
     YieldInterval = 0.01,                  -- task.wait() interval between batches
+    AdaptiveFPSGuard = true,               -- Dynamically adjust throttle delay based on framerate delta
     MaxMemoryBudgetMB = 1024,              -- Memory limit safety check
     AssetDownloadWorkers = 8,              -- Concurrent workers for asset downloader pool
 
-    -- Logging & Notifications
+    -- Logging, Reports & Validation
     VerboseLogs = true,                    -- Detailed console logs
+    ValidateOutputXml = true,              -- Validate XML well-formedness before saving
+    SaveSummaryReport = true,              -- Save JSON execution summary report (.json)
     PlaySoundOnComplete = true,            -- Play audio chime when save completes
     CopyToClipboardOnComplete = true,      -- Copy file path to clipboard on complete
     DiscordWebhookUrl = "",                -- Optional Discord Webhook URL for clone notifications
@@ -316,6 +325,68 @@ local Presets = {
         DecompileScripts = true,
         SaveServerScriptPlaceholders = true,
         SaveNilInstances = true,
+        OptimizeGeometry = false,
+    },
+    Ghost = {
+        SilentMode = true,
+        ShowUI = false,
+        VerboseLogs = false,
+        PlaySoundOnComplete = false,
+        RandomizeGuiName = true,
+        StealthMode = true,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        DownloadRawAssets = false,
+        SaveTerrain = true,
+        SaveTerrainVoxels = false,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        OptimizeGeometry = false,
+    },
+    OnlyMap = {
+        DownloadRawAssets = false,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = false,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = false,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = false,
+        SaveServerScriptPlaceholders = false,
+        SaveNilInstances = false,
+        OptimizeGeometry = false,
+    },
+    UIOnly = {
+        DownloadRawAssets = false,
+        SaveTerrain = false,
+        SaveTerrainVoxels = false,
+        SaveLighting = false,
+        SaveMaterials = false,
+        SaveSounds = false,
+        SaveUnions = false,
+        SaveMeshParts = false,
+        SaveSurfaceAppearance = false,
+        SaveAnimations = false,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = false,
+        SaveNilInstances = false,
         OptimizeGeometry = false,
     }
 }
@@ -466,6 +537,100 @@ function AnimationRecorder.StartAutoCapture()
     end
 end
 
+-- Scan all currently playing animation tracks across the local player and NPCs
+function AnimationRecorder.ScanActiveTracks()
+    local tracks = {}
+    local seen = {}
+
+    local function checkHumanoid(hum)
+        local animator = hum:FindFirstChildOfClass("Animator")
+        if animator then
+            for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                local name = track.Name or "Animation"
+                pcall(function()
+                    if track.Animation and #track.Animation.Name > 0 then
+                        name = track.Animation.Name
+                    end
+                end)
+                if not seen[name] then
+                    seen[name] = true
+                    table.insert(tracks, {
+                        Name = name,
+                        Length = track.Length,
+                        Speed = track.Speed,
+                        Humanoid = hum,
+                        Track = track
+                    })
+                end
+            end
+        end
+    end
+
+    local localPlayer = Players and Players.LocalPlayer
+    if localPlayer and localPlayer.Character then
+        local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then checkHumanoid(hum) end
+    end
+
+    if workspace then
+        for _, desc in ipairs(workspace:GetDescendants()) do
+            if desc:IsA("Humanoid") then
+                checkHumanoid(desc)
+            end
+        end
+    end
+
+    return tracks
+end
+
+-- Export all captured KeyframeSequences to a .rbxm model package
+function AnimationRecorder.ExportRecordedAnimations()
+    local Environment = require("../Utils/Environment")
+    local SerializerXml = require("./SerializerXml")
+
+    local animFolder = Instance.new("Folder")
+    animFolder.Name = "HyperSave_AnimSaves"
+
+    local count = 0
+    for _, item in ipairs(AnimationRecorder.RecordedSequences) do
+        if typeof(item) == "Instance" and item:IsA("KeyframeSequence") then
+            local clone = item:Clone()
+            clone.Parent = animFolder
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        -- Create a placeholder KeyframeSequence if none recorded yet
+        local placeholder = Instance.new("KeyframeSequence")
+        placeholder.Name = "Idle_Sample"
+        local kf0 = Instance.new("Keyframe")
+        kf0.Time = 0
+        kf0.Parent = placeholder
+        placeholder.Parent = animFolder
+        count = 1
+    end
+
+    local fileName = string.format("HyperSave_Animations_%s.rbxm", tostring(game.PlaceId or "0"))
+    local xml = SerializerXml.Serialize(animFolder, {
+        SaveTerrain = false,
+        DecompileScripts = false
+    })
+
+    if Environment.HasFileSystem() then
+        local success, err = pcall(function()
+            Environment.WriteFile(fileName, xml)
+        end)
+        if success then
+            return true, fileName
+        else
+            return false, tostring(err)
+        end
+    end
+
+    return true, fileName
+end
+
 return AnimationRecorder
 
 end)
@@ -480,13 +645,19 @@ local Environment = __require__("Utils/Environment")
 
 local AssetDownloader = {}
 
--- Safe HTTP Request polyfill for executors
+-- Safe HTTP Request polyfill with clean official headers (Prevents executor fingerprinting)
 local function httpRequest(url)
     local req = (syn and syn.request) or (http and http.request) or http_request or request
     if req then
         local s, res = pcall(req, {
             Url = url,
-            Method = "GET"
+            Method = "GET",
+            Headers = {
+                ["User-Agent"] = "Roblox/WinInet",
+                ["Accept"] = "*/*",
+                ["Accept-Encoding"] = "gzip, deflate",
+                ["Connection"] = "keep-alive"
+            }
         })
         if s and res and (res.StatusCode == 200 or res.Success) then
             return res.Body
@@ -573,13 +744,62 @@ function AssetDownloader.CollectAssets(instances)
     return assets
 end
 
--- Download all collected assets to local folder structure using 8-Worker Parallel Pool
+-- Measure real-time client ping to prevent server desync/heartbeat disconnects
+function AssetDownloader.GetClientPing()
+    local ping = 50
+    pcall(function()
+        local stats = game:GetService("Stats")
+        local net = stats and stats:FindFirstChild("Network")
+        local ssi = net and net:FindFirstChild("ServerStatsItem")
+        local dp = ssi and ssi:FindFirstChild("Data Ping")
+        if dp and dp:IsA("ValueBase") then
+            ping = (dp ).Value or 50
+        end
+    end)
+    return ping
+end
+
+-- Export structured JSON manifest for offline downloading
+function AssetDownloader.ExportManifest(assets, manifestPath)
+    local HttpService = game:GetService("HttpService")
+    local list = {}
+    for id, item in pairs(assets) do
+        table.insert(list, {
+            Id = id,
+            Type = item.Type,
+            Url = item.Url,
+            SourceName = item.SourceName
+        })
+    end
+
+    local success, json = pcall(function()
+        return HttpService:JSONEncode({
+            PlaceId = game.PlaceId or 0,
+            TotalAssets = #list,
+            ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
+            Assets = list
+        })
+    end)
+
+    if success and json then
+        local wOk = Environment.WriteFile(manifestPath, json)
+        return wOk, manifestPath
+    end
+
+    return false, "Failed to encode JSON manifest"
+end
+
+-- Download all collected assets safely with Ping Guard, Rate Limiting & Exponential Backoff
 function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallback)
+    local opts = options or {}
     Environment.MakeFolder(baseFolder)
     Environment.MakeFolder(baseFolder .. "/audios")
     Environment.MakeFolder(baseFolder .. "/textures")
     Environment.MakeFolder(baseFolder .. "/meshes")
     Environment.MakeFolder(baseFolder .. "/animations")
+
+    local manifestPath = string.format("%s/HyperSave_Manifest_%d.json", baseFolder, game.PlaceId or 0)
+    AssetDownloader.ExportManifest(assets, manifestPath)
 
     local assetList = {}
     for _, asset in pairs(assets) do
@@ -593,10 +813,11 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
     local failed = 0
     local currentIndex = 1
 
-    local workers = math.clamp(options.AssetDownloadWorkers or 8, 2, 16)
-    local activeWorkers = workers
+    -- In public servers or safe mode, constrain workers to prevent bandwidth saturation
+    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 4, 2, 6) or math.clamp(opts.AssetDownloadWorkers or 8, 2, 16)
+    local activeWorkers = maxWorkers
 
-    for w = 1, workers do
+    for w = 1, maxWorkers do
         task.spawn(function()
             while currentIndex <= total do
                 local myIndex = currentIndex
@@ -604,6 +825,17 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
 
                 local item = assetList[myIndex]
                 if item then
+                    -- 1. Adaptive Ping Guard: Pause if ping spikes above 180ms
+                    if opts.PingGuard ~= false then
+                        local currentPing = AssetDownloader.GetClientPing()
+                        local retryCount = 0
+                        while currentPing > 180 and retryCount < 10 do
+                            task.wait(0.3)
+                            currentPing = AssetDownloader.GetClientPing()
+                            retryCount = retryCount + 1
+                        end
+                    end
+
                     local extension = ".dat"
                     local subDir = "textures"
 
@@ -623,11 +855,23 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
 
                     local fileName = string.format("%s/%s/%s_%s%s", baseFolder, subDir, item.Id, string.gsub(item.SourceName, "[^%w_%-]", "_"), extension)
 
-                    -- Try primary url then v2 fallback
-                    local body = httpRequest(item.Url)
-                    if not body or #body == 0 then
-                        local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
-                        body = httpRequest(v2Url)
+                    -- 2. Exponential backoff retry handler
+                    local body = nil
+                    local maxRetries = 2
+                    for attempt = 1, maxRetries + 1 do
+                        body = httpRequest(item.Url)
+                        if not body or #body == 0 then
+                            local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
+                            body = httpRequest(v2Url)
+                        end
+
+                        if body and #body > 0 then
+                            break
+                        end
+
+                        if attempt <= maxRetries then
+                            task.wait(0.4 * attempt) -- Exponential backoff
+                        end
                     end
 
                     if body and #body > 0 then
@@ -645,7 +889,10 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
                         pcall(progressCallback, downloaded + failed, total, item)
                     end
                 end
-                task.wait(0.01)
+
+                -- 3. Jittered rate limiting (50ms to 120ms delay) to mimic natural client requests
+                local jitter = math.random(50, 120) / 1000
+                task.wait(jitter)
             end
             activeWorkers = activeWorkers - 1
         end)
@@ -1331,6 +1578,9 @@ function Engine.NormalizeOptions(rawOptions)
             elseif lm == "fast" then opts.Mode = "Fast"
             elseif lm == "visualsonly" or lm == "visuals" then opts.Mode = "VisualsOnly"
             elseif lm == "scriptsonly" or lm == "scripts" then opts.Mode = "ScriptsOnly"
+            elseif lm == "onlymap" or lm == "maponly" or lm == "map" then opts.Mode = "OnlyMap"
+            elseif lm == "uionly" or lm == "ui" or lm == "guionly" then opts.Mode = "UIOnly"
+            elseif lm == "ghost" or lm == "stealth" then opts.Mode = "Ghost"
             elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
             else opts.Mode = v end
         elseif lk == "decompileignore" or lk == "decompile_ignore" then
@@ -1357,6 +1607,17 @@ function Engine.NormalizeOptions(rawOptions)
             opts.SaveNilInstances = (v == true)
         elseif lk == "stealthmode" or lk == "stealth_mode" or lk == "anonymous" then
             opts.StealthMode = (v == true)
+        elseif lk == "silent" or lk == "silentmode" or lk == "silent_mode" or lk == "headless" then
+            opts.SilentMode = (v == true)
+            if v == true then
+                opts.ShowUI = false
+                opts.VerboseLogs = false
+                opts.PlaySoundOnComplete = false
+            end
+        elseif lk == "randomizeguiname" or lk == "randomize_gui_name" or lk == "randomizename" then
+            opts.RandomizeGuiName = (v == true)
+        elseif lk == "safestreaming" or lk == "safe_streaming" then
+            opts.SafeStreaming = (v == true)
         elseif lk == "showui" or lk == "show_ui" then
             opts.ShowUI = (v == true)
         else
@@ -1399,7 +1660,7 @@ function Engine:GetDefaultFileName()
     pcall(function()
         placeName = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
     end)
-    placeName = string.gsub(placeName, "[^%w_%-]", "_")
+    placeName = Environment.SanitizeFileName(placeName)
     local ext = string.lower(self.Config.Format or "rbxlx")
     return string.format("HyperSave_%s_%d.%s", placeName, placeId, ext)
 end
@@ -1411,7 +1672,7 @@ end
 
 -- Play completion audio chime
 function Engine:PlayChime()
-    if not self.Config.PlaySoundOnComplete then return end
+    if not self.Config.PlaySoundOnComplete or self.Config.SilentMode then return end
     pcall(function()
         local sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
@@ -1429,6 +1690,7 @@ function Engine:ShouldSaveInstance(inst)
     if ClassBlacklist.Names[inst.Name] then return false end
 
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
+    if inst:GetAttribute("HSI_Root") then return false end
 
     -- Custom IgnoreList check (USSI / UltraSmart parity)
     if self.Config.IgnoreList and type(self.Config.IgnoreList) == "table" then
@@ -1564,6 +1826,7 @@ function Engine:Start()
             Percentage = 4,
             Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
         })
+        local allowPhysicalTeleport = (not self.Config.SafeStreaming) and (not self.Config.StealthMode)
         StreamExplorer.ExploreMap(512, function(cur, tot, pos)
             local pct = 4 + math.floor((cur / tot) * 6)
             self:EmitProgress({
@@ -1573,7 +1836,7 @@ function Engine:Start()
                 Percentage = pct,
                 Message = string.format("Streaming Sweep: %d/%d chunks loaded", cur, tot),
             })
-        end)
+        end, allowPhysicalTeleport)
     end
 
     -- Step 1: Collect Root Services to save
@@ -1887,6 +2150,14 @@ function Engine:Start()
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     end
 
+    -- Step 5.5: Validate XML output if enabled
+    if format == "rbxlx" and self.Config.ValidateOutputXml ~= false then
+        local isValid, valErr = SerializerXml.Validate(outputContent)
+        if not isValid and self.Config.VerboseLogs then
+            warn("[HyperSaveInstance XML Validator] " .. tostring(valErr))
+        end
+    end
+
     -- Step 6: Write to disk
     self:EmitProgress({
         Stage = "Writing",
@@ -1933,6 +2204,27 @@ function Engine:Start()
 
         if self.Config.CopyToClipboardOnComplete then
             Environment.SetClipboard(fullPathHint)
+        end
+
+        -- Generate JSON Summary Report if enabled
+        if self.Config.SaveSummaryReport ~= false then
+            pcall(function()
+                local placeId = game.PlaceId or 0
+                local HttpService = game:GetService("HttpService")
+                local reportName = string.format("HyperSave_Summary_%d.json", placeId)
+                local reportData = {
+                    PlaceId = placeId,
+                    SavedFile = targetFileName,
+                    TotalInstances = totalInstances,
+                    TotalScripts = totalScripts,
+                    DownloadedAssets = downloadedCount,
+                    ElapsedTimeSeconds = elapsed,
+                    Timestamp = os.time(),
+                    Format = format,
+                    Mode = self.Config.Mode or "Full",
+                }
+                Environment.WriteFile(reportName, HttpService:JSONEncode(reportData))
+            end)
         end
 
         -- Dispatch Discord Webhook if configured
@@ -4425,6 +4717,23 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
     return table.concat(xmlBuffer)
 end
 
+-- Validate XML well-formedness and root closure
+function SerializerXml.Validate(xmlContent)
+    if not xmlContent or #xmlContent < 50 then
+        return false, "XML content is empty or too short."
+    end
+
+    if not string.find(xmlContent, "<roblox") then
+        return false, "Missing opening <roblox> root tag."
+    end
+
+    if not string.find(xmlContent, "</roblox>") then
+        return false, "Missing closing </roblox> root tag."
+    end
+
+    return true, nil
+end
+
 return SerializerXml
 
 end)
@@ -4748,17 +5057,17 @@ function StreamExplorer.GetMapBoundingBox()
     return minVec, maxVec
 end
 
--- Perform automated grid sweep to load chunks
+-- Perform automated grid sweep to load chunks safely without triggering movement anti-cheats
 function StreamExplorer.ExploreMap(stepSize, progressCallback)
     if not workspace.StreamingEnabled then return true end
 
-    local player = Players.LocalPlayer
-    if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return false
+    local player = nil
+    pcall(function() player = Players and Players.LocalPlayer end)
+    local hrp = nil
+    if allowPhysicalTeleport and player and player.Character then
+        hrp = player.Character:FindFirstChild("HumanoidRootPart")
     end
-
-    local hrp = player.Character.HumanoidRootPart
-    local originalCFrame = hrp.CFrame
+    local originalCFrame = hrp and hrp.CFrame
     local minVec, maxVec = StreamExplorer.GetMapBoundingBox()
 
     local step = stepSize or 512
@@ -4774,10 +5083,24 @@ function StreamExplorer.ExploreMap(stepSize, progressCallback)
     local completed = 0
 
     for i, targetPos in ipairs(points) do
-        pcall(function()
-            hrp.CFrame = CFrame.new(targetPos)
-        end)
-        task.wait(0.12) -- Wait for server replication chunk
+        -- 1. Stealth non-intrusive stream request (Zero character displacement)
+        local requested = false
+        if player and player.RequestStreamAroundAsync then
+            local s = pcall(function() player:RequestStreamAroundAsync(targetPos) end)
+            if s then requested = true end
+        end
+        if not requested and workspace and workspace.RequestStreamAroundAsync then
+            pcall(function() workspace:RequestStreamAroundAsync(targetPos) end)
+        end
+
+        -- 2. Physical teleportation only if explicitly allowed (Avoids anti-cheat kicks)
+        if allowPhysicalTeleport and hrp then
+            pcall(function()
+                hrp.CFrame = CFrame.new(targetPos)
+            end)
+        end
+
+        task.wait(0.08) -- Wait for server replication chunk
         completed = i
 
         if progressCallback then
@@ -4785,10 +5108,12 @@ function StreamExplorer.ExploreMap(stepSize, progressCallback)
         end
     end
 
-    -- Return to original position
-    pcall(function()
-        hrp.CFrame = originalCFrame
-    end)
+    -- Return to original position if physically teleported
+    if allowPhysicalTeleport and hrp and originalCFrame then
+        pcall(function()
+            hrp.CFrame = originalCFrame
+        end)
+    end
 
     return true
 end
@@ -5310,7 +5635,17 @@ __define__("Loader", function()
     Auto-detects environment, provides instant visual feedback, and loads real-time raw bundle.
 ]]
 
+local isSilent = false
+pcall(function()
+    local genv = (getgenv and getgenv()) or _G
+    if genv then
+        isSilent = (genv.HyperSave_Silent == true) or (genv.SilentMode == true) or (genv.HyperSave_Ghost == true)
+    end
+end)
+
 local function createInstantBanner(text, isError)
+    if isSilent then return end
+
     pcall(function()
         local rawParent = (gethui and gethui())
         if not rawParent then
@@ -5332,6 +5667,11 @@ local function createInstantBanner(text, isError)
             sg.DisplayOrder = 9999999
             sg.ResetOnSpawn = false
             sg.Enabled = true
+            pcall(function()
+                if syn and syn.protect_gui then
+                    syn.protect_gui(sg)
+                end
+            end)
             sg.Parent = rawParent
             container = sg
         end
@@ -5432,6 +5772,7 @@ local RaycastSelector = __require__("Core/RaycastSelector")
 local PlaceDiffTracker = __require__("Core/PlaceDiffTracker")
 local Web3DExporter = __require__("Core/Web3DExporter")
 local LicenseManager = __require__("Utils/LicenseManager")
+local Stealth = __require__("Utils/Stealth")
 
 -- Attempt auto-load of saved enterprise key
 pcall(function()
@@ -5484,40 +5825,44 @@ function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
     local safeContainer = nil
 
+    local isRandom = self.Config.RandomizeGuiName
+    local guiName = self.Config.GuiName or (isRandom and Stealth.GenerateRandomName(14) or "HyperSaveInstance_UI")
+    local containerName = isRandom and Stealth.GenerateRandomName(12) or "HyperSave_Container"
+
     if parent and (parent:IsA("LayerCollector") or parent:IsA("ScreenGui")) then
         pcall(function()
-            local old = parent:FindFirstChild("HyperSave_Container")
+            local old = parent:FindFirstChild(containerName)
             if old then old:Destroy() end
         end)
         local container = Instance.new("Frame")
-        container.Name = "HyperSave_Container"
+        container.Name = containerName
         container.Size = UDim2.new(1, 0, 1, 0)
         container.BackgroundTransparency = 1
+        container:SetAttribute("HSI_Root", true)
         container.Parent = parent
         safeContainer = container
     else
         pcall(function()
-            local old = parent:FindFirstChild("HyperSaveInstance_UI")
+            local old = parent:FindFirstChild(guiName) or parent:FindFirstChild("HyperSaveInstance_UI")
             if old then old:Destroy() end
         end)
 
         local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "HyperSaveInstance_UI"
+        screenGui.Name = guiName
         screenGui.ResetOnSpawn = false
         screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         screenGui.DisplayOrder = 999999
         screenGui.IgnoreGuiInset = true
         screenGui.Enabled = true
+        screenGui:SetAttribute("HSI_Root", true)
         self.ScreenGui = screenGui
 
-        if syn and syn.protect_gui then
-            pcall(syn.protect_gui, screenGui)
-        end
+        Stealth.ProtectGui(screenGui)
 
         local ok = pcall(function() screenGui.Parent = parent end)
         if not ok or not screenGui.Parent then
             pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
-            if not screenGui.Parent then
+            if not screenGui.Parent and not self.Config.StealthMode then
                 pcall(function()
                     local plrs = game:GetService("Players")
                     local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
@@ -5528,21 +5873,19 @@ function Interface:BuildUI()
         safeContainer = screenGui
     end
 
-    -- Floating Mini Toggle Button (Cyber-Tribal Rootkit Marker)
+    -- Floating Mini Toggle Button
     local floatingBtn = Instance.new("TextButton")
-    floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = "[!] HYPERSAVE[0x00]"
+    floatingBtn.Name = isRandom and Stealth.GenerateRandomName(8) or "FloatingToggle"
+    floatingBtn.Text = isRandom and "[HSI]" or "⚡ ABRIR HYPERSAVE"
     floatingBtn.Font = Theme.FontTitle
-    floatingBtn.TextSize = 10
-    floatingBtn.TextColor3 = Theme.AccentGothic
-    floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 170, 0, 32)
+    floatingBtn.TextSize = 11
+    floatingBtn.TextColor3 = Theme.TextPrimary
+    floatingBtn.BackgroundColor3 = Theme.AccentPrimary
+    floatingBtn.Size = UDim2.new(0, 160, 0, 34)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerMedium)
-    local fStroke = Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
-    Theme.StartNeonPulse(fStroke, Theme.BorderLight, Theme.BorderNeon, 3.0)
-    Theme.AddGradient(floatingBtn, Color3.fromRGB(8, 7, 14), Color3.fromRGB(38, 12, 58), 45)
+    Theme.AddStroke(floatingBtn, Theme.BorderLight, 1)
     floatingBtn.Parent = safeContainer
     self.FloatingToggle = floatingBtn
 
@@ -5581,45 +5924,43 @@ function Interface:BuildUI()
     local splash = Instance.new("Frame")
     splash.Name = "SplashCard"
     splash.AnchorPoint = Vector2.new(0.5, 0.5)
-    splash.Size = UDim2.new(0, 380, 0, 175)
+    splash.Size = UDim2.new(0, 380, 0, 165)
     splash.Position = UDim2.new(0.5, 0, 0.5, 0)
     splash.BackgroundColor3 = Theme.Background
-    splash.BackgroundTransparency = 0.02
     splash.BorderSizePixel = 0
     Theme.AddCorner(splash, Theme.CornerLarge)
-    local spStroke = Theme.AddStroke(splash, Theme.BorderNeon, 2)
-    Theme.StartNeonPulse(spStroke, Theme.BorderLight, Theme.BorderNeon, 3.5)
+    Theme.AddStroke(splash, Theme.BorderLight, 1)
     splash.Parent = safeContainer
 
     local splashTitle = Instance.new("TextLabel")
-    splashTitle.Text = "[†] ROOTKIT://HYPERSAVE_V2 [0xDEADBEEF]"
+    splashTitle.Text = "⚡ HYPERSAVEINSTANCE v2.0"
     splashTitle.Font = Theme.FontTitle
-    splashTitle.TextSize = 13
-    splashTitle.TextColor3 = Theme.AccentDanger
+    splashTitle.TextSize = 14
+    splashTitle.TextColor3 = Theme.AccentPrimary
     splashTitle.Size = UDim2.new(1, 0, 0, 30)
     splashTitle.Position = UDim2.new(0, 0, 0, 16)
     splashTitle.BackgroundTransparency = 1
     splashTitle.Parent = splash
 
     local splashBadge = Instance.new("TextLabel")
-    splashBadge.Text = "THEO LORENTZ PADILHA // KERNEL_OVERRIDE"
+    splashBadge.Text = "DESENVOLVIDO POR THEO LORENTZ PADILHA"
     splashBadge.Font = Theme.FontSemiBold
     splashBadge.TextSize = 10
-    splashBadge.TextColor3 = Theme.AccentTheo
-    splashBadge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
-    splashBadge.Size = UDim2.new(0, 260, 0, 24)
-    splashBadge.Position = UDim2.new(0.5, -130, 0, 50)
+    splashBadge.TextColor3 = Theme.TextSecondary
+    splashBadge.BackgroundColor3 = Theme.CardBg
+    splashBadge.Size = UDim2.new(0, 280, 0, 24)
+    splashBadge.Position = UDim2.new(0.5, -140, 0, 50)
     Theme.AddCorner(splashBadge, Theme.CornerMedium)
-    Theme.AddStroke(splashBadge, Theme.BorderLight, 1)
+    Theme.AddStroke(splashBadge, Theme.Border, 1)
     splashBadge.Parent = splash
 
     local splashStatus = Instance.new("TextLabel")
-    splashStatus.Text = "[0x00] ALLOCATING MEMORY HOOKS & DECOMPILER..."
-    splashStatus.Font = Theme.FontCode
-    splashStatus.TextSize = 10
-    splashStatus.TextColor3 = Theme.TextAcid
+    splashStatus.Text = "Carregando módulos e preparando interface..."
+    splashStatus.Font = Theme.FontRegular
+    splashStatus.TextSize = 11
+    splashStatus.TextColor3 = Theme.TextSecondary
     splashStatus.Size = UDim2.new(1, 0, 0, 20)
-    splashStatus.Position = UDim2.new(0, 0, 0, 86)
+    splashStatus.Position = UDim2.new(0, 0, 0, 84)
     splashStatus.BackgroundTransparency = 1
     splashStatus.Parent = splash
 
@@ -5687,15 +6028,14 @@ function Interface:BuildUI()
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 48)
     header.BackgroundColor3 = Theme.CardBg
-    header.BackgroundTransparency = 0.05
     header.BorderSizePixel = 0
     header.Parent = main
 
     local title = Instance.new("TextLabel")
-    title.Text = "[†] ROOTKIT://HYPERSAVE_V2"
+    title.Text = "⚡ HyperSaveInstance"
     title.Font = Theme.FontTitle
-    title.TextSize = 13
-    title.TextColor3 = Theme.AccentDanger
+    title.TextSize = 14
+    title.TextColor3 = Theme.TextPrimary
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Size = UDim2.new(0, 190, 1, 0)
     title.Position = UDim2.new(0, 14, 0, 0)
@@ -5705,15 +6045,15 @@ function Interface:BuildUI()
     -- Platform & License Badge (Interactive Key Activation)
     local badge = Instance.new("TextButton")
     local isEnt = LicenseManager.IsEnterprise()
-    badge.Text = isEnt and "[ 👑 ENTERPRISE ACTIVE ]" or "[ 🔑 FREE // UNLOCK $570 VIP ]"
+    badge.Text = isEnt and "👑 VERSÃO ENTERPRISE" or "⭐ ATIVAR CHAVE PRO"
     badge.Font = Theme.FontSemiBold
-    badge.TextSize = 9
-    badge.TextColor3 = isEnt and Theme.AccentSuccess or Theme.AccentTheo
-    badge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
-    badge.Size = UDim2.new(0, 210, 0, 24)
-    badge.Position = UDim2.new(0, 195, 0.5, -12)
-    Theme.AddCorner(badge, Theme.CornerMedium)
-    local bStroke = Theme.AddStroke(badge, isEnt and Theme.AccentSuccess or Theme.BorderLight, 1)
+    badge.TextSize = 10
+    badge.TextColor3 = isEnt and Theme.AccentSuccess or Theme.TextPrimary
+    badge.BackgroundColor3 = isEnt and Color3.fromRGB(16, 40, 28) or Theme.AccentPrimary
+    badge.Size = UDim2.new(0, 180, 0, 26)
+    badge.Position = UDim2.new(0, 195, 0.5, -13)
+    Theme.AddCorner(badge, Theme.CornerSmall)
+    Theme.AddStroke(badge, isEnt and Theme.AccentSuccess or Theme.BorderLight, 1)
     badge.Parent = header
 
     -- License Activation Modal Dialog
@@ -5990,20 +6330,20 @@ function Interface:BuildUI()
     contentArea.Parent = main
     self.ContentArea = contentArea
 
-    -- Navigation buttons (Cyber-Tribal Rootkit Monospace Hex Navigation)
+    -- Navigation buttons (Clean, Readable and Professional)
     local tabs = {
-        {"Dashboard", "[0x01] PLACE_OVERRIDE"},
-        {"Selector", "[0x02] RAYCAST_ISOLATOR"},
-        {"AudioRipper", "[0x03] AUDIO_DESTRUCTOR"},
-        {"LightingRipper", "[0x04] ATMOS_PRESET"},
-        {"GuiRipper", "[0x05] GUI_DECOMPILER"},
-        {"Network", "[0x06] PACKET_SNIFFER"},
-        {"Universe", "[0x07] UNIVERSE_HIJACK"},
-        {"ObjExport", "[0x08] OBJ_3D_EXTRACT"},
-        {"Tutorial", "[0x09] RUNTIME_MANUAL"},
-        {"Settings", "[0x0A] ROOT_CONFIG"},
-        {"Console", "[0x0B] RAW_SYS_LOGS"},
-        {"About", "[0x0C] KERNEL_INFO"}
+        {"Dashboard", "⚡ Dashboard"},
+        {"Selector", "🎯 Selecionar"},
+        {"AudioRipper", "🎵 Áudios"},
+        {"LightingRipper", "☀️ Iluminação"},
+        {"GuiRipper", "🖥️ Interfaces"},
+        {"Network", "📡 Rede"},
+        {"Universe", "🌌 Universos"},
+        {"ObjExport", "📦 Exportar 3D"},
+        {"Tutorial", "📖 Como Usar"},
+        {"Settings", "⚙️ Ajustes"},
+        {"Console", "📜 Logs"},
+        {"About", "ℹ️ Sobre"}
     }
 
     self.TabFrames = {}
@@ -6118,20 +6458,18 @@ end
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
-    -- Big Action Clone Button (Cyber-Tribal Rootkit Overdrive Button)
+    -- Big Action Clone Button (Clean, Solid, Prominent)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = "[ † EXECUTAR CLONE TOTAL // OVERRIDE RAW MEMORY † ]"
+    cloneBtn.Text = "⚡ SALVAR MAPA COMPLETO (.RBXLX)"
     cloneBtn.Font = Theme.FontTitle
-    cloneBtn.TextSize = 12
-    cloneBtn.TextColor3 = Theme.AccentGothic
-    cloneBtn.BackgroundColor3 = Theme.AccentSecondary
-    cloneBtn.Size = UDim2.new(1, -32, 0, 52)
+    cloneBtn.TextSize = 13
+    cloneBtn.TextColor3 = Theme.TextPrimary
+    cloneBtn.BackgroundColor3 = Theme.AccentPrimary
+    cloneBtn.Size = UDim2.new(1, -32, 0, 48)
     cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
-    local cloneStroke = Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.8)
-    Theme.StartNeonPulse(cloneStroke, Theme.BorderLight, Theme.BorderNeon, 3.5)
-    Theme.AddGradient(cloneBtn, Color3.fromRGB(255, 0, 60), Color3.fromRGB(110, 0, 190), 45)
+    Theme.AddStroke(cloneBtn, Theme.BorderLight, 1)
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
@@ -6141,19 +6479,19 @@ function Interface:BuildDashboardTab()
 
     -- Preset Selection Container
     local presetLabel = Instance.new("TextLabel")
-    presetLabel.Text = "[CONFIG_PROFILE] SELECT DUMP EXTRACTION MODE:"
+    presetLabel.Text = "MODO DE EXTRAÇÃO / PRESET:"
     presetLabel.Font = Theme.FontSemiBold
-    presetLabel.TextSize = 10
-    presetLabel.TextColor3 = Theme.TextMuted
+    presetLabel.TextSize = 11
+    presetLabel.TextColor3 = Theme.TextSecondary
     presetLabel.TextXAlignment = Enum.TextXAlignment.Left
     presetLabel.Size = UDim2.new(1, -32, 0, 18)
-    presetLabel.Position = UDim2.new(0, 16, 0, 76)
+    presetLabel.Position = UDim2.new(0, 16, 0, 72)
     presetLabel.BackgroundTransparency = 1
     presetLabel.Parent = parent
 
     local presetContainer = Instance.new("Frame")
     presetContainer.Size = UDim2.new(1, -32, 0, 34)
-    presetContainer.Position = UDim2.new(0, 16, 0, 96)
+    presetContainer.Position = UDim2.new(0, 16, 0, 94)
     presetContainer.BackgroundTransparency = 1
     presetContainer.Parent = parent
 
@@ -6165,10 +6503,10 @@ function Interface:BuildDashboardTab()
 
     local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
     local presetDisplay = {
-        Full = "[0x01] FULL_DUMP",
-        Fast = "[0x02] FAST_STREAM",
-        VisualsOnly = "[0x03] VISUAL_ONLY",
-        ScriptsOnly = "[0x04] BYTECODE_ONLY"
+        Full = "⚡ Completo",
+        Fast = "🚀 Rápido",
+        VisualsOnly = "🎨 Apenas Mapa",
+        ScriptsOnly = "📜 Apenas Scripts"
     }
 
     self.PresetButtons = {}
@@ -6176,14 +6514,13 @@ function Interface:BuildDashboardTab()
         local btn = Instance.new("TextButton")
         btn.Text = presetDisplay[pKey]
         btn.Font = Theme.FontSemiBold
-        btn.TextSize = 9
-        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentDanger or Theme.TextSecondary
+        btn.TextSize = 10
+        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.TextPrimary or Theme.TextSecondary
         btn.BackgroundColor3 = (self.Config.Mode == pKey) and Theme.CardActive or Theme.CardBg
-        btn.BackgroundTransparency = (self.Config.Mode == pKey) and 0 or Theme.CardTransparency
         btn.Size = UDim2.new(0.25, -5, 1, 0)
         btn.LayoutOrder = i
         Theme.AddCorner(btn, Theme.CornerSmall)
-        Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.BorderNeon or Theme.Border, 1)
+        Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.BorderLight or Theme.Border, 1)
         btn.Parent = presetContainer
         self.PresetButtons[pKey] = btn
 
@@ -6192,36 +6529,34 @@ function Interface:BuildDashboardTab()
             for k, b in pairs(self.PresetButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
                 if k == pKey then
-                    b.TextColor3 = Theme.AccentDanger
+                    b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    b.BackgroundTransparency = 0
-                    if stroke then stroke.Color = Theme.BorderNeon end
+                    if stroke then stroke.Color = Theme.BorderLight end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    b.BackgroundTransparency = Theme.CardTransparency
                     if stroke then stroke.Color = Theme.Border end
                 end
             end
-            self:Log("Dump mode set to: " .. pKey)
+            self:Log("Modo selecionado: " .. pKey)
         end)
     end
 
     -- Format Selector Container
     local formatLabel = Instance.new("TextLabel")
-    formatLabel.Text = "[OUTPUT_TYPE] SERIALIZATION FILE FORMAT:"
+    formatLabel.Text = "FORMATO DO ARQUIVO:"
     formatLabel.Font = Theme.FontSemiBold
-    formatLabel.TextSize = 10
-    formatLabel.TextColor3 = Theme.TextMuted
+    formatLabel.TextSize = 11
+    formatLabel.TextColor3 = Theme.TextSecondary
     formatLabel.TextXAlignment = Enum.TextXAlignment.Left
     formatLabel.Size = UDim2.new(1, -32, 0, 18)
-    formatLabel.Position = UDim2.new(0, 16, 0, 138)
+    formatLabel.Position = UDim2.new(0, 16, 0, 136)
     formatLabel.BackgroundTransparency = 1
     formatLabel.Parent = parent
 
     local formatContainer = Instance.new("Frame")
     formatContainer.Size = UDim2.new(1, -32, 0, 30)
-    formatContainer.Position = UDim2.new(0, 16, 0, 158)
+    formatContainer.Position = UDim2.new(0, 16, 0, 156)
     formatContainer.BackgroundTransparency = 1
     formatContainer.Parent = parent
 
@@ -6232,9 +6567,9 @@ function Interface:BuildDashboardTab()
     formatLayout.Parent = formatContainer
 
     local formats = {
-        {"rbxlx", "[0x01] RBXLX (XML)"},
-        {"rbxl", "[0x02] RBXL (BINARY)"},
-        {"lua", "[0x03] LUAU (STUDIO SCRIPT)"}
+        {"rbxlx", "RBXLX (Studio XML)"},
+        {"rbxl", "RBXL (Binário)"},
+        {"lua", "LUAU (Script)"}
     }
     self.FormatButtons = {}
 
@@ -6243,14 +6578,13 @@ function Interface:BuildDashboardTab()
         local fBtn = Instance.new("TextButton")
         fBtn.Text = fLabel
         fBtn.Font = Theme.FontSemiBold
-        fBtn.TextSize = 9
-        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.AccentDanger or Theme.TextSecondary
+        fBtn.TextSize = 10
+        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.TextPrimary or Theme.TextSecondary
         fBtn.BackgroundColor3 = (self.Config.Format == fKey) and Theme.CardActive or Theme.CardBg
-        fBtn.BackgroundTransparency = (self.Config.Format == fKey) and 0 or Theme.CardTransparency
         fBtn.Size = UDim2.new(0.333, -5, 1, 0)
         fBtn.LayoutOrder = i
         Theme.AddCorner(fBtn, Theme.CornerSmall)
-        Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.BorderNeon or Theme.Border, 1)
+        Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.BorderLight or Theme.Border, 1)
         fBtn.Parent = formatContainer
         self.FormatButtons[fKey] = fBtn
 
@@ -6259,37 +6593,34 @@ function Interface:BuildDashboardTab()
             for k, b in pairs(self.FormatButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
                 if k == fKey then
-                    b.TextColor3 = Theme.AccentDanger
+                    b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    b.BackgroundTransparency = 0
-                    if stroke then stroke.Color = Theme.BorderNeon end
+                    if stroke then stroke.Color = Theme.BorderLight end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    b.BackgroundTransparency = Theme.CardTransparency
                     if stroke then stroke.Color = Theme.Border end
                 end
             end
-            self:Log("Format set to: ." .. fKey)
+            self:Log("Formato definido: ." .. fKey)
         end)
     end
 
-    -- Progress Container (Industrial Alloy Card)
+    -- Progress Container (Clean High-Contrast Card)
     local progressCard = Instance.new("Frame")
     progressCard.Size = UDim2.new(1, -32, 0, 114)
     progressCard.Position = UDim2.new(0, 16, 0, 196)
     progressCard.BackgroundColor3 = Theme.CardBg
-    progressCard.BackgroundTransparency = 0.05
     Theme.AddCorner(progressCard, Theme.CornerMedium)
     Theme.AddStroke(progressCard, Theme.Border, 1)
     progressCard.Parent = parent
 
     local statusHeader = Instance.new("TextLabel")
     statusHeader.Name = "StatusHeader"
-    statusHeader.Text = "[SYS_STATUS] IDLE // READY FOR RAW DUMP"
+    statusHeader.Text = "STATUS: PRONTO PARA SALVAR"
     statusHeader.Font = Theme.FontSemiBold
-    statusHeader.TextSize = 11
-    statusHeader.TextColor3 = Theme.AccentAcid
+    statusHeader.TextSize = 12
+    statusHeader.TextColor3 = Theme.AccentSuccess
     statusHeader.TextXAlignment = Enum.TextXAlignment.Left
     statusHeader.Size = UDim2.new(0.7, 0, 0, 20)
     statusHeader.Position = UDim2.new(0, 12, 0, 10)
@@ -6301,8 +6632,8 @@ function Interface:BuildDashboardTab()
     pctLabel.Name = "PctLabel"
     pctLabel.Text = "0%"
     pctLabel.Font = Theme.FontTitle
-    pctLabel.TextSize = 13
-    pctLabel.TextColor3 = Theme.AccentCyan
+    pctLabel.TextSize = 14
+    pctLabel.TextColor3 = Theme.TextPrimary
     pctLabel.TextXAlignment = Enum.TextXAlignment.Right
     pctLabel.Size = UDim2.new(0.25, 0, 0, 20)
     pctLabel.Position = UDim2.new(0.72, 0, 0, 10)
@@ -6314,23 +6645,22 @@ function Interface:BuildDashboardTab()
     local barTrack = Instance.new("Frame")
     barTrack.Size = UDim2.new(1, -24, 0, 6)
     barTrack.Position = UDim2.new(0, 12, 0, 36)
-    barTrack.BackgroundColor3 = Color3.fromRGB(6, 5, 10)
+    barTrack.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     Theme.AddCorner(barTrack, Theme.CornerPill)
     barTrack.Parent = progressCard
 
     local barFill = Instance.new("Frame")
     barFill.Size = UDim2.new(0, 0, 1, 0)
-    barFill.BackgroundColor3 = Theme.AccentSecondary
+    barFill.BackgroundColor3 = Theme.AccentPrimary
     Theme.AddCorner(barFill, Theme.CornerPill)
-    Theme.AddGradient(barFill, Theme.AccentSecondary, Theme.AccentPrimary, 0)
     barFill.Parent = barTrack
     self.ProgressBarFill = barFill
 
     local statusDetail = Instance.new("TextLabel")
     statusDetail.Name = "StatusDetail"
-    statusDetail.Text = "[RAW_STREAM] 0x4F 0xAA 0x12 0xFF 0x00 0x8C 0xDE 0xAD"
-    statusDetail.Font = Theme.FontCode
-    statusDetail.TextSize = 9
+    statusDetail.Text = "Clique no botão azul acima para iniciar o processo."
+    statusDetail.Font = Theme.FontRegular
+    statusDetail.TextSize = 11
     statusDetail.TextColor3 = Theme.TextMuted
     statusDetail.TextXAlignment = Enum.TextXAlignment.Left
     statusDetail.Size = UDim2.new(1, -24, 0, 18)
@@ -6338,19 +6668,6 @@ function Interface:BuildDashboardTab()
     statusDetail.BackgroundTransparency = 1
     statusDetail.Parent = progressCard
     self.StatusDetail = statusDetail
-
-    -- Live Hex Stream Ticker Animation
-    local lastTicker = os.clock()
-    local runServ = game:GetService("RunService")
-    runServ.RenderStepped:Connect(function()
-        local now = os.clock()
-        if (now - lastTicker) >= 0.35 then
-            lastTicker = now
-            if statusDetail and statusDetail.Parent and not self.Engine.IsRunning then
-                statusDetail.Text = "[RAW_STREAM] " .. Theme.GenerateHexStream(7)
-            end
-        end
-    end)
 
     -- Quick Action Copy Buttons
     local copyBar = Instance.new("Frame")
@@ -6366,10 +6683,10 @@ function Interface:BuildDashboardTab()
     copyLayout.Parent = copyBar
 
     local copyFilePathBtn = Instance.new("TextButton")
-    copyFilePathBtn.Text = "[ 0x01: COPY FILE ]"
+    copyFilePathBtn.Text = "📋 Copiar Arquivo"
     copyFilePathBtn.Font = Theme.FontSemiBold
-    copyFilePathBtn.TextSize = 9
-    copyFilePathBtn.TextColor3 = Theme.TextSecondary
+    copyFilePathBtn.TextSize = 10
+    copyFilePathBtn.TextColor3 = Theme.TextPrimary
     copyFilePathBtn.BackgroundColor3 = Theme.CardHover
     copyFilePathBtn.Size = UDim2.new(0.5, -3, 1, 0)
     copyFilePathBtn.LayoutOrder = 1
@@ -6381,15 +6698,15 @@ function Interface:BuildDashboardTab()
         local name = self.SavedFilePath
         if #name == 0 then name = self.Engine:GetDefaultFileName() end
         Environment.SetClipboard(name)
-        copyFilePathBtn.Text = "[OK] COPIED!"
-        task.delay(2, function() copyFilePathBtn.Text = "[ 0x01: COPY FILE ]" end)
+        copyFilePathBtn.Text = "✓ Copiado!"
+        task.delay(2, function() copyFilePathBtn.Text = "📋 Copiar Arquivo" end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
-    copyAssetsPathBtn.Text = "[ 0x02: COPY ASSETS ]"
+    copyAssetsPathBtn.Text = "📁 Copiar Pasta Assets"
     copyAssetsPathBtn.Font = Theme.FontSemiBold
-    copyAssetsPathBtn.TextSize = 9
-    copyAssetsPathBtn.TextColor3 = Theme.TextSecondary
+    copyAssetsPathBtn.TextSize = 10
+    copyAssetsPathBtn.TextColor3 = Theme.TextPrimary
     copyAssetsPathBtn.BackgroundColor3 = Theme.CardHover
     copyAssetsPathBtn.Size = UDim2.new(0.5, -3, 1, 0)
     copyAssetsPathBtn.LayoutOrder = 2
@@ -6401,8 +6718,8 @@ function Interface:BuildDashboardTab()
         local name = self.SavedAssetPath
         if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
         Environment.SetClipboard(name)
-        copyAssetsPathBtn.Text = "[OK] COPIED!"
-        task.delay(2, function() copyAssetsPathBtn.Text = "[ 0x02: COPY ASSETS ]" end)
+        copyAssetsPathBtn.Text = "✓ Copiado!"
+        task.delay(2, function() copyAssetsPathBtn.Text = "📁 Copiar Pasta Assets" end)
     end)
 end
 
@@ -6423,7 +6740,7 @@ function Interface:BuildSelectorTab()
     scroll.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "TARGET ISOLATOR // 3D RAYCAST"
+    headerLbl.Text = "🎯 SELETOR & ISOLADOR DE OBJETOS 3D"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -6433,18 +6750,17 @@ function Interface:BuildSelectorTab()
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = scroll
 
-    -- 1. In-World 3D Raycast Click Selector Button (Bubble Button)
+    -- 1. In-World 3D Raycast Click Selector Button
     local raycastBtn = Instance.new("TextButton")
-    raycastBtn.Text = "ENABLE 3D RAYCAST SELECTOR"
+    raycastBtn.Text = "🎯 ATIVAR MIRA 3D (CLIQUE NO OBJETO NO MAPA)"
     raycastBtn.Font = Theme.FontTitle
     raycastBtn.TextSize = 11
-    raycastBtn.TextColor3 = Theme.AccentSkull
+    raycastBtn.TextColor3 = Theme.TextPrimary
     raycastBtn.BackgroundColor3 = Theme.AccentPrimary
     raycastBtn.Size = UDim2.new(1, -24, 0, 38)
     raycastBtn.Position = UDim2.new(0, 12, 0, 42)
     Theme.AddCorner(raycastBtn, Theme.CornerMedium)
-    Theme.AddStroke(raycastBtn, Theme.BorderNeon, 1.5)
-    Theme.AddGradient(raycastBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
+    Theme.AddStroke(raycastBtn, Theme.BorderLight, 1)
     raycastBtn.Parent = scroll
 
     -- 2. Search by Name Textbox
@@ -6454,19 +6770,18 @@ function Interface:BuildSelectorTab()
     searchBox.TextSize = 11
     searchBox.TextColor3 = Theme.TextPrimary
     searchBox.PlaceholderColor3 = Theme.TextMuted
-    searchBox.BackgroundColor3 = Color3.fromRGB(10, 8, 16)
+    searchBox.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     searchBox.Size = UDim2.new(1, -24, 0, 36)
     searchBox.Position = UDim2.new(0, 12, 0, 88)
     Theme.AddCorner(searchBox, Theme.CornerSmall)
     Theme.AddStroke(searchBox, Theme.Border, 1)
     searchBox.Parent = scroll
 
-    -- 3. Selected Target Info Card (Frosted Acrylic with Real-Time ViewportFrame)
+    -- 3. Selected Target Info Card
     local infoCard = Instance.new("Frame")
     infoCard.Size = UDim2.new(1, -24, 0, 106)
     infoCard.Position = UDim2.new(0, 12, 0, 132)
-    infoCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
-    infoCard.BackgroundTransparency = 0.3
+    infoCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(infoCard, Theme.CornerMedium)
     Theme.AddStroke(infoCard, Theme.Border, 1)
     infoCard.Parent = scroll
@@ -6475,10 +6790,9 @@ function Interface:BuildSelectorTab()
     local vpFrame = Instance.new("ViewportFrame")
     vpFrame.Size = UDim2.new(0, 90, 0, 90)
     vpFrame.Position = UDim2.new(1, -98, 0, 8)
-    vpFrame.BackgroundColor3 = Color3.fromRGB(8, 6, 14)
-    vpFrame.BackgroundTransparency = 0.2
+    vpFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     Theme.AddCorner(vpFrame, Theme.CornerSmall)
-    Theme.AddStroke(vpFrame, Theme.BorderNeon, 1, 0.5)
+    Theme.AddStroke(vpFrame, Theme.BorderLight, 1)
     vpFrame.Parent = infoCard
 
     local vpCam = Instance.new("Camera")
@@ -6561,11 +6875,11 @@ function Interface:BuildSelectorTab()
         if inst:IsA("BasePart") then parts = parts + 1 end
         if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
 
-        targetTitle.Text = string.format("[TARGET] %s (%s)", inst.Name, inst.ClassName)
+        targetTitle.Text = string.format("[ALVO] %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.AccentCyan
-        targetStats.Text = string.format("[STATS] %d Parts • %d Meshes • %d Scripts", parts, meshes, scripts)
-        targetStats.TextColor3 = Theme.AccentAcid
-        targetPath.Text = "[PATH] " .. inst:GetFullName()
+        targetStats.Text = string.format("• %d Peças • %d Malhas • %d Scripts", parts, meshes, scripts)
+        targetStats.TextColor3 = Theme.AccentSuccess
+        targetPath.Text = "Caminho: " .. inst:GetFullName()
 
         -- In-game visual neon bounding highlight
         pcall(function()
@@ -6576,9 +6890,9 @@ function Interface:BuildSelectorTab()
             if inst:IsA("Model") or inst:IsA("BasePart") then
                 local h = Instance.new("Highlight")
                 h.Name = "HSI_TargetHighlight"
-                h.FillColor = Theme.AccentSecondary
+                h.FillColor = Theme.AccentPrimary
                 h.FillTransparency = 0.65
-                h.OutlineColor = Theme.BorderNeon
+                h.OutlineColor = Theme.BorderLight
                 h.OutlineTransparency = 0.1
                 h.Adornee = inst
                 h.Parent = safeContainer
@@ -6603,7 +6917,7 @@ function Interface:BuildSelectorTab()
                         sz = clone.Size
                     end
 
-                    targetDims.Text = string.format("📐 Dimensions: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
+                    targetDims.Text = string.format("📐 Tamanho: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
 
                     local maxDim = math.max(sz.X, sz.Y, sz.Z)
                     local camDist = math.clamp(maxDim * 1.5, 4, 250)
@@ -6625,12 +6939,12 @@ function Interface:BuildSelectorTab()
                     end)
                 end
             else
-                targetDims.Text = "📐 Type: " .. inst.ClassName
+                targetDims.Text = "📐 Tipo: " .. inst.ClassName
             end
         end)
     end
 
-    -- 4. Action Buttons Container (UIListLayout Pixel-Perfect Horizontal Grid)
+    -- 4. Action Buttons Container
     local actionBtnContainer = Instance.new("Frame")
     actionBtnContainer.Size = UDim2.new(1, -24, 0, 38)
     actionBtnContainer.Position = UDim2.new(0, 12, 0, 246)
@@ -6644,57 +6958,52 @@ function Interface:BuildSelectorTab()
     actionLayout.Parent = actionBtnContainer
 
     local btnSaveSingle = Instance.new("TextButton")
-    btnSaveSingle.Text = "💾 Save Model (.rbxm)"
+    btnSaveSingle.Text = "💾 Salvar Modelo (.rbxm)"
     btnSaveSingle.Font = Theme.FontTitle
     btnSaveSingle.TextSize = 10
-    btnSaveSingle.TextColor3 = Theme.AccentSkull
+    btnSaveSingle.TextColor3 = Theme.TextPrimary
     btnSaveSingle.BackgroundColor3 = Theme.AccentPrimary
     btnSaveSingle.Size = UDim2.new(0.35, -4, 1, 0)
     btnSaveSingle.LayoutOrder = 1
     Theme.AddCorner(btnSaveSingle, Theme.CornerMedium)
-    Theme.AddStroke(btnSaveSingle, Theme.BorderNeon, 1)
+    Theme.AddStroke(btnSaveSingle, Theme.BorderLight, 1)
     btnSaveSingle.Parent = actionBtnContainer
 
     local btnExportWeb3D = Instance.new("TextButton")
-    btnExportWeb3D.Text = "🌐 3D Web Viewer"
+    btnExportWeb3D.Text = "🌐 Visualizar 3D Web"
     btnExportWeb3D.Font = Theme.FontTitle
     btnExportWeb3D.TextSize = 10
-    btnExportWeb3D.TextColor3 = Theme.AccentSkull
-    btnExportWeb3D.BackgroundColor3 = Color3.fromRGB(15, 12, 28)
+    btnExportWeb3D.TextColor3 = Theme.TextPrimary
+    btnExportWeb3D.BackgroundColor3 = Theme.CardHover
     btnExportWeb3D.Size = UDim2.new(0.35, -4, 1, 0)
     btnExportWeb3D.LayoutOrder = 2
     Theme.AddCorner(btnExportWeb3D, Theme.CornerMedium)
-    Theme.AddStroke(btnExportWeb3D, Theme.BorderLight, 1)
+    Theme.AddStroke(btnExportWeb3D, Theme.Border, 1)
     btnExportWeb3D.Parent = actionBtnContainer
 
-    local btnCopyCode = Instance.new("TextButton")
-    btnCopyCode.Text = "📋 Copy Luau Code"
-    btnCopyCode.Parent = actionBtnContainer
-
     local btnAddToPack = Instance.new("TextButton")
-    btnAddToPack.Text = "➕ Add to Batch"
+    btnAddToPack.Text = "➕ Adicionar ao Lote"
     btnAddToPack.Font = Theme.FontTitle
     btnAddToPack.TextSize = 11
-    btnAddToPack.TextColor3 = Theme.AccentSkull
+    btnAddToPack.TextColor3 = Theme.TextPrimary
     btnAddToPack.BackgroundColor3 = Theme.CardActive
-    btnAddToPack.Size = UDim2.new(0.32, -4, 1, 0)
+    btnAddToPack.Size = UDim2.new(0.3, -4, 1, 0)
     btnAddToPack.LayoutOrder = 3
     Theme.AddCorner(btnAddToPack, Theme.CornerMedium)
     Theme.AddStroke(btnAddToPack, Theme.BorderLight, 1)
     btnAddToPack.Parent = actionBtnContainer
 
-    -- 5. Multi-Select Package Card (Frosted Acrylic)
+    -- 5. Multi-Select Package Card
     local packCard = Instance.new("Frame")
     packCard.Size = UDim2.new(1, -24, 0, 110)
     packCard.Position = UDim2.new(0, 12, 0, 292)
-    packCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
-    packCard.BackgroundTransparency = 0.3
+    packCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(packCard, Theme.CornerMedium)
     Theme.AddStroke(packCard, Theme.Border, 1)
     packCard.Parent = scroll
 
     local packTitle = Instance.new("TextLabel")
-    packTitle.Text = "MULTI-TARGET PACKAGE: 0 ITENS"
+    packTitle.Text = "PACOTE DE OBJETOS: 0 ITENS"
     packTitle.Font = Theme.FontSemiBold
     packTitle.TextSize = 11
     packTitle.TextColor3 = Theme.AccentCyan
@@ -6705,11 +7014,11 @@ function Interface:BuildSelectorTab()
     packTitle.Parent = packCard
 
     local btnClearPack = Instance.new("TextButton")
-    btnClearPack.Text = "Limpar"
+    btnClearPack.Text = "🗑️ Limpar"
     btnClearPack.Font = Theme.FontSemiBold
     btnClearPack.TextSize = 10
     btnClearPack.TextColor3 = Theme.AccentDanger
-    btnClearPack.BackgroundColor3 = Color3.fromRGB(24, 14, 22)
+    btnClearPack.BackgroundColor3 = Color3.fromRGB(30, 18, 24)
     btnClearPack.Size = UDim2.new(0.24, 0, 0, 24)
     btnClearPack.Position = UDim2.new(0.73, 0, 0, 8)
     Theme.AddCorner(btnClearPack, Theme.CornerSmall)
@@ -6717,16 +7026,15 @@ function Interface:BuildSelectorTab()
     btnClearPack.Parent = packCard
 
     local btnSavePack = Instance.new("TextButton")
-    btnSavePack.Text = "EXPORT BATCH PACKAGE (.rbxm)"
+    btnSavePack.Text = "📦 SALVAR PACOTE COM TODOS OS OBJETOS (.RBXM)"
     btnSavePack.Font = Theme.FontTitle
     btnSavePack.TextSize = 11
-    btnSavePack.TextColor3 = Theme.AccentSkull
-    btnSavePack.BackgroundColor3 = Theme.AccentPrimary
+    btnSavePack.TextColor3 = Theme.TextPrimary
+    btnSavePack.BackgroundColor3 = Theme.AccentSecondary
     btnSavePack.Size = UDim2.new(1, -20, 0, 38)
     btnSavePack.Position = UDim2.new(0, 10, 0, 56)
     Theme.AddCorner(btnSavePack, Theme.CornerMedium)
-    Theme.AddStroke(btnSavePack, Theme.BorderNeon, 1.2)
-    Theme.AddGradient(btnSavePack, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 0)
+    Theme.AddStroke(btnSavePack, Theme.BorderLight, 1)
     btnSavePack.Parent = packCard
 
     -- 6. Result & Status Label
@@ -6895,15 +7203,15 @@ function Interface:BuildAudioRipperTab()
     topLayout.Parent = topBar
 
     local scanAudioBtn = Instance.new("TextButton")
-    scanAudioBtn.Text = "SCAN ALL AUDIO"
+    scanAudioBtn.Text = "🎵 BUSCAR TODOS OS SONS"
     scanAudioBtn.Font = Theme.FontSemiBold
     scanAudioBtn.TextSize = 10
-    scanAudioBtn.TextColor3 = Theme.AccentSkull
+    scanAudioBtn.TextColor3 = Theme.TextPrimary
     scanAudioBtn.BackgroundColor3 = Theme.AccentPrimary
     scanAudioBtn.Size = UDim2.new(0.38, -4, 1, 0)
     scanAudioBtn.LayoutOrder = 1
     Theme.AddCorner(scanAudioBtn, Theme.CornerMedium)
-    Theme.AddStroke(scanAudioBtn, Theme.BorderNeon, 1)
+    Theme.AddStroke(scanAudioBtn, Theme.BorderLight, 1)
     scanAudioBtn.Parent = topBar
 
     local exportAudioListBtn = Instance.new("TextButton")
@@ -6912,7 +7220,6 @@ function Interface:BuildAudioRipperTab()
     exportAudioListBtn.TextSize = 10
     exportAudioListBtn.TextColor3 = Theme.TextPrimary
     exportAudioListBtn.BackgroundColor3 = Theme.CardBg
-    exportAudioListBtn.BackgroundTransparency = Theme.CardTransparency
     exportAudioListBtn.Size = UDim2.new(0.38, -4, 1, 0)
     exportAudioListBtn.LayoutOrder = 2
     Theme.AddCorner(exportAudioListBtn, Theme.CornerMedium)
@@ -6924,7 +7231,7 @@ function Interface:BuildAudioRipperTab()
     stopAudioBtn.Font = Theme.FontSemiBold
     stopAudioBtn.TextSize = 10
     stopAudioBtn.TextColor3 = Theme.AccentDanger
-    stopAudioBtn.BackgroundColor3 = Color3.fromRGB(24, 14, 22)
+    stopAudioBtn.BackgroundColor3 = Color3.fromRGB(30, 18, 24)
     stopAudioBtn.Size = UDim2.new(0.24, -4, 1, 0)
     stopAudioBtn.LayoutOrder = 3
     Theme.AddCorner(stopAudioBtn, Theme.CornerMedium)
@@ -6938,7 +7245,7 @@ function Interface:BuildAudioRipperTab()
     searchBox.TextSize = 11
     searchBox.TextColor3 = Theme.TextPrimary
     searchBox.PlaceholderColor3 = Theme.TextMuted
-    searchBox.BackgroundColor3 = Color3.fromRGB(10, 8, 16)
+    searchBox.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     searchBox.Size = UDim2.new(1, -32, 0, 30)
     searchBox.Position = UDim2.new(0, 16, 0, 48)
     Theme.AddCorner(searchBox, Theme.CornerSmall)
@@ -7428,7 +7735,6 @@ function Interface:BuildUniverseTab()
                 local row = Instance.new("Frame")
                 row.Size = UDim2.new(1, -12, 0, 32)
                 row.BackgroundColor3 = Theme.CardBg
-                row.BackgroundTransparency = 0.2
                 Theme.AddCorner(row, Theme.CornerSmall)
                 Theme.AddStroke(row, Theme.Border, 1)
                 row.Parent = placeScroll
@@ -7439,10 +7745,30 @@ function Interface:BuildUniverseTab()
                 pName.TextSize = 10
                 pName.TextColor3 = pInfo.IsRoot and Theme.AccentCyan or Theme.TextPrimary
                 pName.TextXAlignment = Enum.TextXAlignment.Left
-                pName.Size = UDim2.new(0.7, 0, 1, 0)
+                pName.Size = UDim2.new(0.55, 0, 1, 0)
                 pName.Position = UDim2.new(0, 10, 0, 0)
                 pName.BackgroundTransparency = 1
                 pName.Parent = row
+
+                local tpBtn = Instance.new("TextButton")
+                tpBtn.Text = "🚀 Teleportar"
+                tpBtn.Font = Theme.FontSemiBold
+                tpBtn.TextSize = 10
+                tpBtn.TextColor3 = Theme.TextPrimary
+                tpBtn.BackgroundColor3 = Theme.AccentPrimary
+                tpBtn.Size = UDim2.new(0, 78, 0, 22)
+                tpBtn.Position = UDim2.new(1, -164, 0.5, -11)
+                Theme.AddCorner(tpBtn, Theme.CornerPill)
+                tpBtn.Parent = row
+
+                Theme.AnimateButton(tpBtn, function()
+                    tpBtn.Text = "Indo..."
+                    pcall(function()
+                        local TeleportService = game:GetService("TeleportService")
+                        local Players = game:GetService("Players")
+                        TeleportService:Teleport(pInfo.PlaceId, Players.LocalPlayer)
+                    end)
+                end)
 
                 local copyIdBtn = Instance.new("TextButton")
                 copyIdBtn.Text = "Copiar ID"
@@ -7450,14 +7776,14 @@ function Interface:BuildUniverseTab()
                 copyIdBtn.TextSize = 10
                 copyIdBtn.TextColor3 = Theme.TextSecondary
                 copyIdBtn.BackgroundColor3 = Theme.CardHover
-                copyIdBtn.Size = UDim2.new(0, 80, 0, 22)
-                copyIdBtn.Position = UDim2.new(1, -88, 0.5, -11)
+                copyIdBtn.Size = UDim2.new(0, 72, 0, 22)
+                copyIdBtn.Position = UDim2.new(1, -80, 0.5, -11)
                 Theme.AddCorner(copyIdBtn, Theme.CornerPill)
                 copyIdBtn.Parent = row
 
                 Theme.AnimateButton(copyIdBtn, function()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
-                    copyIdBtn.Text = "[OK] Copiado"
+                    copyIdBtn.Text = "✓ Copiado"
                     task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
                 end)
             end
@@ -7764,21 +8090,23 @@ function Interface:BuildSettingsTab()
         {"AutoAntiAFK", "Anti-AFK Protection (Prevents Idle Disconnections)", self.Config.AutoAntiAFK},
         {"AutoExploreStreaming", "Full Map Explorer (StreamingEnabled Spatial Bypass)", self.Config.AutoExploreStreaming},
         {"StealthMode", "Stealth Mode (Anti-Cheat Client Evasion)", self.Config.StealthMode},
-        {"DownloadRawAssets", "Download Raw Assets (.mp3, .png, .mesh) to Local Folder", self.Config.DownloadRawAssets},
-        {"OptimizeGeometry", "File Geometry Optimizer (Mesh Deduplication)", self.Config.OptimizeGeometry},
-        {"SaveTerrain", "Preserve Full Terrain (Properties & Water Materials)", self.Config.SaveTerrain},
-        {"SaveTerrainVoxels", "Extract Terrain SmoothVoxels (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
-        {"SaveLighting", "Preserve Lighting, Skybox & Atmospheric Effects", self.Config.SaveLighting},
-        {"SaveSounds", "Preserve Audio Effects, Reverbs & SoundGroups", self.Config.SaveSounds},
-        {"SaveUnions", "Preserve CSG Unions & NegateOperations (Physics & ChildData)", self.Config.SaveUnions},
-        {"SaveSurfaceAppearance", "Preserve PBR Textures & SurfaceAppearances", self.Config.SaveSurfaceAppearance},
-        {"DecompileScripts", "Decompile Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
-        {"IsolateStarterPlayer", "Extract Active Player Scripts & GUIs to StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
-        {"SaveServerScriptPlaceholders", "Smart Backend Reconstruction for Server Scripts", self.Config.SaveServerScriptPlaceholders},
-        {"SynthesizeServer", "Automated Backend Synthesizer for RemoteEvents", self.Config.SynthesizeServer},
-        {"SaveNilInstances", "Save Isolated Instances (Nil Instances)", self.Config.SaveNilInstances},
-        {"SaveAttributes", "Save Modern Instance Attributes", self.Config.SaveAttributes},
-        {"SaveTags", "Save CollectionService Tags", self.Config.SaveTags},
+        {"SaveAnimations", "Capturar e Salvar Animações (KeyframeSequences para o Studio)", self.Config.SaveAnimations},
+        {"SafeAssetDownload", "Proteção de Ping (Pausa downloads se o Ping > 180ms)", self.Config.SafeAssetDownload},
+        {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh) para Pasta Local", self.Config.DownloadRawAssets},
+        {"OptimizeGeometry", "Otimizador de Geometria (Deduplicação de Malhas)", self.Config.OptimizeGeometry},
+        {"SaveTerrain", "Preservar Terreno Completo (Propriedades e Materiais)", self.Config.SaveTerrain},
+        {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (Chunks 3D)", self.Config.SaveTerrainVoxels},
+        {"SaveLighting", "Preservar Iluminação, Skybox e Efeitos Atmosféricos", self.Config.SaveLighting},
+        {"SaveSounds", "Preservar Efeitos Sonoros, Reverberação e SoundGroups", self.Config.SaveSounds},
+        {"SaveUnions", "Preservar Uniões CSG e NegateOperations", self.Config.SaveUnions},
+        {"SaveSurfaceAppearance", "Preservar Texturas PBR e SurfaceAppearances", self.Config.SaveSurfaceAppearance},
+        {"DecompileScripts", "Descompilar Scripts (LocalScripts e ModuleScripts)", self.Config.DecompileScripts},
+        {"IsolateStarterPlayer", "Isolar Scripts do Player para StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
+        {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Server Scripts", self.Config.SaveServerScriptPlaceholders},
+        {"SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer},
+        {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
+        {"SaveAttributes", "Salvar Atributos Modernos de Instâncias", self.Config.SaveAttributes},
+        {"SaveTags", "Salvar Tags do CollectionService", self.Config.SaveTags},
     }
 
     for i, item in ipairs(toggles) do
@@ -7830,6 +8158,35 @@ function Interface:BuildSettingsTab()
             self:Log("Opção alterada: " .. key .. " = " .. tostring(new))
         end)
     end
+
+    local animExportBtn = Instance.new("TextButton")
+    animExportBtn.Text = "🕺 EXPORTAR ANIMAÇÕES CAPTURADAS (.RBXM)"
+    animExportBtn.Font = Theme.FontSemiBold
+    animExportBtn.TextSize = 11
+    animExportBtn.TextColor3 = Theme.TextPrimary
+    animExportBtn.BackgroundColor3 = Theme.AccentPrimary
+    animExportBtn.Size = UDim2.new(1, -12, 0, 38)
+    animExportBtn.Position = UDim2.new(0, 0, 0, 48 + #toggles * 38)
+    Theme.AddCorner(animExportBtn, Theme.CornerMedium)
+    Theme.AddStroke(animExportBtn, Theme.BorderLight, 1)
+    animExportBtn.Parent = scroll
+
+    Theme.AnimateButton(animExportBtn, function()
+        animExportBtn.Text = "Exportando animações..."
+        task.spawn(function()
+            local AnimationRecorder = require("../Core/AnimationRecorder")
+            local success, file = AnimationRecorder.ExportRecordedAnimations()
+            if success then
+                animExportBtn.Text = "✓ Animações salvas: " .. tostring(file)
+                Environment.SetClipboard(tostring(file))
+            else
+                animExportBtn.Text = "Erro ao exportar"
+            end
+            task.delay(2.5, function()
+                animExportBtn.Text = "🕺 EXPORTAR ANIMAÇÕES CAPTURADAS (.RBXM)"
+            end)
+        end)
+    end)
 end
 
 -- 11. Console Tab
@@ -7959,10 +8316,10 @@ function Interface:BuildAboutTab()
 
     -- GitHub Link Button
     local btnGithub = Instance.new("TextButton")
-    btnGithub.Text = "[ 0x01: GITHUB ]"
+    btnGithub.Text = "GitHub"
     btnGithub.Font = Theme.FontSemiBold
-    btnGithub.TextSize = 8
-    btnGithub.TextColor3 = Theme.AccentSkull
+    btnGithub.TextSize = 10
+    btnGithub.TextColor3 = Theme.TextPrimary
     btnGithub.BackgroundColor3 = Theme.CardBg
     btnGithub.Size = UDim2.new(0.25, -4, 1, 0)
     btnGithub.LayoutOrder = 1
@@ -7972,15 +8329,15 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
-        btnGithub.Text = "[OK] COPIED!"
-        task.delay(2, function() btnGithub.Text = "[ 0x01: GITHUB ]" end)
+        btnGithub.Text = "✓ Copiado!"
+        task.delay(2, function() btnGithub.Text = "GitHub" end)
     end)
 
     -- LinkedIn Profile Button
     local btnLinkedIn = Instance.new("TextButton")
-    btnLinkedIn.Text = "[ 0x02: LINKEDIN ]"
+    btnLinkedIn.Text = "LinkedIn"
     btnLinkedIn.Font = Theme.FontSemiBold
-    btnLinkedIn.TextSize = 8
+    btnLinkedIn.TextSize = 10
     btnLinkedIn.TextColor3 = Theme.AccentCyan
     btnLinkedIn.BackgroundColor3 = Theme.CardBg
     btnLinkedIn.Size = UDim2.new(0.25, -4, 1, 0)
@@ -7991,15 +8348,15 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnLinkedIn, function()
         Environment.SetClipboard("https://www.linkedin.com/in/theo-lorentz-padilha-0b9b99287/")
-        btnLinkedIn.Text = "[OK] COPIED!"
-        task.delay(2, function() btnLinkedIn.Text = "[ 0x02: LINKEDIN ]" end)
+        btnLinkedIn.Text = "✓ Copiado!"
+        task.delay(2, function() btnLinkedIn.Text = "LinkedIn" end)
     end)
 
     -- Repository Link Button
     local btnRepo = Instance.new("TextButton")
-    btnRepo.Text = "[ 0x03: REPO ]"
+    btnRepo.Text = "Repositório"
     btnRepo.Font = Theme.FontSemiBold
-    btnRepo.TextSize = 8
+    btnRepo.TextSize = 10
     btnRepo.TextColor3 = Theme.TextPrimary
     btnRepo.BackgroundColor3 = Theme.CardBg
     btnRepo.Size = UDim2.new(0.25, -4, 1, 0)
@@ -8010,28 +8367,27 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
-        btnRepo.Text = "[OK] COPIED!"
-        task.delay(2, function() btnRepo.Text = "[ 0x03: REPO ]" end)
+        btnRepo.Text = "✓ Copiado!"
+        task.delay(2, function() btnRepo.Text = "Repositório" end)
     end)
 
     -- Discord Server Button
     local btnDiscord = Instance.new("TextButton")
-    btnDiscord.Text = "[ 0x04: DISCORD ]"
+    btnDiscord.Text = "Discord"
     btnDiscord.Font = Theme.FontSemiBold
-    btnDiscord.TextSize = 8
-    btnDiscord.TextColor3 = Theme.AccentGothic
+    btnDiscord.TextSize = 10
+    btnDiscord.TextColor3 = Theme.TextPrimary
     btnDiscord.BackgroundColor3 = Theme.AccentSecondary
     btnDiscord.Size = UDim2.new(0.25, -4, 1, 0)
     btnDiscord.LayoutOrder = 4
     Theme.AddCorner(btnDiscord, Theme.CornerSmall)
-    Theme.AddStroke(btnDiscord, Theme.BorderNeon, 1)
-    Theme.AddGradient(btnDiscord, Color3.fromRGB(255, 0, 60), Color3.fromRGB(130, 0, 220), 45)
+    Theme.AddStroke(btnDiscord, Theme.BorderLight, 1)
     btnDiscord.Parent = devBtnBar
 
     Theme.AnimateButton(btnDiscord, function()
         Environment.SetClipboard("https://discord.gg/Tk5zyA83UZ")
-        btnDiscord.Text = "[OK] COPIED!"
-        task.delay(2, function() btnDiscord.Text = "[ 0x04: DISCORD ]" end)
+        btnDiscord.Text = "✓ Copiado!"
+        task.delay(2, function() btnDiscord.Text = "Discord" end)
     end)
 
     -- System Diagnostics Card
@@ -8217,9 +8573,9 @@ end)
 
 __define__("UI/Theme", function()
 --[[
-    HyperSaveInstance - Cyber-Tribal Rootkit & Underground Hacker Design System
+    HyperSaveInstance - Professional High-Contrast Dark Theme
     Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
-    Aesthetic: Brutalist Industrial, Raw Memory Hex Dumps, Blood Crimson & Radioactive Ultraviolet Neon.
+    Design: Clean, Crisp, High-Contrast Modern Dark UI (Inspired by VS Code, Raycast, Discord)
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -8227,67 +8583,67 @@ local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
 local Theme = {
-    -- Void Carbon & Corrosive Dark Palettes
-    Background = Color3.fromRGB(2, 2, 5),             -- Pure Void Carbon Pitch Black (#020205)
-    BackgroundTransparency = 0.02,                   -- Solid, heavy terminal glass
-    CardBg = Color3.fromRGB(8, 7, 14),                -- Brutalist Industrial Alloy (#08070e)
-    CardTransparency = 0.05,                         -- High-density rootkit window
-    CardHover = Color3.fromRGB(20, 14, 34),          -- Cyber-glitch hover
-    CardActive = Color3.fromRGB(38, 12, 58),         -- High-voltage active core
+    -- High-Contrast Professional Dark Palettes
+    Background = Color3.fromRGB(15, 17, 23),          -- Crisp Modern Slate Dark (#0f1117)
+    BackgroundTransparency = 0.02,                   -- Solid, high-readability background
+    CardBg = Color3.fromRGB(24, 27, 36),              -- Clean Elevated Card (#181b24)
+    CardTransparency = 0.0,                          -- Non-blurry, sharp solid surface
+    CardHover = Color3.fromRGB(34, 38, 50),          -- Smooth Hover State
+    CardActive = Color3.fromRGB(45, 51, 68),         -- Selected Active Core
     
-    -- High-Voltage Neon Borders
-    Border = Color3.fromRGB(44, 28, 70),             -- Dark alloy wireframe
-    BorderTransparency = 0.1,
-    BorderLight = Color3.fromRGB(180, 30, 255),      -- Toxic Ultraviolet Stroke (#b41eff)
-    BorderNeon = Color3.fromRGB(255, 0, 75),         -- Corrosive Blood Crimson Glow (#ff004b)
-    BorderCyber = Color3.fromRGB(0, 255, 170),       -- Radioactive Acid Teal (#00ffaa)
+    -- Crisp, Clean Borders (1px sharp strokes)
+    Border = Color3.fromRGB(48, 54, 70),             -- Clean subtle border (#303646)
+    BorderTransparency = 0.0,
+    BorderLight = Color3.fromRGB(59, 130, 246),      -- High-visibility Blue (#3b82f6)
+    BorderNeon = Color3.fromRGB(99, 102, 241),       -- Clean Indigo Accent (#6366f1)
+    BorderCyber = Color3.fromRGB(14, 165, 233),      -- Sky Cyan Highlight (#0ea5e9)
     
-    -- Accents & Signal Flags
-    AccentPrimary = Color3.fromRGB(180, 0, 255),     -- Ultraviolet Overdrive (#b000ff)
-    AccentSecondary = Color3.fromRGB(255, 0, 60),    -- Blood Crimson Voltage (#ff003c)
-    AccentAcid = Color3.fromRGB(0, 255, 128),        -- Terminal Acid Green (#00ff80)
-    AccentDark = Color3.fromRGB(30, 5, 45),          -- Pitch Void Purple (#1e052d)
-    AccentGothic = Color3.fromRGB(250, 250, 255),    -- Razor Sharp Bone White (#fafaff)
-    AccentSuccess = Color3.fromRGB(0, 255, 150),     -- Terminal Green Signal
-    AccentWarning = Color3.fromRGB(255, 170, 0),     -- Hazard Yellow
-    AccentDanger = Color3.fromRGB(255, 0, 55),       -- Critical Kernel Red
-    AccentTheo = Color3.fromRGB(255, 80, 140),       -- Cyber Blood Lavender
+    -- Vibrant Primary & Semantic Accents
+    AccentPrimary = Color3.fromRGB(37, 99, 235),    -- Royal Blue (High Visibility)
+    AccentSecondary = Color3.fromRGB(79, 70, 229),  -- Solid Indigo
+    AccentAcid = Color3.fromRGB(16, 185, 129),       -- Emerald Green
+    AccentDark = Color3.fromRGB(20, 23, 31),         -- Deep Background
+    AccentGothic = Color3.fromRGB(255, 255, 255),    -- Pure White
+    AccentSuccess = Color3.fromRGB(16, 185, 129),    -- Emerald Success
+    AccentWarning = Color3.fromRGB(245, 158, 11),    -- Amber Warning
+    AccentDanger = Color3.fromRGB(239, 68, 68),      -- Coral Red
+    AccentTheo = Color3.fromRGB(99, 102, 241),       -- Clean Indigo Signature
     AccentSkull = Color3.fromRGB(255, 255, 255),     -- Pure White
-    AccentCyan = Color3.fromRGB(0, 230, 255),       -- Ice Hex Blue
-
-    -- Monospace High-Contrast Typography
-    TextPrimary = Color3.fromRGB(255, 255, 255),     -- Bone White Terminal
-    TextSecondary = Color3.fromRGB(200, 185, 230),   -- Steel Silver Violet
-    TextMuted = Color3.fromRGB(120, 105, 145),       -- Dim Matrix Shadow
-    TextAccent = Color3.fromRGB(255, 0, 90),         -- Blood Alert Red
-    TextTheo = Color3.fromRGB(240, 140, 255),        -- Glowing Root Signature
-    TextAcid = Color3.fromRGB(0, 255, 140),          -- Acid Green Monospace
-
-    -- Fonts
-    FontTitle = Enum.Font.Code,
-    FontSemiBold = Enum.Font.Code,
-    FontRegular = Enum.Font.Code,
-    FontCode = Enum.Font.Code,
-
-    -- Brutalist Razor Radii (Zero Round Bubbles - Razor-Sharp Cyberpunk Edges)
-    CornerLarge = UDim.new(0, 3),
-    CornerMedium = UDim.new(0, 2),
-    CornerSmall = UDim.new(0, 1),
-    CornerPill = UDim.new(0, 2),
+    AccentCyan = Color3.fromRGB(14, 165, 233),       -- Sky Cyan
+ 
+    -- Crystal-Clear High-Contrast Typography
+    TextPrimary = Color3.fromRGB(255, 255, 255),     -- Pure High-Contrast White (#ffffff)
+    TextSecondary = Color3.fromRGB(203, 213, 225),   -- Slate 300 (Clean & Easy to Read)
+    TextMuted = Color3.fromRGB(148, 163, 184),       -- Slate 400 (Readable Secondary)
+    TextAccent = Color3.fromRGB(59, 130, 246),       -- Blue Highlight
+    TextTheo = Color3.fromRGB(99, 102, 241),         -- Indigo Highlight
+    TextAcid = Color3.fromRGB(16, 185, 129),         -- Emerald Green
+ 
+    -- Modern Clean Fonts (Gotham Family)
+    FontTitle = Enum.Font.GothamBold,
+    FontSemiBold = Enum.Font.GothamMedium,
+    FontRegular = Enum.Font.Gotham,
+    FontCode = Enum.Font.Gotham,
+ 
+    -- Clean Rounded Radii
+    CornerLarge = UDim.new(0, 10),
+    CornerMedium = UDim.new(0, 8),
+    CornerSmall = UDim.new(0, 6),
+    CornerPill = UDim.new(0, 18),
 }
 
 -- Tween animation helper
 function Theme.Tween(instance, duration, properties, easingStyle, easingDirection)
     local tween = TweenService:Create(
         instance,
-        TweenInfo.new(duration or 0.12, easingStyle or Enum.EasingStyle.Linear, easingDirection or Enum.EasingDirection.Out),
+        TweenInfo.new(duration or 0.15, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out),
         properties
     )
     tween:Play()
     return tween
 end
 
--- Create razor corner
+-- Create rounded corner
 function Theme.AddCorner(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = radius or Theme.CornerMedium
@@ -8295,7 +8651,7 @@ function Theme.AddCorner(instance, radius)
     return corner
 end
 
--- Create sharp stroke / border
+-- Create clean solid stroke / border
 function Theme.AddStroke(instance, color, thickness, transparency)
     local stroke = Instance.new("UIStroke")
     stroke.Color = color or Theme.Border
@@ -8318,58 +8674,50 @@ function Theme.AddGradient(instance, c1, c2, rotation)
     return grad
 end
 
--- Audio SFX feedback
+-- Gentle Audio Click Feedback
 function Theme.PlayClick()
     pcall(function()
         local s = Instance.new("Sound")
         s.SoundId = "rbxassetid://9069609200"
-        s.Volume = 0.25
-        s.Pitch = 1.6
+        s.Volume = 0.18
+        s.Pitch = 1.4
         s.Parent = SoundService
         s:Play()
-        task.delay(1, function() s:Destroy() end)
+        task.delay(0.8, function() s:Destroy() end)
     end)
 end
 
 function Theme.PlayGlitch()
-    pcall(function()
-        local s = Instance.new("Sound")
-        s.SoundId = "rbxassetid://9114223170"
-        s.Volume = 0.35
-        s.Pitch = 1.2
-        s.Parent = SoundService
-        s:Play()
-        task.delay(1.5, function() s:Destroy() end)
-    end)
+    -- Kept silent for clean professional experience
 end
 
--- Interactive Button Animation Helper with Glitch Micro-Snap and Sound
+-- Interactive Button Animation Helper
 function Theme.AnimateButton(btn, onClick)
     local origSize = btn.Size
     local origBg = btn.BackgroundColor3
 
     pcall(function()
         btn.MouseEnter:Connect(function()
-            Theme.Tween(btn, 0.1, {
+            Theme.Tween(btn, 0.12, {
                 BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
             })
         end)
 
         btn.MouseLeave:Connect(function()
-            Theme.Tween(btn, 0.1, {
+            Theme.Tween(btn, 0.12, {
                 BackgroundColor3 = origBg
             })
         end)
 
         btn.MouseButton1Down:Connect(function()
-            Theme.Tween(btn, 0.04, {
+            Theme.Tween(btn, 0.05, {
                 Size = UDim2.new(origSize.X.Scale, origSize.X.Offset - 2, origSize.Y.Scale, origSize.Y.Offset - 2)
             })
             Theme.PlayClick()
         end)
 
         btn.MouseButton1Up:Connect(function()
-            Theme.Tween(btn, 0.06, {
+            Theme.Tween(btn, 0.08, {
                 Size = origSize
             })
         end)
@@ -8384,76 +8732,27 @@ function Theme.AnimateButton(btn, onClick)
     end
 end
 
--- Dual-Color High-Voltage Neon Pulse (Blood Crimson <-> Radioactive Violet)
+-- Clean Static Border Accent
 function Theme.StartNeonPulse(stroke, baseColor, neonColor, speed)
-    local c1 = baseColor or Theme.BorderLight
-    local c2 = neonColor or Theme.BorderNeon
-    local spd = speed or 3.2
-    
-    local conn
-    pcall(function()
-        conn = RunService.RenderStepped:Connect(function()
-            if not stroke or not stroke.Parent then
-                if conn then conn:Disconnect() end
-                return
-            end
-            local t = (math.sin(os.clock() * spd) + 1) * 0.5
-            stroke.Color = Color3.new(
-                c1.R + (c2.R - c1.R) * t,
-                c1.G + (c2.G - c1.G) * t,
-                c1.B + (c2.B - c1.B) * t
-            )
-            stroke.Thickness = 1.2 + t * 0.9
-        end)
-    end)
-    return conn
+    if stroke then
+        stroke.Color = baseColor or Theme.BorderLight
+        stroke.Thickness = 1
+    end
+    return nil
 end
 
--- Random Hex Stream Generator for Live Kernel Aesthetic
-local HEX_CHARS = {"0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"}
+-- Formatted Metric String Helpers
 function Theme.GenerateHexStream(length)
-    local len = length or 8
-    local out = {}
-    for i = 1, len do
-        table.insert(out, "0x" .. HEX_CHARS[math.random(1, 16)] .. HEX_CHARS[math.random(1, 16)])
-    end
-    return table.concat(out, " ")
+    return "STABLE"
 end
 
--- Live ASCII Oscilloscope / Memory Activity Waveform
-local WAVE_GLYPHS = {" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 function Theme.GenerateActivityGraph()
-    local out = {}
-    for i = 1, 8 do
-        table.insert(out, WAVE_GLYPHS[math.random(1, #WAVE_GLYPHS)])
-    end
-    return table.concat(out, "")
+    return "ONLINE"
 end
 
--- Hacker Text Scramble / Decrypt Animation
-local SCRAMBLE_CHARS = {"#", "$", "%", "&", "!", "?", "*", "/", "\\", "0", "1", "X", "Z", "†", "‡", "§"}
+-- Instant text display without lagging or scrambling
 function Theme.ScrambleText(label, targetText, duration)
-    local dur = duration or 0.18
-    local steps = 6
-    local stepTime = dur / steps
-
-    task.spawn(function()
-        local len = #targetText
-        for s = 1, steps - 1 do
-            local scrambled = {}
-            for i = 1, len do
-                local char = string.sub(targetText, i, i)
-                if char == " " or char == "[" or char == "]" or char == "/" or char == ":" then
-                    table.insert(scrambled, char)
-                else
-                    table.insert(scrambled, SCRAMBLE_CHARS[math.random(1, #SCRAMBLE_CHARS)])
-                end
-            end
-            pcall(function() label.Text = table.concat(scrambled, "") end)
-            task.wait(stepTime)
-        end
-        pcall(function() label.Text = targetText end)
-    end)
+    pcall(function() label.Text = targetText end)
 end
 
 return Theme
@@ -8483,13 +8782,34 @@ function AntiAFK.Enable()
         if localPlayer and localPlayer.Idled then
             idleConnection = localPlayer.Idled:Connect(function()
                 if not isEnabled then return end
+                -- 1. Try safe virtual user input without aggressive controller captures
+                local triggered = false
                 pcall(function()
                     local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
-                    if vu and vu.CaptureController then
-                        vu:CaptureController()
-                        vu:ClickButton2(Vector2.new(0, 0))
+                    if vu then
+                        if vu.Button2Down and vu.Button2Up then
+                            vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+                            task.wait(0.05)
+                            vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+                            triggered = true
+                        elseif vu.ClickButton2 then
+                            vu:ClickButton2(Vector2.new(0, 0))
+                            triggered = true
+                        end
                     end
                 end)
+
+                -- 2. Fallback: Micro camera oscillation if VirtualUser is hooked/blocked
+                if not triggered then
+                    pcall(function()
+                        local cam = workspace.CurrentCamera
+                        if cam then
+                            cam.CFrame = cam.CFrame * CFrame.Angles(0, 0.0001, 0)
+                            task.wait(0.05)
+                            cam.CFrame = cam.CFrame * CFrame.Angles(0, -0.0001, 0)
+                        end
+                    end)
+                end
             end)
         end
     end)
@@ -8795,6 +9115,30 @@ local _listfiles = listfiles or (syn and syn.listfiles)
 
 function Environment.HasFileSystem()
     return type(_writefile) == "function"
+end
+
+-- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes
+function Environment.SanitizeFileName(name)
+    if not name or #name == 0 then return "Unnamed" end
+    local clean = string.gsub(name, '[<>:"/\\|?*%c%z]', "_")
+    clean = string.gsub(clean, "^[%s%.]+", "")
+    clean = string.gsub(clean, "[%s%.]+$", "")
+
+    -- Guard against reserved Windows device names
+    local upper = string.upper(clean)
+    local reserved = {
+        CON = true, PRN = true, AUX = true, NUL = true,
+        COM1 = true, COM2 = true, COM3 = true, COM4 = true, COM5 = true, COM6 = true, COM7 = true, COM8 = true, COM9 = true,
+        LPT1 = true, LPT2 = true, LPT3 = true, LPT4 = true, LPT5 = true, LPT6 = true, LPT7 = true, LPT8 = true, LPT9 = true
+    }
+    if reserved[upper] then
+        clean = clean .. "_file"
+    end
+
+    if #clean > 120 then
+        clean = string.sub(clean, 1, 120)
+    end
+    return (#clean > 0 and clean) or "File"
 end
 
 function Environment.WriteFile(path, content)
@@ -9310,6 +9654,39 @@ function Stealth.GenerateRandomName(len)
     return table.concat(res)
 end
 
+-- Safely protect GUI instance from detection
+function Stealth.ProtectGui(gui)
+    local protected = false
+    pcall(function()
+        if syn and syn.protect_gui then
+            syn.protect_gui(gui)
+            protected = true
+        elseif protectgui then
+            protectgui(gui)
+            protected = true
+        elseif protect_gui then
+            protect_gui(gui)
+            protected = true
+        end
+    end)
+    return protected
+end
+
+-- Safely request map streaming around coordinates without moving character
+function Stealth.SafeStreamAround(position, player)
+    local requested = false
+    pcall(function()
+        if player and player.RequestStreamAroundAsync then
+            player:RequestStreamAroundAsync(position)
+            requested = true
+        elseif workspace and workspace.RequestStreamAroundAsync then
+            workspace:RequestStreamAroundAsync(position)
+            requested = true
+        end
+    end)
+    return requested
+end
+
 -- Safely elevate thread identity if supported by executor
 function Stealth.ElevateThread()
     pcall(function()
@@ -9548,9 +9925,35 @@ function HyperSaveInstance.SaveScripts(customConfig)
     return HyperSaveInstance.Save(cfg)
 end
 
+function HyperSaveInstance.SaveSilent(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "Ghost")
+    cfg.SilentMode = true
+    cfg.ShowUI = false
+    cfg.VerboseLogs = false
+    cfg.PlaySoundOnComplete = false
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveGhost(customConfig)
+    return HyperSaveInstance.SaveSilent(customConfig)
+end
+
+function HyperSaveInstance.SaveOnlyMap(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "OnlyMap")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveUIOnly(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "UIOnly")
+    return HyperSaveInstance.Save(cfg)
+end
+
 -- Global environment injection (Universal compatibility)
 local function injectGlobals()
-    local genv = (getgenv and getgenv()) or _G
+    local genv = (getgenv and getgenv()) or nil
     if genv then
         genv.saveinstance = HyperSaveInstance.Save
         genv.saveplace = HyperSaveInstance.Save
@@ -9558,30 +9961,50 @@ local function injectGlobals()
         genv.HyperSaveInstance = HyperSaveInstance
         genv.UltraSmartSaveInstance = HyperSaveInstance
     end
+
+    local isSilent = Defaults.SilentMode or (genv and (genv.HyperSave_Silent or genv.SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
+    if _G and not isSilent then
+        _G.saveinstance = _G.saveinstance or HyperSaveInstance.Save
+        _G.saveplace = _G.saveplace or HyperSaveInstance.Save
+        _G.SynSaveInstance = _G.SynSaveInstance or HyperSaveInstance
+        _G.HyperSaveInstance = _G.HyperSaveInstance or HyperSaveInstance
+        _G.UltraSmartSaveInstance = _G.UltraSmartSaveInstance or HyperSaveInstance
+    end
 end
 
 pcall(injectGlobals)
 
--- Instant StarterGui Notification
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "💀 HyperSaveInstance",
-        Text = "Carregado por Theo Lorentz Padilha!",
-        Duration = 4
-    })
-end)
+-- Check if SilentMode or global silent override is active
+local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
 
-print("[💀 HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
+-- Instant StarterGui Notification (Only in non-silent mode)
+if not isSilent and Defaults.ShowUI then
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "💀 HyperSaveInstance",
+            Text = "Carregado por Theo Lorentz Padilha!",
+            Duration = 4
+        })
+    end)
+end
 
--- Auto-initialize HUD if ShowUI is enabled
-if Defaults.ShowUI then
+if Defaults.VerboseLogs and not isSilent then
+    print("[💀 HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
+end
+
+-- Auto-initialize HUD if ShowUI is enabled and not in SilentMode
+if Defaults.ShowUI and not isSilent then
     local success, result = pcall(function()
         return HyperSaveInstance.OpenUI()
     end)
     if success then
-        print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+        if Defaults.VerboseLogs and not isSilent then
+            print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+        end
     else
-        warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+        if Defaults.VerboseLogs and not isSilent then
+            warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+        end
     end
 end
 

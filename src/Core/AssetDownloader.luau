@@ -7,13 +7,19 @@ local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local AssetDownloader = {}
 
--- Safe HTTP Request polyfill for executors
+-- Safe HTTP Request polyfill with clean official headers (Prevents executor fingerprinting)
 local function httpRequest(url: string): string?
     local req = (syn and syn.request) or (http and http.request) or http_request or request
     if req then
         local s, res = pcall(req, {
             Url = url,
-            Method = "GET"
+            Method = "GET",
+            Headers = {
+                ["User-Agent"] = "Roblox/WinInet",
+                ["Accept"] = "*/*",
+                ["Accept-Encoding"] = "gzip, deflate",
+                ["Connection"] = "keep-alive"
+            }
         })
         if s and res and (res.StatusCode == 200 or res.Success) then
             return res.Body
@@ -100,13 +106,62 @@ function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type:
     return assets
 end
 
--- Download all collected assets to local folder structure using 8-Worker Parallel Pool
+-- Measure real-time client ping to prevent server desync/heartbeat disconnects
+function AssetDownloader.GetClientPing(): number
+    local ping = 50
+    pcall(function()
+        local stats = game:GetService("Stats")
+        local net = stats and stats:FindFirstChild("Network")
+        local ssi = net and net:FindFirstChild("ServerStatsItem")
+        local dp = ssi and ssi:FindFirstChild("Data Ping")
+        if dp and dp:IsA("ValueBase") then
+            ping = (dp :: any).Value or 50
+        end
+    end)
+    return ping
+end
+
+-- Export structured JSON manifest for offline downloading
+function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath: string): (boolean, string)
+    local HttpService = game:GetService("HttpService")
+    local list = {}
+    for id, item in pairs(assets) do
+        table.insert(list, {
+            Id = id,
+            Type = item.Type,
+            Url = item.Url,
+            SourceName = item.SourceName
+        })
+    end
+
+    local success, json = pcall(function()
+        return HttpService:JSONEncode({
+            PlaceId = game.PlaceId or 0,
+            TotalAssets = #list,
+            ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
+            Assets = list
+        })
+    end)
+
+    if success and json then
+        local wOk = Environment.WriteFile(manifestPath, json)
+        return wOk, manifestPath
+    end
+
+    return false, "Failed to encode JSON manifest"
+end
+
+-- Download all collected assets safely with Ping Guard, Rate Limiting & Exponential Backoff
 function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: string, options: table, progressCallback: (current: number, total: number, asset: table) -> ()): (number, number)
+    local opts = options or {}
     Environment.MakeFolder(baseFolder)
     Environment.MakeFolder(baseFolder .. "/audios")
     Environment.MakeFolder(baseFolder .. "/textures")
     Environment.MakeFolder(baseFolder .. "/meshes")
     Environment.MakeFolder(baseFolder .. "/animations")
+
+    local manifestPath = string.format("%s/HyperSave_Manifest_%d.json", baseFolder, game.PlaceId or 0)
+    AssetDownloader.ExportManifest(assets, manifestPath)
 
     local assetList = {}
     for _, asset in pairs(assets) do
@@ -120,10 +175,11 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
     local failed = 0
     local currentIndex = 1
 
-    local workers = math.clamp(options.AssetDownloadWorkers or 8, 2, 16)
-    local activeWorkers = workers
+    -- In public servers or safe mode, constrain workers to prevent bandwidth saturation
+    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 4, 2, 6) or math.clamp(opts.AssetDownloadWorkers or 8, 2, 16)
+    local activeWorkers = maxWorkers
 
-    for w = 1, workers do
+    for w = 1, maxWorkers do
         task.spawn(function()
             while currentIndex <= total do
                 local myIndex = currentIndex
@@ -131,6 +187,17 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
 
                 local item = assetList[myIndex]
                 if item then
+                    -- 1. Adaptive Ping Guard: Pause if ping spikes above 180ms
+                    if opts.PingGuard ~= false then
+                        local currentPing = AssetDownloader.GetClientPing()
+                        local retryCount = 0
+                        while currentPing > 180 and retryCount < 10 do
+                            task.wait(0.3)
+                            currentPing = AssetDownloader.GetClientPing()
+                            retryCount = retryCount + 1
+                        end
+                    end
+
                     local extension = ".dat"
                     local subDir = "textures"
 
@@ -150,11 +217,23 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
 
                     local fileName = string.format("%s/%s/%s_%s%s", baseFolder, subDir, item.Id, string.gsub(item.SourceName, "[^%w_%-]", "_"), extension)
 
-                    -- Try primary url then v2 fallback
-                    local body = httpRequest(item.Url)
-                    if not body or #body == 0 then
-                        local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
-                        body = httpRequest(v2Url)
+                    -- 2. Exponential backoff retry handler
+                    local body = nil
+                    local maxRetries = 2
+                    for attempt = 1, maxRetries + 1 do
+                        body = httpRequest(item.Url)
+                        if not body or #body == 0 then
+                            local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
+                            body = httpRequest(v2Url)
+                        end
+
+                        if body and #body > 0 then
+                            break
+                        end
+
+                        if attempt <= maxRetries then
+                            task.wait(0.4 * attempt) -- Exponential backoff
+                        end
                     end
 
                     if body and #body > 0 then
@@ -172,7 +251,10 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
                         pcall(progressCallback, downloaded + failed, total, item)
                     end
                 end
-                task.wait(0.01)
+
+                -- 3. Jittered rate limiting (50ms to 120ms delay) to mimic natural client requests
+                local jitter = math.random(50, 120) / 1000
+                task.wait(jitter)
             end
             activeWorkers = activeWorkers - 1
         end)

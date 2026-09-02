@@ -9,15 +9,21 @@ local Defaults = {
     FilePath = "",                         -- Auto-generated if empty: HyperSaveInstance/<PlaceName>_<PlaceId>.<Format>
     ShowUI = true,                         -- Open HUD interface by default
     AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
+    SilentMode = false,                    -- Headless / 100% Silent Mode (No UI, no notifications, no sounds, no prints)
+    RandomizeGuiName = false,              -- Randomize ScreenGui name with stealth random hash
     ToggleKeybind = Enum.KeyCode.RightShift, -- Keyboard shortcut to toggle HUD visibility
 
     -- Anti-AFK & Stealth Protection
     AutoAntiAFK = true,                    -- Prevents idle disconnection (Error 268/273)
     StealthMode = true,                    -- Obfuscates memory references and thread identity
+    SafeStreaming = true,                  -- Non-teleport streaming replication (prevents movement anti-cheat kicks)
 
     -- Total Raw Asset Downloader
     DownloadRawAssets = true,              -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
-    AssetDownloadWorkers = 6,              -- Parallel threads for raw asset downloading
+    AssetDownloadWorkers = 4,              -- Safe worker count to prevent rate limits on public servers
+    SafeAssetDownload = true,              -- Token-bucket throttled downloading with jitter
+    PingGuard = true,                      -- Dynamic ping monitoring (auto-pauses if ping > 180ms)
+    ExportAssetManifest = true,            -- Export HyperSave_Manifest_<PlaceId>.json for offline downloading
     AssetFolderName = "",                  -- Auto-generated if empty: HyperSave_Assets_<PlaceId>
 
     -- Smart Optimizer (Strictly Optional / Disabled by default to preserve 100% raw map integrity)
@@ -61,11 +67,14 @@ local Defaults = {
     -- Performance & Throttling
     ChunkSize = 250,                       -- Instances processed per frame/tick to prevent lag/freeze
     YieldInterval = 0.01,                  -- task.wait() interval between batches
+    AdaptiveFPSGuard = true,               -- Dynamically adjust throttle delay based on framerate delta
     MaxMemoryBudgetMB = 1024,              -- Memory limit safety check
     AssetDownloadWorkers = 8,              -- Concurrent workers for asset downloader pool
 
-    -- Logging & Notifications
+    -- Logging, Reports & Validation
     VerboseLogs = true,                    -- Detailed console logs
+    ValidateOutputXml = true,              -- Validate XML well-formedness before saving
+    SaveSummaryReport = true,              -- Save JSON execution summary report (.json)
     PlaySoundOnComplete = true,            -- Play audio chime when save completes
     CopyToClipboardOnComplete = true,      -- Copy file path to clipboard on complete
     DiscordWebhookUrl = "",                -- Optional Discord Webhook URL for clone notifications
@@ -143,6 +152,68 @@ local Presets = {
         DecompileScripts = true,
         SaveServerScriptPlaceholders = true,
         SaveNilInstances = true,
+        OptimizeGeometry = false,
+    },
+    Ghost = {
+        SilentMode = true,
+        ShowUI = false,
+        VerboseLogs = false,
+        PlaySoundOnComplete = false,
+        RandomizeGuiName = true,
+        StealthMode = true,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        DownloadRawAssets = false,
+        SaveTerrain = true,
+        SaveTerrainVoxels = false,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        OptimizeGeometry = false,
+    },
+    OnlyMap = {
+        DownloadRawAssets = false,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = false,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = false,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = false,
+        SaveServerScriptPlaceholders = false,
+        SaveNilInstances = false,
+        OptimizeGeometry = false,
+    },
+    UIOnly = {
+        DownloadRawAssets = false,
+        SaveTerrain = false,
+        SaveTerrainVoxels = false,
+        SaveLighting = false,
+        SaveMaterials = false,
+        SaveSounds = false,
+        SaveUnions = false,
+        SaveMeshParts = false,
+        SaveSurfaceAppearance = false,
+        SaveAnimations = false,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = false,
+        SaveNilInstances = false,
         OptimizeGeometry = false,
     }
 }

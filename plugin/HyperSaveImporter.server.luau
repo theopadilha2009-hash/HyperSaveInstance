@@ -717,12 +717,49 @@ btnRigs.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================================
--- FEATURE 8: 👤 CRÉDITOS & DESENVOLVEDOR (THEO LORENTZ PADILHA)
+-- FEATURE 8: 📦 AUDITORIA & RECONEXÃO DE MANIFESTO DE ASSETS
+-- ============================================================================
+local cardManifest = createCard(
+    "8. Auditoria de Texturas, Malhas (MeshParts) e Sons",
+    "Analisa todas as referências de assets no lugar e lista quantos IDs privados ou válidos estão presentes, preparando o mapa para publicação segura.",
+    8
+)
+cardManifest.Parent = scroll
+
+local btnAudit = createButton(cardManifest, "📦 AUDITAR ASSETS DO MAPA", Color3.fromRGB(16, 185, 129))
+
+btnAudit.MouseButton1Click:Connect(function()
+    setStatus("Auditando referências de assets...", Color3.fromRGB(6, 182, 212))
+
+    local meshes = 0
+    local textures = 0
+    local sounds = 0
+    local animations = 0
+
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then
+            meshes = meshes + 1
+        elseif desc:IsA("Decal") or desc:IsA("Texture") then
+            textures = textures + 1
+        elseif desc:IsA("Sound") then
+            sounds = sounds + 1
+        elseif desc:IsA("Animation") then
+            animations = animations + 1
+        end
+    end
+
+    local summary = string.format("✓ Auditoria concluída: %d Malhas, %d Texturas, %d Sons, %d Animações identificadas.",
+        meshes, textures, sounds, animations)
+    setStatus(summary, Color3.fromRGB(34, 197, 94))
+end)
+
+-- ============================================================================
+-- FEATURE 9: 👤 CRÉDITOS & DESENVOLVEDOR (THEO LORENTZ PADILHA)
 -- ============================================================================
 local cardDev = createCard(
     "👑 Criador & Engenheiro: Theo Lorentz Padilha",
     "Desenvolvido com excelência por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do GitHub.",
-    8
+    9
 )
 cardDev.BackgroundColor3 = Color3.fromRGB(24, 16, 42)
 cardDev.Parent = scroll

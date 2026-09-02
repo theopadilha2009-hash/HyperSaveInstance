@@ -48,6 +48,9 @@ function Engine.NormalizeOptions(rawOptions: table?): table
             elseif lm == "fast" then opts.Mode = "Fast"
             elseif lm == "visualsonly" or lm == "visuals" then opts.Mode = "VisualsOnly"
             elseif lm == "scriptsonly" or lm == "scripts" then opts.Mode = "ScriptsOnly"
+            elseif lm == "onlymap" or lm == "maponly" or lm == "map" then opts.Mode = "OnlyMap"
+            elseif lm == "uionly" or lm == "ui" or lm == "guionly" then opts.Mode = "UIOnly"
+            elseif lm == "ghost" or lm == "stealth" then opts.Mode = "Ghost"
             elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
             else opts.Mode = v end
         elseif lk == "decompileignore" or lk == "decompile_ignore" then
@@ -74,6 +77,17 @@ function Engine.NormalizeOptions(rawOptions: table?): table
             opts.SaveNilInstances = (v == true)
         elseif lk == "stealthmode" or lk == "stealth_mode" or lk == "anonymous" then
             opts.StealthMode = (v == true)
+        elseif lk == "silent" or lk == "silentmode" or lk == "silent_mode" or lk == "headless" then
+            opts.SilentMode = (v == true)
+            if v == true then
+                opts.ShowUI = false
+                opts.VerboseLogs = false
+                opts.PlaySoundOnComplete = false
+            end
+        elseif lk == "randomizeguiname" or lk == "randomize_gui_name" or lk == "randomizename" then
+            opts.RandomizeGuiName = (v == true)
+        elseif lk == "safestreaming" or lk == "safe_streaming" then
+            opts.SafeStreaming = (v == true)
         elseif lk == "showui" or lk == "show_ui" then
             opts.ShowUI = (v == true)
         else
@@ -116,7 +130,7 @@ function Engine:GetDefaultFileName(): string
     pcall(function()
         placeName = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
     end)
-    placeName = string.gsub(placeName, "[^%w_%-]", "_")
+    placeName = Environment.SanitizeFileName(placeName)
     local ext = string.lower(self.Config.Format or "rbxlx")
     return string.format("HyperSave_%s_%d.%s", placeName, placeId, ext)
 end
@@ -128,7 +142,7 @@ end
 
 -- Play completion audio chime
 function Engine:PlayChime()
-    if not self.Config.PlaySoundOnComplete then return end
+    if not self.Config.PlaySoundOnComplete or self.Config.SilentMode then return end
     pcall(function()
         local sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
@@ -146,6 +160,7 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
     if ClassBlacklist.Names[inst.Name] then return false end
 
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
+    if inst:GetAttribute("HSI_Root") then return false end
 
     -- Custom IgnoreList check (USSI / UltraSmart parity)
     if self.Config.IgnoreList and type(self.Config.IgnoreList) == "table" then
@@ -281,6 +296,7 @@ function Engine:Start(): (boolean, string)
             Percentage = 4,
             Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
         })
+        local allowPhysicalTeleport = (not self.Config.SafeStreaming) and (not self.Config.StealthMode)
         StreamExplorer.ExploreMap(512, function(cur, tot, pos)
             local pct = 4 + math.floor((cur / tot) * 6)
             self:EmitProgress({
@@ -290,7 +306,7 @@ function Engine:Start(): (boolean, string)
                 Percentage = pct,
                 Message = string.format("Streaming Sweep: %d/%d chunks loaded", cur, tot),
             })
-        end)
+        end, allowPhysicalTeleport)
     end
 
     -- Step 1: Collect Root Services to save
@@ -604,6 +620,14 @@ function Engine:Start(): (boolean, string)
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     end
 
+    -- Step 5.5: Validate XML output if enabled
+    if format == "rbxlx" and self.Config.ValidateOutputXml ~= false then
+        local isValid, valErr = SerializerXml.Validate(outputContent)
+        if not isValid and self.Config.VerboseLogs then
+            warn("[HyperSaveInstance XML Validator] " .. tostring(valErr))
+        end
+    end
+
     -- Step 6: Write to disk
     self:EmitProgress({
         Stage = "Writing",
@@ -650,6 +674,27 @@ function Engine:Start(): (boolean, string)
 
         if self.Config.CopyToClipboardOnComplete then
             Environment.SetClipboard(fullPathHint)
+        end
+
+        -- Generate JSON Summary Report if enabled
+        if self.Config.SaveSummaryReport ~= false then
+            pcall(function()
+                local placeId = game.PlaceId or 0
+                local HttpService = game:GetService("HttpService")
+                local reportName = string.format("HyperSave_Summary_%d.json", placeId)
+                local reportData = {
+                    PlaceId = placeId,
+                    SavedFile = targetFileName,
+                    TotalInstances = totalInstances,
+                    TotalScripts = totalScripts,
+                    DownloadedAssets = downloadedCount,
+                    ElapsedTimeSeconds = elapsed,
+                    Timestamp = os.time(),
+                    Format = format,
+                    Mode = self.Config.Mode or "Full",
+                }
+                Environment.WriteFile(reportName, HttpService:JSONEncode(reportData))
+            end)
         end
 
         -- Dispatch Discord Webhook if configured

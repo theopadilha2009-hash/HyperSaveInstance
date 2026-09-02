@@ -47,12 +47,22 @@ end
 
 local ok, err = pcall(__launch__)
 if not ok then
-    warn("[💀 HyperSaveInstance Fatal] " .. tostring(err))
+    local isSilent = false
     pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "❌ HyperSaveInstance Erro",
-            Text = tostring(err):sub(1, 120),
-            Duration = 10
-        })
+        local genv = (getgenv and getgenv()) or _G
+        if genv then
+            isSilent = (genv.HyperSave_Silent == true) or (genv.SilentMode == true) or (genv.HyperSave_Ghost == true)
+        end
     end)
+
+    if not isSilent then
+        warn("[💀 HyperSaveInstance Fatal] " .. tostring(err))
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "❌ HyperSaveInstance Erro",
+                Text = tostring(err):sub(1, 120),
+                Duration = 10
+            })
+        end)
+    end
 end

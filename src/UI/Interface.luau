@@ -19,6 +19,7 @@ local RaycastSelector = require(script.Parent.Parent.Core.RaycastSelector)
 local PlaceDiffTracker = require(script.Parent.Parent.Core.PlaceDiffTracker)
 local Web3DExporter = require(script.Parent.Parent.Core.Web3DExporter)
 local LicenseManager = require(script.Parent.Parent.Utils.LicenseManager)
+local Stealth = require(script.Parent.Parent.Utils.Stealth)
 
 -- Attempt auto-load of saved enterprise key
 pcall(function()
@@ -71,40 +72,44 @@ function Interface:BuildUI()
     local parent = Environment.GetSafeGuiParent()
     local safeContainer = nil
 
+    local isRandom = self.Config.RandomizeGuiName
+    local guiName = self.Config.GuiName or (isRandom and Stealth.GenerateRandomName(14) or "HyperSaveInstance_UI")
+    local containerName = isRandom and Stealth.GenerateRandomName(12) or "HyperSave_Container"
+
     if parent and (parent:IsA("LayerCollector") or parent:IsA("ScreenGui")) then
         pcall(function()
-            local old = parent:FindFirstChild("HyperSave_Container")
+            local old = parent:FindFirstChild(containerName)
             if old then old:Destroy() end
         end)
         local container = Instance.new("Frame")
-        container.Name = "HyperSave_Container"
+        container.Name = containerName
         container.Size = UDim2.new(1, 0, 1, 0)
         container.BackgroundTransparency = 1
+        container:SetAttribute("HSI_Root", true)
         container.Parent = parent
         safeContainer = container
     else
         pcall(function()
-            local old = parent:FindFirstChild("HyperSaveInstance_UI")
+            local old = parent:FindFirstChild(guiName) or parent:FindFirstChild("HyperSaveInstance_UI")
             if old then old:Destroy() end
         end)
 
         local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "HyperSaveInstance_UI"
+        screenGui.Name = guiName
         screenGui.ResetOnSpawn = false
         screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         screenGui.DisplayOrder = 999999
         screenGui.IgnoreGuiInset = true
         screenGui.Enabled = true
+        screenGui:SetAttribute("HSI_Root", true)
         self.ScreenGui = screenGui
 
-        if syn and syn.protect_gui then
-            pcall(syn.protect_gui, screenGui)
-        end
+        Stealth.ProtectGui(screenGui)
 
         local ok = pcall(function() screenGui.Parent = parent end)
         if not ok or not screenGui.Parent then
             pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
-            if not screenGui.Parent then
+            if not screenGui.Parent and not self.Config.StealthMode then
                 pcall(function()
                     local plrs = game:GetService("Players")
                     local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
@@ -115,21 +120,19 @@ function Interface:BuildUI()
         safeContainer = screenGui
     end
 
-    -- Floating Mini Toggle Button (Cyber-Tribal Rootkit Marker)
+    -- Floating Mini Toggle Button
     local floatingBtn = Instance.new("TextButton")
-    floatingBtn.Name = "FloatingToggle"
-    floatingBtn.Text = "[!] HYPERSAVE::THEO [0x00]"
+    floatingBtn.Name = isRandom and Stealth.GenerateRandomName(8) or "FloatingToggle"
+    floatingBtn.Text = isRandom and "[HSI]" or "⚡ ABRIR HYPERSAVE"
     floatingBtn.Font = Theme.FontTitle
-    floatingBtn.TextSize = 10
-    floatingBtn.TextColor3 = Theme.AccentGothic
-    floatingBtn.BackgroundColor3 = Theme.CardBg
-    floatingBtn.Size = UDim2.new(0, 170, 0, 32)
+    floatingBtn.TextSize = 11
+    floatingBtn.TextColor3 = Theme.TextPrimary
+    floatingBtn.BackgroundColor3 = Theme.AccentPrimary
+    floatingBtn.Size = UDim2.new(0, 160, 0, 34)
     floatingBtn.Position = UDim2.new(0, 20, 0, 20)
     floatingBtn.Visible = false
     Theme.AddCorner(floatingBtn, Theme.CornerMedium)
-    local fStroke = Theme.AddStroke(floatingBtn, Theme.BorderNeon, 1.5)
-    Theme.StartNeonPulse(fStroke, Theme.BorderLight, Theme.BorderNeon, 3.0)
-    Theme.AddGradient(floatingBtn, Color3.fromRGB(8, 7, 14), Color3.fromRGB(38, 12, 58), 45)
+    Theme.AddStroke(floatingBtn, Theme.BorderLight, 1)
     floatingBtn.Parent = safeContainer
     self.FloatingToggle = floatingBtn
 
@@ -168,45 +171,43 @@ function Interface:BuildUI()
     local splash = Instance.new("Frame")
     splash.Name = "SplashCard"
     splash.AnchorPoint = Vector2.new(0.5, 0.5)
-    splash.Size = UDim2.new(0, 380, 0, 175)
+    splash.Size = UDim2.new(0, 380, 0, 165)
     splash.Position = UDim2.new(0.5, 0, 0.5, 0)
     splash.BackgroundColor3 = Theme.Background
-    splash.BackgroundTransparency = 0.02
     splash.BorderSizePixel = 0
     Theme.AddCorner(splash, Theme.CornerLarge)
-    local spStroke = Theme.AddStroke(splash, Theme.BorderNeon, 2)
-    Theme.StartNeonPulse(spStroke, Theme.BorderLight, Theme.BorderNeon, 3.5)
+    Theme.AddStroke(splash, Theme.BorderLight, 1)
     splash.Parent = safeContainer
 
     local splashTitle = Instance.new("TextLabel")
-    splashTitle.Text = "[†] ROOTKIT://HYPERSAVE_V2 [0xDEADBEEF]"
+    splashTitle.Text = "⚡ HYPERSAVEINSTANCE v2.0"
     splashTitle.Font = Theme.FontTitle
-    splashTitle.TextSize = 13
-    splashTitle.TextColor3 = Theme.AccentDanger
+    splashTitle.TextSize = 14
+    splashTitle.TextColor3 = Theme.AccentPrimary
     splashTitle.Size = UDim2.new(1, 0, 0, 30)
     splashTitle.Position = UDim2.new(0, 0, 0, 16)
     splashTitle.BackgroundTransparency = 1
     splashTitle.Parent = splash
 
     local splashBadge = Instance.new("TextLabel")
-    splashBadge.Text = "THEO LORENTZ PADILHA // KERNEL_OVERRIDE"
+    splashBadge.Text = "DESENVOLVIDO POR THEO LORENTZ PADILHA"
     splashBadge.Font = Theme.FontSemiBold
     splashBadge.TextSize = 10
-    splashBadge.TextColor3 = Theme.AccentTheo
-    splashBadge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
-    splashBadge.Size = UDim2.new(0, 260, 0, 24)
-    splashBadge.Position = UDim2.new(0.5, -130, 0, 50)
+    splashBadge.TextColor3 = Theme.TextSecondary
+    splashBadge.BackgroundColor3 = Theme.CardBg
+    splashBadge.Size = UDim2.new(0, 280, 0, 24)
+    splashBadge.Position = UDim2.new(0.5, -140, 0, 50)
     Theme.AddCorner(splashBadge, Theme.CornerMedium)
-    Theme.AddStroke(splashBadge, Theme.BorderLight, 1)
+    Theme.AddStroke(splashBadge, Theme.Border, 1)
     splashBadge.Parent = splash
 
     local splashStatus = Instance.new("TextLabel")
-    splashStatus.Text = "[0x00] ALLOCATING MEMORY HOOKS & DECOMPILER..."
-    splashStatus.Font = Theme.FontCode
-    splashStatus.TextSize = 10
-    splashStatus.TextColor3 = Theme.TextAcid
+    splashStatus.Text = "Carregando módulos e preparando interface..."
+    splashStatus.Font = Theme.FontRegular
+    splashStatus.TextSize = 11
+    splashStatus.TextColor3 = Theme.TextSecondary
     splashStatus.Size = UDim2.new(1, 0, 0, 20)
-    splashStatus.Position = UDim2.new(0, 0, 0, 86)
+    splashStatus.Position = UDim2.new(0, 0, 0, 84)
     splashStatus.BackgroundTransparency = 1
     splashStatus.Parent = splash
 
@@ -274,15 +275,14 @@ function Interface:BuildUI()
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 48)
     header.BackgroundColor3 = Theme.CardBg
-    header.BackgroundTransparency = 0.05
     header.BorderSizePixel = 0
     header.Parent = main
 
     local title = Instance.new("TextLabel")
-    title.Text = "[†] ROOTKIT://HYPERSAVE_V2"
+    title.Text = "⚡ HyperSaveInstance"
     title.Font = Theme.FontTitle
-    title.TextSize = 13
-    title.TextColor3 = Theme.AccentDanger
+    title.TextSize = 14
+    title.TextColor3 = Theme.TextPrimary
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Size = UDim2.new(0, 190, 1, 0)
     title.Position = UDim2.new(0, 14, 0, 0)
@@ -292,15 +292,15 @@ function Interface:BuildUI()
     -- Platform & License Badge (Interactive Key Activation)
     local badge = Instance.new("TextButton")
     local isEnt = LicenseManager.IsEnterprise()
-    badge.Text = isEnt and "[ 👑 ENTERPRISE ACTIVE ]" or "[ 🔑 FREE // UNLOCK $570 VIP ]"
+    badge.Text = isEnt and "👑 VERSÃO ENTERPRISE" or "⭐ ATIVAR CHAVE PRO"
     badge.Font = Theme.FontSemiBold
-    badge.TextSize = 9
-    badge.TextColor3 = isEnt and Theme.AccentSuccess or Theme.AccentTheo
-    badge.BackgroundColor3 = Color3.fromRGB(12, 10, 20)
-    badge.Size = UDim2.new(0, 210, 0, 24)
-    badge.Position = UDim2.new(0, 195, 0.5, -12)
-    Theme.AddCorner(badge, Theme.CornerMedium)
-    local bStroke = Theme.AddStroke(badge, isEnt and Theme.AccentSuccess or Theme.BorderLight, 1)
+    badge.TextSize = 10
+    badge.TextColor3 = isEnt and Theme.AccentSuccess or Theme.TextPrimary
+    badge.BackgroundColor3 = isEnt and Color3.fromRGB(16, 40, 28) or Theme.AccentPrimary
+    badge.Size = UDim2.new(0, 180, 0, 26)
+    badge.Position = UDim2.new(0, 195, 0.5, -13)
+    Theme.AddCorner(badge, Theme.CornerSmall)
+    Theme.AddStroke(badge, isEnt and Theme.AccentSuccess or Theme.BorderLight, 1)
     badge.Parent = header
 
     -- License Activation Modal Dialog
@@ -577,20 +577,20 @@ function Interface:BuildUI()
     contentArea.Parent = main
     self.ContentArea = contentArea
 
-    -- Navigation buttons (Cyber-Tribal Rootkit Monospace Hex Navigation)
+    -- Navigation buttons (Clean, Readable and Professional)
     local tabs = {
-        {"Dashboard", "[0x01] PLACE_OVERRIDE"},
-        {"Selector", "[0x02] RAYCAST_ISOLATOR"},
-        {"AudioRipper", "[0x03] AUDIO_DESTRUCTOR"},
-        {"LightingRipper", "[0x04] ATMOS_PRESET"},
-        {"GuiRipper", "[0x05] GUI_DECOMPILER"},
-        {"Network", "[0x06] PACKET_SNIFFER"},
-        {"Universe", "[0x07] UNIVERSE_HIJACK"},
-        {"ObjExport", "[0x08] OBJ_3D_EXTRACT"},
-        {"Tutorial", "[0x09] RUNTIME_MANUAL"},
-        {"Settings", "[0x0A] ROOT_CONFIG"},
-        {"Console", "[0x0B] RAW_SYS_LOGS"},
-        {"About", "[0x0C] KERNEL_INFO"}
+        {"Dashboard", "⚡ Dashboard"},
+        {"Selector", "🎯 Selecionar"},
+        {"AudioRipper", "🎵 Áudios"},
+        {"LightingRipper", "☀️ Iluminação"},
+        {"GuiRipper", "🖥️ Interfaces"},
+        {"Network", "📡 Rede"},
+        {"Universe", "🌌 Universos"},
+        {"ObjExport", "📦 Exportar 3D"},
+        {"Tutorial", "📖 Como Usar"},
+        {"Settings", "⚙️ Ajustes"},
+        {"Console", "📜 Logs"},
+        {"About", "ℹ️ Sobre"}
     }
 
     self.TabFrames = {}
@@ -705,20 +705,18 @@ end
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
-    -- Big Action Clone Button (Cyber-Tribal Rootkit Overdrive Button)
+    -- Big Action Clone Button (Clean, Solid, Prominent)
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
-    cloneBtn.Text = "[ † EXECUTAR CLONE TOTAL // OVERRIDE RAW MEMORY † ]"
+    cloneBtn.Text = "⚡ SALVAR MAPA COMPLETO (.RBXLX)"
     cloneBtn.Font = Theme.FontTitle
-    cloneBtn.TextSize = 12
-    cloneBtn.TextColor3 = Theme.AccentGothic
-    cloneBtn.BackgroundColor3 = Theme.AccentSecondary
-    cloneBtn.Size = UDim2.new(1, -32, 0, 52)
+    cloneBtn.TextSize = 13
+    cloneBtn.TextColor3 = Theme.TextPrimary
+    cloneBtn.BackgroundColor3 = Theme.AccentPrimary
+    cloneBtn.Size = UDim2.new(1, -32, 0, 48)
     cloneBtn.Position = UDim2.new(0, 16, 0, 14)
     Theme.AddCorner(cloneBtn, Theme.CornerMedium)
-    local cloneStroke = Theme.AddStroke(cloneBtn, Theme.BorderNeon, 1.8)
-    Theme.StartNeonPulse(cloneStroke, Theme.BorderLight, Theme.BorderNeon, 3.5)
-    Theme.AddGradient(cloneBtn, Color3.fromRGB(255, 0, 60), Color3.fromRGB(110, 0, 190), 45)
+    Theme.AddStroke(cloneBtn, Theme.BorderLight, 1)
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
@@ -728,19 +726,19 @@ function Interface:BuildDashboardTab()
 
     -- Preset Selection Container
     local presetLabel = Instance.new("TextLabel")
-    presetLabel.Text = "[CONFIG_PROFILE] SELECT DUMP EXTRACTION MODE:"
+    presetLabel.Text = "MODO DE EXTRAÇÃO / PRESET:"
     presetLabel.Font = Theme.FontSemiBold
-    presetLabel.TextSize = 10
-    presetLabel.TextColor3 = Theme.TextMuted
+    presetLabel.TextSize = 11
+    presetLabel.TextColor3 = Theme.TextSecondary
     presetLabel.TextXAlignment = Enum.TextXAlignment.Left
     presetLabel.Size = UDim2.new(1, -32, 0, 18)
-    presetLabel.Position = UDim2.new(0, 16, 0, 76)
+    presetLabel.Position = UDim2.new(0, 16, 0, 72)
     presetLabel.BackgroundTransparency = 1
     presetLabel.Parent = parent
 
     local presetContainer = Instance.new("Frame")
     presetContainer.Size = UDim2.new(1, -32, 0, 34)
-    presetContainer.Position = UDim2.new(0, 16, 0, 96)
+    presetContainer.Position = UDim2.new(0, 16, 0, 94)
     presetContainer.BackgroundTransparency = 1
     presetContainer.Parent = parent
 
@@ -752,10 +750,10 @@ function Interface:BuildDashboardTab()
 
     local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
     local presetDisplay = {
-        Full = "[0x01] FULL_DUMP",
-        Fast = "[0x02] FAST_STREAM",
-        VisualsOnly = "[0x03] VISUAL_ONLY",
-        ScriptsOnly = "[0x04] BYTECODE_ONLY"
+        Full = "⚡ Completo",
+        Fast = "🚀 Rápido",
+        VisualsOnly = "🎨 Apenas Mapa",
+        ScriptsOnly = "📜 Apenas Scripts"
     }
 
     self.PresetButtons = {}
@@ -763,14 +761,13 @@ function Interface:BuildDashboardTab()
         local btn = Instance.new("TextButton")
         btn.Text = presetDisplay[pKey]
         btn.Font = Theme.FontSemiBold
-        btn.TextSize = 9
-        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.AccentDanger or Theme.TextSecondary
+        btn.TextSize = 10
+        btn.TextColor3 = (self.Config.Mode == pKey) and Theme.TextPrimary or Theme.TextSecondary
         btn.BackgroundColor3 = (self.Config.Mode == pKey) and Theme.CardActive or Theme.CardBg
-        btn.BackgroundTransparency = (self.Config.Mode == pKey) and 0 or Theme.CardTransparency
         btn.Size = UDim2.new(0.25, -5, 1, 0)
         btn.LayoutOrder = i
         Theme.AddCorner(btn, Theme.CornerSmall)
-        Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.BorderNeon or Theme.Border, 1)
+        Theme.AddStroke(btn, (self.Config.Mode == pKey) and Theme.BorderLight or Theme.Border, 1)
         btn.Parent = presetContainer
         self.PresetButtons[pKey] = btn
 
@@ -779,36 +776,34 @@ function Interface:BuildDashboardTab()
             for k, b in pairs(self.PresetButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
                 if k == pKey then
-                    b.TextColor3 = Theme.AccentDanger
+                    b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    b.BackgroundTransparency = 0
-                    if stroke then stroke.Color = Theme.BorderNeon end
+                    if stroke then stroke.Color = Theme.BorderLight end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    b.BackgroundTransparency = Theme.CardTransparency
                     if stroke then stroke.Color = Theme.Border end
                 end
             end
-            self:Log("Dump mode set to: " .. pKey)
+            self:Log("Modo selecionado: " .. pKey)
         end)
     end
 
     -- Format Selector Container
     local formatLabel = Instance.new("TextLabel")
-    formatLabel.Text = "[OUTPUT_TYPE] SERIALIZATION FILE FORMAT:"
+    formatLabel.Text = "FORMATO DO ARQUIVO:"
     formatLabel.Font = Theme.FontSemiBold
-    formatLabel.TextSize = 10
-    formatLabel.TextColor3 = Theme.TextMuted
+    formatLabel.TextSize = 11
+    formatLabel.TextColor3 = Theme.TextSecondary
     formatLabel.TextXAlignment = Enum.TextXAlignment.Left
     formatLabel.Size = UDim2.new(1, -32, 0, 18)
-    formatLabel.Position = UDim2.new(0, 16, 0, 138)
+    formatLabel.Position = UDim2.new(0, 16, 0, 136)
     formatLabel.BackgroundTransparency = 1
     formatLabel.Parent = parent
 
     local formatContainer = Instance.new("Frame")
     formatContainer.Size = UDim2.new(1, -32, 0, 30)
-    formatContainer.Position = UDim2.new(0, 16, 0, 158)
+    formatContainer.Position = UDim2.new(0, 16, 0, 156)
     formatContainer.BackgroundTransparency = 1
     formatContainer.Parent = parent
 
@@ -819,9 +814,9 @@ function Interface:BuildDashboardTab()
     formatLayout.Parent = formatContainer
 
     local formats = {
-        {"rbxlx", "[0x01] RBXLX (XML)"},
-        {"rbxl", "[0x02] RBXL (BINARY)"},
-        {"lua", "[0x03] LUAU (STUDIO SCRIPT)"}
+        {"rbxlx", "RBXLX (Studio XML)"},
+        {"rbxl", "RBXL (Binário)"},
+        {"lua", "LUAU (Script)"}
     }
     self.FormatButtons = {}
 
@@ -830,14 +825,13 @@ function Interface:BuildDashboardTab()
         local fBtn = Instance.new("TextButton")
         fBtn.Text = fLabel
         fBtn.Font = Theme.FontSemiBold
-        fBtn.TextSize = 9
-        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.AccentDanger or Theme.TextSecondary
+        fBtn.TextSize = 10
+        fBtn.TextColor3 = (self.Config.Format == fKey) and Theme.TextPrimary or Theme.TextSecondary
         fBtn.BackgroundColor3 = (self.Config.Format == fKey) and Theme.CardActive or Theme.CardBg
-        fBtn.BackgroundTransparency = (self.Config.Format == fKey) and 0 or Theme.CardTransparency
         fBtn.Size = UDim2.new(0.333, -5, 1, 0)
         fBtn.LayoutOrder = i
         Theme.AddCorner(fBtn, Theme.CornerSmall)
-        Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.BorderNeon or Theme.Border, 1)
+        Theme.AddStroke(fBtn, (self.Config.Format == fKey) and Theme.BorderLight or Theme.Border, 1)
         fBtn.Parent = formatContainer
         self.FormatButtons[fKey] = fBtn
 
@@ -846,37 +840,34 @@ function Interface:BuildDashboardTab()
             for k, b in pairs(self.FormatButtons) do
                 local stroke = b:FindFirstChildOfClass("UIStroke")
                 if k == fKey then
-                    b.TextColor3 = Theme.AccentDanger
+                    b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    b.BackgroundTransparency = 0
-                    if stroke then stroke.Color = Theme.BorderNeon end
+                    if stroke then stroke.Color = Theme.BorderLight end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    b.BackgroundTransparency = Theme.CardTransparency
                     if stroke then stroke.Color = Theme.Border end
                 end
             end
-            self:Log("Format set to: ." .. fKey)
+            self:Log("Formato definido: ." .. fKey)
         end)
     end
 
-    -- Progress Container (Industrial Alloy Card)
+    -- Progress Container (Clean High-Contrast Card)
     local progressCard = Instance.new("Frame")
     progressCard.Size = UDim2.new(1, -32, 0, 114)
     progressCard.Position = UDim2.new(0, 16, 0, 196)
     progressCard.BackgroundColor3 = Theme.CardBg
-    progressCard.BackgroundTransparency = 0.05
     Theme.AddCorner(progressCard, Theme.CornerMedium)
     Theme.AddStroke(progressCard, Theme.Border, 1)
     progressCard.Parent = parent
 
     local statusHeader = Instance.new("TextLabel")
     statusHeader.Name = "StatusHeader"
-    statusHeader.Text = "[SYS_STATUS] IDLE // READY FOR RAW DUMP"
+    statusHeader.Text = "STATUS: PRONTO PARA SALVAR"
     statusHeader.Font = Theme.FontSemiBold
-    statusHeader.TextSize = 11
-    statusHeader.TextColor3 = Theme.AccentAcid
+    statusHeader.TextSize = 12
+    statusHeader.TextColor3 = Theme.AccentSuccess
     statusHeader.TextXAlignment = Enum.TextXAlignment.Left
     statusHeader.Size = UDim2.new(0.7, 0, 0, 20)
     statusHeader.Position = UDim2.new(0, 12, 0, 10)
@@ -888,8 +879,8 @@ function Interface:BuildDashboardTab()
     pctLabel.Name = "PctLabel"
     pctLabel.Text = "0%"
     pctLabel.Font = Theme.FontTitle
-    pctLabel.TextSize = 13
-    pctLabel.TextColor3 = Theme.AccentCyan
+    pctLabel.TextSize = 14
+    pctLabel.TextColor3 = Theme.TextPrimary
     pctLabel.TextXAlignment = Enum.TextXAlignment.Right
     pctLabel.Size = UDim2.new(0.25, 0, 0, 20)
     pctLabel.Position = UDim2.new(0.72, 0, 0, 10)
@@ -901,23 +892,22 @@ function Interface:BuildDashboardTab()
     local barTrack = Instance.new("Frame")
     barTrack.Size = UDim2.new(1, -24, 0, 6)
     barTrack.Position = UDim2.new(0, 12, 0, 36)
-    barTrack.BackgroundColor3 = Color3.fromRGB(6, 5, 10)
+    barTrack.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     Theme.AddCorner(barTrack, Theme.CornerPill)
     barTrack.Parent = progressCard
 
     local barFill = Instance.new("Frame")
     barFill.Size = UDim2.new(0, 0, 1, 0)
-    barFill.BackgroundColor3 = Theme.AccentSecondary
+    barFill.BackgroundColor3 = Theme.AccentPrimary
     Theme.AddCorner(barFill, Theme.CornerPill)
-    Theme.AddGradient(barFill, Theme.AccentSecondary, Theme.AccentPrimary, 0)
     barFill.Parent = barTrack
     self.ProgressBarFill = barFill
 
     local statusDetail = Instance.new("TextLabel")
     statusDetail.Name = "StatusDetail"
-    statusDetail.Text = "[RAW_STREAM] 0x4F 0xAA 0x12 0xFF 0x00 0x8C 0xDE 0xAD"
-    statusDetail.Font = Theme.FontCode
-    statusDetail.TextSize = 9
+    statusDetail.Text = "Clique no botão azul acima para iniciar o processo."
+    statusDetail.Font = Theme.FontRegular
+    statusDetail.TextSize = 11
     statusDetail.TextColor3 = Theme.TextMuted
     statusDetail.TextXAlignment = Enum.TextXAlignment.Left
     statusDetail.Size = UDim2.new(1, -24, 0, 18)
@@ -925,19 +915,6 @@ function Interface:BuildDashboardTab()
     statusDetail.BackgroundTransparency = 1
     statusDetail.Parent = progressCard
     self.StatusDetail = statusDetail
-
-    -- Live Hex Stream Ticker Animation
-    local lastTicker = os.clock()
-    local runServ = game:GetService("RunService")
-    runServ.RenderStepped:Connect(function()
-        local now = os.clock()
-        if (now - lastTicker) >= 0.35 then
-            lastTicker = now
-            if statusDetail and statusDetail.Parent and not self.Engine.IsRunning then
-                statusDetail.Text = "[RAW_STREAM] " .. Theme.GenerateHexStream(7)
-            end
-        end
-    end)
 
     -- Quick Action Copy Buttons
     local copyBar = Instance.new("Frame")
@@ -953,10 +930,10 @@ function Interface:BuildDashboardTab()
     copyLayout.Parent = copyBar
 
     local copyFilePathBtn = Instance.new("TextButton")
-    copyFilePathBtn.Text = "[ 0x01: COPY FILE ]"
+    copyFilePathBtn.Text = "📋 Copiar Arquivo"
     copyFilePathBtn.Font = Theme.FontSemiBold
-    copyFilePathBtn.TextSize = 9
-    copyFilePathBtn.TextColor3 = Theme.TextSecondary
+    copyFilePathBtn.TextSize = 10
+    copyFilePathBtn.TextColor3 = Theme.TextPrimary
     copyFilePathBtn.BackgroundColor3 = Theme.CardHover
     copyFilePathBtn.Size = UDim2.new(0.5, -3, 1, 0)
     copyFilePathBtn.LayoutOrder = 1
@@ -968,15 +945,15 @@ function Interface:BuildDashboardTab()
         local name = self.SavedFilePath
         if #name == 0 then name = self.Engine:GetDefaultFileName() end
         Environment.SetClipboard(name)
-        copyFilePathBtn.Text = "[OK] COPIED!"
-        task.delay(2, function() copyFilePathBtn.Text = "[ 0x01: COPY FILE ]" end)
+        copyFilePathBtn.Text = "✓ Copiado!"
+        task.delay(2, function() copyFilePathBtn.Text = "📋 Copiar Arquivo" end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
-    copyAssetsPathBtn.Text = "[ 0x02: COPY ASSETS ]"
+    copyAssetsPathBtn.Text = "📁 Copiar Pasta Assets"
     copyAssetsPathBtn.Font = Theme.FontSemiBold
-    copyAssetsPathBtn.TextSize = 9
-    copyAssetsPathBtn.TextColor3 = Theme.TextSecondary
+    copyAssetsPathBtn.TextSize = 10
+    copyAssetsPathBtn.TextColor3 = Theme.TextPrimary
     copyAssetsPathBtn.BackgroundColor3 = Theme.CardHover
     copyAssetsPathBtn.Size = UDim2.new(0.5, -3, 1, 0)
     copyAssetsPathBtn.LayoutOrder = 2
@@ -988,8 +965,8 @@ function Interface:BuildDashboardTab()
         local name = self.SavedAssetPath
         if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
         Environment.SetClipboard(name)
-        copyAssetsPathBtn.Text = "[OK] COPIED!"
-        task.delay(2, function() copyAssetsPathBtn.Text = "[ 0x02: COPY ASSETS ]" end)
+        copyAssetsPathBtn.Text = "✓ Copiado!"
+        task.delay(2, function() copyAssetsPathBtn.Text = "📁 Copiar Pasta Assets" end)
     end)
 end
 
@@ -1010,7 +987,7 @@ function Interface:BuildSelectorTab()
     scroll.Parent = parent
 
     local headerLbl = Instance.new("TextLabel")
-    headerLbl.Text = "TARGET ISOLATOR // 3D RAYCAST"
+    headerLbl.Text = "🎯 SELETOR & ISOLADOR DE OBJETOS 3D"
     headerLbl.Font = Theme.FontTitle
     headerLbl.TextSize = 13
     headerLbl.TextColor3 = Theme.AccentCyan
@@ -1020,18 +997,17 @@ function Interface:BuildSelectorTab()
     headerLbl.BackgroundTransparency = 1
     headerLbl.Parent = scroll
 
-    -- 1. In-World 3D Raycast Click Selector Button (Bubble Button)
+    -- 1. In-World 3D Raycast Click Selector Button
     local raycastBtn = Instance.new("TextButton")
-    raycastBtn.Text = "ENABLE 3D RAYCAST SELECTOR"
+    raycastBtn.Text = "🎯 ATIVAR MIRA 3D (CLIQUE NO OBJETO NO MAPA)"
     raycastBtn.Font = Theme.FontTitle
     raycastBtn.TextSize = 11
-    raycastBtn.TextColor3 = Theme.AccentSkull
+    raycastBtn.TextColor3 = Theme.TextPrimary
     raycastBtn.BackgroundColor3 = Theme.AccentPrimary
     raycastBtn.Size = UDim2.new(1, -24, 0, 38)
     raycastBtn.Position = UDim2.new(0, 12, 0, 42)
     Theme.AddCorner(raycastBtn, Theme.CornerMedium)
-    Theme.AddStroke(raycastBtn, Theme.BorderNeon, 1.5)
-    Theme.AddGradient(raycastBtn, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 45)
+    Theme.AddStroke(raycastBtn, Theme.BorderLight, 1)
     raycastBtn.Parent = scroll
 
     -- 2. Search by Name Textbox
@@ -1041,19 +1017,18 @@ function Interface:BuildSelectorTab()
     searchBox.TextSize = 11
     searchBox.TextColor3 = Theme.TextPrimary
     searchBox.PlaceholderColor3 = Theme.TextMuted
-    searchBox.BackgroundColor3 = Color3.fromRGB(10, 8, 16)
+    searchBox.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     searchBox.Size = UDim2.new(1, -24, 0, 36)
     searchBox.Position = UDim2.new(0, 12, 0, 88)
     Theme.AddCorner(searchBox, Theme.CornerSmall)
     Theme.AddStroke(searchBox, Theme.Border, 1)
     searchBox.Parent = scroll
 
-    -- 3. Selected Target Info Card (Frosted Acrylic with Real-Time ViewportFrame)
+    -- 3. Selected Target Info Card
     local infoCard = Instance.new("Frame")
     infoCard.Size = UDim2.new(1, -24, 0, 106)
     infoCard.Position = UDim2.new(0, 12, 0, 132)
-    infoCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
-    infoCard.BackgroundTransparency = 0.3
+    infoCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(infoCard, Theme.CornerMedium)
     Theme.AddStroke(infoCard, Theme.Border, 1)
     infoCard.Parent = scroll
@@ -1062,10 +1037,9 @@ function Interface:BuildSelectorTab()
     local vpFrame = Instance.new("ViewportFrame")
     vpFrame.Size = UDim2.new(0, 90, 0, 90)
     vpFrame.Position = UDim2.new(1, -98, 0, 8)
-    vpFrame.BackgroundColor3 = Color3.fromRGB(8, 6, 14)
-    vpFrame.BackgroundTransparency = 0.2
+    vpFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     Theme.AddCorner(vpFrame, Theme.CornerSmall)
-    Theme.AddStroke(vpFrame, Theme.BorderNeon, 1, 0.5)
+    Theme.AddStroke(vpFrame, Theme.BorderLight, 1)
     vpFrame.Parent = infoCard
 
     local vpCam = Instance.new("Camera")
@@ -1148,11 +1122,11 @@ function Interface:BuildSelectorTab()
         if inst:IsA("BasePart") then parts = parts + 1 end
         if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
 
-        targetTitle.Text = string.format("[TARGET] %s (%s)", inst.Name, inst.ClassName)
+        targetTitle.Text = string.format("[ALVO] %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.AccentCyan
-        targetStats.Text = string.format("[STATS] %d Parts • %d Meshes • %d Scripts", parts, meshes, scripts)
-        targetStats.TextColor3 = Theme.AccentAcid
-        targetPath.Text = "[PATH] " .. inst:GetFullName()
+        targetStats.Text = string.format("• %d Peças • %d Malhas • %d Scripts", parts, meshes, scripts)
+        targetStats.TextColor3 = Theme.AccentSuccess
+        targetPath.Text = "Caminho: " .. inst:GetFullName()
 
         -- In-game visual neon bounding highlight
         pcall(function()
@@ -1163,9 +1137,9 @@ function Interface:BuildSelectorTab()
             if inst:IsA("Model") or inst:IsA("BasePart") then
                 local h = Instance.new("Highlight")
                 h.Name = "HSI_TargetHighlight"
-                h.FillColor = Theme.AccentSecondary
+                h.FillColor = Theme.AccentPrimary
                 h.FillTransparency = 0.65
-                h.OutlineColor = Theme.BorderNeon
+                h.OutlineColor = Theme.BorderLight
                 h.OutlineTransparency = 0.1
                 h.Adornee = inst
                 h.Parent = safeContainer
@@ -1190,7 +1164,7 @@ function Interface:BuildSelectorTab()
                         sz = clone.Size
                     end
 
-                    targetDims.Text = string.format("📐 Dimensions: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
+                    targetDims.Text = string.format("📐 Tamanho: %.1f x %.1f x %.1f studs", sz.X, sz.Y, sz.Z)
 
                     local maxDim = math.max(sz.X, sz.Y, sz.Z)
                     local camDist = math.clamp(maxDim * 1.5, 4, 250)
@@ -1212,12 +1186,12 @@ function Interface:BuildSelectorTab()
                     end)
                 end
             else
-                targetDims.Text = "📐 Type: " .. inst.ClassName
+                targetDims.Text = "📐 Tipo: " .. inst.ClassName
             end
         end)
     end
 
-    -- 4. Action Buttons Container (UIListLayout Pixel-Perfect Horizontal Grid)
+    -- 4. Action Buttons Container
     local actionBtnContainer = Instance.new("Frame")
     actionBtnContainer.Size = UDim2.new(1, -24, 0, 38)
     actionBtnContainer.Position = UDim2.new(0, 12, 0, 246)
@@ -1231,57 +1205,52 @@ function Interface:BuildSelectorTab()
     actionLayout.Parent = actionBtnContainer
 
     local btnSaveSingle = Instance.new("TextButton")
-    btnSaveSingle.Text = "💾 Save Model (.rbxm)"
+    btnSaveSingle.Text = "💾 Salvar Modelo (.rbxm)"
     btnSaveSingle.Font = Theme.FontTitle
     btnSaveSingle.TextSize = 10
-    btnSaveSingle.TextColor3 = Theme.AccentSkull
+    btnSaveSingle.TextColor3 = Theme.TextPrimary
     btnSaveSingle.BackgroundColor3 = Theme.AccentPrimary
     btnSaveSingle.Size = UDim2.new(0.35, -4, 1, 0)
     btnSaveSingle.LayoutOrder = 1
     Theme.AddCorner(btnSaveSingle, Theme.CornerMedium)
-    Theme.AddStroke(btnSaveSingle, Theme.BorderNeon, 1)
+    Theme.AddStroke(btnSaveSingle, Theme.BorderLight, 1)
     btnSaveSingle.Parent = actionBtnContainer
 
     local btnExportWeb3D = Instance.new("TextButton")
-    btnExportWeb3D.Text = "🌐 3D Web Viewer"
+    btnExportWeb3D.Text = "🌐 Visualizar 3D Web"
     btnExportWeb3D.Font = Theme.FontTitle
     btnExportWeb3D.TextSize = 10
-    btnExportWeb3D.TextColor3 = Theme.AccentSkull
-    btnExportWeb3D.BackgroundColor3 = Color3.fromRGB(15, 12, 28)
+    btnExportWeb3D.TextColor3 = Theme.TextPrimary
+    btnExportWeb3D.BackgroundColor3 = Theme.CardHover
     btnExportWeb3D.Size = UDim2.new(0.35, -4, 1, 0)
     btnExportWeb3D.LayoutOrder = 2
     Theme.AddCorner(btnExportWeb3D, Theme.CornerMedium)
-    Theme.AddStroke(btnExportWeb3D, Theme.BorderLight, 1)
+    Theme.AddStroke(btnExportWeb3D, Theme.Border, 1)
     btnExportWeb3D.Parent = actionBtnContainer
 
-    local btnCopyCode = Instance.new("TextButton")
-    btnCopyCode.Text = "📋 Copy Luau Code"
-    btnCopyCode.Parent = actionBtnContainer
-
     local btnAddToPack = Instance.new("TextButton")
-    btnAddToPack.Text = "➕ Add to Batch"
+    btnAddToPack.Text = "➕ Adicionar ao Lote"
     btnAddToPack.Font = Theme.FontTitle
     btnAddToPack.TextSize = 11
-    btnAddToPack.TextColor3 = Theme.AccentSkull
+    btnAddToPack.TextColor3 = Theme.TextPrimary
     btnAddToPack.BackgroundColor3 = Theme.CardActive
-    btnAddToPack.Size = UDim2.new(0.32, -4, 1, 0)
+    btnAddToPack.Size = UDim2.new(0.3, -4, 1, 0)
     btnAddToPack.LayoutOrder = 3
     Theme.AddCorner(btnAddToPack, Theme.CornerMedium)
     Theme.AddStroke(btnAddToPack, Theme.BorderLight, 1)
     btnAddToPack.Parent = actionBtnContainer
 
-    -- 5. Multi-Select Package Card (Frosted Acrylic)
+    -- 5. Multi-Select Package Card
     local packCard = Instance.new("Frame")
     packCard.Size = UDim2.new(1, -24, 0, 110)
     packCard.Position = UDim2.new(0, 12, 0, 292)
-    packCard.BackgroundColor3 = Color3.fromRGB(12, 9, 20)
-    packCard.BackgroundTransparency = 0.3
+    packCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(packCard, Theme.CornerMedium)
     Theme.AddStroke(packCard, Theme.Border, 1)
     packCard.Parent = scroll
 
     local packTitle = Instance.new("TextLabel")
-    packTitle.Text = "MULTI-TARGET PACKAGE: 0 ITENS"
+    packTitle.Text = "PACOTE DE OBJETOS: 0 ITENS"
     packTitle.Font = Theme.FontSemiBold
     packTitle.TextSize = 11
     packTitle.TextColor3 = Theme.AccentCyan
@@ -1292,11 +1261,11 @@ function Interface:BuildSelectorTab()
     packTitle.Parent = packCard
 
     local btnClearPack = Instance.new("TextButton")
-    btnClearPack.Text = "Limpar"
+    btnClearPack.Text = "🗑️ Limpar"
     btnClearPack.Font = Theme.FontSemiBold
     btnClearPack.TextSize = 10
     btnClearPack.TextColor3 = Theme.AccentDanger
-    btnClearPack.BackgroundColor3 = Color3.fromRGB(24, 14, 22)
+    btnClearPack.BackgroundColor3 = Color3.fromRGB(30, 18, 24)
     btnClearPack.Size = UDim2.new(0.24, 0, 0, 24)
     btnClearPack.Position = UDim2.new(0.73, 0, 0, 8)
     Theme.AddCorner(btnClearPack, Theme.CornerSmall)
@@ -1304,16 +1273,15 @@ function Interface:BuildSelectorTab()
     btnClearPack.Parent = packCard
 
     local btnSavePack = Instance.new("TextButton")
-    btnSavePack.Text = "EXPORT BATCH PACKAGE (.rbxm)"
+    btnSavePack.Text = "📦 SALVAR PACOTE COM TODOS OS OBJETOS (.RBXM)"
     btnSavePack.Font = Theme.FontTitle
     btnSavePack.TextSize = 11
-    btnSavePack.TextColor3 = Theme.AccentSkull
-    btnSavePack.BackgroundColor3 = Theme.AccentPrimary
+    btnSavePack.TextColor3 = Theme.TextPrimary
+    btnSavePack.BackgroundColor3 = Theme.AccentSecondary
     btnSavePack.Size = UDim2.new(1, -20, 0, 38)
     btnSavePack.Position = UDim2.new(0, 10, 0, 56)
     Theme.AddCorner(btnSavePack, Theme.CornerMedium)
-    Theme.AddStroke(btnSavePack, Theme.BorderNeon, 1.2)
-    Theme.AddGradient(btnSavePack, Color3.fromRGB(147, 51, 234), Color3.fromRGB(88, 28, 135), 0)
+    Theme.AddStroke(btnSavePack, Theme.BorderLight, 1)
     btnSavePack.Parent = packCard
 
     -- 6. Result & Status Label
@@ -1482,15 +1450,15 @@ function Interface:BuildAudioRipperTab()
     topLayout.Parent = topBar
 
     local scanAudioBtn = Instance.new("TextButton")
-    scanAudioBtn.Text = "SCAN ALL AUDIO"
+    scanAudioBtn.Text = "🎵 BUSCAR TODOS OS SONS"
     scanAudioBtn.Font = Theme.FontSemiBold
     scanAudioBtn.TextSize = 10
-    scanAudioBtn.TextColor3 = Theme.AccentSkull
+    scanAudioBtn.TextColor3 = Theme.TextPrimary
     scanAudioBtn.BackgroundColor3 = Theme.AccentPrimary
     scanAudioBtn.Size = UDim2.new(0.38, -4, 1, 0)
     scanAudioBtn.LayoutOrder = 1
     Theme.AddCorner(scanAudioBtn, Theme.CornerMedium)
-    Theme.AddStroke(scanAudioBtn, Theme.BorderNeon, 1)
+    Theme.AddStroke(scanAudioBtn, Theme.BorderLight, 1)
     scanAudioBtn.Parent = topBar
 
     local exportAudioListBtn = Instance.new("TextButton")
@@ -1499,7 +1467,6 @@ function Interface:BuildAudioRipperTab()
     exportAudioListBtn.TextSize = 10
     exportAudioListBtn.TextColor3 = Theme.TextPrimary
     exportAudioListBtn.BackgroundColor3 = Theme.CardBg
-    exportAudioListBtn.BackgroundTransparency = Theme.CardTransparency
     exportAudioListBtn.Size = UDim2.new(0.38, -4, 1, 0)
     exportAudioListBtn.LayoutOrder = 2
     Theme.AddCorner(exportAudioListBtn, Theme.CornerMedium)
@@ -1511,7 +1478,7 @@ function Interface:BuildAudioRipperTab()
     stopAudioBtn.Font = Theme.FontSemiBold
     stopAudioBtn.TextSize = 10
     stopAudioBtn.TextColor3 = Theme.AccentDanger
-    stopAudioBtn.BackgroundColor3 = Color3.fromRGB(24, 14, 22)
+    stopAudioBtn.BackgroundColor3 = Color3.fromRGB(30, 18, 24)
     stopAudioBtn.Size = UDim2.new(0.24, -4, 1, 0)
     stopAudioBtn.LayoutOrder = 3
     Theme.AddCorner(stopAudioBtn, Theme.CornerMedium)
@@ -1525,7 +1492,7 @@ function Interface:BuildAudioRipperTab()
     searchBox.TextSize = 11
     searchBox.TextColor3 = Theme.TextPrimary
     searchBox.PlaceholderColor3 = Theme.TextMuted
-    searchBox.BackgroundColor3 = Color3.fromRGB(10, 8, 16)
+    searchBox.BackgroundColor3 = Color3.fromRGB(15, 17, 23)
     searchBox.Size = UDim2.new(1, -32, 0, 30)
     searchBox.Position = UDim2.new(0, 16, 0, 48)
     Theme.AddCorner(searchBox, Theme.CornerSmall)
@@ -2015,7 +1982,6 @@ function Interface:BuildUniverseTab()
                 local row = Instance.new("Frame")
                 row.Size = UDim2.new(1, -12, 0, 32)
                 row.BackgroundColor3 = Theme.CardBg
-                row.BackgroundTransparency = 0.2
                 Theme.AddCorner(row, Theme.CornerSmall)
                 Theme.AddStroke(row, Theme.Border, 1)
                 row.Parent = placeScroll
@@ -2026,10 +1992,30 @@ function Interface:BuildUniverseTab()
                 pName.TextSize = 10
                 pName.TextColor3 = pInfo.IsRoot and Theme.AccentCyan or Theme.TextPrimary
                 pName.TextXAlignment = Enum.TextXAlignment.Left
-                pName.Size = UDim2.new(0.7, 0, 1, 0)
+                pName.Size = UDim2.new(0.55, 0, 1, 0)
                 pName.Position = UDim2.new(0, 10, 0, 0)
                 pName.BackgroundTransparency = 1
                 pName.Parent = row
+
+                local tpBtn = Instance.new("TextButton")
+                tpBtn.Text = "🚀 Teleportar"
+                tpBtn.Font = Theme.FontSemiBold
+                tpBtn.TextSize = 10
+                tpBtn.TextColor3 = Theme.TextPrimary
+                tpBtn.BackgroundColor3 = Theme.AccentPrimary
+                tpBtn.Size = UDim2.new(0, 78, 0, 22)
+                tpBtn.Position = UDim2.new(1, -164, 0.5, -11)
+                Theme.AddCorner(tpBtn, Theme.CornerPill)
+                tpBtn.Parent = row
+
+                Theme.AnimateButton(tpBtn, function()
+                    tpBtn.Text = "Indo..."
+                    pcall(function()
+                        local TeleportService = game:GetService("TeleportService")
+                        local Players = game:GetService("Players")
+                        TeleportService:Teleport(pInfo.PlaceId, Players.LocalPlayer)
+                    end)
+                end)
 
                 local copyIdBtn = Instance.new("TextButton")
                 copyIdBtn.Text = "Copiar ID"
@@ -2037,14 +2023,14 @@ function Interface:BuildUniverseTab()
                 copyIdBtn.TextSize = 10
                 copyIdBtn.TextColor3 = Theme.TextSecondary
                 copyIdBtn.BackgroundColor3 = Theme.CardHover
-                copyIdBtn.Size = UDim2.new(0, 80, 0, 22)
-                copyIdBtn.Position = UDim2.new(1, -88, 0.5, -11)
+                copyIdBtn.Size = UDim2.new(0, 72, 0, 22)
+                copyIdBtn.Position = UDim2.new(1, -80, 0.5, -11)
                 Theme.AddCorner(copyIdBtn, Theme.CornerPill)
                 copyIdBtn.Parent = row
 
                 Theme.AnimateButton(copyIdBtn, function()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
-                    copyIdBtn.Text = "[OK] Copiado"
+                    copyIdBtn.Text = "✓ Copiado"
                     task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
                 end)
             end
@@ -2351,21 +2337,23 @@ function Interface:BuildSettingsTab()
         {"AutoAntiAFK", "Anti-AFK Protection (Prevents Idle Disconnections)", self.Config.AutoAntiAFK},
         {"AutoExploreStreaming", "Full Map Explorer (StreamingEnabled Spatial Bypass)", self.Config.AutoExploreStreaming},
         {"StealthMode", "Stealth Mode (Anti-Cheat Client Evasion)", self.Config.StealthMode},
-        {"DownloadRawAssets", "Download Raw Assets (.mp3, .png, .mesh) to Local Folder", self.Config.DownloadRawAssets},
-        {"OptimizeGeometry", "File Geometry Optimizer (Mesh Deduplication)", self.Config.OptimizeGeometry},
-        {"SaveTerrain", "Preserve Full Terrain (Properties & Water Materials)", self.Config.SaveTerrain},
-        {"SaveTerrainVoxels", "Extract Terrain SmoothVoxels (3D Voxel Chunks)", self.Config.SaveTerrainVoxels},
-        {"SaveLighting", "Preserve Lighting, Skybox & Atmospheric Effects", self.Config.SaveLighting},
-        {"SaveSounds", "Preserve Audio Effects, Reverbs & SoundGroups", self.Config.SaveSounds},
-        {"SaveUnions", "Preserve CSG Unions & NegateOperations (Physics & ChildData)", self.Config.SaveUnions},
-        {"SaveSurfaceAppearance", "Preserve PBR Textures & SurfaceAppearances", self.Config.SaveSurfaceAppearance},
-        {"DecompileScripts", "Decompile Scripts (LocalScripts & ModuleScripts)", self.Config.DecompileScripts},
-        {"IsolateStarterPlayer", "Extract Active Player Scripts & GUIs to StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
-        {"SaveServerScriptPlaceholders", "Smart Backend Reconstruction for Server Scripts", self.Config.SaveServerScriptPlaceholders},
-        {"SynthesizeServer", "Automated Backend Synthesizer for RemoteEvents", self.Config.SynthesizeServer},
-        {"SaveNilInstances", "Save Isolated Instances (Nil Instances)", self.Config.SaveNilInstances},
-        {"SaveAttributes", "Save Modern Instance Attributes", self.Config.SaveAttributes},
-        {"SaveTags", "Save CollectionService Tags", self.Config.SaveTags},
+        {"SaveAnimations", "Capturar e Salvar Animações (KeyframeSequences para o Studio)", self.Config.SaveAnimations},
+        {"SafeAssetDownload", "Proteção de Ping (Pausa downloads se o Ping > 180ms)", self.Config.SafeAssetDownload},
+        {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh) para Pasta Local", self.Config.DownloadRawAssets},
+        {"OptimizeGeometry", "Otimizador de Geometria (Deduplicação de Malhas)", self.Config.OptimizeGeometry},
+        {"SaveTerrain", "Preservar Terreno Completo (Propriedades e Materiais)", self.Config.SaveTerrain},
+        {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (Chunks 3D)", self.Config.SaveTerrainVoxels},
+        {"SaveLighting", "Preservar Iluminação, Skybox e Efeitos Atmosféricos", self.Config.SaveLighting},
+        {"SaveSounds", "Preservar Efeitos Sonoros, Reverberação e SoundGroups", self.Config.SaveSounds},
+        {"SaveUnions", "Preservar Uniões CSG e NegateOperations", self.Config.SaveUnions},
+        {"SaveSurfaceAppearance", "Preservar Texturas PBR e SurfaceAppearances", self.Config.SaveSurfaceAppearance},
+        {"DecompileScripts", "Descompilar Scripts (LocalScripts e ModuleScripts)", self.Config.DecompileScripts},
+        {"IsolateStarterPlayer", "Isolar Scripts do Player para StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
+        {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Server Scripts", self.Config.SaveServerScriptPlaceholders},
+        {"SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer},
+        {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
+        {"SaveAttributes", "Salvar Atributos Modernos de Instâncias", self.Config.SaveAttributes},
+        {"SaveTags", "Salvar Tags do CollectionService", self.Config.SaveTags},
     }
 
     for i, item in ipairs(toggles) do
@@ -2417,6 +2405,35 @@ function Interface:BuildSettingsTab()
             self:Log("Opção alterada: " .. key .. " = " .. tostring(new))
         end)
     end
+
+    local animExportBtn = Instance.new("TextButton")
+    animExportBtn.Text = "🕺 EXPORTAR ANIMAÇÕES CAPTURADAS (.RBXM)"
+    animExportBtn.Font = Theme.FontSemiBold
+    animExportBtn.TextSize = 11
+    animExportBtn.TextColor3 = Theme.TextPrimary
+    animExportBtn.BackgroundColor3 = Theme.AccentPrimary
+    animExportBtn.Size = UDim2.new(1, -12, 0, 38)
+    animExportBtn.Position = UDim2.new(0, 0, 0, 48 + #toggles * 38)
+    Theme.AddCorner(animExportBtn, Theme.CornerMedium)
+    Theme.AddStroke(animExportBtn, Theme.BorderLight, 1)
+    animExportBtn.Parent = scroll
+
+    Theme.AnimateButton(animExportBtn, function()
+        animExportBtn.Text = "Exportando animações..."
+        task.spawn(function()
+            local AnimationRecorder = require("../Core/AnimationRecorder")
+            local success, file = AnimationRecorder.ExportRecordedAnimations()
+            if success then
+                animExportBtn.Text = "✓ Animações salvas: " .. tostring(file)
+                Environment.SetClipboard(tostring(file))
+            else
+                animExportBtn.Text = "Erro ao exportar"
+            end
+            task.delay(2.5, function()
+                animExportBtn.Text = "🕺 EXPORTAR ANIMAÇÕES CAPTURADAS (.RBXM)"
+            end)
+        end)
+    end)
 end
 
 -- 11. Console Tab
@@ -2546,10 +2563,10 @@ function Interface:BuildAboutTab()
 
     -- GitHub Link Button
     local btnGithub = Instance.new("TextButton")
-    btnGithub.Text = "[ 0x01: GITHUB ]"
+    btnGithub.Text = "GitHub"
     btnGithub.Font = Theme.FontSemiBold
-    btnGithub.TextSize = 8
-    btnGithub.TextColor3 = Theme.AccentSkull
+    btnGithub.TextSize = 10
+    btnGithub.TextColor3 = Theme.TextPrimary
     btnGithub.BackgroundColor3 = Theme.CardBg
     btnGithub.Size = UDim2.new(0.25, -4, 1, 0)
     btnGithub.LayoutOrder = 1
@@ -2559,15 +2576,15 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
-        btnGithub.Text = "[OK] COPIED!"
-        task.delay(2, function() btnGithub.Text = "[ 0x01: GITHUB ]" end)
+        btnGithub.Text = "✓ Copiado!"
+        task.delay(2, function() btnGithub.Text = "GitHub" end)
     end)
 
     -- LinkedIn Profile Button
     local btnLinkedIn = Instance.new("TextButton")
-    btnLinkedIn.Text = "[ 0x02: LINKEDIN ]"
+    btnLinkedIn.Text = "LinkedIn"
     btnLinkedIn.Font = Theme.FontSemiBold
-    btnLinkedIn.TextSize = 8
+    btnLinkedIn.TextSize = 10
     btnLinkedIn.TextColor3 = Theme.AccentCyan
     btnLinkedIn.BackgroundColor3 = Theme.CardBg
     btnLinkedIn.Size = UDim2.new(0.25, -4, 1, 0)
@@ -2578,15 +2595,15 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnLinkedIn, function()
         Environment.SetClipboard("https://www.linkedin.com/in/theo-lorentz-padilha-0b9b99287/")
-        btnLinkedIn.Text = "[OK] COPIED!"
-        task.delay(2, function() btnLinkedIn.Text = "[ 0x02: LINKEDIN ]" end)
+        btnLinkedIn.Text = "✓ Copiado!"
+        task.delay(2, function() btnLinkedIn.Text = "LinkedIn" end)
     end)
 
     -- Repository Link Button
     local btnRepo = Instance.new("TextButton")
-    btnRepo.Text = "[ 0x03: REPO ]"
+    btnRepo.Text = "Repositório"
     btnRepo.Font = Theme.FontSemiBold
-    btnRepo.TextSize = 8
+    btnRepo.TextSize = 10
     btnRepo.TextColor3 = Theme.TextPrimary
     btnRepo.BackgroundColor3 = Theme.CardBg
     btnRepo.Size = UDim2.new(0.25, -4, 1, 0)
@@ -2597,28 +2614,27 @@ function Interface:BuildAboutTab()
 
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
-        btnRepo.Text = "[OK] COPIED!"
-        task.delay(2, function() btnRepo.Text = "[ 0x03: REPO ]" end)
+        btnRepo.Text = "✓ Copiado!"
+        task.delay(2, function() btnRepo.Text = "Repositório" end)
     end)
 
     -- Discord Server Button
     local btnDiscord = Instance.new("TextButton")
-    btnDiscord.Text = "[ 0x04: DISCORD ]"
+    btnDiscord.Text = "Discord"
     btnDiscord.Font = Theme.FontSemiBold
-    btnDiscord.TextSize = 8
-    btnDiscord.TextColor3 = Theme.AccentGothic
+    btnDiscord.TextSize = 10
+    btnDiscord.TextColor3 = Theme.TextPrimary
     btnDiscord.BackgroundColor3 = Theme.AccentSecondary
     btnDiscord.Size = UDim2.new(0.25, -4, 1, 0)
     btnDiscord.LayoutOrder = 4
     Theme.AddCorner(btnDiscord, Theme.CornerSmall)
-    Theme.AddStroke(btnDiscord, Theme.BorderNeon, 1)
-    Theme.AddGradient(btnDiscord, Color3.fromRGB(255, 0, 60), Color3.fromRGB(130, 0, 220), 45)
+    Theme.AddStroke(btnDiscord, Theme.BorderLight, 1)
     btnDiscord.Parent = devBtnBar
 
     Theme.AnimateButton(btnDiscord, function()
         Environment.SetClipboard("https://discord.gg/Tk5zyA83UZ")
-        btnDiscord.Text = "[OK] COPIED!"
-        task.delay(2, function() btnDiscord.Text = "[ 0x04: DISCORD ]" end)
+        btnDiscord.Text = "✓ Copiado!"
+        task.delay(2, function() btnDiscord.Text = "Discord" end)
     end)
 
     -- System Diagnostics Card

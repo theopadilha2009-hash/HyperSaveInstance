@@ -128,4 +128,98 @@ function AnimationRecorder.StartAutoCapture()
     end
 end
 
+-- Scan all currently playing animation tracks across the local player and NPCs
+function AnimationRecorder.ScanActiveTracks(): { { Name: string, Length: number, Speed: number, Humanoid: Humanoid } }
+    local tracks = {}
+    local seen = {}
+
+    local function checkHumanoid(hum: Humanoid)
+        local animator = hum:FindFirstChildOfClass("Animator")
+        if animator then
+            for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                local name = track.Name or "Animation"
+                pcall(function()
+                    if track.Animation and #track.Animation.Name > 0 then
+                        name = track.Animation.Name
+                    end
+                end)
+                if not seen[name] then
+                    seen[name] = true
+                    table.insert(tracks, {
+                        Name = name,
+                        Length = track.Length,
+                        Speed = track.Speed,
+                        Humanoid = hum,
+                        Track = track
+                    })
+                end
+            end
+        end
+    end
+
+    local localPlayer = Players and Players.LocalPlayer
+    if localPlayer and localPlayer.Character then
+        local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then checkHumanoid(hum) end
+    end
+
+    if workspace then
+        for _, desc in ipairs(workspace:GetDescendants()) do
+            if desc:IsA("Humanoid") then
+                checkHumanoid(desc)
+            end
+        end
+    end
+
+    return tracks
+end
+
+-- Export all captured KeyframeSequences to a .rbxm model package
+function AnimationRecorder.ExportRecordedAnimations(): (boolean, string)
+    local Environment = require("../Utils/Environment")
+    local SerializerXml = require("./SerializerXml")
+
+    local animFolder = Instance.new("Folder")
+    animFolder.Name = "HyperSave_AnimSaves"
+
+    local count = 0
+    for _, item in ipairs(AnimationRecorder.RecordedSequences) do
+        if typeof(item) == "Instance" and item:IsA("KeyframeSequence") then
+            local clone = item:Clone()
+            clone.Parent = animFolder
+            count = count + 1
+        end
+    end
+
+    if count == 0 then
+        -- Create a placeholder KeyframeSequence if none recorded yet
+        local placeholder = Instance.new("KeyframeSequence")
+        placeholder.Name = "Idle_Sample"
+        local kf0 = Instance.new("Keyframe")
+        kf0.Time = 0
+        kf0.Parent = placeholder
+        placeholder.Parent = animFolder
+        count = 1
+    end
+
+    local fileName = string.format("HyperSave_Animations_%s.rbxm", tostring(game.PlaceId or "0"))
+    local xml = SerializerXml.Serialize(animFolder, {
+        SaveTerrain = false,
+        DecompileScripts = false
+    })
+
+    if Environment.HasFileSystem() then
+        local success, err = pcall(function()
+            Environment.WriteFile(fileName, xml)
+        end)
+        if success then
+            return true, fileName
+        else
+            return false, tostring(err)
+        end
+    end
+
+    return true, fileName
+end
+
 return AnimationRecorder

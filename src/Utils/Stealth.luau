@@ -17,6 +17,39 @@ function Stealth.GenerateRandomName(len: number?): string
     return table.concat(res)
 end
 
+-- Safely protect GUI instance from detection
+function Stealth.ProtectGui(gui: Instance): boolean
+    local protected = false
+    pcall(function()
+        if syn and syn.protect_gui then
+            syn.protect_gui(gui)
+            protected = true
+        elseif protectgui then
+            protectgui(gui)
+            protected = true
+        elseif protect_gui then
+            protect_gui(gui)
+            protected = true
+        end
+    end)
+    return protected
+end
+
+-- Safely request map streaming around coordinates without moving character
+function Stealth.SafeStreamAround(position: Vector3, player: any?): boolean
+    local requested = false
+    pcall(function()
+        if player and player.RequestStreamAroundAsync then
+            player:RequestStreamAroundAsync(position)
+            requested = true
+        elseif workspace and workspace.RequestStreamAroundAsync then
+            workspace:RequestStreamAroundAsync(position)
+            requested = true
+        end
+    end)
+    return requested
+end
+
 -- Safely elevate thread identity if supported by executor
 function Stealth.ElevateThread()
     pcall(function()

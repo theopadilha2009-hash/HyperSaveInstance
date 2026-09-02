@@ -118,6 +118,30 @@ function Environment.HasFileSystem(): boolean
     return type(_writefile) == "function"
 end
 
+-- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes
+function Environment.SanitizeFileName(name: string): string
+    if not name or #name == 0 then return "Unnamed" end
+    local clean = string.gsub(name, '[<>:"/\\|?*%c%z]', "_")
+    clean = string.gsub(clean, "^[%s%.]+", "")
+    clean = string.gsub(clean, "[%s%.]+$", "")
+
+    -- Guard against reserved Windows device names
+    local upper = string.upper(clean)
+    local reserved = {
+        CON = true, PRN = true, AUX = true, NUL = true,
+        COM1 = true, COM2 = true, COM3 = true, COM4 = true, COM5 = true, COM6 = true, COM7 = true, COM8 = true, COM9 = true,
+        LPT1 = true, LPT2 = true, LPT3 = true, LPT4 = true, LPT5 = true, LPT6 = true, LPT7 = true, LPT8 = true, LPT9 = true
+    }
+    if reserved[upper] then
+        clean = clean .. "_file"
+    end
+
+    if #clean > 120 then
+        clean = string.sub(clean, 1, 120)
+    end
+    return (#clean > 0 and clean) or "File"
+end
+
 function Environment.WriteFile(path: string, content: string): boolean
     if _writefile then
         local success, err = pcall(_writefile, path, content)

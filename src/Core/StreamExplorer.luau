@@ -44,17 +44,17 @@ function StreamExplorer.GetMapBoundingBox(): (Vector3, Vector3)
     return minVec, maxVec
 end
 
--- Perform automated grid sweep to load chunks
-function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current: number, total: number, pos: Vector3) -> ()): boolean
+-- Perform automated grid sweep to load chunks safely without triggering movement anti-cheats
+function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current: number, total: number, pos: Vector3) -> (), allowPhysicalTeleport: boolean?): boolean
     if not workspace.StreamingEnabled then return true end
 
-    local player = Players.LocalPlayer
-    if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return false
+    local player = nil
+    pcall(function() player = Players and Players.LocalPlayer end)
+    local hrp = nil
+    if allowPhysicalTeleport and player and player.Character then
+        hrp = player.Character:FindFirstChild("HumanoidRootPart")
     end
-
-    local hrp = player.Character.HumanoidRootPart
-    local originalCFrame = hrp.CFrame
+    local originalCFrame = hrp and hrp.CFrame
     local minVec, maxVec = StreamExplorer.GetMapBoundingBox()
 
     local step = stepSize or 512
@@ -70,10 +70,24 @@ function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current
     local completed = 0
 
     for i, targetPos in ipairs(points) do
-        pcall(function()
-            hrp.CFrame = CFrame.new(targetPos)
-        end)
-        task.wait(0.12) -- Wait for server replication chunk
+        -- 1. Stealth non-intrusive stream request (Zero character displacement)
+        local requested = false
+        if player and player.RequestStreamAroundAsync then
+            local s = pcall(function() player:RequestStreamAroundAsync(targetPos) end)
+            if s then requested = true end
+        end
+        if not requested and workspace and workspace.RequestStreamAroundAsync then
+            pcall(function() workspace:RequestStreamAroundAsync(targetPos) end)
+        end
+
+        -- 2. Physical teleportation only if explicitly allowed (Avoids anti-cheat kicks)
+        if allowPhysicalTeleport and hrp then
+            pcall(function()
+                hrp.CFrame = CFrame.new(targetPos)
+            end)
+        end
+
+        task.wait(0.08) -- Wait for server replication chunk
         completed = i
 
         if progressCallback then
@@ -81,10 +95,12 @@ function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current
         end
     end
 
-    -- Return to original position
-    pcall(function()
-        hrp.CFrame = originalCFrame
-    end)
+    -- Return to original position if physically teleported
+    if allowPhysicalTeleport and hrp and originalCFrame then
+        pcall(function()
+            hrp.CFrame = originalCFrame
+        end)
+    end
 
     return true
 end

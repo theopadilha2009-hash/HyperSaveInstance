@@ -112,9 +112,35 @@ function HyperSaveInstance.SaveScripts(customConfig: table?)
     return HyperSaveInstance.Save(cfg)
 end
 
+function HyperSaveInstance.SaveSilent(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "Ghost")
+    cfg.SilentMode = true
+    cfg.ShowUI = false
+    cfg.VerboseLogs = false
+    cfg.PlaySoundOnComplete = false
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveGhost(customConfig: table?)
+    return HyperSaveInstance.SaveSilent(customConfig)
+end
+
+function HyperSaveInstance.SaveOnlyMap(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "OnlyMap")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveUIOnly(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "UIOnly")
+    return HyperSaveInstance.Save(cfg)
+end
+
 -- Global environment injection (Universal compatibility)
 local function injectGlobals()
-    local genv = (getgenv and getgenv()) or _G
+    local genv = (getgenv and getgenv()) or nil
     if genv then
         genv.saveinstance = HyperSaveInstance.Save
         genv.saveplace = HyperSaveInstance.Save
@@ -122,30 +148,50 @@ local function injectGlobals()
         genv.HyperSaveInstance = HyperSaveInstance
         genv.UltraSmartSaveInstance = HyperSaveInstance
     end
+
+    local isSilent = Defaults.SilentMode or (genv and (genv.HyperSave_Silent or genv.SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
+    if _G and not isSilent then
+        _G.saveinstance = _G.saveinstance or HyperSaveInstance.Save
+        _G.saveplace = _G.saveplace or HyperSaveInstance.Save
+        _G.SynSaveInstance = _G.SynSaveInstance or HyperSaveInstance
+        _G.HyperSaveInstance = _G.HyperSaveInstance or HyperSaveInstance
+        _G.UltraSmartSaveInstance = _G.UltraSmartSaveInstance or HyperSaveInstance
+    end
 end
 
 pcall(injectGlobals)
 
--- Instant StarterGui Notification
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "💀 HyperSaveInstance",
-        Text = "Carregado por Theo Lorentz Padilha!",
-        Duration = 4
-    })
-end)
+-- Check if SilentMode or global silent override is active
+local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
 
-print("[💀 HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
+-- Instant StarterGui Notification (Only in non-silent mode)
+if not isSilent and Defaults.ShowUI then
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "💀 HyperSaveInstance",
+            Text = "Carregado por Theo Lorentz Padilha!",
+            Duration = 4
+        })
+    end)
+end
 
--- Auto-initialize HUD if ShowUI is enabled
-if Defaults.ShowUI then
+if Defaults.VerboseLogs and not isSilent then
+    print("[💀 HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
+end
+
+-- Auto-initialize HUD if ShowUI is enabled and not in SilentMode
+if Defaults.ShowUI and not isSilent then
     local success, result = pcall(function()
         return HyperSaveInstance.OpenUI()
     end)
     if success then
-        print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+        if Defaults.VerboseLogs and not isSilent then
+            print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+        end
     else
-        warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+        if Defaults.VerboseLogs and not isSilent then
+            warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+        end
     end
 end
 

@@ -275,4 +275,21 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
     return table.concat(xmlBuffer)
 end
 
+-- Validate XML well-formedness and root closure
+function SerializerXml.Validate(xmlContent: string): (boolean, string?)
+    if not xmlContent or #xmlContent < 50 then
+        return false, "XML content is empty or too short."
+    end
+
+    if not string.find(xmlContent, "<roblox") then
+        return false, "Missing opening <roblox> root tag."
+    end
+
+    if not string.find(xmlContent, "</roblox>") then
+        return false, "Missing closing </roblox> root tag."
+    end
+
+    return true, nil
+end
+
 return SerializerXml

@@ -757,6 +757,23 @@ if not diffRepSuccess then
 end
 print("  ✓ Place Update Diff Report exported: " .. diffRepFile)
 
+-- 6. Testing Silent / Ghost Mode & Stealth Execution
+print("--- 6. Testing Silent / Ghost Stealth Mode ---")
+local silentSuccess, silentResult = hsi.SaveSilent({ FilePath = "HyperSave_Ghost_Test.rbxlx" })
+if not silentSuccess then
+    error("SaveSilent failed: " .. tostring(silentResult))
+end
+print("  ✓ SaveSilent executed cleanly in background without GUI or audio alert!")
+
+-- 7. Testing Ghost Preset Configuration
+print("--- 7. Testing Ghost Preset Options ---")
+local ghostCfg = hsi.Defaults.ApplyPreset({}, "Ghost")
+if not ghostCfg.SilentMode then error("Ghost preset missing SilentMode!") end
+if ghostCfg.ShowUI ~= false then error("Ghost preset ShowUI should be false!") end
+if not ghostCfg.SafeStreaming then error("Ghost preset SafeStreaming should be true!") end
+if not ghostCfg.StealthMode then error("Ghost preset StealthMode should be true!") end
+print("  ✓ Ghost Preset correctly configured (SilentMode: true, ShowUI: false, SafeStreaming: true, StealthMode: true)")
+
 return "ALL_ROBLOX_CHECKS_PASSED"
 `;
 
