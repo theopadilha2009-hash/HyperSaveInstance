@@ -168,7 +168,7 @@ local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent
 if not isSilent and Defaults.ShowUI then
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "💀 HyperSaveInstance",
+            Title = "HyperSaveInstance",
             Text = "Carregado por Theo Lorentz Padilha!",
             Duration = 4
         })
@@ -176,7 +176,7 @@ if not isSilent and Defaults.ShowUI then
 end
 
 if Defaults.VerboseLogs and not isSilent then
-    print("[💀 HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
+    print("[HyperSaveInstance] Iniciando HyperSaveInstance por Theo Lorentz Padilha...")
 end
 
 -- Auto-initialize HUD if ShowUI is enabled and not in SilentMode
@@ -186,11 +186,11 @@ if Defaults.ShowUI and not isSilent then
     end)
     if success then
         if Defaults.VerboseLogs and not isSilent then
-            print("[💀 HyperSaveInstance] ✓ HUD Carregado com Sucesso! Pressione RightShift ou use o botão flutuante.")
+            print("[HyperSaveInstance] Interface carregada com sucesso! Pressione RightShift ou use o botão flutuante.")
         end
     else
         if Defaults.VerboseLogs and not isSilent then
-            warn("[💀 HyperSaveInstance] ✕ Falha ao abrir interface: " .. tostring(result))
+            warn("[HyperSaveInstance] Falha ao abrir interface: " .. tostring(result))
         end
     end
 end
