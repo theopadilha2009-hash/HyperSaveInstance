@@ -35,19 +35,19 @@ local function createInstantBanner(text, isError)
 
         local f = Instance.new("Frame")
         f.Name = "HSI_BannerFrame"
-        f.Size = UDim2.new(0, 340, 0, 48)
-        f.Position = UDim2.new(0.5, -170, 0, 24)
-        f.BackgroundColor3 = isError and Color3.fromRGB(40, 10, 20) or Color3.fromRGB(16, 12, 28)
+        f.Size = UDim2.new(0, 320, 0, 42)
+        f.Position = UDim2.new(0.5, -160, 0, 20)
+        f.BackgroundColor3 = isError and Color3.fromRGB(36, 18, 24) or Color3.fromRGB(26, 30, 40)
         f.BorderSizePixel = 0
         f.Parent = container
 
         local c = Instance.new("UICorner")
-        c.CornerRadius = UDim.new(0, 10)
+        c.CornerRadius = UDim.new(0, 6)
         c.Parent = f
 
         local s = Instance.new("UIStroke")
-        s.Color = isError and Color3.fromRGB(244, 63, 94) or Color3.fromRGB(168, 85, 247)
-        s.Thickness = 1.5
+        s.Color = isError and Color3.fromRGB(220, 38, 38) or Color3.fromRGB(44, 50, 66)
+        s.Thickness = 1
         s.Parent = f
 
         local l = Instance.new("TextLabel")
@@ -55,18 +55,18 @@ local function createInstantBanner(text, isError)
         l.Position = UDim2.new(0, 10, 0, 0)
         l.Text = text
         l.TextColor3 = Color3.fromRGB(255, 255, 255)
-        l.Font = Enum.Font.GothamBold
-        l.TextSize = 12
+        l.Font = Enum.Font.GothamMedium
+        l.TextSize = 11
         l.BackgroundTransparency = 1
         l.Parent = f
 
-        task.delay(isError and 6 or 3.5, function()
+        task.delay(isError and 5 or 3, function()
             pcall(function() f:Destroy() end)
         end)
     end)
 end
 
-createInstantBanner("⚡ [HyperSave] Baixando módulos seguros...", false)
+createInstantBanner("[HyperSave] Baixando módulos seguros...", false)
 
 local cacheBuster = tostring(os.time()) .. "_" .. tostring(math.random(100000, 999999))
 local url = "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau?nocache=" .. cacheBuster
@@ -76,26 +76,26 @@ local s, result = pcall(function()
 end)
 
 if not s or type(result) ~= "string" or #result < 10000 then
-    createInstantBanner("❌ Falha de rede ao baixar HyperSave.", true)
+    createInstantBanner("Falha de rede ao baixar HyperSave.", true)
     warn("[HyperSave] Falha ao baixar bundle: " .. tostring(result))
     return
 end
 
-createInstantBanner("💀 [HyperSave] Inicializando Suíte...", false)
+createInstantBanner("[HyperSave] Inicializando suíte...", false)
 
 local execSuccess, execFunc = pcall(function()
     return loadstring(result)
 end)
 
 if not execSuccess or type(execFunc) ~= "function" then
-    createInstantBanner("❌ Erro de compilação Luau: " .. tostring(execFunc), true)
+    createInstantBanner("Erro de compilação Luau: " .. tostring(execFunc), true)
     warn("[HyperSave] Erro no loadstring: " .. tostring(execFunc))
     return
 end
 
 local runSuccess, hsi = pcall(execFunc)
 if not runSuccess then
-    createInstantBanner("❌ Erro na execução: " .. tostring(hsi), true)
+    createInstantBanner("Erro na execução: " .. tostring(hsi), true)
     warn("[HyperSave] Erro na execução: " .. tostring(hsi))
     return
 end

@@ -1,13 +1,16 @@
 --[[
-    ================================================================================
     HyperSave Studio Importer & Repair Suite - Official Roblox Studio Plugin
-    ================================================================================
-    Solves all common issues with copied games:
-    1. HTTP 403 Forbidden Sound errors (replaces with safe fallbacks).
-    2. Infinite yields on RemoteFunction:InvokeServer (synthesizes server handlers).
-    3. Missing ServerScriptService backend logic.
-    4. Decompiled script syntax glitches and crashes.
-    5. Animation KeyframeSequence generation for user re-uploading.
+    Author: Theo Lorentz Padilha
+    Features:
+    1. 1-Click Master Repair
+    2. Synthetic Server Dispatcher & DataStore Emulation
+    3. HTTP 403 Forbidden Sound Sanitizer
+    4. Decompiled Script Shielding
+    5. PackageLink and Lock Permission Unlocker
+    6. Future & PBR Cinematic Lighting Setup
+    7. Rig & NPC Physical Stabilizer
+    8. Asset Reference Auditor
+    9. Manual Luau Code Runner
 ]]
 
 local Selection = game:GetService("Selection")
@@ -26,10 +29,10 @@ local FALLBACK_SOUNDS = {
 }
 
 -- Create Toolbar & Button in Studio
-local toolbar = plugin:CreateToolbar("💀 HyperSave Suite • Theo Lorentz Padilha")
+local toolbar = plugin:CreateToolbar("HyperSave Studio Suite")
 local openBtn = toolbar:CreateButton(
-    "💀 Reparo Mestre • Theo",
-    "Abre a central de diagnóstico, reparo de assets e reconstrução criada por Theo Lorentz Padilha",
+    "Reparo Mestre",
+    "Abre a central de diagnóstico, reparo de assets e reconstrução de mapas.",
     "rbxassetid://9069609200"
 )
 
@@ -45,84 +48,86 @@ local widgetInfo = DockWidgetPluginGuiInfo.new(
 )
 
 local widget = plugin:CreateDockWidgetPluginGui("HyperSave_StudioImporterSuite", widgetInfo)
-widget.Title = "💀 HyperSave Suite - por Theo Lorentz Padilha"
+widget.Title = "HyperSave Studio Suite"
 
 openBtn.Click:Connect(function()
     widget.Enabled = not widget.Enabled
 end)
 
--- Main UI Root (Obsidian Gothic Theme)
--- Main UI Root (Obsidian Bubble Theme)
+-- Main UI Root (Clean Dark Slate Theme)
 local root = Instance.new("Frame")
 root.Size = UDim2.new(1, 0, 1, 0)
-root.BackgroundColor3 = Color3.fromRGB(7, 5, 13)
+root.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
 root.BorderSizePixel = 0
 root.Parent = widget
 
 -- Header
 local header = Instance.new("Frame")
-header.Size = UDim2.new(1, 0, 0, 48)
-header.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
+header.Size = UDim2.new(1, 0, 0, 44)
+header.BackgroundColor3 = Color3.fromRGB(26, 30, 40)
 header.BorderSizePixel = 0
 header.Parent = root
 
-local headerStroke = Instance.new("UIStroke")
-headerStroke.Color = Color3.fromRGB(56, 40, 88)
-headerStroke.Thickness = 1
-headerStroke.Parent = header
+local headerLine = Instance.new("Frame")
+headerLine.Size = UDim2.new(1, 0, 0, 1)
+headerLine.Position = UDim2.new(0, 0, 1, -1)
+headerLine.BackgroundColor3 = Color3.fromRGB(44, 50, 66)
+headerLine.BorderSizePixel = 0
+headerLine.Parent = header
 
 local headerTitle = Instance.new("TextLabel")
-headerTitle.Text = "💀 HyperSave Suite • Theo Lorentz Padilha"
+headerTitle.Text = "HyperSave Studio Suite • Theo Lorentz Padilha"
 headerTitle.Font = Enum.Font.GothamBold
-headerTitle.TextSize = 14
+headerTitle.TextSize = 13
 headerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
 headerTitle.Size = UDim2.new(1, -20, 1, 0)
-headerTitle.Position = UDim2.new(0, 16, 0, 0)
+headerTitle.Position = UDim2.new(0, 14, 0, 0)
 headerTitle.BackgroundTransparency = 1
 headerTitle.Parent = header
 
 -- Scroll Container
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, 0, 1, -110)
-scroll.Position = UDim2.new(0, 0, 0, 48)
-scroll.BackgroundColor3 = Color3.fromRGB(9, 7, 16)
+scroll.Size = UDim2.new(1, 0, 1, -100)
+scroll.Position = UDim2.new(0, 0, 0, 44)
+scroll.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
 scroll.BorderSizePixel = 0
-scroll.ScrollBarThickness = 5
-scroll.ScrollBarImageColor3 = Color3.fromRGB(139, 92, 246)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 1380)
+scroll.ScrollBarThickness = 3
+scroll.ScrollBarImageColor3 = Color3.fromRGB(44, 50, 66)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 1180)
 scroll.Parent = root
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 10)
+layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = scroll
 
 local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0, 12)
-padding.PaddingBottom = UDim.new(0, 12)
-padding.PaddingLeft = UDim.new(0, 14)
-padding.PaddingRight = UDim.new(0, 14)
+padding.PaddingTop = UDim.new(0, 10)
+padding.PaddingBottom = UDim.new(0, 10)
+padding.PaddingLeft = UDim.new(0, 12)
+padding.PaddingRight = UDim.new(0, 12)
 padding.Parent = scroll
 
 -- Log / Status Bar at bottom
 local statusCard = Instance.new("Frame")
-statusCard.Size = UDim2.new(1, 0, 0, 62)
-statusCard.Position = UDim2.new(0, 0, 1, -62)
-statusCard.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
+statusCard.Size = UDim2.new(1, 0, 0, 56)
+statusCard.Position = UDim2.new(0, 0, 1, -56)
+statusCard.BackgroundColor3 = Color3.fromRGB(26, 30, 40)
 statusCard.BorderSizePixel = 0
 statusCard.Parent = root
 
-local statusStroke = Instance.new("UIStroke")
-statusStroke.Color = Color3.fromRGB(56, 40, 88)
-statusStroke.Thickness = 1
-statusStroke.Parent = statusCard
+local statusLine = Instance.new("Frame")
+statusLine.Size = UDim2.new(1, 0, 0, 1)
+statusLine.BackgroundColor3 = Color3.fromRGB(44, 50, 66)
+statusLine.BorderSizePixel = 0
+statusLine.Parent = statusCard
 
 local statusLbl = Instance.new("TextLabel")
 statusLbl.Text = "Pronto para diagnosticar e reparar o mapa."
 statusLbl.Font = Enum.Font.Gotham
 statusLbl.TextSize = 11
-statusLbl.TextColor3 = Color3.fromRGB(216, 180, 254)
+statusLbl.TextColor3 = Color3.fromRGB(160, 174, 192)
 statusLbl.TextXAlignment = Enum.TextXAlignment.Left
 statusLbl.TextYAlignment = Enum.TextYAlignment.Top
 statusLbl.TextWrapped = true
@@ -131,25 +136,25 @@ statusLbl.Position = UDim2.new(0, 12, 0, 8)
 statusLbl.BackgroundTransparency = 1
 statusLbl.Parent = statusCard
 
-local function setStatus(text: string, color: Color3)
+local function setStatus(text: string, color: Color3?)
     statusLbl.Text = text
-    statusLbl.TextColor3 = color or Color3.fromRGB(216, 180, 254)
+    statusLbl.TextColor3 = color or Color3.fromRGB(160, 174, 192)
 end
 
 -- Helper: Create UI Card
 local function createCard(title: string, desc: string, layoutOrder: number)
     local card = Instance.new("Frame")
-    card.Size = UDim2.new(1, 0, 0, 120)
-    card.BackgroundColor3 = Color3.fromRGB(16, 12, 28)
+    card.Size = UDim2.new(1, 0, 0, 104)
+    card.BackgroundColor3 = Color3.fromRGB(26, 30, 40)
     card.BorderSizePixel = 0
     card.LayoutOrder = layoutOrder
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 14)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = card
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(56, 40, 88)
+    stroke.Color = Color3.fromRGB(44, 50, 66)
     stroke.Thickness = 1
     stroke.Parent = card
 
@@ -157,10 +162,10 @@ local function createCard(title: string, desc: string, layoutOrder: number)
     cardTitle.Text = title
     cardTitle.Font = Enum.Font.GothamBold
     cardTitle.TextSize = 12
-    cardTitle.TextColor3 = Color3.fromRGB(233, 213, 255)
+    cardTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    cardTitle.Size = UDim2.new(1, -24, 0, 22)
-    cardTitle.Position = UDim2.new(0, 12, 0, 10)
+    cardTitle.Size = UDim2.new(1, -24, 0, 20)
+    cardTitle.Position = UDim2.new(0, 12, 0, 8)
     cardTitle.BackgroundTransparency = 1
     cardTitle.Parent = card
 
@@ -168,61 +173,55 @@ local function createCard(title: string, desc: string, layoutOrder: number)
     cardDesc.Text = desc
     cardDesc.Font = Enum.Font.Gotham
     cardDesc.TextSize = 10
-    cardDesc.TextColor3 = Color3.fromRGB(156, 140, 180)
+    cardDesc.TextColor3 = Color3.fromRGB(160, 174, 192)
     cardDesc.TextXAlignment = Enum.TextXAlignment.Left
     cardDesc.TextYAlignment = Enum.TextYAlignment.Top
     cardDesc.TextWrapped = true
-    cardDesc.Size = UDim2.new(1, -24, 0, 32)
-    cardDesc.Position = UDim2.new(0, 12, 0, 34)
+    cardDesc.Size = UDim2.new(1, -24, 0, 30)
+    cardDesc.Position = UDim2.new(0, 12, 0, 28)
     cardDesc.BackgroundTransparency = 1
     cardDesc.Parent = card
 
     return card
 end
 
--- Helper: Create Action Button (Bubble Pill Button)
-local function createButton(parent: Instance, text: string, bgColor: Color3)
+-- Helper: Create Action Button
+local function createButton(parent: Instance, text: string, bgColor: Color3?)
     local btn = Instance.new("TextButton")
     btn.Text = text
-    btn.Font = Enum.Font.GothamBold
+    btn.Font = Enum.Font.GothamMedium
     btn.TextSize = 11
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundColor3 = bgColor or Color3.fromRGB(139, 92, 246)
-    btn.Size = UDim2.new(1, -24, 0, 36)
-    btn.Position = UDim2.new(0, 12, 0, 72)
+    btn.BackgroundColor3 = bgColor or Color3.fromRGB(37, 99, 235)
+    btn.Size = UDim2.new(1, -24, 0, 32)
+    btn.Position = UDim2.new(0, 12, 0, 62)
     btn.BorderSizePixel = 0
     btn.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = btn
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(168, 85, 247)
-    stroke.Thickness = 1
-    stroke.Parent = btn
 
     return btn
 end
 
 -- ============================================================================
--- FEATURE 0: ⚡ 1-CLIQUE: REPARO MESTRE TOTAL & TORNAR JOGO JOGÁVEL
+-- FEATURE 0: 1-CLIQUE: REPARO MESTRE TOTAL & TORNAR JOGO JOGÁVEL
 -- ============================================================================
 local cardMaster = createCard(
-    "⚡ REPARO MESTRE TOTAL (1-CLIQUE)",
-    "Executa TODAS as correções em sequência: destrava permissões, conserta áudios 403, blinda scripts, emula DataStores/VIP e deixa o jogo 100% pronto para dar Play!",
+    "Reparo Mestre Total (1-Clique)",
+    "Executa todas as correções em sequência: destrava permissões, conserta áudios 403, blinda scripts e emula DataStores/VIP para deixar o jogo pronto.",
     0
 )
-cardMaster.Size = UDim2.new(1, 0, 0, 130)
-cardMaster.BackgroundColor3 = Color3.fromRGB(24, 16, 42)
+cardMaster.Size = UDim2.new(1, 0, 0, 110)
 cardMaster.Parent = scroll
 
-local btnMaster = createButton(cardMaster, "🚀 EXECUTAR REPARO MESTRE TOTAL", Color3.fromRGB(147, 51, 234))
-btnMaster.Size = UDim2.new(1, -24, 0, 42)
+local btnMaster = createButton(cardMaster, "Executar Reparo Mestre Total", Color3.fromRGB(37, 99, 235))
+btnMaster.Size = UDim2.new(1, -24, 0, 36)
 
 btnMaster.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Master Repair")
-    setStatus("Executando reparo mestre total...", Color3.fromRGB(236, 72, 153))
+    setStatus("Executando reparo mestre total...", Color3.fromRGB(59, 130, 246))
 
     -- 1. Destravar permissões & packages
     local unlockedPackages = 0
@@ -339,26 +338,26 @@ end)
     pcall(function() serverScript.Source = code end)
 
     ChangeHistoryService:SetWaypoint("After HyperSave Master Repair")
-    local summary = string.format("✓ REPARO MESTRE CONCLUÍDO! %d pacotes desvinculados, %d áudios corrigidos, %d scripts blindados e %d remotes conectados! Aperte F5!",
+    local summary = string.format("✓ Reparo concluído: %d pacotes desvinculados, %d áudios corrigidos, %d scripts blindados e %d remotes conectados.",
         unlockedPackages, fixedAudio, protectedScripts, countFuncs + countEvents)
-    setStatus(summary, Color3.fromRGB(34, 197, 94))
+    setStatus(summary, Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 1: SINTETIZAR SERVIDOR (Resolve o travamento de InvokeServer & Remotes)
+-- FEATURE 1: SINTETIZAR SERVIDOR
 -- ============================================================================
 local cardServer = createCard(
     "1. Gerar Servidor Inteligente (ServerScriptService)",
-    "Varre o jogo em busca de RemoteEvents e RemoteFunctions e cria o backend automático para que o cliente não congele no 'InvokeServer' e responda aos cliques.",
+    "Cria o backend automático para RemoteEvents e RemoteFunctions, evitando congelamento no InvokeServer.",
     1
 )
 cardServer.Parent = scroll
 
-local btnServer = createButton(cardServer, "⚡ GERAR BACKEND DE SERVIDOR AUTOMÁTICO", Color3.fromRGB(16, 185, 129))
+local btnServer = createButton(cardServer, "Gerar Backend de Servidor", Color3.fromRGB(37, 99, 235))
 
 btnServer.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Server Synthesizer")
-    setStatus("Varrendo Remotes e gerando backend...", Color3.fromRGB(6, 182, 212))
+    setStatus("Varrendo Remotes e gerando backend...", Color3.fromRGB(59, 130, 246))
 
     local remotesFolder = ServerScriptService:FindFirstChild("HyperSave_ServerBackend")
     if not remotesFolder then
@@ -371,31 +370,18 @@ btnServer.MouseButton1Click:Connect(function()
     local countFuncs = 0
 
     local code = [=[
---[[
-    [HyperSaveInstance - Backend de Servidor Sintético]
-    Garante que todas as RemoteFunctions retornem sucesso imediatamente,
-    emula DataStores em memória e desbloqueia GamePasses/VIP para o jogo rodar perfeitamente no Studio.
-]]
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
 local DataStoreService = game:GetService("DataStoreService")
 
-print("[HyperSave Server] Inicializando emulador de servidor com DataStore & VIP grátis...")
+print("[HyperSave Server] Servidor ativo com emulador de DataStore & VIP.")
 
--- Desbloquear GamePasses e Áreas VIP no Studio
 pcall(function()
-    MarketplaceService.UserOwnsGamePassAsync = function(player, passId)
-        print(string.format("[HyperSave VIP] Acesso VIP concedido para GamePass #%s", tostring(passId)))
-        return true
-    end
-    MarketplaceService.PlayerOwnsAsset = function(player, assetId)
-        return true
-    end
+    MarketplaceService.UserOwnsGamePassAsync = function(player, passId) return true end
+    MarketplaceService.PlayerOwnsAsset = function(player, assetId) return true end
 end)
 
--- Emulador de DataStore em Memória
 local MockStores = {}
 pcall(function()
     DataStoreService.GetDataStore = function(self, name, scope)
@@ -413,61 +399,35 @@ pcall(function()
     end
 end)
 
--- Configurar Leaderstats inicial com saldo generoso para testes
 Players.PlayerAdded:Connect(function(player)
     local ls = player:FindFirstChild("leaderstats")
     if not ls then
         ls = Instance.new("Folder")
         ls.Name = "leaderstats"
-        
         local coins = Instance.new("IntValue")
         coins.Name = "Coins"
         coins.Value = 1000000
         coins.Parent = ls
-        
         local cash = Instance.new("IntValue")
         cash.Name = "Cash"
         cash.Value = 1000000
         cash.Parent = ls
-
         local level = Instance.new("IntValue")
         level.Name = "Level"
         level.Value = 50
         level.Parent = ls
-        
         ls.Parent = player
     end
 end)
-
 ]=]
 
-    -- Scan descendants
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("RemoteFunction") then
             countFuncs = countFuncs + 1
-            code = code .. string.format([=[
-pcall(function()
-    local rf = %s
-    if rf and rf:IsA("RemoteFunction") then
-        rf.OnServerInvoke = function(player, ...)
-            print("[HyperSave Server] Invocado: " .. rf.Name .. " por " .. player.Name)
-            return true, {Success = true, Status = "OK"}
-        end
-    end
-end)
-]=], desc:GetFullName())
+            code = code .. string.format("\npcall(function() (%s).OnServerInvoke = function(p, ...) return true, {Success=true} end end)", desc:GetFullName())
         elseif desc:IsA("RemoteEvent") then
             countEvents = countEvents + 1
-            code = code .. string.format([=[
-pcall(function()
-    local re = %s
-    if re and re:IsA("RemoteEvent") then
-        re.OnServerEvent:Connect(function(player, ...)
-            print("[HyperSave Server] Evento recebido: " .. re.Name .. " de " .. player.Name)
-        end)
-    end
-end)
-]=], desc:GetFullName())
+            code = code .. string.format("\npcall(function() (%s).OnServerEvent:Connect(function(p, ...) end) end)", desc:GetFullName())
         end
     end
 
@@ -483,31 +443,30 @@ end)
     end)
 
     ChangeHistoryService:SetWaypoint("After HyperSave Server Synthesizer")
-    setStatus(string.format("✓ Sucesso! Servidor gerado com %d RemoteEvents e %d RemoteFunctions!", countEvents, countFuncs), Color3.fromRGB(34, 197, 94))
+    setStatus(string.format("✓ Servidor gerado com %d RemoteEvents e %d RemoteFunctions.", countEvents, countFuncs), Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 2: CORRIGIR SONS E ASSETS COM ERRO 403 (Asset Forbidden)
+-- FEATURE 2: CORRIGIR SONS E ASSETS COM ERRO 403
 -- ============================================================================
 local cardAudio = createCard(
     "2. Consertar Áudios Bloqueados (Erro HTTP 403)",
-    "Identifica todos os sons do jogo que pertencem a criadores privados e os substitui por áudios públicos funcionais, eliminando o erro vermelho de permissão do console.",
+    "Substitui sons de criadores privados por áudios públicos funcionais, eliminando erros no console.",
     2
 )
 cardAudio.Parent = scroll
 
-local btnAudio = createButton(cardAudio, "🔊 REPARAR ÁUDIOS E ELIMINAR ERRO 403", Color3.fromRGB(234, 88, 12))
+local btnAudio = createButton(cardAudio, "Reparar Áudios Bloqueados", Color3.fromRGB(37, 99, 235))
 
 btnAudio.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Audio Sanitizer")
-    setStatus("Analisando instâncias de Sound no jogo...", Color3.fromRGB(6, 182, 212))
+    setStatus("Analisando instâncias de Sound no jogo...", Color3.fromRGB(59, 130, 246))
 
     local fixedCount = 0
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("Sound") then
             local soundId = desc.SoundId
             if #soundId > 0 and string.find(soundId, "rbxassetid://") then
-                -- Add attribute with original ID in case the user wants to keep track
                 desc:SetAttribute("OriginalPrivateSoundId", soundId)
                 desc.SoundId = FALLBACK_SOUNDS.Generic
                 fixedCount = fixedCount + 1
@@ -516,24 +475,24 @@ btnAudio.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Audio Sanitizer")
-    setStatus(string.format("✓ Concluído! %d sons privados foram sanitizados e agora tocam perfeitamente!", fixedCount), Color3.fromRGB(34, 197, 94))
+    setStatus(string.format("✓ %d sons privados foram substituídos por sons públicos.", fixedCount), Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
 -- FEATURE 3: BLINDAGEM DE SCRIPTS DESCOMPILADOS
 -- ============================================================================
 local cardScripts = createCard(
-    "3. Blindar Scripts Descompilados (Proteção Contra Erros)",
-    "Verifica LocalScripts e ModuleScripts que falharam ao descompilar ou têm sintaxe quebrada, adicionando proteções para não travar a interface gráfica do jogo.",
+    "3. Blindar Scripts Descompilados",
+    "Adiciona proteções a scripts com falhas de descompilação para não interromper a execução.",
     3
 )
 cardScripts.Parent = scroll
 
-local btnScripts = createButton(cardScripts, "🛡️ BLINDAR SCRIPTS LOCAIS", Color3.fromRGB(79, 70, 229))
+local btnScripts = createButton(cardScripts, "Blindar Scripts Locais", Color3.fromRGB(37, 99, 235))
 
 btnScripts.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Script Shield")
-    setStatus("Verificando scripts...", Color3.fromRGB(6, 182, 212))
+    setStatus("Verificando scripts...", Color3.fromRGB(59, 130, 246))
 
     local protected = 0
     for _, desc in ipairs(game:GetDescendants()) do
@@ -541,7 +500,7 @@ btnScripts.MouseButton1Click:Connect(function()
             local s, src = pcall(function() return desc.Source end)
             if s and src then
                 if string.find(src, "Failed to decompile") or string.find(src, "decompilation failed") then
-                    desc.Source = "-- [HyperSave Safe Stub] Script original falhou ao descompilar.\n-- Para evitar que o jogo congele, esta função foi neutralizada de forma segura:\nreturn function(...) return true end\n"
+                    desc.Source = "-- [HyperSave Safe Stub]\nreturn function(...) return true end\n"
                     protected = protected + 1
                 end
             end
@@ -549,24 +508,24 @@ btnScripts.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Script Shield")
-    setStatus(string.format("✓ %d scripts protegidos contra travamentos!", protected), Color3.fromRGB(34, 197, 94))
+    setStatus(string.format("✓ %d scripts protegidos contra travamentos.", protected), Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 4: DESTRAVAR PERMISSÕES E REMOVER BLOQUEIOS DE PACOTES (PackageLink)
+-- FEATURE 4: DESTRAVAR PERMISSÕES E REMOVER BLOQUEIOS DE PACOTES
 -- ============================================================================
 local cardUnlock = createCard(
-    "4. Destravar Permissões (Eliminar 'Sem Permissão' & Desvincular Packages)",
-    "Remove PackageLinks de terceiros que bloqueiam o mapa no Studio, desbloqueia peças travadas (Locked=false) e limpa restrições de permissão do criador original.",
+    "4. Destravar Permissões e Peças",
+    "Remove PackageLinks e desbloqueia peças travadas (Locked=false) para edição livre no Studio.",
     4
 )
 cardUnlock.Parent = scroll
 
-local btnUnlock = createButton(cardUnlock, "🔓 DESTRAVAR TODAS AS PERMISSÕES DO MAPA", Color3.fromRGB(16, 185, 129))
+local btnUnlock = createButton(cardUnlock, "Destravar Todas as Permissões", Color3.fromRGB(37, 99, 235))
 
 btnUnlock.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Permission Unlock")
-    setStatus("Destravando modelos e removendo PackageLinks...", Color3.fromRGB(6, 182, 212))
+    setStatus("Destravando modelos e removendo PackageLinks...", Color3.fromRGB(59, 130, 246))
 
     local unlockedPackages = 0
     local unlockedParts = 0
@@ -586,46 +545,50 @@ btnUnlock.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Permission Unlock")
-    setStatus(string.format("✓ Concluído! %d pacotes desvinculados e %d peças destravadas!", unlockedPackages, unlockedParts), Color3.fromRGB(34, 197, 94))
+    setStatus(string.format("✓ %d pacotes desvinculados e %d peças destravadas.", unlockedPackages, unlockedParts), Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 5: INJETOR RÁPIDO DE CÓDIGO LUA
+-- FEATURE 5: INJETOR DE CÓDIGO LUA
 -- ============================================================================
 local cardCode = createCard(
-    "5. Executar Reconstrução Manual de Código .lua",
-    "Caso você tenha exportado no formato '.lua' em vez de '.rbxlx', você pode colar pequenos blocos aqui para reconstruir instâncias.",
+    "5. Executar Código Luau Manual",
+    "Permite colar blocos de script para reconstruir instâncias ou manipular objetos.",
     5
 )
-cardCode.Size = UDim2.new(1, 0, 0, 170)
+cardCode.Size = UDim2.new(1, 0, 0, 150)
 cardCode.Parent = scroll
 
 local codeBox = Instance.new("TextBox")
-codeBox.PlaceholderText = "-- Cole scripts Luau aqui..."
-codeBox.Font = Enum.Font.Code
-codeBox.TextSize = 11
-codeBox.TextColor3 = Color3.fromRGB(220, 230, 245)
-codeBox.PlaceholderColor3 = Color3.fromRGB(100, 110, 130)
+codeBox.PlaceholderText = "-- Cole seu código Luau aqui..."
+codeBox.Font = Enum.Font.Gotham
+codeBox.TextSize = 10
+codeBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+codeBox.PlaceholderColor3 = Color3.fromRGB(113, 128, 150)
 codeBox.BackgroundColor3 = Color3.fromRGB(14, 16, 22)
 codeBox.ClearTextOnFocus = false
 codeBox.MultiLine = true
-codeBox.Size = UDim2.new(1, -24, 0, 50)
-codeBox.Position = UDim2.new(0, 12, 0, 68)
+codeBox.Size = UDim2.new(1, -24, 0, 44)
+codeBox.Position = UDim2.new(0, 12, 0, 60)
 codeBox.Parent = cardCode
 
-local btnExec = createButton(cardCode, "▶ EXECUTAR CÓDIGO", Color3.fromRGB(147, 51, 234))
-btnExec.Position = UDim2.new(0, 12, 0, 124)
+local codeCorner = Instance.new("UICorner")
+codeCorner.CornerRadius = UDim.new(0, 4)
+codeCorner.Parent = codeBox
+
+local btnExec = createButton(cardCode, "Executar Código", Color3.fromRGB(37, 99, 235))
+btnExec.Position = UDim2.new(0, 12, 0, 110)
 
 btnExec.MouseButton1Click:Connect(function()
     local text = codeBox.Text
     if #text == 0 then
-        setStatus("Cole um código antes de executar.", Color3.fromRGB(239, 68, 68))
+        setStatus("Cole um código antes de executar.", Color3.fromRGB(220, 38, 38))
         return
     end
 
     local fn, err = loadstring(text)
     if not fn then
-        setStatus("Erro de sintaxe no código: " .. tostring(err), Color3.fromRGB(239, 68, 68))
+        setStatus("Erro de sintaxe no código: " .. tostring(err), Color3.fromRGB(220, 38, 38))
         return
     end
 
@@ -633,27 +596,27 @@ btnExec.MouseButton1Click:Connect(function()
     local ok, execErr = pcall(fn)
     if ok then
         ChangeHistoryService:SetWaypoint("After Manual Exec")
-        setStatus("✓ Código executado com sucesso no Studio!", Color3.fromRGB(34, 197, 94))
+        setStatus("✓ Código executado com sucesso no Studio.", Color3.fromRGB(16, 185, 129))
     else
-        setStatus("Erro ao executar: " .. tostring(execErr), Color3.fromRGB(239, 68, 68))
+        setStatus("Erro ao executar: " .. tostring(execErr), Color3.fromRGB(220, 38, 38))
     end
 end)
 
 -- ============================================================================
--- FEATURE 6: ✨ ILUMINAÇÃO ULTRA-REALISTA (PBR + FUTURE)
+-- FEATURE 6: ILUMINAÇÃO PBR + FUTURE
 -- ============================================================================
 local cardLight = createCard(
-    "6. Atualizar Iluminação para PBR / Future (Qualidade AAA)",
-    "Atualiza a tecnologia do Lighting para 'Future', ativa sombras suaves de alta definição, adiciona Atmosphere, Bloom e SunRays cinemáticos.",
+    "6. Atualizar Iluminação para PBR / Future",
+    "Configura a tecnologia do Lighting para Future, ativa sombras suaves e efeitos atmosféricos.",
     6
 )
 cardLight.Parent = scroll
 
-local btnLight = createButton(cardLight, "✨ APLICAR ILUMINAÇÃO ULTRA-REALISTA", Color3.fromRGB(245, 158, 11))
+local btnLight = createButton(cardLight, "Aplicar Iluminação Future / PBR", Color3.fromRGB(37, 99, 235))
 
 btnLight.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Cinematic Lighting")
-    setStatus("Aplicando tecnologia Future e efeitos visuais...", Color3.fromRGB(6, 182, 212))
+    setStatus("Aplicando tecnologia Future e efeitos visuais...", Color3.fromRGB(59, 130, 246))
 
     local Lighting = game:GetService("Lighting")
     pcall(function()
@@ -679,24 +642,24 @@ btnLight.MouseButton1Click:Connect(function()
     end)
 
     ChangeHistoryService:SetWaypoint("After HyperSave Cinematic Lighting")
-    setStatus("✓ Iluminação atualizada para qualidade Future / PBR cinemática!", Color3.fromRGB(34, 197, 94))
+    setStatus("✓ Iluminação atualizada para qualidade Future / PBR.", Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 7: 🧍 ESTABILIZADOR DE RIGS & NPCS (Anti-Ragdoll de Limbs)
+-- FEATURE 7: ESTABILIZADOR DE RIGS & NPCS
 -- ============================================================================
 local cardRigs = createCard(
     "7. Estabilizador de NPCs & Rigs de Personagens",
-    "Garante que NPCs e personagens do mapa não desmontem ou caiam no chão como ragdolls sem física ao dar Play no Studio, ancorando raízes com segurança.",
+    "Garante que NPCs e personagens do mapa não desmontem ao dar Play no Studio.",
     7
 )
 cardRigs.Parent = scroll
 
-local btnRigs = createButton(cardRigs, "🧍 ESTABILIZAR NPCS E RIGS DO MAPA", Color3.fromRGB(59, 130, 246))
+local btnRigs = createButton(cardRigs, "Estabilizar NPCs e Rigs", Color3.fromRGB(37, 99, 235))
 
 btnRigs.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Rig Stabilizer")
-    setStatus("Estabilizando Humanoids e Rigs no Workspace...", Color3.fromRGB(6, 182, 212))
+    setStatus("Estabilizando Humanoids e Rigs no Workspace...", Color3.fromRGB(59, 130, 246))
 
     local stabilized = 0
     for _, desc in ipairs(workspace:GetDescendants()) do
@@ -713,23 +676,23 @@ btnRigs.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Rig Stabilizer")
-    setStatus(string.format("✓ %d NPCs/Rigs estabilizados com sucesso!", stabilized), Color3.fromRGB(34, 197, 94))
+    setStatus(string.format("✓ %d NPCs/Rigs estabilizados com sucesso.", stabilized), Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 8: 📦 AUDITORIA & RECONEXÃO DE MANIFESTO DE ASSETS
+-- FEATURE 8: AUDITORIA DE ASSETS
 -- ============================================================================
 local cardManifest = createCard(
-    "8. Auditoria de Texturas, Malhas (MeshParts) e Sons",
-    "Analisa todas as referências de assets no lugar e lista quantos IDs privados ou válidos estão presentes, preparando o mapa para publicação segura.",
+    "8. Auditoria de Texturas, Malhas e Sons",
+    "Analisa as referências de assets no lugar e lista a quantidade de IDs identificados.",
     8
 )
 cardManifest.Parent = scroll
 
-local btnAudit = createButton(cardManifest, "📦 AUDITAR ASSETS DO MAPA", Color3.fromRGB(16, 185, 129))
+local btnAudit = createButton(cardManifest, "Auditar Assets do Mapa", Color3.fromRGB(37, 99, 235))
 
 btnAudit.MouseButton1Click:Connect(function()
-    setStatus("Auditando referências de assets...", Color3.fromRGB(6, 182, 212))
+    setStatus("Auditando referências de assets...", Color3.fromRGB(59, 130, 246))
 
     local meshes = 0
     local textures = 0
@@ -750,24 +713,23 @@ btnAudit.MouseButton1Click:Connect(function()
 
     local summary = string.format("✓ Auditoria concluída: %d Malhas, %d Texturas, %d Sons, %d Animações identificadas.",
         meshes, textures, sounds, animations)
-    setStatus(summary, Color3.fromRGB(34, 197, 94))
+    setStatus(summary, Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
--- FEATURE 9: 👤 CRÉDITOS & DESENVOLVEDOR (THEO LORENTZ PADILHA)
+-- FEATURE 9: DESENVOLVEDOR
 -- ============================================================================
 local cardDev = createCard(
-    "👑 Criador & Engenheiro: Theo Lorentz Padilha",
-    "Desenvolvido com excelência por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do GitHub.",
+    "Theo Lorentz Padilha",
+    "Desenvolvido por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do repositório.",
     9
 )
-cardDev.BackgroundColor3 = Color3.fromRGB(24, 16, 42)
 cardDev.Parent = scroll
 
-local btnDevGithub = createButton(cardDev, "🔗 COPIAR GITHUB DE THEO LORENTZ PADILHA", Color3.fromRGB(147, 51, 234))
+local btnDevGithub = createButton(cardDev, "Copiar Link do Repositório", Color3.fromRGB(36, 42, 56))
 
 btnDevGithub.MouseButton1Click:Connect(function()
-    setStatus("✓ Link do GitHub copiado: https://github.com/theopadilha2009-hash", Color3.fromRGB(168, 85, 247))
+    setStatus("✓ Link do GitHub copiado: https://github.com/theopadilha2009-hash/HyperSaveInstance", Color3.fromRGB(16, 185, 129))
 end)
 
 print("[HyperSave Suite] Plugin carregado com sucesso!")

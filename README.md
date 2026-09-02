@@ -5,14 +5,14 @@
   <img src="assets/hypersave-emblem.jpg" alt="HyperSaveInstance ram skull emblem" width="620">
 </p>
 
-# ⚡ HyperSaveInstance v2.0 (Ultimate Master Suite)
+# HyperSaveInstance v2.0
 
 > **Universal Roblox Game Cloner, 3D Raycast Ripper & Reverse-Engineering Suite**  
-> **Desenvolvido com excelência por [Theo Lorentz Padilha](https://github.com/theopadilha2009-hash)**
+> **Desenvolvido por [Theo Lorentz Padilha](https://github.com/theopadilha2009-hash)**
 
 <p align="center">
-  <a href="https://github.com/theopadilha2009-hash"><img src="https://img.shields.io/badge/Author-Theo%20Lorentz%20Padilha-ff007f?style=for-the-badge&logo=github" alt="Author"></a>
-  <a href="https://github.com/theopadilha2009-hash/HyperSaveInstance"><img src="https://img.shields.io/badge/Release-v2.1.0%20Cyber--Tribal-7c3aed?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/theopadilha2009-hash"><img src="https://img.shields.io/badge/Author-Theo%20Lorentz%20Padilha-2563eb?style=for-the-badge&logo=github" alt="Author"></a>
+  <a href="https://github.com/theopadilha2009-hash/HyperSaveInstance"><img src="https://img.shields.io/badge/Release-v2.0.0-10b981?style=for-the-badge" alt="Release"></a>
   <a href="https://discord.gg/Tk5zyA83UZ"><img src="https://img.shields.io/badge/Discord-Theo%20Dev%20Hub-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   <a href="https://luau.org/"><img src="https://img.shields.io/badge/Language-Luau-00E5FF?style=for-the-badge&logo=lua" alt="Luau"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge" alt="License"></a>
@@ -20,7 +20,7 @@
 
 ---
 
-## 🚀 1-Click In-Game Loader
+## In-Game Loader
 
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/Loader.luau", true))()
@@ -135,11 +135,11 @@ HyperSaveInstance is intended for development, debugging, interoperability resea
 
 Do not use it to redistribute protected content, bypass access controls, impersonate another creator, or violate Roblox rules or applicable law. You are responsible for obtaining permission and validating how exported content may be used.
 
-## 👤 Author & Maintainer
+## Author & Maintainer
 
 Criado, desenvolvido e mantido por **Theo Lorentz Padilha**:
-- 🌐 **GitHub Profile:** [https://github.com/theopadilha2009-hash](https://github.com/theopadilha2009-hash)
-- 📦 **HyperSaveInstance Repository:** [https://github.com/theopadilha2009-hash/HyperSaveInstance](https://github.com/theopadilha2009-hash/HyperSaveInstance)
+- GitHub Profile: [https://github.com/theopadilha2009-hash](https://github.com/theopadilha2009-hash)
+- HyperSaveInstance Repository: [https://github.com/theopadilha2009-hash/HyperSaveInstance](https://github.com/theopadilha2009-hash/HyperSaveInstance)
 
 ## Support the project
 

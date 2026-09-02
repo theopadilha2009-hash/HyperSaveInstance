@@ -86,7 +86,7 @@ const server = http.createServer((req, res) => {
     </style>
 </head>
 <body>
-    <h1>⚡ HyperSaveInstance - Servidor Local de Assets</h1>
+    <h1>HyperSaveInstance - Servidor Local de Assets</h1>
     <p>Diretório: <code>${ASSETS_DIR}</code> | Porta: <code>${PORT}</code></p>
     <p>Total de arquivos disponíveis: <strong>${(files || []).length}</strong></p>
     <ul>
@@ -126,7 +126,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
     console.log(`=======================================================`);
-    console.log(` ⚡ HYPERSAVEINSTANCE - LOCAL ASSET SERVER ACTIVE `);
+    console.log(` HYPERSAVEINSTANCE - LOCAL ASSET SERVER ACTIVE `);
     console.log(`=======================================================`);
     console.log(` Local URL : http://localhost:${PORT}/`);
     console.log(` Assets Dir: ${ASSETS_DIR}`);
