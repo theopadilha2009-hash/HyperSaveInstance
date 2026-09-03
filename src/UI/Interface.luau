@@ -533,7 +533,7 @@ function Interface:BuildUI()
                 local ping = 0
                 pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
                 if compactBar and compactBar.Visible then
-                    cStats.Text = string.format("[ROOT] FPS: %d | PING: %dms | 0x%X", fps, ping, math.random(0x1000, 0xFFFF))
+                    cStats.Text = string.format("FPS: %d • Ping: %dms", fps, ping)
                 end
             end
         end)
@@ -965,6 +965,85 @@ function Interface:BuildDashboardTab()
         Environment.SetClipboard(name)
         copyAssetsPathBtn.Text = "✓ Copiado!"
         task.delay(2, function() copyAssetsPathBtn.Text = "Copiar Pasta de Assets" end)
+    end)
+
+    -- Live Telemetry Stats Row
+    local telemetryCard = Instance.new("Frame")
+    telemetryCard.Size = UDim2.new(1, -32, 0, 46)
+    telemetryCard.Position = UDim2.new(0, 16, 0, 310)
+    telemetryCard.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(telemetryCard, Theme.CornerMedium)
+    Theme.AddStroke(telemetryCard, Theme.Border, 1)
+    telemetryCard.Parent = parent
+
+    local tLayout = Instance.new("UIListLayout")
+    tLayout.FillDirection = Enum.FillDirection.Horizontal
+    tLayout.Padding = UDim.new(0, 0)
+    tLayout.Parent = telemetryCard
+
+    local function createTelemetryItem(label: string, defaultVal: string, widthRatio: number)
+        local itemFrame = Instance.new("Frame")
+        itemFrame.Size = UDim2.new(widthRatio, 0, 1, 0)
+        itemFrame.BackgroundTransparency = 1
+        itemFrame.Parent = telemetryCard
+
+        local valLbl = Instance.new("TextLabel")
+        valLbl.Text = defaultVal
+        valLbl.Font = Theme.FontTitle
+        valLbl.TextSize = 12
+        valLbl.TextColor3 = Theme.TextPrimary
+        valLbl.Size = UDim2.new(1, 0, 0, 18)
+        valLbl.Position = UDim2.new(0, 0, 0, 6)
+        valLbl.BackgroundTransparency = 1
+        valLbl.Parent = itemFrame
+
+        local tagLbl = Instance.new("TextLabel")
+        tagLbl.Text = label
+        tagLbl.Font = Theme.FontRegular
+        tagLbl.TextSize = 9
+        tagLbl.TextColor3 = Theme.TextSecondary
+        tagLbl.Size = UDim2.new(1, 0, 0, 14)
+        tagLbl.Position = UDim2.new(0, 0, 0, 24)
+        tagLbl.BackgroundTransparency = 1
+        tagLbl.Parent = itemFrame
+
+        return valLbl
+    end
+
+    local fpsValLbl = createTelemetryItem("FPS DO JOGO", "60", 0.333)
+    local pingValLbl = createTelemetryItem("PING DE REDE", "-- ms", 0.333)
+    local ramValLbl = createTelemetryItem("MEMÓRIA CLIENT", "-- MB", 0.334)
+
+    task.spawn(function()
+        local Stats = game:GetService("Stats")
+        local fpsCount = 0
+        local lastUpdate = os.clock()
+        local runServ = game:GetService("RunService")
+        runServ.RenderStepped:Connect(function()
+            fpsCount = fpsCount + 1
+            local now = os.clock()
+            if now - lastUpdate >= 0.5 then
+                local fps = math.round(fpsCount / (now - lastUpdate))
+                fpsCount = 0
+                lastUpdate = now
+                local ping = 0
+                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                local mem = 0
+                pcall(function() mem = math.round(Stats:GetTotalMemoryUsageMb()) end)
+
+                if fpsValLbl and fpsValLbl.Parent then
+                    fpsValLbl.Text = tostring(fps)
+                    fpsValLbl.TextColor3 = (fps >= 45) and Theme.AccentSuccess or Theme.AccentWarning
+                end
+                if pingValLbl and pingValLbl.Parent then
+                    pingValLbl.Text = tostring(ping) .. " ms"
+                    pingValLbl.TextColor3 = (ping < 120) and Theme.AccentSuccess or Theme.AccentWarning
+                end
+                if ramValLbl and ramValLbl.Parent then
+                    ramValLbl.Text = tostring(mem) .. " MB"
+                end
+            end
+        end)
     end)
 end
 

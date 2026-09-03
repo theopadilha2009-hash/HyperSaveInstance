@@ -389,15 +389,19 @@ pcall(function()
         if not MockStores[id] then
             local mem = {}
             MockStores[id] = {
-                GetAsync = function(s, k) return mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000} end,
+                GetAsync = function(s, k) return mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000, Gems = 50000} end,
                 SetAsync = function(s, k, v) mem[k] = v return v end,
-                UpdateAsync = function(s, k, fn) local curr = mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000} local n = fn(curr) mem[k] = n return n end,
+                UpdateAsync = function(s, k, fn) local curr = mem[k] or {Coins = 1000000, Level = 50, Cash = 1000000, Gems = 50000} local n = fn(curr) mem[k] = n return n end,
                 RemoveAsync = function(s, k) local o = mem[k] mem[k] = nil return o end,
             }
         end
         return MockStores[id]
     end
 end)
+
+-- Global Mock Frameworks (Knit & ReplicaService compatibility)
+_G.KnitServices = _G.KnitServices or {}
+_G.KnitControllers = _G.KnitControllers or {}
 
 Players.PlayerAdded:Connect(function(player)
     local ls = player:FindFirstChild("leaderstats")
@@ -412,6 +416,10 @@ Players.PlayerAdded:Connect(function(player)
         cash.Name = "Cash"
         cash.Value = 1000000
         cash.Parent = ls
+        local gems = Instance.new("IntValue")
+        gems.Name = "Gems"
+        gems.Value = 50000
+        gems.Parent = ls
         local level = Instance.new("IntValue")
         level.Name = "Level"
         level.Value = 50

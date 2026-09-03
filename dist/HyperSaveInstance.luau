@@ -639,6 +639,7 @@ __define__("Core/AssetDownloader", function()
 --[[
     HyperSaveInstance - Comprehensive Raw Asset Downloader Engine
     Downloads raw audios (.mp3), textures (.png), 3D meshes (.mesh/.obj) and animations to local disk.
+    Equipped with Dynamic Network & FPS Throttling, Exponential Backoff and Ping Guard.
 ]]
 
 local Environment = __require__("Utils/Environment")
@@ -746,17 +747,32 @@ end
 
 -- Measure real-time client ping to prevent server desync/heartbeat disconnects
 function AssetDownloader.GetClientPing()
-    local ping = 50
+    local ping = 45
     pcall(function()
         local stats = game:GetService("Stats")
         local net = stats and stats:FindFirstChild("Network")
         local ssi = net and net:FindFirstChild("ServerStatsItem")
         local dp = ssi and ssi:FindFirstChild("Data Ping")
         if dp and dp:IsA("ValueBase") then
-            ping = (dp ).Value or 50
+            ping = (dp ).Value or 45
         end
     end)
     return ping
+end
+
+-- Measure real-time client FPS
+function AssetDownloader.GetClientFPS()
+    local fps = 60
+    pcall(function()
+        local ws = game:GetService("Workspace")
+        if ws and ws.GetRealPhysicsFPS then
+            local val = ws:GetRealPhysicsFPS()
+            if val and val > 0 then
+                fps = val
+            end
+        end
+    end)
+    return fps
 end
 
 -- Export structured JSON manifest for offline downloading
@@ -789,7 +805,7 @@ function AssetDownloader.ExportManifest(assets, manifestPath)
     return false, "Failed to encode JSON manifest"
 end
 
--- Download all collected assets safely with Ping Guard, Rate Limiting & Exponential Backoff
+-- Download all collected assets safely with Ping Guard, FPS Throttling & Exponential Backoff
 function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallback)
     local opts = options or {}
     Environment.MakeFolder(baseFolder)
@@ -813,8 +829,8 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
     local failed = 0
     local currentIndex = 1
 
-    -- In public servers or safe mode, constrain workers to prevent bandwidth saturation
-    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 4, 2, 6) or math.clamp(opts.AssetDownloadWorkers or 8, 2, 16)
+    -- In safe mode, constrain workers to 3-4 to keep network and CPU usage imperceptible
+    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 3, 1, 4) or math.clamp(opts.AssetDownloadWorkers or 6, 2, 8)
     local activeWorkers = maxWorkers
 
     for w = 1, maxWorkers do
@@ -825,13 +841,15 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
 
                 local item = assetList[myIndex]
                 if item then
-                    -- 1. Adaptive Ping Guard: Pause if ping spikes above 180ms
-                    if opts.PingGuard ~= false then
+                    -- 1. Adaptive Ping & FPS Guard: Pause if ping > 160ms or FPS < 35
+                    if opts.SafeAssetDownload ~= false then
                         local currentPing = AssetDownloader.GetClientPing()
+                        local currentFps = AssetDownloader.GetClientFPS()
                         local retryCount = 0
-                        while currentPing > 180 and retryCount < 10 do
-                            task.wait(0.3)
+                        while (currentPing > 160 or currentFps < 35) and retryCount < 12 do
+                            task.wait(0.25)
                             currentPing = AssetDownloader.GetClientPing()
+                            currentFps = AssetDownloader.GetClientFPS()
                             retryCount = retryCount + 1
                         end
                     end
@@ -870,7 +888,7 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
                         end
 
                         if attempt <= maxRetries then
-                            task.wait(0.4 * attempt) -- Exponential backoff
+                            task.wait(0.3 * attempt)
                         end
                     end
 
@@ -890,8 +908,8 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
                     end
                 end
 
-                -- 3. Jittered rate limiting (50ms to 120ms delay) to mimic natural client requests
-                local jitter = math.random(50, 120) / 1000
+                -- Jittered rate limiting delay (40ms to 80ms)
+                local jitter = math.random(40, 80) / 1000
                 task.wait(jitter)
             end
             activeWorkers = activeWorkers - 1
@@ -2025,6 +2043,14 @@ function Engine:Start()
 
     for _, root in ipairs(rootInstances) do
         scan(root)
+    end
+
+    -- Process any accumulated streaming instances preserved from stream-out chunks
+    local accumulated = StreamExplorer.GetAccumulatedInstances()
+    for _, accInst in ipairs(accumulated) do
+        if not visited[accInst] and self:ShouldSaveInstance(accInst) then
+            scan(accInst)
+        end
     end
 
     -- Pre-warm asset cache for instant reflection read
@@ -5012,21 +5038,25 @@ end)
 
 __define__("Core/StreamExplorer", function()
 --[[
-    HyperSaveInstance - StreamingEnabled Auto-Map Explorer
-    Sweeps spatial coordinates across the map to force server chunk replication into memory.
+    HyperSaveInstance - StreamingEnabled Auto-Map Explorer (Camera-Only Stealth Mode)
+    Sweeps spatial coordinates across the map via camera manipulation & RequestStreamAroundAsync.
+    Zero physical character displacement to prevent movement/speed anti-cheat detections (Adonis, HD Admin, etc.).
+    Includes a Snapshot Memory Accumulator to preserve streamed-out chunks in memory.
 ]]
 
 local Players = nil
 pcall(function() Players = game:GetService("Players") end)
 
-local StreamExplorer = {}
+local StreamExplorer = {
+    CapturedInstances = {}
+}
 
 -- Scan map bounds and calculate bounding box
 function StreamExplorer.GetMapBoundingBox()
     local minVec = Vector3.new(-1024, -100, -1024)
     local maxVec = Vector3.new(1024, 500, 1024)
 
-    -- Check if Terrain or Spawns exist
+    -- Check if Terrain exists
     local terrain = workspace.Terrain
     if terrain then
         local s, extents = pcall(function() return terrain.MaxExtents end)
@@ -5037,7 +5067,7 @@ function StreamExplorer.GetMapBoundingBox()
         end
     end
 
-    -- Check spawn locations or workspace children
+    -- Check workspace models/parts
     for _, child in ipairs(workspace:GetChildren()) do
         if child:IsA("BasePart") or child:IsA("Model") then
             pcall(function()
@@ -5057,17 +5087,47 @@ function StreamExplorer.GetMapBoundingBox()
     return minVec, maxVec
 end
 
--- Perform automated grid sweep to load chunks safely without triggering movement anti-cheats
+-- Index currently loaded instances in workspace into memory accumulator
+function StreamExplorer.AccumulateCurrentInstances()
+    for _, desc in ipairs(workspace:GetDescendants()) do
+        if not StreamExplorer.CapturedInstances[desc] then
+            StreamExplorer.CapturedInstances[desc] = true
+        end
+    end
+end
+
+-- Get all accumulated instances across all visited chunks
+function StreamExplorer.GetAccumulatedInstances()
+    local list = {}
+    for inst, _ in pairs(StreamExplorer.CapturedInstances) do
+        table.insert(list, inst)
+    end
+    return list
+end
+
+-- Clear accumulator
+function StreamExplorer.ClearAccumulator()
+    table.clear(StreamExplorer.CapturedInstances)
+end
+
+-- Perform stealth grid sweep to load chunks safely without moving character
 function StreamExplorer.ExploreMap(stepSize, progressCallback)
-    if not workspace.StreamingEnabled then return true end
+    if not workspace.StreamingEnabled then
+        StreamExplorer.AccumulateCurrentInstances()
+        return true
+    end
 
     local player = nil
     pcall(function() player = Players and Players.LocalPlayer end)
+    local camera = workspace.CurrentCamera
+    local originalCameraCFrame = camera and camera.CFrame
+    local originalCameraType = camera and camera.CameraType
+
     local hrp = nil
     if allowPhysicalTeleport and player and player.Character then
         hrp = player.Character:FindFirstChild("HumanoidRootPart")
     end
-    local originalCFrame = hrp and hrp.CFrame
+    local originalHrpCFrame = hrp and hrp.CFrame
     local minVec, maxVec = StreamExplorer.GetMapBoundingBox()
 
     local step = stepSize or 512
@@ -5075,15 +5135,32 @@ function StreamExplorer.ExploreMap(stepSize, progressCallback)
 
     for x = minVec.X, maxVec.X, step do
         for z = minVec.Z, maxVec.Z, step do
-            table.insert(points, Vector3.new(x, math.max(50, (minVec.Y + maxVec.Y) / 2), z))
+            table.insert(points, Vector3.new(x, math.max(60, (minVec.Y + maxVec.Y) / 2), z))
         end
     end
 
     local total = #points
     local completed = 0
 
+    -- Put camera in Scriptable mode to focus on chunks without character movement
+    if camera and not allowPhysicalTeleport then
+        pcall(function()
+            camera.CameraType = Enum.CameraType.Scriptable
+        end)
+    end
+
+    -- Initial capture of spawn region
+    StreamExplorer.AccumulateCurrentInstances()
+
     for i, targetPos in ipairs(points) do
-        -- 1. Stealth non-intrusive stream request (Zero character displacement)
+        -- 1. Stealth Camera focus (Moves observation vector without triggering movement anti-cheat)
+        if camera and not allowPhysicalTeleport then
+            pcall(function()
+                camera.CFrame = CFrame.new(targetPos + Vector3.new(0, 120, 0), targetPos)
+            end)
+        end
+
+        -- 2. Non-intrusive stream request
         local requested = false
         if player and player.RequestStreamAroundAsync then
             local s = pcall(function() player:RequestStreamAroundAsync(targetPos) end)
@@ -5093,25 +5170,40 @@ function StreamExplorer.ExploreMap(stepSize, progressCallback)
             pcall(function() workspace:RequestStreamAroundAsync(targetPos) end)
         end
 
-        -- 2. Physical teleportation only if explicitly allowed (Avoids anti-cheat kicks)
+        -- 3. Optional physical teleport (Only if user explicitly forced it)
         if allowPhysicalTeleport and hrp then
             pcall(function()
                 hrp.CFrame = CFrame.new(targetPos)
             end)
         end
 
-        task.wait(0.08) -- Wait for server replication chunk
-        completed = i
+        -- Natural jitter delay (70ms to 110ms)
+        local jitter = 0.07 + (math.random(1, 40) / 1000)
+        task.wait(jitter)
 
+        -- 4. Accumulate newly streamed instances into memory buffer before potential stream-out
+        StreamExplorer.AccumulateCurrentInstances()
+
+        completed = i
         if progressCallback then
             pcall(progressCallback, completed, total, targetPos)
         end
     end
 
-    -- Return to original position if physically teleported
-    if allowPhysicalTeleport and hrp and originalCFrame then
+    -- Restore camera to normal gameplay state
+    if camera and originalCameraType then
         pcall(function()
-            hrp.CFrame = originalCFrame
+            camera.CameraType = originalCameraType
+            if originalCameraCFrame then
+                camera.CFrame = originalCameraCFrame
+            end
+        end)
+    end
+
+    -- Restore character if physically moved
+    if allowPhysicalTeleport and hrp and originalHrpCFrame then
+        pcall(function()
+            hrp.CFrame = originalHrpCFrame
         end)
     end
 
@@ -6302,7 +6394,7 @@ function Interface:BuildUI()
                 local ping = 0
                 pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
                 if compactBar and compactBar.Visible then
-                    cStats.Text = string.format("[ROOT] FPS: %d | PING: %dms | 0x%X", fps, ping, math.random(0x1000, 0xFFFF))
+                    cStats.Text = string.format("FPS: %d • Ping: %dms", fps, ping)
                 end
             end
         end)
@@ -6734,6 +6826,85 @@ function Interface:BuildDashboardTab()
         Environment.SetClipboard(name)
         copyAssetsPathBtn.Text = "✓ Copiado!"
         task.delay(2, function() copyAssetsPathBtn.Text = "Copiar Pasta de Assets" end)
+    end)
+
+    -- Live Telemetry Stats Row
+    local telemetryCard = Instance.new("Frame")
+    telemetryCard.Size = UDim2.new(1, -32, 0, 46)
+    telemetryCard.Position = UDim2.new(0, 16, 0, 310)
+    telemetryCard.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(telemetryCard, Theme.CornerMedium)
+    Theme.AddStroke(telemetryCard, Theme.Border, 1)
+    telemetryCard.Parent = parent
+
+    local tLayout = Instance.new("UIListLayout")
+    tLayout.FillDirection = Enum.FillDirection.Horizontal
+    tLayout.Padding = UDim.new(0, 0)
+    tLayout.Parent = telemetryCard
+
+    local function createTelemetryItem(label, defaultVal, widthRatio)
+        local itemFrame = Instance.new("Frame")
+        itemFrame.Size = UDim2.new(widthRatio, 0, 1, 0)
+        itemFrame.BackgroundTransparency = 1
+        itemFrame.Parent = telemetryCard
+
+        local valLbl = Instance.new("TextLabel")
+        valLbl.Text = defaultVal
+        valLbl.Font = Theme.FontTitle
+        valLbl.TextSize = 12
+        valLbl.TextColor3 = Theme.TextPrimary
+        valLbl.Size = UDim2.new(1, 0, 0, 18)
+        valLbl.Position = UDim2.new(0, 0, 0, 6)
+        valLbl.BackgroundTransparency = 1
+        valLbl.Parent = itemFrame
+
+        local tagLbl = Instance.new("TextLabel")
+        tagLbl.Text = label
+        tagLbl.Font = Theme.FontRegular
+        tagLbl.TextSize = 9
+        tagLbl.TextColor3 = Theme.TextSecondary
+        tagLbl.Size = UDim2.new(1, 0, 0, 14)
+        tagLbl.Position = UDim2.new(0, 0, 0, 24)
+        tagLbl.BackgroundTransparency = 1
+        tagLbl.Parent = itemFrame
+
+        return valLbl
+    end
+
+    local fpsValLbl = createTelemetryItem("FPS DO JOGO", "60", 0.333)
+    local pingValLbl = createTelemetryItem("PING DE REDE", "-- ms", 0.333)
+    local ramValLbl = createTelemetryItem("MEMÓRIA CLIENT", "-- MB", 0.334)
+
+    task.spawn(function()
+        local Stats = game:GetService("Stats")
+        local fpsCount = 0
+        local lastUpdate = os.clock()
+        local runServ = game:GetService("RunService")
+        runServ.RenderStepped:Connect(function()
+            fpsCount = fpsCount + 1
+            local now = os.clock()
+            if now - lastUpdate >= 0.5 then
+                local fps = math.round(fpsCount / (now - lastUpdate))
+                fpsCount = 0
+                lastUpdate = now
+                local ping = 0
+                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                local mem = 0
+                pcall(function() mem = math.round(Stats:GetTotalMemoryUsageMb()) end)
+
+                if fpsValLbl and fpsValLbl.Parent then
+                    fpsValLbl.Text = tostring(fps)
+                    fpsValLbl.TextColor3 = (fps >= 45) and Theme.AccentSuccess or Theme.AccentWarning
+                end
+                if pingValLbl and pingValLbl.Parent then
+                    pingValLbl.Text = tostring(ping) .. " ms"
+                    pingValLbl.TextColor3 = (ping < 120) and Theme.AccentSuccess or Theme.AccentWarning
+                end
+                if ramValLbl and ramValLbl.Parent then
+                    ramValLbl.Text = tostring(mem) .. " MB"
+                end
+            end
+        end)
     end)
 end
 
@@ -9621,14 +9792,28 @@ end)
 __define__("Utils/Stealth", function()
 --[[
     HyperSaveInstance - Stealth & Anti-Detection Shield
-    Protects threads, hides temporary instances and masks operations from in-game anti-cheats.
+    Protects threads, masks operations, hides UI instances and suppresses telemetry from in-game anti-cheats.
 ]]
 
 local Stealth = {}
 
+local HttpService = nil
+pcall(function() HttpService = game:GetService("HttpService") end)
+
+-- Generate ephemeral GUID for instance naming (Prevents static string signature detection)
+function Stealth.GenerateEphemeralGUID()
+    if HttpService and HttpService.GenerateGUID then
+        local s, guid = pcall(function() return HttpService:GenerateGUID(false) end)
+        if s and guid then
+            return "HSI_" .. string.gsub(guid, "%-", "")
+        end
+    end
+    return Stealth.GenerateRandomName(24)
+end
+
 -- Generate random alphanumeric name
 function Stealth.GenerateRandomName(len)
-    local length = len or 16
+    local length = len or 20
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     local res = {}
     for i = 1, length do
@@ -9638,7 +9823,7 @@ function Stealth.GenerateRandomName(len)
     return table.concat(res)
 end
 
--- Safely protect GUI instance from detection
+-- Safely protect GUI instance from anti-cheat detection
 function Stealth.ProtectGui(gui)
     local protected = false
     pcall(function()

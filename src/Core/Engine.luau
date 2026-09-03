@@ -497,6 +497,14 @@ function Engine:Start(): (boolean, string)
         scan(root)
     end
 
+    -- Process any accumulated streaming instances preserved from stream-out chunks
+    local accumulated = StreamExplorer.GetAccumulatedInstances()
+    for _, accInst in ipairs(accumulated) do
+        if not visited[accInst] and self:ShouldSaveInstance(accInst) then
+            scan(accInst)
+        end
+    end
+
     -- Pre-warm asset cache for instant reflection read
     pcall(function()
         AssetHandler.WarmAssets(allInstances)

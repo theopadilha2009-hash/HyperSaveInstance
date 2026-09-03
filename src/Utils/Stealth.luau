@@ -1,13 +1,27 @@
 --[[
     HyperSaveInstance - Stealth & Anti-Detection Shield
-    Protects threads, hides temporary instances and masks operations from in-game anti-cheats.
+    Protects threads, masks operations, hides UI instances and suppresses telemetry from in-game anti-cheats.
 ]]
 
 local Stealth = {}
 
+local HttpService = nil
+pcall(function() HttpService = game:GetService("HttpService") end)
+
+-- Generate ephemeral GUID for instance naming (Prevents static string signature detection)
+function Stealth.GenerateEphemeralGUID(): string
+    if HttpService and HttpService.GenerateGUID then
+        local s, guid = pcall(function() return HttpService:GenerateGUID(false) end)
+        if s and guid then
+            return "HSI_" .. string.gsub(guid, "%-", "")
+        end
+    end
+    return Stealth.GenerateRandomName(24)
+end
+
 -- Generate random alphanumeric name
 function Stealth.GenerateRandomName(len: number?): string
-    local length = len or 16
+    local length = len or 20
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     local res = {}
     for i = 1, length do
@@ -17,7 +31,7 @@ function Stealth.GenerateRandomName(len: number?): string
     return table.concat(res)
 end
 
--- Safely protect GUI instance from detection
+-- Safely protect GUI instance from anti-cheat detection
 function Stealth.ProtectGui(gui: Instance): boolean
     local protected = false
     pcall(function()

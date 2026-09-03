@@ -1,6 +1,7 @@
 --[[
     HyperSaveInstance - Comprehensive Raw Asset Downloader Engine
     Downloads raw audios (.mp3), textures (.png), 3D meshes (.mesh/.obj) and animations to local disk.
+    Equipped with Dynamic Network & FPS Throttling, Exponential Backoff and Ping Guard.
 ]]
 
 local Environment = require(script.Parent.Parent.Utils.Environment)
@@ -108,17 +109,32 @@ end
 
 -- Measure real-time client ping to prevent server desync/heartbeat disconnects
 function AssetDownloader.GetClientPing(): number
-    local ping = 50
+    local ping = 45
     pcall(function()
         local stats = game:GetService("Stats")
         local net = stats and stats:FindFirstChild("Network")
         local ssi = net and net:FindFirstChild("ServerStatsItem")
         local dp = ssi and ssi:FindFirstChild("Data Ping")
         if dp and dp:IsA("ValueBase") then
-            ping = (dp :: any).Value or 50
+            ping = (dp :: any).Value or 45
         end
     end)
     return ping
+end
+
+-- Measure real-time client FPS
+function AssetDownloader.GetClientFPS(): number
+    local fps = 60
+    pcall(function()
+        local ws = game:GetService("Workspace")
+        if ws and ws.GetRealPhysicsFPS then
+            local val = ws:GetRealPhysicsFPS()
+            if val and val > 0 then
+                fps = val
+            end
+        end
+    end)
+    return fps
 end
 
 -- Export structured JSON manifest for offline downloading
@@ -151,7 +167,7 @@ function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath:
     return false, "Failed to encode JSON manifest"
 end
 
--- Download all collected assets safely with Ping Guard, Rate Limiting & Exponential Backoff
+-- Download all collected assets safely with Ping Guard, FPS Throttling & Exponential Backoff
 function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: string, options: table, progressCallback: (current: number, total: number, asset: table) -> ()): (number, number)
     local opts = options or {}
     Environment.MakeFolder(baseFolder)
@@ -175,8 +191,8 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
     local failed = 0
     local currentIndex = 1
 
-    -- In public servers or safe mode, constrain workers to prevent bandwidth saturation
-    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 4, 2, 6) or math.clamp(opts.AssetDownloadWorkers or 8, 2, 16)
+    -- In safe mode, constrain workers to 3-4 to keep network and CPU usage imperceptible
+    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 3, 1, 4) or math.clamp(opts.AssetDownloadWorkers or 6, 2, 8)
     local activeWorkers = maxWorkers
 
     for w = 1, maxWorkers do
@@ -187,13 +203,15 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
 
                 local item = assetList[myIndex]
                 if item then
-                    -- 1. Adaptive Ping Guard: Pause if ping spikes above 180ms
-                    if opts.PingGuard ~= false then
+                    -- 1. Adaptive Ping & FPS Guard: Pause if ping > 160ms or FPS < 35
+                    if opts.SafeAssetDownload ~= false then
                         local currentPing = AssetDownloader.GetClientPing()
+                        local currentFps = AssetDownloader.GetClientFPS()
                         local retryCount = 0
-                        while currentPing > 180 and retryCount < 10 do
-                            task.wait(0.3)
+                        while (currentPing > 160 or currentFps < 35) and retryCount < 12 do
+                            task.wait(0.25)
                             currentPing = AssetDownloader.GetClientPing()
+                            currentFps = AssetDownloader.GetClientFPS()
                             retryCount = retryCount + 1
                         end
                     end
@@ -232,7 +250,7 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
                         end
 
                         if attempt <= maxRetries then
-                            task.wait(0.4 * attempt) -- Exponential backoff
+                            task.wait(0.3 * attempt)
                         end
                     end
 
@@ -252,8 +270,8 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
                     end
                 end
 
-                -- 3. Jittered rate limiting (50ms to 120ms delay) to mimic natural client requests
-                local jitter = math.random(50, 120) / 1000
+                -- Jittered rate limiting delay (40ms to 80ms)
+                local jitter = math.random(40, 80) / 1000
                 task.wait(jitter)
             end
             activeWorkers = activeWorkers - 1
