@@ -2986,10 +2986,10 @@ function RaycastSelector:InitVisuals()
     pcall(function()
         local hl = Instance.new("Highlight")
         hl.Name = "HyperSave_SelectorHighlight"
-        hl.FillColor = Color3.fromRGB(168, 85, 247)
-        hl.FillTransparency = 0.6
-        hl.OutlineColor = Color3.fromRGB(243, 232, 255)
-        hl.OutlineTransparency = 0.05
+        hl.FillColor = Color3.fromRGB(37, 99, 235)
+        hl.FillTransparency = 0.5
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+        hl.OutlineTransparency = 0
         hl.Enabled = false
         
         -- Store in gethui, CoreGui or workspace safely
@@ -4421,7 +4421,7 @@ local function buildGame()
             end
 
             -- Attributes
-            if options.SaveAttributes then
+            if opts.SaveAttributes ~= false then
                 local attrs = Reflection.GetAttributes(inst)
                 for k, v in pairs(attrs) do
                     local luaV = formatValueLua(v, typeof(v))
@@ -4432,7 +4432,7 @@ local function buildGame()
             end
 
             -- Tags
-            if options.SaveTags then
+            if opts.SaveTags ~= false then
                 local tags = Reflection.GetTags(inst)
                 for _, tag in ipairs(tags) do
                     append(string.format('    pcall(function() CollectionService:AddTag(%s, %q) end)\n', varName, tag))
@@ -5271,10 +5271,15 @@ function TerrainSerializer.ExtractTerrainData(terrain, options)
     local yChunks = math.ceil((maxVoxel.Y - minVoxel.Y) / step)
     local zChunks = math.ceil((maxVoxel.Z - minVoxel.Z) / step)
 
+    local chunkCount = 0
     -- Iterate chunks
     for cx = 0, xChunks - 1 do
         for cy = 0, yChunks - 1 do
             for cz = 0, zChunks - 1 do
+                chunkCount = chunkCount + 1
+                if chunkCount % 12 == 0 then
+                    task.wait(0.001)
+                end
                 local chunkMin = Vector3int16.new(
                     minVoxel.X + cx * step,
                     minVoxel.Y + cy * step,
@@ -6276,8 +6281,7 @@ function Interface:BuildUI()
             bStroke.Color = Theme.AccentSuccess
             
             pcall(function()
-                local wfn = Environment.GetWriteFileFunction()
-                if wfn then wfn("HyperSave_License.key", kInput.Text) end
+                Environment.WriteFile("HyperSave_License.key", kInput.Text)
             end)
 
             task.delay(1.5, function()
@@ -9270,6 +9274,10 @@ local _listfiles = listfiles or (syn and syn.listfiles)
 
 function Environment.HasFileSystem()
     return type(_writefile) == "function"
+end
+
+function Environment.GetWriteFileFunction()
+    return _writefile
 end
 
 -- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes

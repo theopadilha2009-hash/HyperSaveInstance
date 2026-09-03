@@ -98,7 +98,7 @@ local function buildGame()
             end
 
             -- Attributes
-            if options.SaveAttributes then
+            if opts.SaveAttributes ~= false then
                 local attrs = Reflection.GetAttributes(inst)
                 for k, v in pairs(attrs) do
                     local luaV = formatValueLua(v, typeof(v))
@@ -109,7 +109,7 @@ local function buildGame()
             end
 
             -- Tags
-            if options.SaveTags then
+            if opts.SaveTags ~= false then
                 local tags = Reflection.GetTags(inst)
                 for _, tag in ipairs(tags) do
                     append(string.format('    pcall(function() CollectionService:AddTag(%s, %q) end)\n', varName, tag))

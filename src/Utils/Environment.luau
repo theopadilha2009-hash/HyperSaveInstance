@@ -118,6 +118,10 @@ function Environment.HasFileSystem(): boolean
     return type(_writefile) == "function"
 end
 
+function Environment.GetWriteFileFunction()
+    return _writefile
+end
+
 -- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes
 function Environment.SanitizeFileName(name: string): string
     if not name or #name == 0 then return "Unnamed" end

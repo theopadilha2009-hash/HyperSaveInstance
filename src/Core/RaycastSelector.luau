@@ -35,10 +35,10 @@ function RaycastSelector:InitVisuals()
     pcall(function()
         local hl = Instance.new("Highlight")
         hl.Name = "HyperSave_SelectorHighlight"
-        hl.FillColor = Color3.fromRGB(168, 85, 247)
-        hl.FillTransparency = 0.6
-        hl.OutlineColor = Color3.fromRGB(243, 232, 255)
-        hl.OutlineTransparency = 0.05
+        hl.FillColor = Color3.fromRGB(37, 99, 235)
+        hl.FillTransparency = 0.5
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+        hl.OutlineTransparency = 0
         hl.Enabled = false
         
         -- Store in gethui, CoreGui or workspace safely

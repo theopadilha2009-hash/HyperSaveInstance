@@ -415,8 +415,7 @@ function Interface:BuildUI()
             bStroke.Color = Theme.AccentSuccess
             
             pcall(function()
-                local wfn = Environment.GetWriteFileFunction()
-                if wfn then wfn("HyperSave_License.key", kInput.Text) end
+                Environment.WriteFile("HyperSave_License.key", kInput.Text)
             end)
 
             task.delay(1.5, function()

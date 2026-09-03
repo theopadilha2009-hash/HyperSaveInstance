@@ -54,10 +54,15 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
     local yChunks = math.ceil((maxVoxel.Y - minVoxel.Y) / step)
     local zChunks = math.ceil((maxVoxel.Z - minVoxel.Z) / step)
 
+    local chunkCount = 0
     -- Iterate chunks
     for cx = 0, xChunks - 1 do
         for cy = 0, yChunks - 1 do
             for cz = 0, zChunks - 1 do
+                chunkCount = chunkCount + 1
+                if chunkCount % 12 == 0 then
+                    task.wait(0.001)
+                end
                 local chunkMin = Vector3int16.new(
                     minVoxel.X + cx * step,
                     minVoxel.Y + cy * step,
