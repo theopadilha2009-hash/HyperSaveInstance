@@ -1,12 +1,12 @@
-#  HyperSaveInstance - API Documentation
+# HyperSaveInstance - Documentação da API
 
-HyperSaveInstance can be executed directly as an interactive In-Game GUI or used programmatically inside custom automation scripts.
+O HyperSaveInstance pode ser executado como interface interativa (HUD) ou programaticamente dentro de scripts de automação.
 
 ---
 
-## Quick Execution
+## Execução Rápida
 
-### Interactive HUD (Default)
+### Interface Interativa (HUD)
 ```lua
 local HyperSaveInstance = loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()
 HyperSaveInstance.OpenUI()
@@ -14,67 +14,79 @@ HyperSaveInstance.OpenUI()
 
 ---
 
-## Programmatic API
+## API Programática
 
-### `HyperSaveInstance.Save(options: table)`
-Runs the full clone process with custom configuration options.
+### `HyperSaveInstance.Save(options: table?): (boolean, string)`
+Executa o processo de salvamento com opções customizadas.
 
-#### Example:
+#### Exemplo:
 ```lua
 local HyperSaveInstance = loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()
 
 local success, message = HyperSaveInstance.Save({
     Format = "rbxlx",                   -- "rbxlx" | "rbxl" | "lua"
-    DecompileScripts = true,            -- Decompile LocalScripts & ModuleScripts
-    SaveTerrainVoxels = true,           -- Extract 3D smooth terrain voxels
-    SaveLighting = true,                -- Atmosphere, Sky, Post-processing
-    SaveNilInstances = true,            -- Capture isolated nil instances
-    DecompileParallelWorkers = 8,       -- Multi-threaded decompiler
-    FilePath = "MyCustomClone.rbxlx"   -- Target file name
+    Mode = "Full",                      -- "Full" | "Fast" | "VisualsOnly" | "ScriptsOnly" | "Ghost"
+    DecompileScripts = true,            -- Descompilar LocalScripts & ModuleScripts
+    SaveTerrainVoxels = true,           -- Extrair voxels 3D do SmoothTerrain
+    SaveLighting = true,                -- Capturar Atmosphere, Sky e Pós-processamento
+    SaveNilInstances = true,            -- Capturar instâncias isoladas em nil
+    SafeAssetDownload = true,           -- Throttling inteligente de rede por Ping & FPS
+    FilePath = "MyGameClone.rbxlx"      -- Nome do arquivo de saída
 })
 
 if success then
-    print("Game cloned successfully!", message)
+    print("Jogo salvo com sucesso em:", message)
 else
-    warn("Failed to clone game:", message)
+    warn("Falha ao salvar:", message)
 end
 ```
 
 ---
 
-## Preset Methods
+## Métodos de Presets Rápidos
 
 ### `HyperSaveInstance.SaveFast(options: table?)`
-Saves all visual elements and models quickly without waiting for script decompilation or full voxel extraction.
+Salva elementos visuais e modelos rapidamente sem aguardar a descompilação de scripts.
 
 ### `HyperSaveInstance.SaveVisuals(options: table?)`
-Saves 100% of visual elements, materials, terrain properties, lighting, sounds, and UI without decompiling scripts.
+Salva geometria, texturas, propriedades de terreno, iluminação, sons e interfaces gráficas.
 
 ### `HyperSaveInstance.SaveScripts(options: table?)`
-Focused exclusively on extracting and decompiling all client and replicated scripts in the game.
+Focado exclusivamente na extração e descompilação de scripts locais e replicados.
+
+### `HyperSaveInstance.SaveSilent(options: table?)` / `HyperSaveInstance.SaveGhost(options: table?)`
+Executa o salvamento em segundo plano sem abrir interface gráfica, sem reproduzir sons e com proteção de evasão ativa.
+
+### `HyperSaveInstance.ExportWeb3D(targetRoot: Instance?, options: table?): (boolean, string)`
+Exporta a geometria 3D para um arquivo HTML interativo autônomo com visualizador WebGL (Three.js).
+
+### `HyperSaveInstance.Snapshot(name: string?, root: Instance?): (boolean, string)`
+Registra um snapshot das instâncias para acompanhamento de atualizações do mapa (Place Diff Tracker).
 
 ---
 
-## Configuration Options Reference
+## Referência de Configurações
 
-| Option | Type | Default | Description |
+| Opção | Tipo | Padrão | Descrição |
 | :--- | :---: | :---: | :--- |
-| `Format` | `string` | `"rbxlx"` | Output format: `"rbxlx"` (Roblox XML), `"rbxl"` (Binary), or `"lua"` (Studio recreation script) |
-| `Mode` | `string` | `"Full"` | Preset mode: `"Full"`, `"Fast"`, `"VisualsOnly"`, `"ScriptsOnly"` |
-| `FilePath` | `string` | `""` | Destination file path (auto-generated if empty) |
-| `ShowUI` | `boolean` | `true` | Opens the Glassmorphic HUD upon execution |
-| `SaveTerrain` | `boolean` | `true` | Preserves Terrain water properties, decorations, and materials |
-| `SaveTerrainVoxels` | `boolean` | `true` | Extracts 3D Voxel occupancy and material grid data |
-| `TerrainVoxelStep` | `number` | `64` | Chunk step size for reading terrain voxels safely |
-| `SaveLighting` | `boolean` | `true` | Captures Lighting, Skybox, Atmosphere, and Post-effects |
-| `SaveSounds` | `boolean` | `true` | Preserves Sound instances, SoundGroups, and audio effects |
-| `SaveUnions` | `boolean` | `true` | Preserves CSG UnionOperations and NegateOperations |
-| `SaveSurfaceAppearance` | `boolean` | `true` | Preserves PBR Normal, Roughness, and Metalness maps |
-| `SaveAttributes` | `boolean` | `true` | Saves all modern instance custom attributes |
-| `SaveTags` | `boolean` | `true` | Saves all CollectionService tags |
-| `DecompileScripts` | `boolean` | `true` | Decompiles LocalScripts and ModuleScripts |
-| `DecompileTimeout` | `number` | `12` | Max time (seconds) to wait per script |
-| `DecompileParallelWorkers` | `number` | `8` | Number of concurrent decompiler threads |
-| `SaveServerScriptPlaceholders` | `boolean` | `true` | Creates structured stub scripts with network event listeners for server scripts |
-| `SaveNilInstances` | `boolean` | `true` | Captures isolated nil instances via `getnilinstances()` |
-| `PreloadStreaming` | `boolean` | `true` | Preloads map chunks when StreamingEnabled is active |
+| `Format` | `string` | `"rbxlx"` | Formato de saída: `"rbxlx"` (XML), `"rbxl"` (Binário) ou `"lua"` |
+| `Mode` | `string` | `"Full"` | Modo de operação: `"Full"`, `"Fast"`, `"VisualsOnly"`, `"ScriptsOnly"`, `"Ghost"` |
+| `FilePath` | `string` | `""` | Caminho de destino (gerado automaticamente se vazio) |
+| `ShowUI` | `boolean` | `true` | Abre o HUD interativo na inicialização |
+| `AutoAntiAFK` | `boolean` | `true` | Proteção automática contra desconexão por inatividade (20 min) |
+| `AutoExploreStreaming` | `boolean` | `true` | Varredura de chunks por câmera para jogos com StreamingEnabled |
+| `StealthMode` | `boolean` | `true` | Proteções de evasão e anonimização contra anti-cheats de jogos |
+| `SafeAssetDownload` | `boolean` | `true` | Pausa downloads de assets se o Ping > 160ms ou FPS < 35 |
+| `DownloadRawAssets` | `boolean` | `false` | Salva arquivos brutos (.mp3, .png, .mesh) em pasta local |
+| `SaveTerrain` | `boolean` | `true` | Preserva propriedades, cores e materiais do terreno |
+| `SaveTerrainVoxels` | `boolean` | `true` | Extrai matrizes de ocupação e material em 3D |
+| `SaveLighting` | `boolean` | `true` | Preserva Atmosphere, Sky, Bloom, SunRays e ColorCorrection |
+| `SaveSounds` | `boolean` | `true` | Preserva sons, SoundGroups e efeitos acústicos |
+| `SaveUnions` | `boolean` | `true` | Preserva uniões CSG e operações de negação |
+| `SaveSurfaceAppearance` | `boolean` | `true` | Preserva mapas PBR (Color, Normal, Metalness, Roughness) |
+| `SaveAttributes` | `boolean` | `true` | Salva atributos customizados de instâncias |
+| `SaveTags` | `boolean` | `true` | Salva tags do CollectionService |
+| `DecompileScripts` | `boolean` | `true` | Descompila LocalScripts e ModuleScripts |
+| `DecompileTimeout` | `number` | `12` | Tempo máximo (segundos) por script |
+| `DecompileParallelWorkers`| `number` | `8` | Quantidade de threads simultâneas no descompilador |
+| `SaveNilInstances` | `boolean` | `true` | Captura instâncias isoladas em nil via `getnilinstances()` |

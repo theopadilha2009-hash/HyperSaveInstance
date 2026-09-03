@@ -1,62 +1,52 @@
-#  HyperSaveInstance - Feature Architecture & Comparison
+# HyperSaveInstance - Arquitetura de Recursos e Comparativo
 
-HyperSaveInstance was designed from the ground up by analyzing and combining the best qualities of the leading Roblox reverse-engineering and serialization projects:
-- **UniversalSynSaveInstance (USSI)**: Robust traversal, service coverage, and file structuring.
-- **UltraSmartSaveInstance**: 10/10 visual fidelity, terrain voxel extraction, CSG preservation, and surface appearances.
-- **rbx-dom**: Strict adherence to official Roblox `.rbxlx` XML and `.rbxl` binary chunk specifications.
-- **rbx-instance-serializer**: Clean, modular instance property reconstruction.
+O HyperSaveInstance foi desenvolvido combinando as melhores técnicas de serialização, engenharia reversa e otimização de memória do ecossistema Roblox:
+- **UniversalSynSaveInstance (USSI)**: Ampla cobertura de serviços, propriedades e regras de compatibilidade.
+- **UltraSmartSaveInstance**: Fidelidade visual 10/10, extração de voxels 3D, preservação de CSG e PBR.
+- **rbx-dom**: Conformidade com as especificações oficiais de chunks XML e binários da Roblox.
+- **Raycast 3D World Selector**: Isolamento e extração de modelos e áreas específicas do mapa via mira 3D.
+- **Camera-Only Streaming Bypass**: Varredura espacial não-intrusiva sem movimentação física do personagem.
 
 ---
 
-##  Comprehensive Comparison
+## Tabela Comparativa
 
-| Feature | Legacy Synapse (2019) | USSI Standard | UltraSmart | **HyperSaveInstance v2.0** |
+| Recurso | Synapse Legado | USSI Standard | UltraSmart | **HyperSaveInstance v2.0** |
 | :--- | :---: | :---: | :---: | :---: |
-| **In-Game GUI (1-Click)** |  None |  None |  Basic UI |  **Modern Glassmorphic HUD** |
-| **Multi-Worker Decompiler** |  Single Thread |  Slow / Blocking |  Basic |  **Multi-Worker Pool (8+ Workers)** |
-| **Timeout & Auto-Retry** |  Hangs forever |  Partial |  Partial |  **Safe Timeout + Auto-Retry** |
-| **SmoothTerrain Voxel Extraction** |  No |  Basic |  Good |  **Full 3D Voxel Chunks + Water + Materials** |
-| **CSG Unions & MeshParts** |  Partial |  Partial |  Good |  **Full AssetId & RenderFidelity Preservation** |
-| **PBR SurfaceAppearance** |  No |  Partial |  Good |  **ColorMap, NormalMap, Metalness, Roughness** |
-| **Lighting & Atmosphere** |  Basic |  Good |  Good |  **Atmosphere, Sky, SunRays, PostEffects** |
-| **Audio & SoundGroups** |  Basic |  Basic |  Basic |  **Equalizer, Reverb, Distortion, PitchShift** |
-| **Constraints & Bones** |  Partial |  Partial |  Partial |  **Attachments, Bones, Motors, Welds, Align** |
-| **CollectionService Tags** |  No |  Partial |  Partial |  **100% Preserved via CollectionService** |
-| **Modern Attributes** |  No |  Partial |  Partial |  **100% Preserved via GetAttributes()** |
-| **Export: Roblox XML (.rbxlx)** |  Yes |  Yes |  Yes |  **Standard Compliant v4 XML** |
-| **Export: Roblox Binary (.rbxl)** |  No |  No |  No |  **LZ4-Compressed Binary Format** |
-| **Export: Studio Lua Script (.lua)** |  No |  No |  No |  **Standalone Recreation Script** |
-| **Bypass StreamingEnabled** |  No |  No |  Partial |  **Pre-loader Simulation** |
-| **Cross-Platform Support** |  Windows only |  Windows |  Windows |  **macOS, Windows & Mobile** |
+| **Interface no Jogo** | Não | Não | Básica | **Dashboard Dark Slate + Modo Pílula** |
+| **Bypass de StreamingEnabled** | Não | Não | Teleporte físico | **Câmera Furtiva + Memory Accumulator** |
+| **Throttling de Rede (Ping & FPS)** | Não | Não | Não | **Automático (Pausa se Ping > 160ms)** |
+| **Descompilador Paralelo** | Thread única | Lento | Básico | **Pool de Workers com Fallback AST** |
+| **Extração de Terreno 3D** | Não | Básica | Boa | **Voxels Completos + Propriedades de Água** |
+| **Preservação de Uniões CSG** | Parcial | Parcial | Boa | **AssetId & RenderFidelity Preservados** |
+| **Texturas PBR (SurfaceAppearance)** | Não | Parcial | Boa | **ColorMap, Normal, Metalness, Roughness** |
+| **Iluminação & Efeitos Atmosféricos**| Básico | Bom | Bom | **Atmosphere, Sky, SunRays, Bloom, DoF** |
+| **Sons & Grupos de Áudio** | Básico | Básico | Básico | **SoundGroups, Reverb, PitchShift, Distortion** |
+| **CollectionService & Atributos** | Não | Parcial | Parcial | **100% Preservados via Reflection** |
+| **Exportação: Roblox XML (.rbxlx)** | Sim | Sim | Sim | **Padrão Oficial Roblox Studio** |
+| **Exportação: Roblox Binário (.rbxl)**| Não | Não | Não | **Formato Binário Comprimido LZ4** |
+| **Exportador 3D WebGL (HTML)** | Não | Não | Não | **Visualizador 3D Three.js Autônomo** |
+| **Rastreador de Atualizações (Diff)**| Não | Não | Não | **Snapshots & Relatório de Modificações** |
+| **Plugin de Reparo para o Studio** | Não | Não | Não | **Reparo Mestre em 1-Clique (Knit/DataStore)** |
+| **Suporte Multiplataforma** | Apenas Windows | Windows | Windows | **macOS, Windows e Mobile** |
 
 ---
 
-##  Visual Fidelity Engine (10/10)
+## Módulos da Engine
 
-1. **Terrain Engine**:
-   - Reads 3D regions using `Terrain:ReadVoxels(Region3int16)`.
-   - Preserves exact Material & Occupancy matrices encoded in Base64 streams.
-   - Saves WaterWaveSize, WaterWaveSpeed, WaterColor, WaterReflectance, WaterTransparency, and custom MaterialColors.
+1. **Motor de Terreno (SmoothVoxels)**:
+   - Lê regiões 3D via `Terrain:ReadVoxels()`.
+   - Preserva matrizes exatas de material e ocupação.
+   - Salva propriedades customizadas de água e cores de materiais.
 
-2. **CSG & MeshPart Engine**:
-   - Preserves `MeshId`, `TextureID`, `RenderFidelity`, `CollisionFidelity`, and `DoubleSided`.
-   - Handles `UnionOperation` asset references and solid modeling smoothing angles.
+2. **Motor de CSG e Malhas**:
+   - Preserva `MeshId`, `TextureID`, `RenderFidelity`, `CollisionFidelity` e `DoubleSided`.
+   - Trata referências de `UnionOperation` e ângulos de suavização.
 
-3. **Lighting & Environment**:
-   - Preserves exact global lighting values (`Ambient`, `OutdoorAmbient`, `Brightness`, `ClockTime`, `ExposureCompensation`, `Technology`).
-   - Atmosphere settings (`Density`, `Offset`, `Color`, `Decay`, `Glare`, `Haze`).
-   - Skybox textures (`SkyboxBk`, `SkyboxDn`, `SkyboxFt`, `SkyboxLf`, `SkyboxRt`, `SkyboxUp`, `SunTextureId`, `MoonTextureId`).
-   - Full post-processing effects (`BloomEffect`, `BlurEffect`, `ColorCorrectionEffect`, `SunRaysEffect`, `DepthOfFieldEffect`).
+3. **Motor de Iluminação e Atmosfera**:
+   - Preserva tecnologia de renderização (`Technology.Future`, `ShadowSoftness`, `GlobalShadows`).
+   - Propriedades de `Atmosphere`, texturas de `Sky` e pós-processamento completo.
 
----
-
-##  Script Decompiler Engine (10/10)
-
-1. **LocalScripts & ModuleScripts**:
-   - Decompiled in parallel using configurable worker pools.
-   - Includes metadata headers with hierarchy path, execution timestamp, and executor identifier.
-   - Automatic fallback to raw Luau bytecode dump if the executor lacks a full decompiler.
-
-2. **Server Scripts (`Script`)**:
-   - In Roblox FilteringEnabled, server script bytecode resides exclusively on the Roblox servers and is inaccessible to client execution.
-   - HyperSaveInstance preserves the entire instance hierarchy, properties, attributes, and tags, creating formatted placeholder stubs with RemoteEvent / RemoteFunction network endpoints.
+4. **Motor de Descompilação e Fallback**:
+   - Processamento de `LocalScripts` e `ModuleScripts` em paralelo com limitação de taxa.
+   - Fallback para bytecode Luau ou mocks de AST quando a descompilação não estiver disponível no executor.
