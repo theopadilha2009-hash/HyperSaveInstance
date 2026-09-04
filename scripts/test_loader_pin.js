@@ -61,4 +61,78 @@ const detects = trunc.a !== fullSum.a || trunc.b !== fullSum.b;
 console.log(`  ${detects ? 'OK  ' : 'FALHA '} truncamento de 1 byte e detectado`);
 
 console.log(allMatch && detects ? '\nRESULTADO: paridade Luau/JS confirmada em todos os casos' : '\nRESULTADO: FALHOU');
-process.exit(allMatch && detects ? 0 : 1);
+if (!(allMatch && detects)) process.exit(1);
+
+// ---------------------------------------------------------------------------
+// End-to-end: run loader.luau in a Lua VM with a stubbed game:HttpGet and check
+// that it accepts the exact body it was pinned to and rejects anything else.
+// ---------------------------------------------------------------------------
+
+function runLoaderWith(serverBody, { expectedBytes, adlerA, adlerB }) {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'loader.luau'), 'utf8')
+        .replace(/local PINNED_COMMIT = "[^"]*"/, 'local PINNED_COMMIT = "deadbeef"')
+        .replace(/local EXPECTED_ADLER_A = \d+/, `local EXPECTED_ADLER_A = ${adlerA}`)
+        .replace(/local EXPECTED_ADLER_B = \d+/, `local EXPECTED_ADLER_B = ${adlerB}`)
+        .replace(/local EXPECTED_BYTES = \d+/, `local EXPECTED_BYTES = ${expectedBytes}`)
+        // Fengari is Lua 5.3, so the Luau type annotations have to come off the
+        // same way scripts/bundle.js strips them before shipping.
+        .replace(/\)\s*:\s*\([^)]*\)/g, ')')
+        .replace(/\)\s*:\s*[\w?]+/g, ')')
+        .replace(/(\w+)\s*:\s*[\w?]+(\s*[,)])/g, '$1$2');
+
+    const L = lauxlib.luaL_newstate();
+    lualib.luaL_openlibs(L);
+
+    const harness = `
+        local warnings = {}
+        warn = function(msg) warnings[#warnings + 1] = tostring(msg) end
+        game = { HttpGet = function(self, url) return SERVER_BODY end }
+        loadstring = load
+        local result = LOADER()
+        return result, table.concat(warnings, " | ")
+    `;
+
+    lua.lua_pushstring(L, Buffer.from(serverBody, 'binary'));
+    lua.lua_setglobal(L, to_luastring('SERVER_BODY'));
+
+    if (lauxlib.luaL_loadstring(L, to_luastring(src)) !== lua.LUA_OK) {
+        throw new Error(`loader compile: ${lua.lua_tojsstring(L, -1)}`);
+    }
+    lua.lua_setglobal(L, to_luastring('LOADER'));
+
+    if (lauxlib.luaL_dostring(L, to_luastring(harness)) !== lua.LUA_OK) {
+        throw new Error(`harness: ${lua.lua_tojsstring(L, -1)}`);
+    }
+    const warnings = lua.lua_tojsstring(L, -1);
+    const loaded = !lua.lua_isnil(L, -2);
+    return { loaded, warnings };
+}
+
+console.log('\n--- loader end-to-end ---');
+{
+    // A tiny stand-in for the bundle: the real one needs a full Roblox runtime,
+    // and what is under test here is the integrity gate, not the suite.
+    const body = 'return { marker = "ok" }';
+    const buf = Buffer.from(body, 'binary');
+    const sum = adler32JS(buf);
+    const pin = { expectedBytes: buf.length, adlerA: sum.a, adlerB: sum.b };
+
+    const good = runLoaderWith(body, pin);
+    console.log(`  ${good.loaded && !good.warnings ? 'OK  ' : 'FALHA '} corpo integro e aceito${good.warnings ? ` (avisos: ${good.warnings})` : ''}`);
+
+    const truncated = runLoaderWith(body.slice(0, -1), pin);
+    const caughtTrunc = !truncated.loaded && /expected \d+ bytes/.test(truncated.warnings);
+    console.log(`  ${caughtTrunc ? 'OK  ' : 'FALHA '} corpo truncado e rejeitado por tamanho`);
+
+    // Same length, different content — only the checksum can catch this.
+    const tampered = 'return { marker = "XX" }';
+    const swapped = runLoaderWith(tampered, pin);
+    const caughtTamper = !swapped.loaded && /checksum mismatch/.test(swapped.warnings);
+    console.log(`  ${caughtTamper ? 'OK  ' : 'FALHA '} corpo trocado do mesmo tamanho e rejeitado por checksum`);
+
+    if (!(good.loaded && caughtTrunc && caughtTamper)) {
+        console.error('\nRESULTADO: o gate de integridade do loader nao esta funcionando');
+        process.exit(1);
+    }
+}
+console.log('\nRESULTADO: gate de integridade do loader verificado');
