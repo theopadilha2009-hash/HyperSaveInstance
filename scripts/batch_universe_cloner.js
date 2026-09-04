@@ -31,14 +31,18 @@ Examples:
     process.exit(0);
 }
 
-function fetchJson(url) {
+function fetchJson(url, timeoutMs = 12000) {
     return new Promise((resolve, reject) => {
-        https.get(url, {
-            headers: {
-                'User-Agent': 'Roblox/WinInet',
-                'Accept': 'application/json'
-            }
+        const req = https.get(url, {
+            headers: { 'Accept': 'application/json' }
         }, (res) => {
+            // Without this, a 403/429/HTML error page was parsed as if it were a
+            // successful response and the caller treated the failure as "0 results".
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                res.resume();
+                reject(new Error(`HTTP ${res.statusCode} from ${url}`));
+                return;
+            }
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
@@ -48,28 +52,42 @@ function fetchJson(url) {
                     reject(new Error(`Failed to parse JSON from ${url}: ${e.message}`));
                 }
             });
-        }).on('error', reject);
+        });
+        req.setTimeout(timeoutMs, () => {
+            req.destroy(new Error(`Timed out after ${timeoutMs}ms: ${url}`));
+        });
+        req.on('error', reject);
     });
 }
 
+// Returns { universeId, resolved } so the caller can tell a real lookup from
+// the fallback. The empty catch used to make an unresolved id look identical to
+// a resolved one in the output.
 async function resolveUniverseId(id) {
     try {
         const res = await fetchJson(`https://apis.roblox.com/universes/v1/places/${id}/universe`);
         if (res && res.universeId) {
-            return res.universeId;
+            return { universeId: res.universeId, resolved: true };
         }
-    } catch (e) {}
-    return id;
+        return { universeId: id, resolved: false, reason: 'response had no universeId' };
+    } catch (e) {
+        return { universeId: id, resolved: false, reason: e.message };
+    }
 }
 
 async function main() {
     console.log(`\n[HyperSave Universe] Resolving Universe ID for: ${targetId}...`);
-    const universeId = await resolveUniverseId(targetId);
-    console.log(`[HyperSave Universe] Universe ID identified: ${universeId}`);
+    const { universeId, resolved, reason } = await resolveUniverseId(targetId);
+    if (resolved) {
+        console.log(`[HyperSave Universe] Universe ID identified: ${universeId}`);
+    } else {
+        console.warn(`[HyperSave Universe] Could not resolve a universe for ${targetId} (${reason}); trying it as a universe id directly.`);
+    }
 
     console.log(`[HyperSave Universe] Fetching place list from Roblox Universe API...`);
     let allPlaces = [];
     let cursor = '';
+    let incomplete = false;
 
     do {
         const url = `https://develop.roblox.com/v1/universes/${universeId}/places?isUniverseCreation=false&limit=100${cursor ? `&cursor=${cursor}` : ''}`;
@@ -82,7 +100,14 @@ async function main() {
                 break;
             }
         } catch (e) {
-            console.error(`[Error] API call failed: ${e.message}`);
+            // Failing on the first page means we have nothing; failing later
+            // means the list is incomplete. Reporting either as success is how
+            // "0 sub-places" used to look identical to a genuinely empty universe.
+            if (allPlaces.length === 0) {
+                throw new Error(`Could not list places for universe ${universeId}: ${e.message}`);
+            }
+            console.error(`[Warning] Page fetch failed after ${allPlaces.length} places, list is incomplete: ${e.message}`);
+            incomplete = true;
             break;
         }
     } while (cursor);
@@ -109,6 +134,14 @@ async function main() {
         }))
     };
 
+    if (allPlaces.length === 0) {
+        throw new Error(`No places found for ${targetId}. Nothing was written.`);
+    }
+
+    if (incomplete) {
+        outputBatch.Incomplete = true;
+    }
+
     const outPath = path.join(process.cwd(), `HyperSave_Universe_${universeId}.json`);
     fs.writeFileSync(outPath, JSON.stringify(outputBatch, null, 2), 'utf8');
     console.log(`\n[✓ Saved] Batch Universe Job File saved to: ${outPath}\n`);
@@ -116,4 +149,5 @@ async function main() {
 
 main().catch(err => {
     console.error(`[Fatal Error] ${err.message}`);
+    process.exit(1);
 });
