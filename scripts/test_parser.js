@@ -26,35 +26,25 @@ function runTests() {
 
     // 2. Validate essential module exports
     console.log(`\n[TEST 2] Checking virtual module registry...`);
-    const requiredModules = [
-        'Utils/Environment',
-        'Utils/AntiAFK',
-        'Utils/Stealth',
-        'Utils/Base64',
-        'Utils/LZ4',
-        'Utils/Stream',
-        'Config/Defaults',
-        'Config/ClassBlacklist',
-        'Core/Reflection',
-        'Core/TerrainSerializer',
-        'Core/StreamExplorer',
-        'Core/Decompiler',
-        'Core/AssetHandler',
-        'Core/AssetDownloader',
-        'Core/AudioRipper',
-        'Core/LightingRipper',
-        'Core/GuiRipper',
-        'Core/NetworkSniffer',
-        'Core/UniverseTracker',
-        'Core/ObjExporter',
-        'Core/Optimizer',
-        'Core/SerializerXml',
-        'Core/SerializerBinary',
-        'Core/SerializerScript',
-        'Core/Engine',
-        'UI/Theme',
-        'UI/Interface'
-    ];
+    // Derived from src/ instead of hardcoded: the previous list had drifted and
+    // silently stopped checking six modules that had been added since.
+    const srcDir = path.join(__dirname, '..', 'src');
+    const requiredModules = [];
+    (function collect(dir, prefix) {
+        for (const entry of fs.readdirSync(dir).sort()) {
+            const full = path.join(dir, entry);
+            if (fs.statSync(full).isDirectory()) {
+                collect(full, prefix ? `${prefix}/${entry}` : entry);
+            } else if (entry.endsWith('.luau') && entry !== 'init.luau') {
+                const name = entry.replace(/\.luau$/, '');
+                requiredModules.push(prefix ? `${prefix}/${name}` : name);
+            }
+        }
+    })(srcDir, '');
+
+    if (requiredModules.length === 0) {
+        throw new Error('No modules found under src/ — the module scan is broken.');
+    }
 
     for (const mod of requiredModules) {
         if (!bundleContent.includes(`__define__("${mod}"`)) {
