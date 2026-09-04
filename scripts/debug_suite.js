@@ -306,10 +306,20 @@ function testPlugin() {
         assert(false, 'Plugin parses as valid Lua', `${err.message} (line ${err.line || '?'})`);
     }
 
-    // Every action has to be undoable in one step, and the deprecated
-    // SetWaypoint pairs were already unbalanced in the spawn restorer.
-    assert(content.includes('TryBeginRecording') && content.includes('FinishRecording'),
-        'Plugin uses the current ChangeHistoryService recording API');
+    // Counts rather than a substring match: asserting only that
+    // TryBeginRecording appears somewhere would pass on a single usage while
+    // most handlers still call the deprecated SetWaypoint.
+    const begins = (content.match(/TryBeginRecording/g) || []).length;
+    const finishes = (content.match(/FinishRecording\(/g) || []).length;
+    assert(begins > 0 && begins === finishes,
+        'Every TryBeginRecording has a matching FinishRecording',
+        `${begins} begins, ${finishes} finishes`);
+
+    const before = (content.match(/SetWaypoint\("Before/g) || []).length;
+    const after = (content.match(/SetWaypoint\("After/g) || []).length;
+    assert(before === after,
+        'Legacy SetWaypoint pairs are balanced',
+        `${before} Before, ${after} After — an unpaired Before leaves a dangling undo entry`);
 }
 
 function runAll() {

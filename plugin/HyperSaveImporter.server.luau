@@ -839,13 +839,15 @@ cardSpawn.Parent = scroll
 local btnSpawn = createButton(cardSpawn, "Verificar e Criar SpawnLocation", Color3.fromRGB(37, 99, 235))
 
 btnSpawn.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Spawn Restorer")
     local workspace = game:GetService("Workspace")
     local existingSpawn = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
 
     if existingSpawn then
+        -- Nada a registrar: abrir o waypoint aqui deixava um "Before" sem par
+        -- no histórico de undo sempre que já existia um spawn.
         setStatus(string.format("✓ SpawnLocation existente já encontrado em: %s", existingSpawn:GetFullName()), Color3.fromRGB(16, 185, 129))
     else
+        local recording = ChangeHistoryService:TryBeginRecording("HyperSaveSpawnRestorer", "Restaurar SpawnLocation")
         local spawn = Instance.new("SpawnLocation")
         spawn.Name = "SafeSpawnLocation"
         spawn.Size = Vector3.new(12, 1, 12)
@@ -853,7 +855,9 @@ btnSpawn.MouseButton1Click:Connect(function()
         spawn.Anchored = true
         spawn.Neutral = true
         spawn.Parent = workspace
-        ChangeHistoryService:SetWaypoint("After HyperSave Spawn Restorer")
+        if recording then
+            ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+        end
         setStatus("✓ SafeSpawnLocation neutro criado no centro do mapa (0, 10, 0)!", Color3.fromRGB(16, 185, 129))
     end
 end)
