@@ -2622,19 +2622,31 @@ end)
 __define__("Core/GuiRipper", function()
 --[[
     HyperSaveInstance - GUI & HUD Ripper
-    Extracts all ScreenGuis, Menus, Inventories, Health Bars, and HUDs to a standalone UI Pack.
+    Extracts all ScreenGuis, Menus, Inventories, Health Bars, and HUDs to a standalone UI Pack or pure Luau code.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 local StarterGui = nil
-pcall(function() StarterGui = game:GetService("StarterGui") end)
+pcall(function() StarterGui = clonerefFn(game:GetService("StarterGui")) end)
 local Environment = __require__("Utils/Environment")
 local SerializerXml = __require__("Core/SerializerXml")
 local Decompiler = __require__("Core/Decompiler")
 
 local GuiRipper = {}
 
+-- Check if a GUI belongs to CoreGui / internal toolbars
+local function isInternalGui(gui)
+    local name = gui.Name
+    if name == "RobloxGui" or name == "CoreScripts" or name == "HyperSaveInstance_UI" or
+       name == "TopBarApp" or name == "PurchasePrompt" or name == "InGameMenu" then
+        return true
+    end
+    return false
+end
+
+-- Export all active GUIs to .rbxmx XML package
 function GuiRipper.ExportAllGuis(options)
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_UIPack_%d.rbxmx", placeId)
@@ -2646,22 +2658,24 @@ function GuiRipper.ExportAllGuis(options)
     local scriptInstances = {}
 
     -- Scan StarterGui
-    for _, gui in ipairs(StarterGui:GetChildren()) do
-        if gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui") then
-            pcall(function()
-                local cl = gui:Clone()
-                if cl then cl.Parent = folder end
-            end)
+    if StarterGui then
+        for _, gui in ipairs(StarterGui:GetChildren()) do
+            if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not isInternalGui(gui) then
+                pcall(function()
+                    local cl = gui:Clone()
+                    if cl then cl.Parent = folder end
+                end)
+            end
         end
     end
 
     -- Scan PlayerGui if available
-    local player = Players.LocalPlayer
+    local player = Players and Players.LocalPlayer
     if player then
         local pGui = player:FindFirstChild("PlayerGui")
         if pGui then
             for _, gui in ipairs(pGui:GetChildren()) do
-                if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not folder:FindFirstChild(gui.Name) then
+                if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not isInternalGui(gui) and not folder:FindFirstChild(gui.Name) then
                     pcall(function()
                         local cl = gui:Clone()
                         if cl then cl.Parent = folder end
@@ -2691,6 +2705,99 @@ function GuiRipper.ExportAllGuis(options)
         return true, fileName
     end
     return false, "Failed to write UI pack file."
+end
+
+-- Convert any GUI instance into an executable, pure Luau script
+function GuiRipper.ExportGuiToLuaScript(targetGui)
+    if not targetGui then
+        return false, "No GUI instance specified for Luau code generator"
+    end
+
+    local lines = {
+        "--[[",
+        "    ================================================================================",
+        "    [HyperSaveInstance - Auto-Generated Luau GUI Script]",
+        "    Target: " .. targetGui.Name .. " (" .. targetGui.ClassName .. ")",
+        "    Generated automatically by HyperSaveInstance GuiRipper.",
+        "    ================================================================================",
+        "--]]",
+        "",
+        "local CoreGui = game:GetService(\"CoreGui\")",
+        "local Players = game:GetService(\"Players\")",
+        "local LocalPlayer = Players.LocalPlayer",
+        "local PlayerGui = LocalPlayer and LocalPlayer:WaitForChild(\"PlayerGui\")",
+        "",
+        "local function CreateUI()",
+    }
+
+    local varCounter = 0
+    local instToVar = {}
+
+    local function getVar(inst)
+        if not instToVar[inst] then
+            varCounter = varCounter + 1
+            local cleanName = string.gsub(inst.Name, "[^%w_]", "")
+            if #cleanName == 0 then cleanName = "inst" end
+            instToVar[inst] = string.format("%s_%d", cleanName, varCounter)
+        end
+        return instToVar[inst]
+    end
+
+    local function serializeInst(inst, parentVar)
+        local vName = getVar(inst)
+        table.insert(lines, string.format("    local %s = Instance.new(%q)", vName, inst.ClassName))
+        table.insert(lines, string.format("    %s.Name = %q", vName, inst.Name))
+
+        pcall(function()
+            if inst:IsA("GuiObject") then
+                table.insert(lines, string.format("    %s.Size = UDim2.new(%s, %s, %s, %s)", vName, inst.Size.X.Scale, inst.Size.X.Offset, inst.Size.Y.Scale, inst.Size.Y.Offset))
+                table.insert(lines, string.format("    %s.Position = UDim2.new(%s, %s, %s, %s)", vName, inst.Position.X.Scale, inst.Position.X.Offset, inst.Position.Y.Scale, inst.Position.Y.Offset))
+                table.insert(lines, string.format("    %s.BackgroundColor3 = Color3.fromRGB(%d, %d, %d)", vName, math.floor(inst.BackgroundColor3.R * 255), math.floor(inst.BackgroundColor3.G * 255), math.floor(inst.BackgroundColor3.B * 255)))
+                table.insert(lines, string.format("    %s.BackgroundTransparency = %s", vName, tostring(inst.BackgroundTransparency)))
+            end
+            if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+                table.insert(lines, string.format("    %s.Text = %q", vName, (inst ).Text))
+                table.insert(lines, string.format("    %s.TextSize = %d", vName, (inst ).TextSize))
+                table.insert(lines, string.format("    %s.TextColor3 = Color3.fromRGB(%d, %d, %d)", vName, math.floor((inst ).TextColor3.R * 255), math.floor((inst ).TextColor3.G * 255), math.floor((inst ).TextColor3.B * 255)))
+            end
+            if inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
+                table.insert(lines, string.format("    %s.Image = %q", vName, (inst ).Image))
+            end
+            if inst:IsA("UICorner") then
+                table.insert(lines, string.format("    %s.CornerRadius = UDim.new(%s, %s)", vName, inst.CornerRadius.Scale, inst.CornerRadius.Offset))
+            end
+            if inst:IsA("UIStroke") then
+                table.insert(lines, string.format("    %s.Color = Color3.fromRGB(%d, %d, %d)", vName, math.floor(inst.Color.R * 255), math.floor(inst.Color.G * 255), math.floor(inst.Color.B * 255)))
+                table.insert(lines, string.format("    %s.Thickness = %s", vName, tostring(inst.Thickness)))
+            end
+        end)
+
+        if parentVar then
+            table.insert(lines, string.format("    %s.Parent = %s", vName, parentVar))
+        else
+            table.insert(lines, string.format("    %s.Parent = (gethui and gethui()) or PlayerGui or CoreGui", vName))
+        end
+        table.insert(lines, "")
+
+        for _, child in ipairs(inst:GetChildren()) do
+            serializeInst(child, vName)
+        end
+    end
+
+    serializeInst(targetGui, nil)
+    table.insert(lines, "    return " .. getVar(targetGui))
+    table.insert(lines, "end")
+    table.insert(lines, "")
+    table.insert(lines, "return CreateUI()")
+
+    local code = table.concat(lines, "\n")
+    local fileName = string.format("HyperSave_GuiScript_%s_%d.lua", string.gsub(targetGui.Name, "[^%w_]", ""), os.time())
+    local writeOk = Environment.WriteFile(fileName, code)
+
+    if writeOk then
+        return true, fileName
+    end
+    return false, "Failed to write Luau GUI script"
 end
 
 return GuiRipper
@@ -2863,6 +2970,59 @@ function NetworkSniffer.ExportLogs()
 
     Environment.WriteFile(fileName, json)
     return fileName
+end
+
+-- Generate runnable Luau test script replicating all intercepted network calls
+function NetworkSniffer.ExportRemoteSpyScript()
+    local placeId = game.PlaceId or 0
+    local fileName = string.format("HyperSave_RemoteTest_%d.lua", placeId)
+
+    local lines = {
+        "--[[",
+        "    ================================================================================",
+        "    [HyperSaveInstance - Auto-Generated Remote Call Replicator]",
+        "    Place ID: " .. tostring(placeId),
+        "    Total Intercepted Network Calls: " .. tostring(#NetworkSniffer.CapturedLogs),
+        "    Exported At: " .. os.date("%Y-%m-%d %H:%M:%S"),
+        "    ================================================================================",
+        "--]]",
+        "",
+        "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+        "local Players = game:GetService(\"Players\")",
+        "",
+        "print(\"[HyperSave Remote Replicator] Starting reconstructed network traffic dispatch...\")",
+        "",
+    }
+
+    local seenPaths = {}
+    for i, log in ipairs(NetworkSniffer.CapturedLogs) do
+        local path = log.RemotePath
+        if not seenPaths[path] then
+            seenPaths[path] = true
+            table.insert(lines, string.format("-- [%d] %s: %s", i, log.Type, log.RemoteName))
+            table.insert(lines, "task.spawn(function()")
+            table.insert(lines, string.format("    local remote = %s", path))
+            table.insert(lines, "    if remote then")
+            if log.Type == "FireServer" then
+                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
+                table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsPreview))
+            elseif log.Type == "InvokeServer" then
+                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
+                table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsPreview))
+            end
+            table.insert(lines, "    end")
+            table.insert(lines, "end)")
+            table.insert(lines, "")
+        end
+    end
+
+    local code = table.concat(lines, "\n")
+    local writeOk = Environment.WriteFile(fileName, code)
+
+    if writeOk then
+        return true, fileName
+    end
+    return false, "Failed to write remote test script"
 end
 
 function NetworkSniffer.Clear()

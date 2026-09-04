@@ -123,6 +123,59 @@ function NetworkSniffer.ExportLogs(): string
     return fileName
 end
 
+-- Generate runnable Luau test script replicating all intercepted network calls
+function NetworkSniffer.ExportRemoteSpyScript(): (boolean, string)
+    local placeId = game.PlaceId or 0
+    local fileName = string.format("HyperSave_RemoteTest_%d.lua", placeId)
+
+    local lines = {
+        "--[[",
+        "    ================================================================================",
+        "    [HyperSaveInstance - Auto-Generated Remote Call Replicator]",
+        "    Place ID: " .. tostring(placeId),
+        "    Total Intercepted Network Calls: " .. tostring(#NetworkSniffer.CapturedLogs),
+        "    Exported At: " .. os.date("%Y-%m-%d %H:%M:%S"),
+        "    ================================================================================",
+        "--]]",
+        "",
+        "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+        "local Players = game:GetService(\"Players\")",
+        "",
+        "print(\"[HyperSave Remote Replicator] Starting reconstructed network traffic dispatch...\")",
+        "",
+    }
+
+    local seenPaths = {}
+    for i, log in ipairs(NetworkSniffer.CapturedLogs) do
+        local path = log.RemotePath
+        if not seenPaths[path] then
+            seenPaths[path] = true
+            table.insert(lines, string.format("-- [%d] %s: %s", i, log.Type, log.RemoteName))
+            table.insert(lines, "task.spawn(function()")
+            table.insert(lines, string.format("    local remote = %s", path))
+            table.insert(lines, "    if remote then")
+            if log.Type == "FireServer" then
+                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
+                table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsPreview))
+            elseif log.Type == "InvokeServer" then
+                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
+                table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsPreview))
+            end
+            table.insert(lines, "    end")
+            table.insert(lines, "end)")
+            table.insert(lines, "")
+        end
+    end
+
+    local code = table.concat(lines, "\n")
+    local writeOk = Environment.WriteFile(fileName, code)
+
+    if writeOk then
+        return true, fileName
+    end
+    return false, "Failed to write remote test script"
+end
+
 function NetworkSniffer.Clear()
     NetworkSniffer.CapturedLogs = {}
 end
