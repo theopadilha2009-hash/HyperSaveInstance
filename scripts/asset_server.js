@@ -43,8 +43,13 @@ if (!fs.existsSync(ASSETS_DIR)) {
 }
 
 const server = http.createServer((req, res) => {
-    // CORS headers to permit Roblox Studio, Three.js viewers & web browsers
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // This server exposes a local directory, so CORS stays restricted to
+    // loopback origins instead of '*'.
+    const origin = req.headers.origin;
+    if (origin && /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Vary', 'Origin');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
 
@@ -100,8 +105,14 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
-    const filePath = path.join(ASSETS_DIR, safePath);
+    const rootDir = path.resolve(ASSETS_DIR);
+    const filePath = path.resolve(rootDir, '.' + path.posix.normalize(pathname));
+
+    if (filePath !== rootDir && !filePath.startsWith(rootDir + path.sep)) {
+        res.writeHead(403, { 'Content-Type': 'text/plain' });
+        res.end('Forbidden');
+        return;
+    }
 
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
@@ -122,6 +133,15 @@ const server = http.createServer((req, res) => {
         const readStream = fs.createReadStream(filePath);
         readStream.pipe(res);
     });
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`[AssetServer] Port ${PORT} is already in use. Pass another port: node scripts/asset_server.js <port> <dir>`);
+    } else {
+        console.error('[AssetServer] Server error:', err.message);
+    }
+    process.exit(1);
 });
 
 server.listen(PORT, () => {

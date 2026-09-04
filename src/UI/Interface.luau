@@ -1948,7 +1948,7 @@ function Interface:BuildNetworkTab()
 
     NetworkSniffer.OnCall(function(entry)
         local row = Instance.new("TextLabel")
-        row.Text = string.format("[%s] [%s] %s -> %s", entry.Timestamp, entry.Type, entry.RemoteName, entry.ArgsPreview)
+        row.Text = string.format("[%s] [%s] %s -> %s", entry.Timestamp, entry.Type, entry.RemoteName, entry.ArgsShape)
         row.Font = Theme.FontRegular
         row.TextSize = 10
         row.TextColor3 = (entry.Type == "FireServer") and Theme.TextPrimary or Theme.TextSecondary

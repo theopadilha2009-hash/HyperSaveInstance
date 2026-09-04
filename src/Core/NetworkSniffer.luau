@@ -13,18 +13,29 @@ NetworkSniffer.IsActive = false
 NetworkSniffer.CapturedLogs = {}
 NetworkSniffer.Listeners = {}
 
--- Format arguments safely into readable string / json
-local function serializeArgs(args: table): string
-    local s, json = pcall(function()
-        return HttpService:JSONEncode(args)
-    end)
-    if s and json then return json end
-
+-- Describe the SHAPE of the arguments, never their content.
+-- Remote payloads in a live server carry other players' data; logging the values
+-- would write third-party information to this machine's disk.
+local function describeArgs(args): string
     local parts = {}
-    for i, v in ipairs(args) do
-        table.insert(parts, tostring(v) .. " (" .. typeof(v) .. ")")
+    for i = 1, (args.n or #args) do
+        local v = args[i]
+        local t = typeof(v)
+        if t == "string" then
+            table.insert(parts, string.format("string(%d)", #v))
+        elseif t == "number" or t == "boolean" or t == "nil" then
+            table.insert(parts, t)
+        elseif t == "Instance" then
+            table.insert(parts, "Instance<" .. v.ClassName .. ">")
+        elseif t == "table" then
+            local count = 0
+            for _ in pairs(v) do count = count + 1 end
+            table.insert(parts, string.format("table{%d}", count))
+        else
+            table.insert(parts, t)
+        end
     end
-    return "{" .. table.concat(parts, ", ") .. "}"
+    return "(" .. table.concat(parts, ", ") .. ")"
 end
 
 -- Start live packet sniffing
@@ -85,8 +96,7 @@ function NetworkSniffer.LogCall(callType: string, remote: Instance, args: table)
         RemoteName = remote.Name,
         RemotePath = remote:GetFullName(),
         ArgCount = #args,
-        ArgsPreview = serializeArgs(args),
-        RawArgs = args,
+        ArgsShape = describeArgs(args),
     }
 
     table.insert(NetworkSniffer.CapturedLogs, entry)
@@ -114,7 +124,7 @@ function NetworkSniffer.ExportLogs(): string
     if not s or not json then
         local lines = {}
         for _, log in ipairs(NetworkSniffer.CapturedLogs) do
-            table.insert(lines, string.format("[%s] [%s] %s -> %s", log.Timestamp, log.Type, log.RemotePath, log.ArgsPreview))
+            table.insert(lines, string.format("[%s] [%s] %s -> %s", log.Timestamp, log.Type, log.RemotePath, log.ArgsShape))
         end
         json = table.concat(lines, "\n")
     end
@@ -155,11 +165,11 @@ function NetworkSniffer.ExportRemoteSpyScript(): (boolean, string)
             table.insert(lines, string.format("    local remote = %s", path))
             table.insert(lines, "    if remote then")
             if log.Type == "FireServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
-                table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsPreview))
+                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsShape))
             elseif log.Type == "InvokeServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
-                table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsPreview))
+                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsShape))
             end
             table.insert(lines, "    end")
             table.insert(lines, "end)")
