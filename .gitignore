@@ -3,4 +3,17 @@ node_modules/
 *.log
 *.mov
 *.mp4
+
+# Artefatos gerados pela suite em runtime
 HyperSave_*
+HyperSave_Assets*/
+*.rbxlx
+*.rbxl
+*.rbxm
+*.rbxmx
+
+# Editores
+.vscode/
+.idea/
+*.swp
+Thumbs.db
