@@ -61,8 +61,24 @@ if (status) {
     fail('dist/HyperSaveInstance.luau has uncommitted changes. Commit the bundle before pinning.');
 }
 
-const commit = git('rev-parse', 'HEAD');
+// The pin names the commit that last changed the bundle, not HEAD. Using HEAD
+// would be circular: committing the pinned loader advances HEAD and would
+// immediately make the pin it just wrote look stale.
+const commit = git('log', '-1', '--format=%H', '--', 'dist/HyperSaveInstance.luau');
+if (!commit) {
+    fail('dist/HyperSaveInstance.luau has never been committed.');
+}
+
+// What users will actually download is the blob at that commit, so verify the
+// working tree matches it rather than trusting that they are the same.
+const committedBundle = execFileSync('git', ['show', `${commit}:dist/HyperSaveInstance.luau`], {
+    cwd: ROOT,
+    maxBuffer: 64 * 1024 * 1024,
+});
 const bundle = fs.readFileSync(BUNDLE);
+if (!committedBundle.equals(bundle)) {
+    fail('dist/HyperSaveInstance.luau differs from the committed blob. Commit the bundle first.');
+}
 const { a: adlerA, b: adlerB } = adler32(bundle);
 const bytes = bundle.length;
 
