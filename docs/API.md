@@ -2,13 +2,23 @@
 
 O HyperSaveInstance pode ser executado como interface interativa (HUD) ou programaticamente dentro de scripts de automação.
 
+> [!IMPORTANT]
+> O chunk do bundle **não retorna** a tabela da suíte: em `scripts/bundle.js` o
+> ponto de entrada é envolvido num `pcall`, e o `return` fica dentro dele. Ou
+> seja, `loadstring(...)()` devolve `nil`.
+>
+> A superfície pública é publicada em `getgenv()` pelo próprio bundle, e é assim
+> que os exemplos abaixo obtêm a tabela. Se você vir
+> `attempt to index nil value`, é este o motivo.
+
 ---
 
 ## Execução Rápida
 
 ### Interface Interativa (HUD)
 ```lua
-local HyperSaveInstance = loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/Loader.luau"))()
+local HyperSaveInstance = getgenv().HyperSaveInstance or _G.HyperSaveInstance
 HyperSaveInstance.OpenUI()
 ```
 
@@ -21,7 +31,8 @@ Executa o processo de salvamento com opções customizadas.
 
 #### Exemplo:
 ```lua
-local HyperSaveInstance = loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/Loader.luau"))()
+local HyperSaveInstance = getgenv().HyperSaveInstance or _G.HyperSaveInstance
 
 local success, message = HyperSaveInstance.Save({
     Format = "rbxlx",                   -- "rbxlx" | "rbxl" | "lua"

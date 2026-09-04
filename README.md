@@ -28,6 +28,11 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/
 
 Use the loader only in environments where you have permission to inspect and export the content involved.
 
+The loader fetches the bundle from a **pinned commit**, not from `main`, so the
+code it runs cannot change after publication. `dist/Loader.luau` is generated
+from `loader.luau` by `npm run pin:loader` — do not edit it by hand, and run
+that command after committing a new bundle or CI will reject the mismatch.
+
 ## Overview
 
 HyperSaveInstance provides a single interface for full-place serialization, isolated model export, script processing, asset discovery, terrain preservation, interface extraction, lighting capture, network inspection, and Studio-side import workflows.
@@ -42,10 +47,13 @@ The project contains:
 
 ## Feature matrix
 
+> [!NOTE]
+> Rows describe what this project implements. Columns for other projects are
+> based on their public documentation and are not benchmark results.
+
 | Capability | Legacy Synapse | USSI | UltraSmart | HyperSaveInstance 2.0 |
 | --- | ---: | ---: | ---: | ---: |
 | In-game control interface | No | No | Basic | Full dashboard |
-| Visual fidelity | 6/10 | 9/10 | 9/10 | 10/10 |
 | Script decompiler engine | Slow | Single worker | Basic | Worker pool with retry |
 | Raw asset downloader | No | No | No | Included |
 | Audio browser and exporter | No | No | No | Included |
@@ -58,7 +66,7 @@ The project contains:
 | Anti-idle handling | No | No | No | Included |
 | StreamingEnabled traversal | No | No | Partial | Spatial grid traversal |
 | Interface toggle | No | No | No | RightShift |
-| Output formats | RBXLX | RBXLX | RBXLX | RBXLX, RBXL, Lua, OBJ |
+| Output formats | RBXLX | RBXLX | RBXLX | RBXLX, Lua, OBJ (RBXL incomplete) |
 | Platforms | Windows | Windows | Windows | macOS, Windows, mobile |
 
 ## Core capabilities
@@ -93,7 +101,13 @@ Produces OBJ and MTL output for supported geometry workflows involving Blender, 
 
 ### Studio importer
 
-`plugin/HyperSaveImporter.server.luau` provides a Studio-side workflow for rebuilding exports and reconnecting supported local assets.
+`plugin/HyperSaveImporter.server.luau` provides Studio-side repair actions for an
+already-opened export (unlinking packages, unlocking parts, anchoring rigs,
+restoring a spawn).
+
+It does **not** import files: opening the `.rbxlx` is done through Studio's own
+File > Open from File. Reconnecting downloaded assets is not implemented — the
+downloader writes `HyperSave_Manifest_<PlaceId>.json`, and nothing reads it back.
 
 ## Controls
 
@@ -109,18 +123,24 @@ Produces OBJ and MTL output for supported geometry workflows involving Blender, 
 
 Compatibility depends on the capabilities exposed by the execution environment, especially `writefile`, HTTP access, hidden-property access, and decompilation support.
 
-| Environment | Platform | File system | Decompiler | Declared status |
+> [!NOTE]
+> The table below records which capabilities each environment is *expected* to
+> expose. It is not a test matrix: CI exercises a single simulated environment
+> (`scripts/simulate_roblox_runtime.js`), so treat these rows as expectations to
+> verify, not as verified results.
+
+| Environment | Platform | File system | Decompiler | Expected |
 | --- | --- | ---: | ---: | --- |
-| MacSploit | macOS | Yes | Yes | Fully supported |
-| Hydrogen | macOS | Yes | Yes | Fully supported |
-| Wave | Windows | Yes | Yes | Fully supported |
-| Synapse Z | Windows | Yes | Yes | Fully supported |
-| Solara | Windows | Yes | Bytecode | Supported |
-| Celery | Windows | Yes | Bytecode | Supported |
-| Hydrogen | Mobile | Yes | Yes | Fully supported |
-| Delta | Mobile | Yes | Yes | Fully supported |
-| Codex | Mobile | Yes | Yes | Fully supported |
-| Arceus X | Mobile | Yes | Yes | Fully supported |
+| MacSploit | macOS | Yes | Yes | Full capabilities |
+| Hydrogen | macOS | Yes | Yes | Full capabilities |
+| Wave | Windows | Yes | Yes | Full capabilities |
+| Synapse Z | Windows | Yes | Yes | Full capabilities |
+| Solara | Windows | Yes | Bytecode | Bytecode only |
+| Celery | Windows | Yes | Bytecode | Bytecode only |
+| Hydrogen | Mobile | Yes | Yes | Full capabilities |
+| Delta | Mobile | Yes | Yes | Full capabilities |
+| Codex | Mobile | Yes | Yes | Full capabilities |
+| Arceus X | Mobile | Yes | Yes | Full capabilities |
 
 ## Documentation
 
