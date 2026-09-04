@@ -105,9 +105,13 @@ Produces OBJ and MTL output for supported geometry workflows involving Blender, 
 already-opened export (unlinking packages, unlocking parts, anchoring rigs,
 restoring a spawn).
 
-It does **not** import files: opening the `.rbxlx` is done through Studio's own
-File > Open from File. Reconnecting downloaded assets is not implemented — the
-downloader writes `HyperSave_Manifest_<PlaceId>.json`, and nothing reads it back.
+Opening the `.rbxlx` itself is done through Studio's own File > Open from File.
+
+The plugin does read `HyperSave_Manifest_<PlaceId>.json` back: "Reconectar Assets
+Baixados" matches the downloaded files against the manifest and rewrites the
+matching `rbxassetid://` references in the open tree. The resulting `rbxtemp://`
+ids are valid for the current Studio session; making them permanent means
+publishing the assets under your own account.
 
 ## Controls
 

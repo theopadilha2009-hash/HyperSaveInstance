@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { lua, lauxlib, lualib, to_luastring } = require('fengari');
+const luaparse = require('luaparse');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_PATH = path.join(ROOT_DIR, 'dist', 'HyperSaveInstance.luau');
@@ -30,6 +31,17 @@ function assert(condition, testName, details = '') {
 // Loads one src/ module into a Lua VM and returns a caller for its functions.
 // The previous suite tested Node's Buffer and a JS-local escapeXml, so neither
 // src/Utils/Base64.luau nor src/Core/SerializerXml.luau was ever executed.
+
+// Mirrors the annotation stripping in scripts/bundle.js so Luau source can be
+// parsed by luaparse, which only understands Lua 5.1.
+function stripLuauTypes(code) {
+    return code
+        .replace(/^\s*(export\s+)?type\s+[^\n]*(\n\s+[^\n]*)*/gm, '')
+        .replace(/::\s*[\w.<>{}|?\s]+/g, '')
+        .replace(/\)\s*:\s*[\w.<>{}|?()\s,]+(?=\s*\n)/g, ')')
+        .replace(/(\w+)\s*:\s*[\w.<>{}|?]+(\??)(\s*[,)])/g, '$1$3');
+}
+
 function loadLuauModule(relPath) {
     const source = fs.readFileSync(path.join(ROOT_DIR, 'src', relPath), 'utf8');
     // The bundler strips Luau type annotations the same way before shipping.
@@ -266,7 +278,6 @@ function testBundle() {
     assert(!leftoverRequires, 'Zero leftover untransformed require() calls');
 
     // AST syntax validation
-    const luaparse = require('luaparse');
     let astValid = false;
     let parseErr = '';
     try {
@@ -284,6 +295,21 @@ function testPlugin() {
     assert(fs.existsSync(PLUGIN_PATH), 'plugin/HyperSaveImporter.server.luau exists');
     const content = fs.readFileSync(PLUGIN_PATH, 'utf8');
     assert(content.includes('CreateToolbar') && content.includes('DockWidgetPluginGui'), 'Plugin Toolbar & Widget UI declared');
+
+    // A syntax error in the plugin only shows up when Studio loads it, which no
+    // check here would have caught — the previous test was a substring match.
+    const stripped = stripLuauTypes(content);
+    try {
+        luaparse.parse(stripped, { luaVersion: '5.1' });
+        assert(true, 'Plugin parses as valid Lua');
+    } catch (err) {
+        assert(false, 'Plugin parses as valid Lua', `${err.message} (line ${err.line || '?'})`);
+    }
+
+    // Every action has to be undoable in one step, and the deprecated
+    // SetWaypoint pairs were already unbalanced in the spawn restorer.
+    assert(content.includes('TryBeginRecording') && content.includes('FinishRecording'),
+        'Plugin uses the current ChangeHistoryService recording API');
 }
 
 function runAll() {

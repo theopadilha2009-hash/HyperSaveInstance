@@ -11,6 +11,7 @@
     7. Rig & NPC Physical Stabilizer
     8. Asset Reference Auditor
     9. Manual Luau Code Runner
+    10. Manifest-driven Asset Reconnection
 ]]
 
 local Selection = game:GetService("Selection")
@@ -19,6 +20,46 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local SoundService = game:GetService("SoundService")
+
+local ContentProvider = game:GetService("ContentProvider")
+local StudioService = game:GetService("StudioService")
+
+-- Walks the tree in slices so a large place does not freeze Studio. The repair
+-- actions used to call game:GetDescendants() four times back to back with no
+-- yield at all.
+local function forEachDescendant(root, callback, onProgress)
+    local descendants = root:GetDescendants()
+    local total = #descendants
+    for i = 1, total do
+        callback(descendants[i])
+        if i % 2000 == 0 then
+            if onProgress then onProgress(i, total) end
+            task.wait()
+        end
+    end
+    return total
+end
+
+-- Which sounds are actually unplayable. The previous check matched every
+-- `rbxassetid://` SoundId, so "fix blocked audio" replaced the entire
+-- soundtrack of the place with one beep.
+local function findUnplayableSounds(sounds)
+    local failed = {}
+    if #sounds == 0 then return failed, true end
+
+    local ok = pcall(function()
+        ContentProvider:PreloadAsync(sounds, function(contentId, status)
+            if status == Enum.AssetFetchStatus.Failure
+                or status == Enum.AssetFetchStatus.TimedOut then
+                failed[contentId] = true
+            end
+        end)
+    end)
+
+    -- Without a reliable verdict we replace nothing: silently flattening the
+    -- audio is worse than leaving it alone.
+    return failed, ok
+end
 
 -- Fallback audio library (verified 100% public Roblox core sounds)
 local FALLBACK_SOUNDS = {
@@ -94,7 +135,10 @@ scroll.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
 scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 3
 scroll.ScrollBarImageColor3 = Color3.fromRGB(44, 50, 66)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 1180)
+-- Was a hardcoded 1180 for ~1408px of content, so the last two cards could not
+-- be reached at all.
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 scroll.Parent = root
 
 local layout = Instance.new("UIListLayout")
@@ -235,12 +279,24 @@ btnMaster.MouseButton1Click:Connect(function()
         end
     end
 
-    -- 2. Consertar áudios 403
+    -- 2. Consertar áudios 403 (mesma regra do botão isolado: só o que de fato
+    -- não carrega, e sempre guardando o id original para dar undo)
     local fixedAudio = 0
-    for _, desc in ipairs(game:GetDescendants()) do
+    local soundCandidates = {}
+    forEachDescendant(game, function(desc)
         if desc:IsA("Sound") and #desc.SoundId > 0 and string.find(desc.SoundId, "rbxassetid://") then
-            desc.SoundId = FALLBACK_SOUNDS.Generic
-            fixedAudio = fixedAudio + 1
+            table.insert(soundCandidates, desc)
+        end
+    end)
+
+    local failedSounds, soundVerdictOk = findUnplayableSounds(soundCandidates)
+    if soundVerdictOk then
+        for _, desc in ipairs(soundCandidates) do
+            if failedSounds[desc.SoundId] then
+                desc:SetAttribute("OriginalPrivateSoundId", desc.SoundId)
+                desc.SoundId = FALLBACK_SOUNDS.Generic
+                fixedAudio = fixedAudio + 1
+            end
         end
     end
 
@@ -470,20 +526,30 @@ btnAudio.MouseButton1Click:Connect(function()
     ChangeHistoryService:SetWaypoint("Before HyperSave Audio Sanitizer")
     setStatus("Analisando instâncias de Sound no jogo...", Color3.fromRGB(59, 130, 246))
 
+    local candidates = {}
+    forEachDescendant(game, function(desc)
+        if desc:IsA("Sound") and #desc.SoundId > 0 and string.find(desc.SoundId, "rbxassetid://") then
+            table.insert(candidates, desc)
+        end
+    end)
+
+    local failed, verdictOk = findUnplayableSounds(candidates)
+    if not verdictOk then
+        setStatus("Não foi possível verificar quais áudios estão bloqueados; nada foi alterado.", Color3.fromRGB(245, 158, 11))
+        return
+    end
+
     local fixedCount = 0
-    for _, desc in ipairs(game:GetDescendants()) do
-        if desc:IsA("Sound") then
-            local soundId = desc.SoundId
-            if #soundId > 0 and string.find(soundId, "rbxassetid://") then
-                desc:SetAttribute("OriginalPrivateSoundId", soundId)
-                desc.SoundId = FALLBACK_SOUNDS.Generic
-                fixedCount = fixedCount + 1
-            end
+    for _, desc in ipairs(candidates) do
+        if failed[desc.SoundId] then
+            desc:SetAttribute("OriginalPrivateSoundId", desc.SoundId)
+            desc.SoundId = FALLBACK_SOUNDS.Generic
+            fixedCount = fixedCount + 1
         end
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Audio Sanitizer")
-    setStatus(string.format("✓ %d sons privados foram substituídos por sons públicos.", fixedCount), Color3.fromRGB(16, 185, 129))
+    setStatus(string.format("✓ %d de %d sons estavam inacessíveis e foram substituídos (os demais foram mantidos).", fixedCount, #candidates), Color3.fromRGB(16, 185, 129))
 end)
 
 -- ============================================================================
@@ -793,19 +859,203 @@ btnSpawn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================================
+-- FEATURE 12: RECONECTAR ASSETS BAIXADOS (o elo que faltava)
+--
+-- O AssetDownloader grava HyperSave_Manifest_<PlaceId>.json junto dos arquivos
+-- em audios/ textures/ meshes/ animations/, e ate agora nada lia esse manifesto
+-- de volta: o README prometia "reconnecting supported local assets" e nao havia
+-- uma linha de import no plugin.
+--
+-- Use apenas com conteudo que voce tem direito de reconstruir. Os ids
+-- resultantes (rbxtemp://) valem para a sessao atual do Studio; para algo
+-- permanente e preciso publicar os assets na sua propria conta.
+-- ============================================================================
+local cardImport = createCard(
+    "12. Reconectar Assets Baixados",
+    "Le o HyperSave_Manifest_<PlaceId>.json e os arquivos baixados e religa as referencias rbxassetid:// da arvore aberta aos arquivos locais.",
+    12
+)
+cardImport.Parent = scroll
+
+local btnImport = createButton(cardImport, "Escolher Manifesto e Arquivos...", Color3.fromRGB(16, 185, 129))
+
+-- Which properties on which classes hold a content id. Anything not listed here
+-- is simply left alone.
+local CONTENT_PROPERTIES = {
+    Decal = { "Texture" },
+    Texture = { "Texture" },
+    ImageLabel = { "Image" },
+    ImageButton = { "Image" },
+    Sound = { "SoundId" },
+    MeshPart = { "MeshId", "TextureID" },
+    SpecialMesh = { "MeshId", "TextureId" },
+    ParticleEmitter = { "Texture" },
+    Beam = { "Texture" },
+    Trail = { "Texture" },
+    Animation = { "AnimationId" },
+    Sky = { "SkyboxBk", "SkyboxDn", "SkyboxFt", "SkyboxLf", "SkyboxRt", "SkyboxUp", "SunTextureId", "MoonTextureId" },
+    SurfaceAppearance = { "ColorMap", "NormalMap", "MetalnessMap", "RoughnessMap" },
+}
+
+-- Files land as "<id>_<sanitized source name>.<ext>", so the id is the prefix.
+local function assetIdFromFileName(name: string): string?
+    return string.match(name, "^(%d+)_") or string.match(name, "^(%d+)%.")
+end
+
+local function numericId(contentId: string): string?
+    if type(contentId) ~= "string" then return nil end
+    return string.match(contentId, "rbxassetid://(%d+)")
+        or string.match(contentId, "rbxasset://.-(%d+)")
+        or string.match(contentId, "^(%d+)$")
+end
+
+btnImport.MouseButton1Click:Connect(function()
+    local okManifest, manifestFiles = pcall(function()
+        return StudioService:PromptImportFilesAsync({ "json" })
+    end)
+
+    if not okManifest then
+        setStatus("Não foi possível abrir o seletor de arquivos: " .. tostring(manifestFiles), Color3.fromRGB(239, 68, 68))
+        return
+    end
+    if not manifestFiles or #manifestFiles == 0 then
+        setStatus("Nenhum manifesto selecionado.", Color3.fromRGB(245, 158, 11))
+        return
+    end
+
+    local decoded
+    local okDecode, decodeErr = pcall(function()
+        decoded = HttpService:JSONDecode(manifestFiles[1]:GetBinaryContents())
+    end)
+    if not okDecode or type(decoded) ~= "table" or type(decoded.Assets) ~= "table" then
+        setStatus("Manifesto inválido ou ilegível: " .. tostring(decodeErr), Color3.fromRGB(239, 68, 68))
+        return
+    end
+
+    local manifestById = {}
+    local manifestCount = 0
+    for _, entry in ipairs(decoded.Assets) do
+        if entry and entry.Id then
+            manifestById[tostring(entry.Id)] = entry
+            manifestCount = manifestCount + 1
+        end
+    end
+
+    if manifestCount == 0 then
+        setStatus("O manifesto não lista nenhum asset.", Color3.fromRGB(245, 158, 11))
+        return
+    end
+
+    setStatus(string.format("Manifesto lido: %d assets. Selecione agora os arquivos baixados.", manifestCount), Color3.fromRGB(59, 130, 246))
+
+    local okAssets, assetFiles = pcall(function()
+        return StudioService:PromptImportFilesAsync({ "png", "jpg", "jpeg", "mp3", "ogg", "mesh", "rbxanim", "dat" })
+    end)
+    if not okAssets or not assetFiles or #assetFiles == 0 then
+        setStatus("Nenhum arquivo de asset selecionado; nada foi alterado.", Color3.fromRGB(245, 158, 11))
+        return
+    end
+
+    -- Map asset id -> temporary content id, skipping files the manifest does not
+    -- know about instead of guessing.
+    local tempIdByAsset = {}
+    local matchedFiles, unmatchedFiles = 0, 0
+    for _, file in ipairs(assetFiles) do
+        local id = assetIdFromFileName(file.Name)
+        if id and manifestById[id] then
+            local okTemp, tempId = pcall(function()
+                return file:GetTemporaryId()
+            end)
+            if okTemp and tempId then
+                tempIdByAsset[id] = tempId
+                matchedFiles = matchedFiles + 1
+            else
+                unmatchedFiles = unmatchedFiles + 1
+            end
+        else
+            unmatchedFiles = unmatchedFiles + 1
+        end
+    end
+
+    if matchedFiles == 0 then
+        setStatus("Nenhum arquivo bateu com o manifesto (esperado: <id>_<nome>.<ext>).", Color3.fromRGB(239, 68, 68))
+        return
+    end
+
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveReconnectAssets", "Reconectar assets do manifesto")
+    if not recording then
+        setStatus("Não foi possível iniciar o registro de undo; nada foi alterado.", Color3.fromRGB(239, 68, 68))
+        return
+    end
+
+    local rewritten, instancesTouched = 0, 0
+    local okScan, scanErr = pcall(function()
+        forEachDescendant(game, function(inst)
+            local props = CONTENT_PROPERTIES[inst.ClassName]
+            if not props then return end
+
+            local touched = false
+            for _, propName in ipairs(props) do
+                local okRead, value = pcall(function()
+                    return (inst :: any)[propName]
+                end)
+                if okRead and type(value) == "string" and #value > 0 then
+                    local id = numericId(value)
+                    local tempId = id and tempIdByAsset[id]
+                    if tempId then
+                        local okWrite = pcall(function()
+                            -- Keep the original so this is reversible even
+                            -- outside the undo stack.
+                            inst:SetAttribute("HyperSaveOriginal_" .. propName, value)
+                            ;(inst :: any)[propName] = tempId
+                        end)
+                        if okWrite then
+                            rewritten = rewritten + 1
+                            touched = true
+                        end
+                    end
+                end
+            end
+            if touched then
+                instancesTouched = instancesTouched + 1
+            end
+        end, function(done, total)
+            setStatus(string.format("Religando assets... %d/%d instâncias", done, total), Color3.fromRGB(59, 130, 246))
+        end)
+    end)
+
+    ChangeHistoryService:FinishRecording(
+        recording,
+        okScan and Enum.FinishRecordingOperation.Commit or Enum.FinishRecordingOperation.Cancel
+    )
+
+    if not okScan then
+        setStatus("Falha durante a varredura, alterações revertidas: " .. tostring(scanErr), Color3.fromRGB(239, 68, 68))
+        return
+    end
+
+    setStatus(string.format(
+        "✓ %d referências religadas em %d instâncias (%d arquivos usados, %d ignorados). Ids rbxtemp:// valem nesta sessão do Studio.",
+        rewritten, instancesTouched, matchedFiles, unmatchedFiles
+    ), Color3.fromRGB(16, 185, 129))
+end)
+
+-- ============================================================================
 -- FEATURE 11: DESENVOLVEDOR
 -- ============================================================================
 local cardDev = createCard(
     "Theo Lorentz Padilha",
-    "Desenvolvido por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do repositório.",
-    11
+    "Desenvolvido por Theo Lorentz Padilha. O link do repositório está abaixo.",
+    13
 )
 cardDev.Parent = scroll
 
-local btnDevGithub = createButton(cardDev, "Copiar Link do Repositório", Color3.fromRGB(36, 42, 56))
+-- O botão anterior dizia "copiado" sem tocar em clipboard nenhum. Plugins não
+-- têm API de clipboard, então o link é apenas exibido para ser copiado à mão.
+local btnDevGithub = createButton(cardDev, "Mostrar Link do Repositório", Color3.fromRGB(36, 42, 56))
 
 btnDevGithub.MouseButton1Click:Connect(function()
-    setStatus("✓ Link do GitHub copiado: https://github.com/theopadilha2009-hash/HyperSaveInstance", Color3.fromRGB(16, 185, 129))
+    setStatus("github.com/theopadilha2009-hash/HyperSaveInstance", Color3.fromRGB(16, 185, 129))
 end)
 
 print("[HyperSave Suite] Plugin carregado com sucesso!")
