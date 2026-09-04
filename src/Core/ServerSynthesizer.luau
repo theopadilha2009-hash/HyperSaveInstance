@@ -198,15 +198,27 @@ task.spawn(function()
             
             -- Intelligent mock response based on common function naming patterns
             local nameLower = string.lower(%q)
-            if string.find(nameLower, "data") or string.find(nameLower, "load") or string.find(nameLower, "get") then
+            if string.find(nameLower, "data") or string.find(nameLower, "load") or string.find(nameLower, "get") or string.find(nameLower, "profile") then
                 return {
                     Success = true,
-                    Data = {},
-                    Coins = 1000,
-                    Level = 1,
+                    Data = { Honey = 10000000, Pollen = 500000, Capacity = 2500000, Coins = 1000000, Gems = 50000, Level = 50, Beli = 10000000, Fragments = 50000 },
+                    Coins = 1000000,
+                    Gems = 50000,
+                    Level = 50,
+                    Beli = 10000000,
                     Inventory = {},
                 }
-            elseif string.find(nameLower, "buy") or string.find(nameLower, "purchase") then
+            elseif string.find(nameLower, "hive") or string.find(nameLower, "claim") then
+                return true, "Hive Claimed"
+            elseif string.find(nameLower, "egg") or string.find(nameLower, "hatch") or string.find(nameLower, "pet") then
+                return true, { PetId = "Huge_Dragon", Power = 1000000, Level = 100 }
+            elseif string.find(nameLower, "fruit") or string.find(nameLower, "skill") or string.find(nameLower, "quest") then
+                return { Success = true, Level = 2550, Mastery = 600, Beli = 10000000 }
+            elseif string.find(nameLower, "weapon") or string.find(nameLower, "crate") or string.find(nameLower, "skin") then
+                return { Success = true, Weapon = "Golden_Gun", Unlocked = true }
+            elseif string.find(nameLower, "door") or string.find(nameLower, "key") or string.find(nameLower, "revive") then
+                return true, "Unlocked"
+            elseif string.find(nameLower, "buy") or string.find(nameLower, "purchase") or string.find(nameLower, "trade") then
                 return true, "Success"
             end
 
@@ -239,6 +251,30 @@ end)
 ]=], fullName, getPathExpression(re), re.Name))
     end
 
+    -- Hook UnreliableRemoteEvents
+    if remotes.Unreliable and #remotes.Unreliable > 0 then
+        add("\n-- ============================================================================")
+        add("-- [UnreliableRemoteEvents] Auto-Listeners")
+        add("-- ============================================================================\n")
+
+        for _, ure in ipairs(remotes.Unreliable) do
+            local fullName = ure:GetFullName()
+
+            add(string.format([=[
+-- UnreliableRemoteEvent: %s
+task.spawn(function()
+    local target = %s
+    if target and target.ClassName == "UnreliableRemoteEvent" then
+        target.OnServerEvent:Connect(function(player, ...)
+            local args = {...}
+            -- Suppress spam for unreliable position/render events
+        end)
+    end
+end)
+]=], fullName, getPathExpression(ure), ure.Name))
+        end
+    end
+
     add([=[
 
 print("[HyperSave Backend] Server dispatcher ready! All remotes are now responding.")
@@ -256,7 +292,7 @@ function ServerSynthesizer.SynthesizeService(rootInstances: {Instance}): Instanc
     serverService.Name = "ServerScriptService"
 
     local syntheticScript = Instance.new("Script")
-    syntheticScript.Name = "HyperSave_ServerDispatcher"
+    syntheticScript.Name = "ServerDispatcher"
     pcall(function()
         (syntheticScript :: any).Source = sourceCode
     end)

@@ -5,8 +5,9 @@
     Includes a Snapshot Memory Accumulator to preserve streamed-out chunks in memory.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 
 local StreamExplorer = {
     CapturedInstances = {}

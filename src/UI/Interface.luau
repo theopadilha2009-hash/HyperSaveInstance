@@ -85,7 +85,6 @@ function Interface:BuildUI()
         container.Name = containerName
         container.Size = UDim2.new(1, 0, 1, 0)
         container.BackgroundTransparency = 1
-        container:SetAttribute("HSI_Root", true)
         container.Parent = parent
         safeContainer = container
     else
@@ -101,7 +100,6 @@ function Interface:BuildUI()
         screenGui.DisplayOrder = 999999
         screenGui.IgnoreGuiInset = true
         screenGui.Enabled = true
-        screenGui:SetAttribute("HSI_Root", true)
         self.ScreenGui = screenGui
 
         Stealth.ProtectGui(screenGui)
@@ -118,6 +116,10 @@ function Interface:BuildUI()
             end
         end
         safeContainer = screenGui
+    end
+
+    if self.Engine and self.Engine.Config then
+        self.Engine.Config.IgnoredGui = safeContainer
     end
 
     -- Floating Mini Toggle Button
@@ -468,7 +470,7 @@ function Interface:BuildUI()
 
     -- Compact In-Game HUD Widget (Minimalist floating bar)
     local compactBar = Instance.new("Frame")
-    compactBar.Name = "HyperSave_CompactHUD"
+    compactBar.Name = isRandom and Stealth.GenerateRandomName(12) or "CompactHUD"
     compactBar.Size = UDim2.new(0, 380, 0, 34)
     compactBar.Position = UDim2.new(0.5, -190, 0, 14)
     compactBar.BackgroundColor3 = Theme.Background
@@ -1212,7 +1214,7 @@ function Interface:BuildSelectorTab()
             end
             if inst:IsA("Model") or inst:IsA("BasePart") then
                 local h = Instance.new("Highlight")
-                h.Name = "HSI_TargetHighlight"
+                h.Name = Stealth.GenerateRandomName(16)
                 h.FillColor = Theme.AccentPrimary
                 h.FillTransparency = 0.65
                 h.OutlineColor = Theme.BorderLight

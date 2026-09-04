@@ -70,6 +70,22 @@ function HyperSaveInstance.SaveModel(targetInstance: Instance, customConfig: tab
     return engine:SaveTarget(targetInstance, customConfig)
 end
 
+-- Save specific model directly as .rbxm package
+function HyperSaveInstance.SaveModelToRbxm(targetInstance: Instance, customConfig: table?): (boolean, string)
+    local cfg = table.clone(customConfig or {})
+    cfg.Format = "rbxm"
+    local engine = Engine.new(cfg)
+    return engine:SaveTarget(targetInstance, cfg)
+end
+
+-- Save multiple instances into a single .rbxm package
+function HyperSaveInstance.SaveBatchToRbxm(targets: {Instance}, customConfig: table?): (boolean, string)
+    local cfg = table.clone(customConfig or {})
+    cfg.Format = "rbxm"
+    local engine = Engine.new(cfg)
+    return engine:SaveTargetBatch(targets, cfg)
+end
+
 -- Export 3D Wavefront OBJ/MTL
 function HyperSaveInstance.ExportObj(targetRoot: Instance?, options: table?): (boolean, string)
     return ObjExporter.Export(targetRoot, options)
@@ -138,6 +154,42 @@ function HyperSaveInstance.SaveUIOnly(customConfig: table?)
     return HyperSaveInstance.Save(cfg)
 end
 
+function HyperSaveInstance.SaveBeeSwarm(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "BeeSwarm")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveBloxFruits(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "BloxFruits")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SavePetSimulator(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "PetSimulator99")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveArsenal(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "Arsenal")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveDoors(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "Doors")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveTowerDefense(customConfig: table?)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "TowerDefense")
+    return HyperSaveInstance.Save(cfg)
+end
+
 -- Global environment injection (Universal compatibility)
 local function injectGlobals()
     local genv = (getgenv and getgenv()) or nil
@@ -147,27 +199,29 @@ local function injectGlobals()
         genv.SynSaveInstance = HyperSaveInstance
         genv.HyperSaveInstance = HyperSaveInstance
         genv.UltraSmartSaveInstance = HyperSaveInstance
-    end
-
-    local isSilent = Defaults.SilentMode or (genv and (genv.HyperSave_Silent or genv.SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
-    if _G and not isSilent then
-        _G.saveinstance = _G.saveinstance or HyperSaveInstance.Save
-        _G.saveplace = _G.saveplace or HyperSaveInstance.Save
-        _G.SynSaveInstance = _G.SynSaveInstance or HyperSaveInstance
-        _G.HyperSaveInstance = _G.HyperSaveInstance or HyperSaveInstance
-        _G.UltraSmartSaveInstance = _G.UltraSmartSaveInstance or HyperSaveInstance
+    else
+        -- Fallback only when getgenv is not supported (Studio/Headless simulator)
+        if _G then
+            _G.saveinstance = _G.saveinstance or HyperSaveInstance.Save
+            _G.saveplace = _G.saveplace or HyperSaveInstance.Save
+            _G.SynSaveInstance = _G.SynSaveInstance or HyperSaveInstance
+            _G.HyperSaveInstance = _G.HyperSaveInstance or HyperSaveInstance
+            _G.UltraSmartSaveInstance = _G.UltraSmartSaveInstance or HyperSaveInstance
+        end
     end
 end
 
 pcall(injectGlobals)
 
 -- Check if SilentMode or global silent override is active
-local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
+local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or (_G and (_G.HyperSave_Silent or _G.SilentMode))
 
 -- Instant StarterGui Notification (Only in non-silent mode)
 if not isSilent and Defaults.ShowUI then
     pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
+        local clonerefFn = cloneref or function(obj) return obj end
+        local sg = clonerefFn(game:GetService("StarterGui"))
+        sg:SetCore("SendNotification", {
             Title = "HyperSaveInstance",
             Text = "Carregado por Theo Lorentz Padilha!",
             Duration = 4

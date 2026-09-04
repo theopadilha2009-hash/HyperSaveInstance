@@ -56,7 +56,51 @@ O arquivo `.rbxlx` será gerado dentro da pasta `workspace/` do seu executor com
 
 ---
 
-## 3. Como Abrir no Roblox Studio
+## 3. Presets Especiais
+
+Você pode acionar modos otimizados programaticamente:
+
+```luau
+local HyperSave = loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau", true))()
+
+-- 1. Preset Bee Swarm Simulator (Anti-teleport + filtro de flores e tokens)
+HyperSave.SaveBeeSwarm()
+
+-- 2. Preset Blox Fruits (Filtro de VFX de combate, ilhas e slashes)
+HyperSave.SaveBloxFruits()
+
+-- 3. Preset Pet Simulator 99 (Filtro de moedas, baús e pets ativos)
+HyperSave.SavePetSimulator()
+
+-- 4. Preset Arsenal (Filtro de ragdolls, tracers e viewmodels)
+HyperSave.SaveArsenal()
+
+-- 5. Preset Doors (Filtro de efeitos de susto e glitch temporários)
+HyperSave.SaveDoors()
+
+-- 6. Preset Tower Defense Simulator (Filtro de spawners de mobs e projéteis)
+HyperSave.SaveTowerDefense()
+
+-- 7. Preset Ghost / Silencioso (Sem UI, sem prints, 100% stealth)
+HyperSave.SaveGhost()
+
+-- 8. Preset Rápido (Apenas mapa e scripts sem assets pesados)
+HyperSave.SaveFast()
+```
+
+---
+
+## 4. Download de Assets Offline (Node.js)
+
+Se o mapa possuir muitas texturas ou áudios, você pode baixar o manifesto de assets instantaneamente pelo terminal sem travar seu jogo:
+
+```bash
+node scripts/download_manifest.js path/to/HyperSave_Manifest_<PlaceId>.json
+```
+
+---
+
+## 5. Como Abrir no Roblox Studio
 
 1. Abra o **Roblox Studio**.
 2. Vá em **File (Arquivo)** -> **Open from File... (Abrir do Arquivo...)**.

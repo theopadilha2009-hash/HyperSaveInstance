@@ -269,7 +269,7 @@ function Environment.GetSafeGuiParent(): Instance
     -- 2. Try CoreGui if accessible
     local coreGui = nil
     pcall(function()
-        coreGui = game:GetService("CoreGui")
+        coreGui = cloneref(game:GetService("CoreGui"))
     end)
     if coreGui then
         local canAccess, name = pcall(function()
@@ -283,7 +283,7 @@ function Environment.GetSafeGuiParent(): Instance
     -- 3. Fallback to LocalPlayer's PlayerGui (Safe non-blocking)
     local pgui = nil
     pcall(function()
-        local plrs = game:GetService("Players")
+        local plrs = cloneref(game:GetService("Players"))
         local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
         if lp then
             pgui = lp:FindFirstChildOfClass("PlayerGui")

@@ -17,8 +17,9 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
     local currentPlaceId = game.PlaceId or 0
     local rootName = "Root Place"
 
+    local clonerefFn = cloneref or function(obj) return obj end
     pcall(function()
-        local mp = game:GetService("MarketplaceService")
+        local mp = clonerefFn(game:GetService("MarketplaceService"))
         if mp then
             rootName = mp:GetProductInfo(currentPlaceId).Name
         end
@@ -33,7 +34,7 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
 
     -- Query AssetService for places in universe
     local success, pages = pcall(function()
-        local assetService = game:GetService("AssetService")
+        local assetService = clonerefFn(game:GetService("AssetService"))
         return assetService and assetService:GetGamePlacesAsync()
     end)
 
@@ -60,6 +61,33 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
     end
 
     return places
+end
+
+-- Export Universe places hierarchy to JSON file
+function UniverseTracker.ExportUniverseMap(customPath: string?): (boolean, string)
+    local Environment = require(script.Parent.Parent.Utils.Environment)
+    local clonerefFn = cloneref or function(obj) return obj end
+    local HttpService = clonerefFn(game:GetService("HttpService"))
+    
+    local places = UniverseTracker.GetUniversePlaces()
+    local currentPlaceId = game.PlaceId or 0
+    local fileName = customPath or string.format("HyperSave_Universe_%d.json", currentPlaceId)
+
+    local success, json = pcall(function()
+        return HttpService:JSONEncode({
+            UniverseRootPlaceId = currentPlaceId,
+            TotalPlaces = #places,
+            ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
+            Places = places
+        })
+    end)
+
+    if success and json then
+        local wOk = Environment.WriteFile(fileName, json)
+        return wOk, fileName
+    end
+
+    return false, "Failed to encode Universe JSON"
 end
 
 return UniverseTracker

@@ -5,15 +5,16 @@
 
 local Stealth = {}
 
+local clonerefFn = cloneref or function(obj) return obj end
 local HttpService = nil
-pcall(function() HttpService = game:GetService("HttpService") end)
+pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
 
 -- Generate ephemeral GUID for instance naming (Prevents static string signature detection)
 function Stealth.GenerateEphemeralGUID(): string
     if HttpService and HttpService.GenerateGUID then
         local s, guid = pcall(function() return HttpService:GenerateGUID(false) end)
         if s and guid then
-            return "HSI_" .. string.gsub(guid, "%-", "")
+            return string.gsub(guid, "%-", "")
         end
     end
     return Stealth.GenerateRandomName(24)
@@ -86,6 +87,59 @@ function Stealth.SafeGetProperty(instance: Instance, property: string): any
     end)
     if success then return val end
     return nil
+end
+
+-- Mask Luau functions as native C closures to prevent hook detection
+function Stealth.MaskClosure(fn: (...any) -> ...any): (...any) -> ...any
+    if typeof(fn) ~= "function" then return fn end
+    local masked = fn
+    pcall(function()
+        if newcclosure then
+            masked = newcclosure(fn)
+        end
+    end)
+    return masked
+end
+
+-- Lock metatable to prevent external inspection or tampering
+function Stealth.ProtectMetatable(tbl: table): table
+    if type(tbl) ~= "table" then return tbl end
+    pcall(function()
+        local mt = getrawmetatable and getrawmetatable(tbl) or getmetatable(tbl)
+        if mt then
+            if setreadonly then
+                setreadonly(mt, false)
+            end
+            mt.__metatable = "The metatable is locked"
+            if setreadonly then
+                setreadonly(mt, true)
+            end
+        else
+            setmetatable(tbl, {
+                __metatable = "The metatable is locked",
+            })
+        end
+    end)
+    return tbl
+end
+
+-- Check if instance belongs to Roblox internal telemetry or CoreGui
+function Stealth.IsInternalOrProtected(instance: Instance): boolean
+    if not instance then return true end
+    local isInternal = false
+    pcall(function()
+        local name = instance.Name
+        local className = instance.ClassName
+        if string.find(name, "RobloxNetworkAutoTest") or
+           string.find(name, "Telemetry") or
+           string.find(name, "MemStorageConnection") or
+           string.find(name, "CoreScript") or
+           className == "PluginMouse" or
+           className == "RobloxPluginGui" then
+            isInternal = true
+        end
+    end)
+    return isInternal
 end
 
 return Stealth

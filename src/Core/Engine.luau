@@ -52,7 +52,14 @@ function Engine.NormalizeOptions(rawOptions: table?): table
             elseif lm == "uionly" or lm == "ui" or lm == "guionly" then opts.Mode = "UIOnly"
             elseif lm == "ghost" or lm == "stealth" then opts.Mode = "Ghost"
             elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
+            elseif lm == "beeswarm" or lm == "bss" or lm == "bee_swarm" then opts.Mode = "BeeSwarm"
+            elseif lm == "bloxfruits" or lm == "blox_fruits" or lm == "bf" then opts.Mode = "BloxFruits"
+            elseif lm == "petsimulator99" or lm == "petsim" or lm == "ps99" or lm == "pet_simulator_99" then opts.Mode = "PetSimulator99"
+            elseif lm == "arsenal" then opts.Mode = "Arsenal"
+            elseif lm == "doors" then opts.Mode = "Doors"
+            elseif lm == "towerdefense" or lm == "tds" or lm == "tower_defense" then opts.Mode = "TowerDefense"
             else opts.Mode = v end
+            Defaults.ApplyPreset(opts, opts.Mode)
         elseif lk == "decompileignore" or lk == "decompile_ignore" then
             opts.DecompileIgnore = v
         elseif lk == "savebytecode" or lk == "save_bytecode" then
@@ -160,7 +167,9 @@ function Engine:ShouldSaveInstance(inst: Instance): boolean
     if ClassBlacklist.Names[inst.Name] then return false end
 
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
-    if inst:GetAttribute("HSI_Root") then return false end
+    if self.Config.IgnoredGui and (inst == self.Config.IgnoredGui or inst:IsDescendantOf(self.Config.IgnoredGui)) then
+        return false
+    end
 
     -- Custom IgnoreList check (USSI / UltraSmart parity)
     if self.Config.IgnoreList and type(self.Config.IgnoreList) == "table" then
@@ -432,17 +441,19 @@ function Engine:Start(): (boolean, string)
         end)
     end
 
-    -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio
+    -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio (Synthesized in memory)
+    local synthesizedSpawn = nil
     if self.Config.GenerateSafeSpawn then
         pcall(function()
-            local Players = game:GetService("Players")
-            local localPlayer = Players.LocalPlayer
+            local clonerefFn = cloneref or function(obj) return obj end
+            local Players = clonerefFn(game:GetService("Players"))
+            local localPlayer = Players and (Players.LocalPlayer or Players:FindFirstChildOfClass("Player"))
             local char = localPlayer and localPlayer.Character
             local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head") or char.PrimaryPart)
-            if hrp and workspace and not workspace:FindFirstChild("HyperSave_SafeSpawn") then
+            if hrp then
                 local spawnPos = hrp.CFrame - Vector3.new(0, 3, 0)
                 local safeSpawn = Instance.new("SpawnLocation")
-                safeSpawn.Name = "HyperSave_SafeSpawn"
+                safeSpawn.Name = "StudioSpawnLocation"
                 safeSpawn.Size = Vector3.new(12, 1.2, 12)
                 safeSpawn.CFrame = spawnPos
                 safeSpawn.Anchored = true
@@ -452,7 +463,7 @@ function Engine:Start(): (boolean, string)
                 safeSpawn.Color = Color3.fromRGB(0, 200, 255)
                 safeSpawn.Neutral = true
                 safeSpawn.Duration = 0
-                safeSpawn.Parent = workspace
+                synthesizedSpawn = safeSpawn
             end
         end)
     end
@@ -517,6 +528,10 @@ function Engine:Start(): (boolean, string)
             table.insert(rootInstances, serverService)
             scan(serverService)
         end)
+    end
+
+    if synthesizedSpawn then
+        table.insert(allInstances, synthesizedSpawn)
     end
 
     local totalInstances = #allInstances

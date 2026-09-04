@@ -5,10 +5,11 @@
     native KeyframeSequence instances that can be published to the user's account in Studio.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local RunService = nil
-pcall(function() RunService = game:GetService("RunService") end)
+pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 
 local AnimationRecorder = {}
 AnimationRecorder.IsRecording = false
@@ -31,7 +32,7 @@ function AnimationRecorder.RecordTrack(humanoid: Humanoid, trackName: string, du
     if #motors == 0 then return end
 
     local keyframeSeq = Instance.new("KeyframeSequence")
-    keyframeSeq.Name = trackName or "HyperSave_RecordedAnimation"
+    keyframeSeq.Name = trackName or "RecordedAnimation"
 
     local sampleRate = 30 -- 30 FPS sampling
     local interval = 1 / sampleRate
@@ -176,11 +177,11 @@ end
 
 -- Export all captured KeyframeSequences to a .rbxm model package
 function AnimationRecorder.ExportRecordedAnimations(): (boolean, string)
-    local Environment = require("../Utils/Environment")
-    local SerializerXml = require("./SerializerXml")
+    local Environment = require(script.Parent.Parent.Utils.Environment)
+    local SerializerXml = require(script.Parent.SerializerXml)
 
     local animFolder = Instance.new("Folder")
-    animFolder.Name = "HyperSave_AnimSaves"
+    animFolder.Name = "RecordedAnimations"
 
     local count = 0
     for _, item in ipairs(AnimationRecorder.RecordedSequences) do

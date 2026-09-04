@@ -229,7 +229,8 @@ function SerializerXml.Serialize(instances: {Instance}, scriptSources: {[LuaSour
             pcall(function()
                 local entries = (inst :: any):GetEntries()
                 if entries and #entries > 0 then
-                    local HttpService = game:GetService("HttpService")
+                    local clonerefFn = cloneref or function(obj) return obj end
+                    local HttpService = clonerefFn(game:GetService("HttpService"))
                     local json = HttpService:JSONEncode(entries)
                     append(string.format('%s\t\t<string name="Contents">%s</string>\n', indent, escapeXml(json)))
                 end

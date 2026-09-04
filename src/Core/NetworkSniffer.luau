@@ -3,17 +3,15 @@
     Logs and intercepts RemoteEvent / RemoteFunction calls to reverse-engineer client-server network protocols.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local HttpService = nil
-pcall(function() HttpService = game:GetService("HttpService") end)
+pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local NetworkSniffer = {}
 NetworkSniffer.IsActive = false
 NetworkSniffer.CapturedLogs = {}
 NetworkSniffer.Listeners = {}
-
-local originalFireServer = nil
-local originalInvokeServer = nil
 
 -- Format arguments safely into readable string / json
 local function serializeArgs(args: table): string
@@ -38,19 +36,39 @@ function NetworkSniffer.Start()
     local hookmeta = hookmetamethod or (syn and syn.hookmetamethod)
     if hookmeta then
         local oldNamecall
-        oldNamecall = hookmeta(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if NetworkSniffer.IsActive and typeof(self) == "Instance" then
+        local hookFn = function(self, ...)
+            if checkcaller and checkcaller() then
+                return oldNamecall(self, ...)
+            end
+
+            local method = nil
+            pcall(function()
+                if getnamecallmethod then
+                    method = getnamecallmethod()
+                end
+            end)
+
+            if NetworkSniffer.IsActive and typeof(self) == "Instance" and method then
                 if method == "FireServer" and self:IsA("RemoteEvent") then
                     local args = {...}
-                    NetworkSniffer.LogCall("FireServer", self, args)
+                    task.spawn(function()
+                        NetworkSniffer.LogCall("FireServer", self, args)
+                    end)
                 elseif method == "InvokeServer" and self:IsA("RemoteFunction") then
                     local args = {...}
-                    NetworkSniffer.LogCall("InvokeServer", self, args)
+                    task.spawn(function()
+                        NetworkSniffer.LogCall("InvokeServer", self, args)
+                    end)
                 end
             end
             return oldNamecall(self, ...)
-        end)
+        end
+
+        if newcclosure then
+            hookFn = newcclosure(hookFn)
+        end
+
+        oldNamecall = hookmeta(game, "__namecall", hookFn)
     end
 end
 

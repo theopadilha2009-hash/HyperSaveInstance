@@ -12,15 +12,26 @@ pcall(function()
     end
 end)
 
+local function getRandomString(len)
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local res = {}
+    for i = 1, (len or 16) do
+        local r = math.random(1, #chars)
+        table.insert(res, string.sub(chars, r, r))
+    end
+    return table.concat(res)
+end
+
 local function createInstantBanner(text, isError)
     if isSilent then return end
 
     pcall(function()
+        local clonerefFn = cloneref or function(obj) return obj end
         local rawParent = (gethui and gethui())
         if not rawParent then
-            local plrs = game:GetService("Players")
-            local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
-            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
+            local plrs = clonerefFn(game:GetService("Players"))
+            local lp = plrs and (plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player"))
+            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or clonerefFn(game:GetService("CoreGui"))
         end
         if not rawParent then return end
 
@@ -28,28 +39,26 @@ local function createInstantBanner(text, isError)
         if rawParent:IsA("LayerCollector") or rawParent:IsA("ScreenGui") then
             container = rawParent
         else
-            local old = rawParent:FindFirstChild("HSI_BootBanner")
-            if old then old:Destroy() end
-
             local sg = Instance.new("ScreenGui")
-            sg.Name = "HSI_BootBanner"
+            sg.Name = getRandomString(16)
             sg.DisplayOrder = 9999999
             sg.ResetOnSpawn = false
             sg.Enabled = true
             pcall(function()
                 if syn and syn.protect_gui then
                     syn.protect_gui(sg)
+                elseif protectgui then
+                    protectgui(sg)
+                elseif protect_gui then
+                    protect_gui(sg)
                 end
             end)
             sg.Parent = rawParent
             container = sg
         end
 
-        local oldF = container:FindFirstChild("HSI_BannerFrame")
-        if oldF then oldF:Destroy() end
-
         local f = Instance.new("Frame")
-        f.Name = "HSI_BannerFrame"
+        f.Name = getRandomString(16)
         f.Size = UDim2.new(0, 340, 0, 48)
         f.Position = UDim2.new(0.5, -170, 0, 24)
         f.BackgroundColor3 = isError and Color3.fromRGB(40, 10, 20) or Color3.fromRGB(16, 12, 28)
@@ -76,7 +85,12 @@ local function createInstantBanner(text, isError)
         l.Parent = f
 
         task.delay(isError and 6 or 3.5, function()
-            pcall(function() f:Destroy() end)
+            pcall(function()
+                f:Destroy()
+                if container and container ~= rawParent and #container:GetChildren() == 0 then
+                    container:Destroy()
+                end
+            end)
         end)
     end)
 end

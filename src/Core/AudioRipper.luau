@@ -3,8 +3,9 @@
     Scans, previews, plays and extracts all music tracks and sound effects in the game.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local SoundService = nil
-pcall(function() SoundService = game:GetService("SoundService") end)
+pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local AudioRipper = {}
@@ -45,8 +46,8 @@ function AudioRipper.ScanSounds(): {AudioInfo}
         end
     end
 
-    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "StarterGui", "Chat"}) do
-        local s, service = pcall(function() return game:GetService(sName) end)
+    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "Lighting", "StarterGui", "StarterPack", "StarterPlayer", "Chat", "MaterialService"}) do
+        local s, service = pcall(function() return clonerefFn(game:GetService(sName)) end)
         if s and service then scan(service) end
     end
 
@@ -65,7 +66,7 @@ function AudioRipper.PlayPreview(soundId: string): boolean
         local snd = Instance.new("Sound")
         snd.SoundId = soundId
         snd.Volume = 1
-        snd.Parent = SoundService
+        snd.Parent = workspace.CurrentCamera or SoundService
         snd:Play()
         previewSoundInstance = snd
     end)

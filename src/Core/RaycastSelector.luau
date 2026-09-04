@@ -4,12 +4,14 @@
     in the game world to inspect its hierarchy and save it with all internal scripts.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local UserInputService = nil
-pcall(function() UserInputService = game:GetService("UserInputService") end)
+pcall(function() UserInputService = clonerefFn(game:GetService("UserInputService")) end)
 local RunService = nil
-pcall(function() RunService = game:GetService("RunService") end)
+pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+local Stealth = require(script.Parent.Parent.Utils.Stealth)
 
 local RaycastSelector = {}
 RaycastSelector.__index = RaycastSelector
@@ -34,20 +36,22 @@ end
 function RaycastSelector:InitVisuals()
     pcall(function()
         local hl = Instance.new("Highlight")
-        hl.Name = "HyperSave_SelectorHighlight"
+        hl.Name = Stealth.GenerateRandomName(16)
         hl.FillColor = Color3.fromRGB(37, 99, 235)
         hl.FillTransparency = 0.5
         hl.OutlineColor = Color3.fromRGB(255, 255, 255)
         hl.OutlineTransparency = 0
         hl.Enabled = false
         
-        -- Store in gethui, CoreGui or workspace safely
+        Stealth.ProtectGui(hl)
+
+        -- Store in gethui or CoreGui safely
         local parent = nil
         if gethui then
             pcall(function() parent = gethui() end)
         end
         if not parent then
-            pcall(function() parent = game:GetService("CoreGui") end)
+            pcall(function() parent = clonerefFn(game:GetService("CoreGui")) end)
         end
         hl.Parent = parent or workspace
         self.Highlight = hl

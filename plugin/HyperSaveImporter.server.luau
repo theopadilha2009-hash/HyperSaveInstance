@@ -725,12 +725,80 @@ btnAudit.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================================
--- FEATURE 9: DESENVOLVEDOR
+-- FEATURE 9: AUTO-ANCORAR FÍSICA E ARQUITETURA ESTÁTICA
+-- ============================================================================
+local cardPhysics = createCard(
+    "9. Estabilizador de Física & Arquitetura",
+    "Ancora automaticamente peças e construções estáticas no Workspace para evitar que o mapa desmorone ao dar Play no Studio.",
+    9
+)
+cardPhysics.Parent = scroll
+
+local btnPhysics = createButton(cardPhysics, "Ancorar Construções do Workspace", Color3.fromRGB(37, 99, 235))
+
+btnPhysics.MouseButton1Click:Connect(function()
+    ChangeHistoryService:SetWaypoint("Before HyperSave Physics Stabilizer")
+    setStatus("Ancorando partes do mapa...", Color3.fromRGB(59, 130, 246))
+
+    local anchoredCount = 0
+    local workspace = game:GetService("Workspace")
+    for _, desc in ipairs(workspace:GetDescendants()) do
+        if desc:IsA("BasePart") and not desc.Anchored then
+            local isCharacter = false
+            local model = desc:FindFirstAncestorOfClass("Model")
+            if model and model:FindFirstChildOfClass("Humanoid") then
+                isCharacter = true
+            end
+            if not isCharacter then
+                desc.Anchored = true
+                anchoredCount = anchoredCount + 1
+            end
+        end
+    end
+
+    ChangeHistoryService:SetWaypoint("After HyperSave Physics Stabilizer")
+    setStatus(string.format("✓ %d peças estáticas ancoradas com sucesso para estabilidade física.", anchoredCount), Color3.fromRGB(16, 185, 129))
+end)
+
+-- ============================================================================
+-- FEATURE 10: RESTAURAR SPAWNLOCATION & ÁREA SEGURA
+-- ============================================================================
+local cardSpawn = createCard(
+    "10. Restaurar SpawnLocation & Área Inicial",
+    "Garante que o mapa tenha um SpawnLocation neutro funcional no centro para evitar que o jogador caia no void.",
+    10
+)
+cardSpawn.Parent = scroll
+
+local btnSpawn = createButton(cardSpawn, "Verificar e Criar SpawnLocation", Color3.fromRGB(37, 99, 235))
+
+btnSpawn.MouseButton1Click:Connect(function()
+    ChangeHistoryService:SetWaypoint("Before HyperSave Spawn Restorer")
+    local workspace = game:GetService("Workspace")
+    local existingSpawn = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+
+    if existingSpawn then
+        setStatus(string.format("✓ SpawnLocation existente já encontrado em: %s", existingSpawn:GetFullName()), Color3.fromRGB(16, 185, 129))
+    else
+        local spawn = Instance.new("SpawnLocation")
+        spawn.Name = "SafeSpawnLocation"
+        spawn.Size = Vector3.new(12, 1, 12)
+        spawn.Position = Vector3.new(0, 10, 0)
+        spawn.Anchored = true
+        spawn.Neutral = true
+        spawn.Parent = workspace
+        ChangeHistoryService:SetWaypoint("After HyperSave Spawn Restorer")
+        setStatus("✓ SafeSpawnLocation neutro criado no centro do mapa (0, 10, 0)!", Color3.fromRGB(16, 185, 129))
+    end
+end)
+
+-- ============================================================================
+-- FEATURE 11: DESENVOLVEDOR
 -- ============================================================================
 local cardDev = createCard(
     "Theo Lorentz Padilha",
     "Desenvolvido por Theo Lorentz Padilha. Clique no botão abaixo para copiar o link oficial do repositório.",
-    9
+    11
 )
 cardDev.Parent = scroll
 

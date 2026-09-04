@@ -3,8 +3,9 @@
     Preserves 100% of properties, meshes, textures, materials, sounds, terrain, physics, PBR, UI, attributes and tags.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local CollectionService = nil
-pcall(function() CollectionService = game:GetService("CollectionService") end)
+pcall(function() CollectionService = clonerefFn(game:GetService("CollectionService")) end)
 
 local Reflection = {}
 

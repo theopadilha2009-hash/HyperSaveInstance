@@ -138,7 +138,8 @@ end
 -- Preload & warm assets in memory
 function AssetHandler.WarmAssets(instances: {Instance})
     pcall(function()
-        local ContentProvider = game:GetService("ContentProvider")
+        local clonerefFn = cloneref or function(obj) return obj end
+        local ContentProvider = clonerefFn(game:GetService("ContentProvider"))
         if not ContentProvider then return end
 
         local batch = {}

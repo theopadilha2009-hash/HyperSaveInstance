@@ -4,8 +4,11 @@
     Focus: High contrast, crystal-clear readability, zero visual noise
 ]]
 
-local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
+local clonerefFn = cloneref or function(obj) return obj end
+local TweenService = nil
+pcall(function() TweenService = clonerefFn(game:GetService("TweenService")) end)
+local SoundService = nil
+pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
 
 local Theme = {
     -- Backgrounds & Surfaces (Solid Dark Slate, High Contrast)

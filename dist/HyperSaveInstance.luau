@@ -183,7 +183,7 @@ local Defaults = {
     ShowUI = true,                         -- Open HUD interface by default
     AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
     SilentMode = false,                    -- Headless / 100% Silent Mode (No UI, no notifications, no sounds, no prints)
-    RandomizeGuiName = false,              -- Randomize ScreenGui name with stealth random hash
+    RandomizeGuiName = true,               -- Randomize ScreenGui name with stealth random hash
     ToggleKeybind = Enum.KeyCode.RightShift, -- Keyboard shortcut to toggle HUD visibility
 
     -- Anti-AFK & Stealth Protection
@@ -388,8 +388,178 @@ local Presets = {
         SaveServerScriptPlaceholders = false,
         SaveNilInstances = false,
         OptimizeGeometry = false,
+    },
+    BeeSwarm = {
+        DownloadRawAssets = true,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        IgnoreList = {
+            "Collectibles",
+            "Popups",
+            "FieldEffects",
+            "PlayerBees",
+            "Debris",
+        },
+        OptimizeGeometry = false,
+    },
+    BloxFruits = {
+        DownloadRawAssets = true,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        IgnoreList = {
+            "CombatVFX",
+            "Slashes",
+            "Debris",
+            "TempHitboxes",
+            "WaterRipples",
+            "DamageIndicators",
+            "Effects",
+            "TemporaryParticles",
+        },
+        OptimizeGeometry = false,
+    },
+    PetSimulator99 = {
+        DownloadRawAssets = true,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        IgnoreList = {
+            "CoinDebris",
+            "DropCoins",
+            "BreakableEffects",
+            "DamagePopups",
+            "TempVFX",
+            "BeamEffects",
+            "ActivePets",
+        },
+        OptimizeGeometry = false,
+    },
+    Arsenal = {
+        DownloadRawAssets = true,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        IgnoreList = {
+            "BulletHoles",
+            "Tracers",
+            "Ragdolls",
+            "Debris",
+            "BloodEffects",
+            "MuzzleFlashes",
+            "Viewmodel",
+        },
+        OptimizeGeometry = false,
+    },
+    Doors = {
+        DownloadRawAssets = true,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        IgnoreList = {
+            "JumpscareDebris",
+            "TempLights",
+            "FootstepParticles",
+            "GlitchEffects",
+        },
+        OptimizeGeometry = false,
+    },
+    TowerDefense = {
+        DownloadRawAssets = true,
+        SaveTerrain = true,
+        SaveTerrainVoxels = true,
+        SaveLighting = true,
+        SaveMaterials = true,
+        SaveSounds = true,
+        SaveUnions = true,
+        SaveMeshParts = true,
+        SaveSurfaceAppearance = true,
+        SaveAnimations = true,
+        SaveAttributes = true,
+        SaveTags = true,
+        DecompileScripts = true,
+        SaveServerScriptPlaceholders = true,
+        SaveNilInstances = false,
+        SafeStreaming = true,
+        AutoExploreStreaming = false,
+        IgnoreList = {
+            "MobSpawns",
+            "Projectiles",
+            "ExplosionDebris",
+            "HealthBars",
+            "TowerRadiusRings",
+        },
+        OptimizeGeometry = false,
     }
 }
+
+Defaults.Presets = Presets
 
 function Defaults.ApplyPreset(config, presetName)
     local preset = Presets[presetName]
@@ -414,10 +584,11 @@ __define__("Core/AnimationRecorder", function()
     native KeyframeSequence instances that can be published to the user's account in Studio.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local RunService = nil
-pcall(function() RunService = game:GetService("RunService") end)
+pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 
 local AnimationRecorder = {}
 AnimationRecorder.IsRecording = false
@@ -440,7 +611,7 @@ function AnimationRecorder.RecordTrack(humanoid, trackName, durationSeconds, onC
     if #motors == 0 then return end
 
     local keyframeSeq = Instance.new("KeyframeSequence")
-    keyframeSeq.Name = trackName or "HyperSave_RecordedAnimation"
+    keyframeSeq.Name = trackName or "RecordedAnimation"
 
     local sampleRate = 30 -- 30 FPS sampling
     local interval = 1 / sampleRate
@@ -585,11 +756,11 @@ end
 
 -- Export all captured KeyframeSequences to a .rbxm model package
 function AnimationRecorder.ExportRecordedAnimations()
-    local Environment = require("../Utils/Environment")
-    local SerializerXml = require("./SerializerXml")
+    local Environment = __require__("Utils/Environment")
+    local SerializerXml = __require__("Core/SerializerXml")
 
     local animFolder = Instance.new("Folder")
-    animFolder.Name = "HyperSave_AnimSaves"
+    animFolder.Name = "RecordedAnimations"
 
     local count = 0
     for _, item in ipairs(AnimationRecorder.RecordedSequences) do
@@ -739,6 +910,10 @@ function AssetDownloader.CollectAssets(instances)
             registerAsset("Texture", inst.ShirtTemplate, inst.Name)
         elseif inst:IsA("Pants") then
             registerAsset("Texture", inst.PantsTemplate, inst.Name)
+        elseif inst:IsA("VideoFrame") then
+            registerAsset("Video", (inst ).Video, inst.Name)
+        elseif inst:IsA("PackageLink") then
+            registerAsset("Package", (inst ).PackageId, inst.Name)
         end
     end
 
@@ -749,7 +924,8 @@ end
 function AssetDownloader.GetClientPing()
     local ping = 45
     pcall(function()
-        local stats = game:GetService("Stats")
+        local clonerefFn = cloneref or function(obj) return obj end
+        local stats = clonerefFn(game:GetService("Stats"))
         local net = stats and stats:FindFirstChild("Network")
         local ssi = net and net:FindFirstChild("ServerStatsItem")
         local dp = ssi and ssi:FindFirstChild("Data Ping")
@@ -764,7 +940,8 @@ end
 function AssetDownloader.GetClientFPS()
     local fps = 60
     pcall(function()
-        local ws = game:GetService("Workspace")
+        local clonerefFn = cloneref or function(obj) return obj end
+        local ws = clonerefFn(game:GetService("Workspace"))
         if ws and ws.GetRealPhysicsFPS then
             local val = ws:GetRealPhysicsFPS()
             if val and val > 0 then
@@ -777,8 +954,19 @@ end
 
 -- Export structured JSON manifest for offline downloading
 function AssetDownloader.ExportManifest(assets, manifestPath)
-    local HttpService = game:GetService("HttpService")
+    local clonerefFn = cloneref or function(obj) return obj end
+    local HttpService = clonerefFn(game:GetService("HttpService"))
     local list = {}
+    local summary = {
+        Audio = 0,
+        Texture = 0,
+        Mesh = 0,
+        Animation = 0,
+        Video = 0,
+        Package = 0,
+        Other = 0,
+    }
+
     for id, item in pairs(assets) do
         table.insert(list, {
             Id = id,
@@ -786,12 +974,18 @@ function AssetDownloader.ExportManifest(assets, manifestPath)
             Url = item.Url,
             SourceName = item.SourceName
         })
+        if summary[item.Type] ~= nil then
+            summary[item.Type] = summary[item.Type] + 1
+        else
+            summary.Other = summary.Other + 1
+        end
     end
 
     local success, json = pcall(function()
         return HttpService:JSONEncode({
             PlaceId = game.PlaceId or 0,
             TotalAssets = #list,
+            CategorySummary = summary,
             ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
             Assets = list
         })
@@ -1068,7 +1262,8 @@ end
 -- Preload & warm assets in memory
 function AssetHandler.WarmAssets(instances)
     pcall(function()
-        local ContentProvider = game:GetService("ContentProvider")
+        local clonerefFn = cloneref or function(obj) return obj end
+        local ContentProvider = clonerefFn(game:GetService("ContentProvider"))
         if not ContentProvider then return end
 
         local batch = {}
@@ -1097,8 +1292,9 @@ __define__("Core/AudioRipper", function()
     Scans, previews, plays and extracts all music tracks and sound effects in the game.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local SoundService = nil
-pcall(function() SoundService = game:GetService("SoundService") end)
+pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
 local Environment = __require__("Utils/Environment")
 
 local AudioRipper = {}
@@ -1132,8 +1328,8 @@ function AudioRipper.ScanSounds()
         end
     end
 
-    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "StarterGui", "Chat"}) do
-        local s, service = pcall(function() return game:GetService(sName) end)
+    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "Lighting", "StarterGui", "StarterPack", "StarterPlayer", "Chat", "MaterialService"}) do
+        local s, service = pcall(function() return clonerefFn(game:GetService(sName)) end)
         if s and service then scan(service) end
     end
 
@@ -1152,7 +1348,7 @@ function AudioRipper.PlayPreview(soundId)
         local snd = Instance.new("Sound")
         snd.SoundId = soundId
         snd.Volume = 1
-        snd.Parent = SoundService
+        snd.Parent = workspace.CurrentCamera or SoundService
         snd:Play()
         previewSoundInstance = snd
     end)
@@ -1212,12 +1408,97 @@ local function getScriptPath(scriptInstance)
     return "game." .. table.concat(names, ".")
 end
 
+-- Extract detected network events and functions invoked by this script
+function Decompiler.ExtractNetworkSignatures(code)
+    local signatures = {}
+    local seen = {}
+    
+    for remoteCall in string.gmatch(code, "([%w_%.:]+):[Ff]ire[Ss]erver%(") do
+        if not seen[remoteCall] then
+            seen[remoteCall] = true
+            table.insert(signatures, "RemoteEvent: " .. remoteCall .. ":FireServer(...)")
+        end
+    end
+
+    for funcCall in string.gmatch(code, "([%w_%.:]+):[Ii]nvoke[Ss]erver%(") do
+        if not seen[funcCall] then
+            seen[funcCall] = true
+            table.insert(signatures, "RemoteFunction: " .. funcCall .. ":InvokeServer(...)")
+        end
+    end
+
+    return signatures
+end
+
+-- Extract module dependencies required by this script
+function Decompiler.ExtractDependencies(code)
+    local deps = {}
+    local seen = {}
+
+    for mod in string.gmatch(code, "require%(([%w_%.%s]+)%)") do
+        local clean = string.gsub(mod, "^%s*(.-)%s*$", "%1")
+        if #clean > 0 and not seen[clean] then
+            seen[clean] = true
+            table.insert(deps, clean)
+        end
+    end
+
+    return deps
+end
+
+-- Deobfuscate escaped character sequences and string.char blocks
+function Decompiler.DeobfuscateStrings(code)
+    if not code or #code == 0 then return "" end
+
+    local deobfuscated = code
+
+    -- 1. Decode 3-digit decimal escapes: \097 -> 'a'
+    deobfuscated = string.gsub(deobfuscated, "\\(%d%d%d)", function(d)
+        local num = tonumber(d)
+        if num and num >= 32 and num <= 126 and num ~= 34 and num ~= 39 and num ~= 92 then
+            return string.char(num)
+        end
+        return "\\" .. d
+    end)
+
+    -- 2. Decode hex escapes: \x68 -> 'h'
+    deobfuscated = string.gsub(deobfuscated, "\\x(%x%x)", function(h)
+        local num = tonumber(h, 16)
+        if num and num >= 32 and num <= 126 and num ~= 34 and num ~= 39 and num ~= 92 then
+            return string.char(num)
+        end
+        return "\\x" .. h
+    end)
+
+    return deobfuscated
+end
+
 -- Generate banner comment for decompiled scripts
-local function generateHeader(scriptInstance, status)
+local function generateHeader(scriptInstance, status, code)
     local path = getScriptPath(scriptInstance)
     local dateStr = os.date("%Y-%m-%d %H:%M:%S")
     local execName = Environment.GetExecutorName()
     
+    local extraInfo = ""
+    if code and #code > 0 then
+        local sigs = Decompiler.ExtractNetworkSignatures(code)
+        local deps = Decompiler.ExtractDependencies(code)
+
+        if #sigs > 0 then
+            extraInfo = extraInfo .. "\n    Network Calls (" .. #sigs .. "):\n"
+            for _, s in ipairs(sigs) do
+                extraInfo = extraInfo .. "      - " .. s .. "\n"
+            end
+        end
+
+        if #deps > 0 then
+            extraInfo = extraInfo .. "\n    Dependencies (" .. #deps .. "):\n"
+            for _, d in ipairs(deps) do
+                extraInfo = extraInfo .. "      - require(" .. d .. ")\n"
+            end
+        end
+    end
+
     return string.format([=[
 --[[
     ================================================================================
@@ -1227,18 +1508,18 @@ local function generateHeader(scriptInstance, status)
     Path: %s
     Status: %s
     Executor: %s
-    Exported At: %s
+    Exported At: %s%s
     ================================================================================
 ]]
 
-]=], scriptInstance.ClassName, path, status, execName, dateStr)
+]=], scriptInstance.ClassName, path, status, execName, dateStr, extraInfo)
 end
 
 -- Intelligent script beautifier & bytecode artifact cleaner
 function Decompiler.Beautify(code)
     if not code or #code == 0 then return "" end
 
-    local beautified = code
+    local beautified = Decompiler.DeobfuscateStrings(code)
 
     -- 1. Strip useless decompiler watermark lines
     beautified = string.gsub(beautified, "%-%-%s*Decompiled with [^\r\n]+[\r\n]*", "")
@@ -1248,12 +1529,14 @@ function Decompiler.Beautify(code)
     -- 2. Strip unassigned trash variables generated by raw decompilers
     beautified = string.gsub(beautified, "local%s+_%s*=%s*nil;?%s*\n", "")
     beautified = string.gsub(beautified, "local%s+_[%d]+%s*=%s*nil;?%s*\n", "")
+    beautified = string.gsub(beautified, ";%s*;\n", ";\n")
 
     -- 3. Replace generic service variables (e.g. local v1 = game:GetService("Players"))
     local commonServices = {
         "Players", "ReplicatedStorage", "ReplicatedFirst", "RunService", "TweenService",
         "UserInputService", "HttpService", "SoundService", "Lighting", "Debris",
-        "MarketplaceService", "TeleportService", "StarterGui", "ContextActionService"
+        "MarketplaceService", "TeleportService", "StarterGui", "ContextActionService",
+        "CollectionService", "DataStoreService"
     }
 
     local replacements = {}
@@ -1270,7 +1553,11 @@ function Decompiler.Beautify(code)
         beautified = string.gsub(beautified, "local%s+" .. oldVar .. "%s*=", "local " .. newVar .. " =")
     end
 
-    -- 4. Clean consecutive empty lines (normalize to max 2 blank lines)
+    -- 4. Replace common Player/Character patterns
+    beautified = string.gsub(beautified, "local%s+([vu_]%d+)%s*=%s*Players%.LocalPlayer", "local LocalPlayer = Players.LocalPlayer")
+    beautified = string.gsub(beautified, "local%s+([vu_]%d+)%s*=%s*LocalPlayer%.Character", "local Character = LocalPlayer.Character")
+
+    -- 5. Clean consecutive empty lines (normalize to max 2 blank lines)
     beautified = string.gsub(beautified, "\n%s*\n%s*\n+", "\n\n")
 
     return beautified
@@ -1600,7 +1887,14 @@ function Engine.NormalizeOptions(rawOptions)
             elseif lm == "uionly" or lm == "ui" or lm == "guionly" then opts.Mode = "UIOnly"
             elseif lm == "ghost" or lm == "stealth" then opts.Mode = "Ghost"
             elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
+            elseif lm == "beeswarm" or lm == "bss" or lm == "bee_swarm" then opts.Mode = "BeeSwarm"
+            elseif lm == "bloxfruits" or lm == "blox_fruits" or lm == "bf" then opts.Mode = "BloxFruits"
+            elseif lm == "petsimulator99" or lm == "petsim" or lm == "ps99" or lm == "pet_simulator_99" then opts.Mode = "PetSimulator99"
+            elseif lm == "arsenal" then opts.Mode = "Arsenal"
+            elseif lm == "doors" then opts.Mode = "Doors"
+            elseif lm == "towerdefense" or lm == "tds" or lm == "tower_defense" then opts.Mode = "TowerDefense"
             else opts.Mode = v end
+            Defaults.ApplyPreset(opts, opts.Mode)
         elseif lk == "decompileignore" or lk == "decompile_ignore" then
             opts.DecompileIgnore = v
         elseif lk == "savebytecode" or lk == "save_bytecode" then
@@ -1708,7 +2002,9 @@ function Engine:ShouldSaveInstance(inst)
     if ClassBlacklist.Names[inst.Name] then return false end
 
     if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
-    if inst:GetAttribute("HSI_Root") then return false end
+    if self.Config.IgnoredGui and (inst == self.Config.IgnoredGui or inst:IsDescendantOf(self.Config.IgnoredGui)) then
+        return false
+    end
 
     -- Custom IgnoreList check (USSI / UltraSmart parity)
     if self.Config.IgnoreList and type(self.Config.IgnoreList) == "table" then
@@ -1980,17 +2276,19 @@ function Engine:Start()
         end)
     end
 
-    -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio
+    -- Generate Safe SpawnLocation at player's current position to prevent falling into void in Studio (Synthesized in memory)
+    local synthesizedSpawn = nil
     if self.Config.GenerateSafeSpawn then
         pcall(function()
-            local Players = game:GetService("Players")
-            local localPlayer = Players.LocalPlayer
+            local clonerefFn = cloneref or function(obj) return obj end
+            local Players = clonerefFn(game:GetService("Players"))
+            local localPlayer = Players and (Players.LocalPlayer or Players:FindFirstChildOfClass("Player"))
             local char = localPlayer and localPlayer.Character
             local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head") or char.PrimaryPart)
-            if hrp and workspace and not workspace:FindFirstChild("HyperSave_SafeSpawn") then
+            if hrp then
                 local spawnPos = hrp.CFrame - Vector3.new(0, 3, 0)
                 local safeSpawn = Instance.new("SpawnLocation")
-                safeSpawn.Name = "HyperSave_SafeSpawn"
+                safeSpawn.Name = "StudioSpawnLocation"
                 safeSpawn.Size = Vector3.new(12, 1.2, 12)
                 safeSpawn.CFrame = spawnPos
                 safeSpawn.Anchored = true
@@ -2000,7 +2298,7 @@ function Engine:Start()
                 safeSpawn.Color = Color3.fromRGB(0, 200, 255)
                 safeSpawn.Neutral = true
                 safeSpawn.Duration = 0
-                safeSpawn.Parent = workspace
+                synthesizedSpawn = safeSpawn
             end
         end)
     end
@@ -2065,6 +2363,10 @@ function Engine:Start()
             table.insert(rootInstances, serverService)
             scan(serverService)
         end)
+    end
+
+    if synthesizedSpawn then
+        table.insert(allInstances, synthesizedSpawn)
     end
 
     local totalInstances = #allInstances
@@ -2401,8 +2703,9 @@ __define__("Core/LightingRipper", function()
     Extracts realistic Skyboxes, Atmospheres, ColorCorrections, SunRays, and Post-Processing to a standalone preset.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local Lighting = nil
-pcall(function() Lighting = game:GetService("Lighting") end)
+pcall(function() Lighting = clonerefFn(game:GetService("Lighting")) end)
 local Environment = __require__("Utils/Environment")
 local SerializerXml = __require__("Core/SerializerXml")
 
@@ -2442,17 +2745,15 @@ __define__("Core/NetworkSniffer", function()
     Logs and intercepts RemoteEvent / RemoteFunction calls to reverse-engineer client-server network protocols.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local HttpService = nil
-pcall(function() HttpService = game:GetService("HttpService") end)
+pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
 local Environment = __require__("Utils/Environment")
 
 local NetworkSniffer = {}
 NetworkSniffer.IsActive = false
 NetworkSniffer.CapturedLogs = {}
 NetworkSniffer.Listeners = {}
-
-local originalFireServer = nil
-local originalInvokeServer = nil
 
 -- Format arguments safely into readable string / json
 local function serializeArgs(args)
@@ -2477,19 +2778,39 @@ function NetworkSniffer.Start()
     local hookmeta = hookmetamethod or (syn and syn.hookmetamethod)
     if hookmeta then
         local oldNamecall
-        oldNamecall = hookmeta(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if NetworkSniffer.IsActive and typeof(self) == "Instance" then
+        local hookFn = function(self, ...)
+            if checkcaller and checkcaller() then
+                return oldNamecall(self, ...)
+            end
+
+            local method = nil
+            pcall(function()
+                if getnamecallmethod then
+                    method = getnamecallmethod()
+                end
+            end)
+
+            if NetworkSniffer.IsActive and typeof(self) == "Instance" and method then
                 if method == "FireServer" and self:IsA("RemoteEvent") then
                     local args = {...}
-                    NetworkSniffer.LogCall("FireServer", self, args)
+                    task.spawn(function()
+                        NetworkSniffer.LogCall("FireServer", self, args)
+                    end)
                 elseif method == "InvokeServer" and self:IsA("RemoteFunction") then
                     local args = {...}
-                    NetworkSniffer.LogCall("InvokeServer", self, args)
+                    task.spawn(function()
+                        NetworkSniffer.LogCall("InvokeServer", self, args)
+                    end)
                 end
             end
             return oldNamecall(self, ...)
-        end)
+        end
+
+        if newcclosure then
+            hookFn = newcclosure(hookFn)
+        end
+
+        oldNamecall = hookmeta(game, "__namecall", hookFn)
     end
 end
 
@@ -2721,29 +3042,82 @@ end)
 __define__("Core/Optimizer", function()
 --[[
     HyperSaveInstance - Smart Place Optimizer & Deduplicator
-    (Strictly Optional) Reduces file size by deduplicating textures and pruning empty temporary containers.
+    (Strictly Optional) Reduces file size by deduplicating textures, pruning broken welds, empty temporary containers, and orphaned UI highlights.
 ]]
 
-local Optimizer = {}
+local Optimizer = {
+    Stats = {
+        PrunedWelds = 0,
+        PrunedFolders = 0,
+        PrunedOrphans = 0,
+        PrunedDuplicates = 0,
+        TotalPruned = 0,
+    }
+}
 
 function Optimizer.OptimizeHierarchy(rootInstances, options)
     if not options.OptimizeGeometry then
         return rootInstances
     end
 
+    Optimizer.Stats = {
+        PrunedWelds = 0,
+        PrunedFolders = 0,
+        PrunedOrphans = 0,
+        PrunedDuplicates = 0,
+        TotalPruned = 0,
+    }
+
     local cleanedRoots = {}
-    local prunedCount = 0
 
     local function cleanRecursive(inst)
-        -- Remove empty temporary folders or zero-size unrendered parts if safe
+        -- 1. Remove empty temporary folders
         if inst:IsA("Folder") and #inst:GetChildren() == 0 and not inst:GetAttribute("Preserve") then
-            prunedCount = prunedCount + 1
+            Optimizer.Stats.PrunedFolders = Optimizer.Stats.PrunedFolders + 1
+            Optimizer.Stats.TotalPruned = Optimizer.Stats.TotalPruned + 1
             return false
         end
 
-        for _, child in ipairs(inst:GetChildren()) do
-            cleanRecursive(child)
+        -- 2. Remove broken Welds or ManualWelds where Part0 or Part1 is missing/nil
+        if (inst:IsA("Weld") or inst:IsA("ManualWeld") or inst:IsA("Motor6D")) and not inst:GetAttribute("Preserve") then
+            local p0 = (inst ).Part0
+            local p1 = (inst ).Part1
+            if not p0 or not p1 then
+                Optimizer.Stats.PrunedWelds = Optimizer.Stats.PrunedWelds + 1
+                Optimizer.Stats.TotalPruned = Optimizer.Stats.TotalPruned + 1
+                return false
+            end
         end
+
+        -- 3. Remove orphaned Highlight / SelectionBox / SelectionSphere with Adornee == nil and parent is not a Model/Part
+        if (inst:IsA("Highlight") or inst:IsA("SelectionBox") or inst:IsA("SelectionSphere")) and not inst:GetAttribute("Preserve") then
+            local adornee = (inst ).Adornee
+            if not adornee and not (inst.Parent and (inst.Parent:IsA("Model") or inst.Parent:IsA("BasePart"))) then
+                Optimizer.Stats.PrunedOrphans = Optimizer.Stats.PrunedOrphans + 1
+                Optimizer.Stats.TotalPruned = Optimizer.Stats.TotalPruned + 1
+                return false
+            end
+        end
+
+        -- 4. Clean children recursively
+        local children = inst:GetChildren()
+        local seenSounds = {}
+        for _, child in ipairs(children) do
+            -- Deduplicate identical sounds in same parent
+            if child:IsA("Sound") and #child.SoundId > 0 then
+                if seenSounds[child.SoundId] and not child:GetAttribute("Preserve") then
+                    Optimizer.Stats.PrunedDuplicates = Optimizer.Stats.PrunedDuplicates + 1
+                    Optimizer.Stats.TotalPruned = Optimizer.Stats.TotalPruned + 1
+                    pcall(function() child:Destroy() end)
+                else
+                    seenSounds[child.SoundId] = true
+                    cleanRecursive(child)
+                end
+            else
+                cleanRecursive(child)
+            end
+        end
+
         return true
     end
 
@@ -2754,6 +3128,10 @@ function Optimizer.OptimizeHierarchy(rootInstances, options)
     end
 
     return cleanedRoots
+end
+
+function Optimizer.GetStats()
+    return Optimizer.Stats
 end
 
 return Optimizer
@@ -2767,8 +3145,9 @@ __define__("Core/PlaceDiffTracker", function()
     newly added instances, modified scripts, and removed models in game updates.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local HttpService = nil
-pcall(function() HttpService = game:GetService("HttpService") end)
+pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
 local Environment = __require__("Utils/Environment")
 
 local PlaceDiffTracker = {}
@@ -2955,12 +3334,14 @@ __define__("Core/RaycastSelector", function()
     in the game world to inspect its hierarchy and save it with all internal scripts.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local UserInputService = nil
-pcall(function() UserInputService = game:GetService("UserInputService") end)
+pcall(function() UserInputService = clonerefFn(game:GetService("UserInputService")) end)
 local RunService = nil
-pcall(function() RunService = game:GetService("RunService") end)
+pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+local Stealth = __require__("Utils/Stealth")
 
 local RaycastSelector = {}
 RaycastSelector.__index = RaycastSelector
@@ -2985,20 +3366,22 @@ end
 function RaycastSelector:InitVisuals()
     pcall(function()
         local hl = Instance.new("Highlight")
-        hl.Name = "HyperSave_SelectorHighlight"
+        hl.Name = Stealth.GenerateRandomName(16)
         hl.FillColor = Color3.fromRGB(37, 99, 235)
         hl.FillTransparency = 0.5
         hl.OutlineColor = Color3.fromRGB(255, 255, 255)
         hl.OutlineTransparency = 0
         hl.Enabled = false
         
-        -- Store in gethui, CoreGui or workspace safely
+        Stealth.ProtectGui(hl)
+
+        -- Store in gethui or CoreGui safely
         local parent = nil
         if gethui then
             pcall(function() parent = gethui() end)
         end
         if not parent then
-            pcall(function() parent = game:GetService("CoreGui") end)
+            pcall(function() parent = clonerefFn(game:GetService("CoreGui")) end)
         end
         hl.Parent = parent or workspace
         self.Highlight = hl
@@ -3147,8 +3530,9 @@ __define__("Core/Reflection", function()
     Preserves 100% of properties, meshes, textures, materials, sounds, terrain, physics, PBR, UI, attributes and tags.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local CollectionService = nil
-pcall(function() CollectionService = game:GetService("CollectionService") end)
+pcall(function() CollectionService = clonerefFn(game:GetService("CollectionService")) end)
 
 local Reflection = {}
 
@@ -4697,7 +5081,8 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
             pcall(function()
                 local entries = (inst ):GetEntries()
                 if entries and #entries > 0 then
-                    local HttpService = game:GetService("HttpService")
+                    local clonerefFn = cloneref or function(obj) return obj end
+                    local HttpService = clonerefFn(game:GetService("HttpService"))
                     local json = HttpService:JSONEncode(entries)
                     append(string.format('%s\t\t<string name="Contents">%s</string>\n', indent, escapeXml(json)))
                 end
@@ -4965,15 +5350,27 @@ task.spawn(function()
             
             -- Intelligent mock response based on common function naming patterns
             local nameLower = string.lower(%q)
-            if string.find(nameLower, "data") or string.find(nameLower, "load") or string.find(nameLower, "get") then
+            if string.find(nameLower, "data") or string.find(nameLower, "load") or string.find(nameLower, "get") or string.find(nameLower, "profile") then
                 return {
                     Success = true,
-                    Data = {},
-                    Coins = 1000,
-                    Level = 1,
+                    Data = { Honey = 10000000, Pollen = 500000, Capacity = 2500000, Coins = 1000000, Gems = 50000, Level = 50, Beli = 10000000, Fragments = 50000 },
+                    Coins = 1000000,
+                    Gems = 50000,
+                    Level = 50,
+                    Beli = 10000000,
                     Inventory = {},
                 }
-            elseif string.find(nameLower, "buy") or string.find(nameLower, "purchase") then
+            elseif string.find(nameLower, "hive") or string.find(nameLower, "claim") then
+                return true, "Hive Claimed"
+            elseif string.find(nameLower, "egg") or string.find(nameLower, "hatch") or string.find(nameLower, "pet") then
+                return true, { PetId = "Huge_Dragon", Power = 1000000, Level = 100 }
+            elseif string.find(nameLower, "fruit") or string.find(nameLower, "skill") or string.find(nameLower, "quest") then
+                return { Success = true, Level = 2550, Mastery = 600, Beli = 10000000 }
+            elseif string.find(nameLower, "weapon") or string.find(nameLower, "crate") or string.find(nameLower, "skin") then
+                return { Success = true, Weapon = "Golden_Gun", Unlocked = true }
+            elseif string.find(nameLower, "door") or string.find(nameLower, "key") or string.find(nameLower, "revive") then
+                return true, "Unlocked"
+            elseif string.find(nameLower, "buy") or string.find(nameLower, "purchase") or string.find(nameLower, "trade") then
                 return true, "Success"
             end
 
@@ -5006,6 +5403,30 @@ end)
 ]=], fullName, getPathExpression(re), re.Name))
     end
 
+    -- Hook UnreliableRemoteEvents
+    if remotes.Unreliable and #remotes.Unreliable > 0 then
+        add("\n-- ============================================================================")
+        add("-- [UnreliableRemoteEvents] Auto-Listeners")
+        add("-- ============================================================================\n")
+
+        for _, ure in ipairs(remotes.Unreliable) do
+            local fullName = ure:GetFullName()
+
+            add(string.format([=[
+-- UnreliableRemoteEvent: %s
+task.spawn(function()
+    local target = %s
+    if target and target.ClassName == "UnreliableRemoteEvent" then
+        target.OnServerEvent:Connect(function(player, ...)
+            local args = {...}
+            -- Suppress spam for unreliable position/render events
+        end)
+    end
+end)
+]=], fullName, getPathExpression(ure), ure.Name))
+        end
+    end
+
     add([=[
 
 print("[HyperSave Backend] Server dispatcher ready! All remotes are now responding.")
@@ -5023,7 +5444,7 @@ function ServerSynthesizer.SynthesizeService(rootInstances)
     serverService.Name = "ServerScriptService"
 
     local syntheticScript = Instance.new("Script")
-    syntheticScript.Name = "HyperSave_ServerDispatcher"
+    syntheticScript.Name = "ServerDispatcher"
     pcall(function()
         (syntheticScript ).Source = sourceCode
     end)
@@ -5044,8 +5465,9 @@ __define__("Core/StreamExplorer", function()
     Includes a Snapshot Memory Accumulator to preserve streamed-out chunks in memory.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 
 local StreamExplorer = {
     CapturedInstances = {}
@@ -5354,8 +5776,9 @@ function UniverseTracker.GetUniversePlaces()
     local currentPlaceId = game.PlaceId or 0
     local rootName = "Root Place"
 
+    local clonerefFn = cloneref or function(obj) return obj end
     pcall(function()
-        local mp = game:GetService("MarketplaceService")
+        local mp = clonerefFn(game:GetService("MarketplaceService"))
         if mp then
             rootName = mp:GetProductInfo(currentPlaceId).Name
         end
@@ -5370,7 +5793,7 @@ function UniverseTracker.GetUniversePlaces()
 
     -- Query AssetService for places in universe
     local success, pages = pcall(function()
-        local assetService = game:GetService("AssetService")
+        local assetService = clonerefFn(game:GetService("AssetService"))
         return assetService and assetService:GetGamePlacesAsync()
     end)
 
@@ -5397,6 +5820,33 @@ function UniverseTracker.GetUniversePlaces()
     end
 
     return places
+end
+
+-- Export Universe places hierarchy to JSON file
+function UniverseTracker.ExportUniverseMap(customPath)
+    local Environment = __require__("Utils/Environment")
+    local clonerefFn = cloneref or function(obj) return obj end
+    local HttpService = clonerefFn(game:GetService("HttpService"))
+    
+    local places = UniverseTracker.GetUniversePlaces()
+    local currentPlaceId = game.PlaceId or 0
+    local fileName = customPath or string.format("HyperSave_Universe_%d.json", currentPlaceId)
+
+    local success, json = pcall(function()
+        return HttpService:JSONEncode({
+            UniverseRootPlaceId = currentPlaceId,
+            TotalPlaces = #places,
+            ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
+            Places = places
+        })
+    end)
+
+    if success and json then
+        local wOk = Environment.WriteFile(fileName, json)
+        return wOk, fileName
+    end
+
+    return false, "Failed to encode Universe JSON"
 end
 
 return UniverseTracker
@@ -5756,15 +6206,26 @@ pcall(function()
     end
 end)
 
+local function getRandomString(len)
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local res = {}
+    for i = 1, (len or 16) do
+        local r = math.random(1, #chars)
+        table.insert(res, string.sub(chars, r, r))
+    end
+    return table.concat(res)
+end
+
 local function createInstantBanner(text, isError)
     if isSilent then return end
 
     pcall(function()
+        local clonerefFn = cloneref or function(obj) return obj end
         local rawParent = (gethui and gethui())
         if not rawParent then
-            local plrs = game:GetService("Players")
-            local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
-            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or game:GetService("CoreGui")
+            local plrs = clonerefFn(game:GetService("Players"))
+            local lp = plrs and (plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player"))
+            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or clonerefFn(game:GetService("CoreGui"))
         end
         if not rawParent then return end
 
@@ -5772,28 +6233,26 @@ local function createInstantBanner(text, isError)
         if rawParent:IsA("LayerCollector") or rawParent:IsA("ScreenGui") then
             container = rawParent
         else
-            local old = rawParent:FindFirstChild("HSI_BootBanner")
-            if old then old:Destroy() end
-
             local sg = Instance.new("ScreenGui")
-            sg.Name = "HSI_BootBanner"
+            sg.Name = getRandomString(16)
             sg.DisplayOrder = 9999999
             sg.ResetOnSpawn = false
             sg.Enabled = true
             pcall(function()
                 if syn and syn.protect_gui then
                     syn.protect_gui(sg)
+                elseif protectgui then
+                    protectgui(sg)
+                elseif protect_gui then
+                    protect_gui(sg)
                 end
             end)
             sg.Parent = rawParent
             container = sg
         end
 
-        local oldF = container:FindFirstChild("HSI_BannerFrame")
-        if oldF then oldF:Destroy() end
-
         local f = Instance.new("Frame")
-        f.Name = "HSI_BannerFrame"
+        f.Name = getRandomString(16)
         f.Size = UDim2.new(0, 340, 0, 48)
         f.Position = UDim2.new(0.5, -170, 0, 24)
         f.BackgroundColor3 = isError and Color3.fromRGB(40, 10, 20) or Color3.fromRGB(16, 12, 28)
@@ -5820,7 +6279,12 @@ local function createInstantBanner(text, isError)
         l.Parent = f
 
         task.delay(isError and 6 or 3.5, function()
-            pcall(function() f:Destroy() end)
+            pcall(function()
+                f:Destroy()
+                if container and container ~= rawParent and #container:GetChildren() == 0 then
+                    container:Destroy()
+                end
+            end)
         end)
     end)
 end
@@ -5951,7 +6415,6 @@ function Interface:BuildUI()
         container.Name = containerName
         container.Size = UDim2.new(1, 0, 1, 0)
         container.BackgroundTransparency = 1
-        container:SetAttribute("HSI_Root", true)
         container.Parent = parent
         safeContainer = container
     else
@@ -5967,7 +6430,6 @@ function Interface:BuildUI()
         screenGui.DisplayOrder = 999999
         screenGui.IgnoreGuiInset = true
         screenGui.Enabled = true
-        screenGui:SetAttribute("HSI_Root", true)
         self.ScreenGui = screenGui
 
         Stealth.ProtectGui(screenGui)
@@ -5984,6 +6446,10 @@ function Interface:BuildUI()
             end
         end
         safeContainer = screenGui
+    end
+
+    if self.Engine and self.Engine.Config then
+        self.Engine.Config.IgnoredGui = safeContainer
     end
 
     -- Floating Mini Toggle Button
@@ -6334,7 +6800,7 @@ function Interface:BuildUI()
 
     -- Compact In-Game HUD Widget (Minimalist floating bar)
     local compactBar = Instance.new("Frame")
-    compactBar.Name = "HyperSave_CompactHUD"
+    compactBar.Name = isRandom and Stealth.GenerateRandomName(12) or "CompactHUD"
     compactBar.Size = UDim2.new(0, 380, 0, 34)
     compactBar.Position = UDim2.new(0.5, -190, 0, 14)
     compactBar.BackgroundColor3 = Theme.Background
@@ -7078,7 +7544,7 @@ function Interface:BuildSelectorTab()
             end
             if inst:IsA("Model") or inst:IsA("BasePart") then
                 local h = Instance.new("Highlight")
-                h.Name = "HSI_TargetHighlight"
+                h.Name = Stealth.GenerateRandomName(16)
                 h.FillColor = Theme.AccentPrimary
                 h.FillTransparency = 0.65
                 h.OutlineColor = Theme.BorderLight
@@ -8754,8 +9220,11 @@ __define__("UI/Theme", function()
     Focus: High contrast, crystal-clear readability, zero visual noise
 ]]
 
-local TweenService = game:GetService("TweenService")
-local SoundService = game:GetService("SoundService")
+local clonerefFn = cloneref or function(obj) return obj end
+local TweenService = nil
+pcall(function() TweenService = clonerefFn(game:GetService("TweenService")) end)
+local SoundService = nil
+pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
 
 local Theme = {
     -- Backgrounds & Surfaces (Solid Dark Slate, High Contrast)
@@ -8924,8 +9393,9 @@ __define__("Utils/AntiAFK", function()
     Prevents Roblox Error 268/273 (20-minute idle disconnection) during long save sessions.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 
 local AntiAFK = {}
 local isEnabled = false
@@ -8937,35 +9407,45 @@ function AntiAFK.Enable()
 
     pcall(function()
         local plrs = Players or game:GetService("Players")
-        local localPlayer = plrs and plrs.LocalPlayer
+        local localPlayer = plrs and (plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player"))
         if localPlayer and localPlayer.Idled then
             idleConnection = localPlayer.Idled:Connect(function()
                 if not isEnabled then return end
-                -- 1. Try safe virtual user input without aggressive controller captures
-                local triggered = false
+                
+                -- 1. Primary stealth method: Natural camera micro-oscillation
+                local handled = false
                 pcall(function()
-                    local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
-                    if vu then
-                        if vu.Button2Down and vu.Button2Up then
-                            vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
-                            task.wait(0.05)
-                            vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
-                            triggered = true
-                        elseif vu.ClickButton2 then
-                            vu:ClickButton2(Vector2.new(0, 0))
-                            triggered = true
-                        end
+                    local cam = workspace.CurrentCamera
+                    if cam then
+                        local jitter = (math.random() > 0.5 and 0.0001 or -0.0001)
+                        cam.CFrame = cam.CFrame * CFrame.Angles(0, jitter, 0)
+                        task.wait(0.04)
+                        cam.CFrame = cam.CFrame * CFrame.Angles(0, -jitter, 0)
+                        handled = true
                     end
                 end)
 
-                -- 2. Fallback: Micro camera oscillation if VirtualUser is hooked/blocked
-                if not triggered then
+                -- 2. Secondary fallback: VirtualInputManager micro-event
+                if not handled then
                     pcall(function()
-                        local cam = workspace.CurrentCamera
-                        if cam then
-                            cam.CFrame = cam.CFrame * CFrame.Angles(0, 0.0001, 0)
-                            task.wait(0.05)
-                            cam.CFrame = cam.CFrame * CFrame.Angles(0, -0.0001, 0)
+                        local vim = clonerefFn(game:GetService("VirtualInputManager"))
+                        if vim and vim.SendMouseButtonEvent then
+                            local rx = math.random(10, 50)
+                            local ry = math.random(10, 50)
+                            vim:SendMouseButtonEvent(rx, ry, 0, true, game, 0)
+                            task.wait(0.03)
+                            vim:SendMouseButtonEvent(rx, ry, 0, false, game, 0)
+                            handled = true
+                        end
+                    end)
+                end
+
+                -- 3. Last resort fallback: VirtualUser
+                if not handled then
+                    pcall(function()
+                        local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
+                        if vu and vu.ClickButton2 then
+                            vu:ClickButton2(Vector2.new(math.random(10, 50), math.random(10, 50)))
                         end
                     end)
                 end
@@ -9427,7 +9907,7 @@ function Environment.GetSafeGuiParent()
     -- 2. Try CoreGui if accessible
     local coreGui = nil
     pcall(function()
-        coreGui = game:GetService("CoreGui")
+        coreGui = cloneref(game:GetService("CoreGui"))
     end)
     if coreGui then
         local canAccess, name = pcall(function()
@@ -9441,7 +9921,7 @@ function Environment.GetSafeGuiParent()
     -- 3. Fallback to LocalPlayer's PlayerGui (Safe non-blocking)
     local pgui = nil
     pcall(function()
-        local plrs = game:GetService("Players")
+        local plrs = cloneref(game:GetService("Players"))
         local lp = plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player")
         if lp then
             pgui = lp:FindFirstChildOfClass("PlayerGui")
@@ -9805,15 +10285,16 @@ __define__("Utils/Stealth", function()
 
 local Stealth = {}
 
+local clonerefFn = cloneref or function(obj) return obj end
 local HttpService = nil
-pcall(function() HttpService = game:GetService("HttpService") end)
+pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
 
 -- Generate ephemeral GUID for instance naming (Prevents static string signature detection)
 function Stealth.GenerateEphemeralGUID()
     if HttpService and HttpService.GenerateGUID then
         local s, guid = pcall(function() return HttpService:GenerateGUID(false) end)
         if s and guid then
-            return "HSI_" .. string.gsub(guid, "%-", "")
+            return string.gsub(guid, "%-", "")
         end
     end
     return Stealth.GenerateRandomName(24)
@@ -9886,6 +10367,59 @@ function Stealth.SafeGetProperty(instance, property)
     end)
     if success then return val end
     return nil
+end
+
+-- Mask Luau functions as native C closures to prevent hook detection
+function Stealth.MaskClosure(fn)
+    if typeof(fn) ~= "function" then return fn end
+    local masked = fn
+    pcall(function()
+        if newcclosure then
+            masked = newcclosure(fn)
+        end
+    end)
+    return masked
+end
+
+-- Lock metatable to prevent external inspection or tampering
+function Stealth.ProtectMetatable(tbl)
+    if type(tbl) ~= "table" then return tbl end
+    pcall(function()
+        local mt = getrawmetatable and getrawmetatable(tbl) or getmetatable(tbl)
+        if mt then
+            if setreadonly then
+                setreadonly(mt, false)
+            end
+            mt.__metatable = "The metatable is locked"
+            if setreadonly then
+                setreadonly(mt, true)
+            end
+        else
+            setmetatable(tbl, {
+                __metatable = "The metatable is locked",
+            })
+        end
+    end)
+    return tbl
+end
+
+-- Check if instance belongs to Roblox internal telemetry or CoreGui
+function Stealth.IsInternalOrProtected(instance)
+    if not instance then return true end
+    local isInternal = false
+    pcall(function()
+        local name = instance.Name
+        local className = instance.ClassName
+        if string.find(name, "RobloxNetworkAutoTest") or
+           string.find(name, "Telemetry") or
+           string.find(name, "MemStorageConnection") or
+           string.find(name, "CoreScript") or
+           className == "PluginMouse" or
+           className == "RobloxPluginGui" then
+            isInternal = true
+        end
+    end)
+    return isInternal
 end
 
 return Stealth
@@ -10060,6 +10594,22 @@ function HyperSaveInstance.SaveModel(targetInstance, customConfig)
     return engine:SaveTarget(targetInstance, customConfig)
 end
 
+-- Save specific model directly as .rbxm package
+function HyperSaveInstance.SaveModelToRbxm(targetInstance, customConfig)
+    local cfg = table.clone(customConfig or {})
+    cfg.Format = "rbxm"
+    local engine = Engine.new(cfg)
+    return engine:SaveTarget(targetInstance, cfg)
+end
+
+-- Save multiple instances into a single .rbxm package
+function HyperSaveInstance.SaveBatchToRbxm(targets, customConfig)
+    local cfg = table.clone(customConfig or {})
+    cfg.Format = "rbxm"
+    local engine = Engine.new(cfg)
+    return engine:SaveTargetBatch(targets, cfg)
+end
+
 -- Export 3D Wavefront OBJ/MTL
 function HyperSaveInstance.ExportObj(targetRoot, options)
     return ObjExporter.Export(targetRoot, options)
@@ -10128,6 +10678,42 @@ function HyperSaveInstance.SaveUIOnly(customConfig)
     return HyperSaveInstance.Save(cfg)
 end
 
+function HyperSaveInstance.SaveBeeSwarm(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "BeeSwarm")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveBloxFruits(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "BloxFruits")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SavePetSimulator(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "PetSimulator99")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveArsenal(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "Arsenal")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveDoors(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "Doors")
+    return HyperSaveInstance.Save(cfg)
+end
+
+function HyperSaveInstance.SaveTowerDefense(customConfig)
+    local cfg = table.clone(customConfig or {})
+    Defaults.ApplyPreset(cfg, "TowerDefense")
+    return HyperSaveInstance.Save(cfg)
+end
+
 -- Global environment injection (Universal compatibility)
 local function injectGlobals()
     local genv = (getgenv and getgenv()) or nil
@@ -10137,27 +10723,29 @@ local function injectGlobals()
         genv.SynSaveInstance = HyperSaveInstance
         genv.HyperSaveInstance = HyperSaveInstance
         genv.UltraSmartSaveInstance = HyperSaveInstance
-    end
-
-    local isSilent = Defaults.SilentMode or (genv and (genv.HyperSave_Silent or genv.SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
-    if _G and not isSilent then
-        _G.saveinstance = _G.saveinstance or HyperSaveInstance.Save
-        _G.saveplace = _G.saveplace or HyperSaveInstance.Save
-        _G.SynSaveInstance = _G.SynSaveInstance or HyperSaveInstance
-        _G.HyperSaveInstance = _G.HyperSaveInstance or HyperSaveInstance
-        _G.UltraSmartSaveInstance = _G.UltraSmartSaveInstance or HyperSaveInstance
+    else
+        -- Fallback only when getgenv is not supported (Studio/Headless simulator)
+        if _G then
+            _G.saveinstance = _G.saveinstance or HyperSaveInstance.Save
+            _G.saveplace = _G.saveplace or HyperSaveInstance.Save
+            _G.SynSaveInstance = _G.SynSaveInstance or HyperSaveInstance
+            _G.HyperSaveInstance = _G.HyperSaveInstance or HyperSaveInstance
+            _G.UltraSmartSaveInstance = _G.UltraSmartSaveInstance or HyperSaveInstance
+        end
     end
 end
 
 pcall(injectGlobals)
 
 -- Check if SilentMode or global silent override is active
-local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or _G.HyperSave_Silent or _G.SilentMode
+local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or (_G and (_G.HyperSave_Silent or _G.SilentMode))
 
 -- Instant StarterGui Notification (Only in non-silent mode)
 if not isSilent and Defaults.ShowUI then
     pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
+        local clonerefFn = cloneref or function(obj) return obj end
+        local sg = clonerefFn(game:GetService("StarterGui"))
+        sg:SetCore("SendNotification", {
             Title = "HyperSaveInstance",
             Text = "Carregado por Theo Lorentz Padilha!",
             Duration = 4

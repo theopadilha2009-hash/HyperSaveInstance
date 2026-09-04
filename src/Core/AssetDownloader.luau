@@ -101,6 +101,10 @@ function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type:
             registerAsset("Texture", inst.ShirtTemplate, inst.Name)
         elseif inst:IsA("Pants") then
             registerAsset("Texture", inst.PantsTemplate, inst.Name)
+        elseif inst:IsA("VideoFrame") then
+            registerAsset("Video", (inst :: any).Video, inst.Name)
+        elseif inst:IsA("PackageLink") then
+            registerAsset("Package", (inst :: any).PackageId, inst.Name)
         end
     end
 
@@ -111,7 +115,8 @@ end
 function AssetDownloader.GetClientPing(): number
     local ping = 45
     pcall(function()
-        local stats = game:GetService("Stats")
+        local clonerefFn = cloneref or function(obj) return obj end
+        local stats = clonerefFn(game:GetService("Stats"))
         local net = stats and stats:FindFirstChild("Network")
         local ssi = net and net:FindFirstChild("ServerStatsItem")
         local dp = ssi and ssi:FindFirstChild("Data Ping")
@@ -126,7 +131,8 @@ end
 function AssetDownloader.GetClientFPS(): number
     local fps = 60
     pcall(function()
-        local ws = game:GetService("Workspace")
+        local clonerefFn = cloneref or function(obj) return obj end
+        local ws = clonerefFn(game:GetService("Workspace"))
         if ws and ws.GetRealPhysicsFPS then
             local val = ws:GetRealPhysicsFPS()
             if val and val > 0 then
@@ -139,8 +145,19 @@ end
 
 -- Export structured JSON manifest for offline downloading
 function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath: string): (boolean, string)
-    local HttpService = game:GetService("HttpService")
+    local clonerefFn = cloneref or function(obj) return obj end
+    local HttpService = clonerefFn(game:GetService("HttpService"))
     local list = {}
+    local summary = {
+        Audio = 0,
+        Texture = 0,
+        Mesh = 0,
+        Animation = 0,
+        Video = 0,
+        Package = 0,
+        Other = 0,
+    }
+
     for id, item in pairs(assets) do
         table.insert(list, {
             Id = id,
@@ -148,12 +165,18 @@ function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath:
             Url = item.Url,
             SourceName = item.SourceName
         })
+        if summary[item.Type] ~= nil then
+            summary[item.Type] = summary[item.Type] + 1
+        else
+            summary.Other = summary.Other + 1
+        end
     end
 
     local success, json = pcall(function()
         return HttpService:JSONEncode({
             PlaceId = game.PlaceId or 0,
             TotalAssets = #list,
+            CategorySummary = summary,
             ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
             Assets = list
         })

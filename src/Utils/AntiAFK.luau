@@ -3,8 +3,9 @@
     Prevents Roblox Error 268/273 (20-minute idle disconnection) during long save sessions.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local Players = nil
-pcall(function() Players = game:GetService("Players") end)
+pcall(function() Players = clonerefFn(game:GetService("Players")) end)
 
 local AntiAFK = {}
 local isEnabled = false
@@ -16,35 +17,45 @@ function AntiAFK.Enable()
 
     pcall(function()
         local plrs = Players or game:GetService("Players")
-        local localPlayer = plrs and plrs.LocalPlayer
+        local localPlayer = plrs and (plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player"))
         if localPlayer and localPlayer.Idled then
             idleConnection = localPlayer.Idled:Connect(function()
                 if not isEnabled then return end
-                -- 1. Try safe virtual user input without aggressive controller captures
-                local triggered = false
+                
+                -- 1. Primary stealth method: Natural camera micro-oscillation
+                local handled = false
                 pcall(function()
-                    local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
-                    if vu then
-                        if vu.Button2Down and vu.Button2Up then
-                            vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
-                            task.wait(0.05)
-                            vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
-                            triggered = true
-                        elseif vu.ClickButton2 then
-                            vu:ClickButton2(Vector2.new(0, 0))
-                            triggered = true
-                        end
+                    local cam = workspace.CurrentCamera
+                    if cam then
+                        local jitter = (math.random() > 0.5 and 0.0001 or -0.0001)
+                        cam.CFrame = cam.CFrame * CFrame.Angles(0, jitter, 0)
+                        task.wait(0.04)
+                        cam.CFrame = cam.CFrame * CFrame.Angles(0, -jitter, 0)
+                        handled = true
                     end
                 end)
 
-                -- 2. Fallback: Micro camera oscillation if VirtualUser is hooked/blocked
-                if not triggered then
+                -- 2. Secondary fallback: VirtualInputManager micro-event
+                if not handled then
                     pcall(function()
-                        local cam = workspace.CurrentCamera
-                        if cam then
-                            cam.CFrame = cam.CFrame * CFrame.Angles(0, 0.0001, 0)
-                            task.wait(0.05)
-                            cam.CFrame = cam.CFrame * CFrame.Angles(0, -0.0001, 0)
+                        local vim = clonerefFn(game:GetService("VirtualInputManager"))
+                        if vim and vim.SendMouseButtonEvent then
+                            local rx = math.random(10, 50)
+                            local ry = math.random(10, 50)
+                            vim:SendMouseButtonEvent(rx, ry, 0, true, game, 0)
+                            task.wait(0.03)
+                            vim:SendMouseButtonEvent(rx, ry, 0, false, game, 0)
+                            handled = true
+                        end
+                    end)
+                end
+
+                -- 3. Last resort fallback: VirtualUser
+                if not handled then
+                    pcall(function()
+                        local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
+                        if vu and vu.ClickButton2 then
+                            vu:ClickButton2(Vector2.new(math.random(10, 50), math.random(10, 50)))
                         end
                     end)
                 end

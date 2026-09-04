@@ -7,7 +7,9 @@
     "build": "node scripts/bundle.js",
     "test": "node scripts/debug_suite.js && node scripts/simulate_roblox_runtime.js",
     "test:sim": "node scripts/simulate_roblox_runtime.js",
-    "install:plugin": "node scripts/install_plugin.js"
+    "install:plugin": "node scripts/install_plugin.js",
+    "download:manifest": "node scripts/download_manifest.js",
+    "clone:universe": "node scripts/batch_universe_cloner.js"
   },
   "keywords": [
     "roblox",

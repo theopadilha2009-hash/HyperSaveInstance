@@ -19,8 +19,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build Standalone Bundle
-        run: node scripts/bundle.js
+      - name: Install Dependencies
+        run: npm ci || npm install
 
-      - name: Run Test & Validation Suite
-        run: node scripts/test_parser.js
+      - name: Build Standalone Bundle
+        run: npm run build
+
+      - name: Run Master Audit & Roblox Runtime Simulation
+        run: npm test
+
+      - name: Upload Production Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: HyperSaveInstance-Bundle
+          path: dist/HyperSaveInstance.luau

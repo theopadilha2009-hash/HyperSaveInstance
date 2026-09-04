@@ -50,14 +50,34 @@ console.log(` Place ID: ${manifest.PlaceId || 'N/A'} | Total Assets: ${assets.le
 console.log(` Output Directory: ${baseDir}`);
 console.log(`=============================================================\n`);
 
-function downloadFile(url, dest) {
+function resolveAssetUrl(rawUrl, id) {
+    if (!rawUrl || rawUrl.length === 0) {
+        if (id) return `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
+        return null;
+    }
+    if (rawUrl.startsWith('rbxassetid://')) {
+        const numId = rawUrl.replace('rbxassetid://', '');
+        return `https://assetdelivery.roblox.com/v1/asset/?id=${numId}`;
+    }
+    if (/^\d+$/.test(rawUrl)) {
+        return `https://assetdelivery.roblox.com/v1/asset/?id=${rawUrl}`;
+    }
+    return rawUrl;
+}
+
+function downloadFile(url, dest, retries = 2) {
     return new Promise((resolve) => {
         if (fs.existsSync(dest) && fs.statSync(dest).size > 0) {
             return resolve({ success: true, skipped: true });
         }
 
+        const effectiveUrl = resolveAssetUrl(url);
+        if (!effectiveUrl) {
+            return resolve({ success: false, error: 'Invalid URL' });
+        }
+
         const file = fs.createWriteStream(dest);
-        const req = https.get(url, {
+        const req = https.get(effectiveUrl, {
             headers: {
                 'User-Agent': 'Roblox/WinInet',
             }
@@ -70,31 +90,49 @@ function downloadFile(url, dest) {
                 });
             } else if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 file.close();
-                fs.unlinkSync(dest);
-                downloadFile(res.headers.location, dest).then(resolve);
+                if (fs.existsSync(dest)) fs.unlinkSync(dest);
+                downloadFile(res.headers.location, dest, retries).then(resolve);
             } else {
                 file.close();
                 if (fs.existsSync(dest)) fs.unlinkSync(dest);
-                resolve({ success: false, status: res.statusCode });
+                if (retries > 0) {
+                    setTimeout(() => {
+                        downloadFile(url, dest, retries - 1).then(resolve);
+                    }, 500);
+                } else {
+                    resolve({ success: false, status: res.statusCode });
+                }
             }
         });
 
         req.on('error', (err) => {
             file.close();
             if (fs.existsSync(dest)) fs.unlinkSync(dest);
-            resolve({ success: false, error: err.message });
+            if (retries > 0) {
+                setTimeout(() => {
+                    downloadFile(url, dest, retries - 1).then(resolve);
+                }, 500);
+            } else {
+                resolve({ success: false, error: err.message });
+            }
         });
 
-        req.setTimeout(10000, () => {
+        req.setTimeout(12000, () => {
             req.destroy();
             file.close();
             if (fs.existsSync(dest)) fs.unlinkSync(dest);
-            resolve({ success: false, error: 'Timeout' });
+            if (retries > 0) {
+                setTimeout(() => {
+                    downloadFile(url, dest, retries - 1).then(resolve);
+                }, 500);
+            } else {
+                resolve({ success: false, error: 'Timeout' });
+            }
         });
     });
 }
 
-async function runPool(concurrency = 6) {
+async function runPool(concurrency = 8) {
     let completed = 0;
     let failed = 0;
     let index = 0;
@@ -113,7 +151,8 @@ async function runPool(concurrency = 6) {
             const cleanName = (item.SourceName || 'asset').replace(/[^a-zA-Z0-9_\-]/g, '_');
             const dest = path.join(baseDir, sub, `${item.Id}_${cleanName}${ext}`);
 
-            const res = await downloadFile(item.Url, dest);
+            const targetUrl = item.Url || resolveAssetUrl(null, item.Id);
+            const res = await downloadFile(targetUrl, dest);
             if (res.success) {
                 completed++;
             } else {
@@ -121,14 +160,14 @@ async function runPool(concurrency = 6) {
             }
 
             const pct = Math.floor(((completed + failed) / assets.length) * 100);
-            process.stdout.write(`\r[Download Progress] ${completed + failed}/${assets.length} (${pct}%) | Success: ${completed} | Failed: ${failed}`);
+            process.stdout.write(`\r[Download Progress] ${completed + failed}/${assets.length} (${pct}%) | Baixados: ${completed} | Falhas: ${failed}`);
         }
     }
 
     const workers = Array(concurrency).fill(null).map(() => worker());
     await Promise.all(workers);
 
-    console.log(`\n\n[✓ Done] Finished downloading ${completed} assets (${failed} failed) to ${baseDir}\n`);
+    console.log(`\n\n[✓ Done] Concluído download de ${completed} assets (${failed} falhas) para: ${baseDir}\n`);
 }
 
-runPool(6);
+runPool(8);

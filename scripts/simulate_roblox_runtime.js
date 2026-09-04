@@ -579,9 +579,26 @@ print("  ✓ Global hook 'saveinstance' verified: " .. tostring(type(genv.savein
 local safeParent = (gethui and gethui()) or game:GetService("CoreGui")
 local ui = safeParent:FindFirstChild("HyperSaveInstance_UI")
 if not ui then
-    error("ScreenGui 'HyperSaveInstance_UI' was not created in Gui Parent!")
+    for _, child in ipairs(safeParent:GetChildren()) do
+        if child.ClassName == "ScreenGui" and child:FindFirstChild("MainFrame") then
+            ui = child
+            break
+        end
+    end
 end
-print("  ✓ ScreenGui 'HyperSaveInstance_UI' successfully created in " .. safeParent.Name)
+if not ui then
+    for i = #safeParent:GetChildren(), 1, -1 do
+        local child = safeParent:GetChildren()[i]
+        if child.ClassName == "ScreenGui" and child.Name ~= "RobloxGui" then
+            ui = child
+            break
+        end
+    end
+end
+if not ui then
+    error("ScreenGui was not created in Gui Parent!")
+end
+print("  ✓ ScreenGui '" .. ui.Name .. "' successfully created in " .. safeParent.Name)
 
 local mainFrame = ui:FindFirstChild("MainFrame")
 if not mainFrame then
@@ -590,6 +607,14 @@ end
 print("  ✓ MainFrame created successfully (Size: " .. tostring(mainFrame.Size.X.Offset) .. "x" .. tostring(mainFrame.Size.Y.Offset) .. ")")
 
 local floatingBtn = ui:FindFirstChild("FloatingToggle")
+if not floatingBtn then
+    for _, child in ipairs(ui:GetChildren()) do
+        if child.ClassName == "TextButton" then
+            floatingBtn = child
+            break
+        end
+    end
+end
 if not floatingBtn then
     error("FloatingToggle mobile button was not created!")
 end
@@ -765,14 +790,36 @@ if not silentSuccess then
 end
 print("  ✓ SaveSilent executed cleanly in background without GUI or audio alert!")
 
--- 7. Testing Ghost Preset Configuration
-print("--- 7. Testing Ghost Preset Options ---")
+-- 7. Testing Game & Stealth Presets
+print("--- 7. Testing Game & Stealth Presets ---")
 local ghostCfg = hsi.Defaults.ApplyPreset({}, "Ghost")
 if not ghostCfg.SilentMode then error("Ghost preset missing SilentMode!") end
 if ghostCfg.ShowUI ~= false then error("Ghost preset ShowUI should be false!") end
 if not ghostCfg.SafeStreaming then error("Ghost preset SafeStreaming should be true!") end
 if not ghostCfg.StealthMode then error("Ghost preset StealthMode should be true!") end
-print("  ✓ Ghost Preset correctly configured (SilentMode: true, ShowUI: false, SafeStreaming: true, StealthMode: true)")
+print("  ✓ Ghost Preset correctly configured")
+
+local bfCfg = hsi.Defaults.ApplyPreset({}, "BloxFruits")
+if not bfCfg.SafeStreaming then error("BloxFruits preset missing SafeStreaming!") end
+if not bfCfg.IgnoreList or #bfCfg.IgnoreList == 0 then error("BloxFruits preset missing IgnoreList!") end
+print("  ✓ BloxFruits Preset correctly configured (Ignore filters: " .. tostring(#bfCfg.IgnoreList) .. ")")
+
+local psCfg = hsi.Defaults.ApplyPreset({}, "PetSimulator99")
+if not psCfg.SafeStreaming then error("PetSimulator99 preset missing SafeStreaming!") end
+if not psCfg.IgnoreList or #psCfg.IgnoreList == 0 then error("PetSimulator99 preset missing IgnoreList!") end
+print("  ✓ PetSimulator99 Preset correctly configured (Ignore filters: " .. tostring(#psCfg.IgnoreList) .. ")")
+
+local arsCfg = hsi.Defaults.ApplyPreset({}, "Arsenal")
+if not arsCfg.SafeStreaming then error("Arsenal preset missing SafeStreaming!") end
+print("  ✓ Arsenal Preset correctly configured")
+
+local doorsCfg = hsi.Defaults.ApplyPreset({}, "Doors")
+if not doorsCfg.SafeStreaming then error("Doors preset missing SafeStreaming!") end
+print("  ✓ Doors Preset correctly configured")
+
+local tdCfg = hsi.Defaults.ApplyPreset({}, "TowerDefense")
+if not tdCfg.SafeStreaming then error("TowerDefense preset missing SafeStreaming!") end
+print("  ✓ TowerDefense Preset correctly configured")
 
 return "ALL_ROBLOX_CHECKS_PASSED"
 `;

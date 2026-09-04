@@ -4,8 +4,9 @@
     newly added instances, modified scripts, and removed models in game updates.
 ]]
 
+local clonerefFn = cloneref or function(obj) return obj end
 local HttpService = nil
-pcall(function() HttpService = game:GetService("HttpService") end)
+pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local PlaceDiffTracker = {}
