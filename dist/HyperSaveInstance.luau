@@ -2814,6 +2814,13 @@ function Engine:Start()
     end
 
     local writeSuccess = Environment.WriteFile(targetFileName, outputContent)
+    if not writeSuccess then
+        local fallbackName = string.format("HyperSave_Place_%d.%s", game.PlaceId or 0, format)
+        writeSuccess = Environment.WriteFile(fallbackName, outputContent)
+        if writeSuccess then
+            targetFileName = fallbackName
+        end
+    end
     local elapsed = os.clock() - startTime
 
     if writeSuccess then
@@ -11057,11 +11064,13 @@ end
 -- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes
 function Environment.SanitizeFileName(name)
     if not name or #name == 0 then
-        return "Unnamed"
+        return "Place"
     end
-    local clean = string.gsub(name, '[<>:"/\\|?*%c%z]', "_")
-    clean = string.gsub(clean, "^[%s%.]+", "")
-    clean = string.gsub(clean, "[%s%.]+$", "")
+    -- Strip non-ASCII (emojis, unicode) and invalid filesystem chars
+    local clean = string.gsub(name, "[^%w%-%s%[%]_]", "_")
+    clean = string.gsub(clean, "_+", "_")
+    clean = string.gsub(clean, "^[%s%._]+", "")
+    clean = string.gsub(clean, "[%s%._]+$", "")
 
     -- Guard against reserved Windows device names
     local upper = string.upper(clean)
@@ -11093,10 +11102,10 @@ function Environment.SanitizeFileName(name)
         clean = clean .. "_file"
     end
 
-    if #clean > 120 then
-        clean = string.sub(clean, 1, 120)
+    if #clean > 80 then
+        clean = string.sub(clean, 1, 80)
     end
-    return (#clean > 0 and clean) or "File"
+    return (#clean > 0 and clean) or "Place"
 end
 
 function Environment.WriteFile(path, content)

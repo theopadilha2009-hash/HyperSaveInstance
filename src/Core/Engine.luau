@@ -789,6 +789,13 @@ function Engine:Start(): (boolean, string)
     end
 
     local writeSuccess = Environment.WriteFile(targetFileName, outputContent)
+    if not writeSuccess then
+        local fallbackName = string.format("HyperSave_Place_%d.%s", game.PlaceId or 0, format)
+        writeSuccess = Environment.WriteFile(fallbackName, outputContent)
+        if writeSuccess then
+            targetFileName = fallbackName
+        end
+    end
     local elapsed = os.clock() - startTime
 
     if writeSuccess then
