@@ -61,7 +61,10 @@ O arquivo `.rbxlx` será gerado dentro da pasta `workspace/` do seu executor com
 Você pode acionar modos otimizados programaticamente:
 
 ```luau
-local HyperSave = loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau", true))()
+-- O chunk do bundle devolve nil (o return fica dentro do pcall do bundler);
+-- a tabela publica vem de getgenv().
+loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/Loader.luau", true))()
+local HyperSave = getgenv().HyperSaveInstance or _G.HyperSaveInstance
 
 -- 1. Preset Bee Swarm Simulator (Anti-teleport + filtro de flores e tokens)
 HyperSave.SaveBeeSwarm()

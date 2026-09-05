@@ -52,10 +52,9 @@ function LicenseManager.ValidateKey(rawKey: string): (boolean, LicenseTier, stri
 
     local cleanKey = string.upper(string.gsub(rawKey, "%s+", ""))
     
-    -- Master / Dev Keys
-    if cleanKey == "THEO-DEV-ROOT-2026" or cleanKey == "THEO-OWNER-ACCESS" then
-        return true, "Enterprise", "Theo Lorentz Padilha (Master Developer)"
-    end
+    -- Chaves de desenvolvedor nao ficam no codigo versionado: este arquivo e
+    -- publicado no bundle, entao qualquer constante aqui e publica. Para uso
+    -- proprio, gere uma chave Enterprise com scripts/generate_key.js.
 
     -- Enterprise Pattern: THEO-ENT-XXXX-XXXX-XXXX
     local p1, p2, p3 = string.match(cleanKey, "^THEO%-ENT%-(%x%x%x%x)%-(%x%x%x%x)%-(%x%x%x%x)$")

@@ -6,24 +6,50 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
+      # Full history: the pin check resolves the commit that last touched dist/
+      # with `git log`, and a shallow clone has no history for it to walk — on a
+      # pull_request it would resolve to the synthetic merge commit instead.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      # No `|| npm install` fallback: npm ci fails exactly when package.json and
+      # the lockfile disagree, which is the case we want to hear about.
       - name: Install Dependencies
-        run: npm ci || npm install
+        run: npm ci
 
-      - name: Build Standalone Bundle
-        run: npm run build
+      # The tests below run against dist/, so they have to run against the dist
+      # that is actually committed — that file is what users download. Testing a
+      # freshly built one would pass even with a stale bundle in the repo.
+      - name: Verify committed bundle matches src/
+        run: |
+          npm run build
+          if ! git diff --exit-code -- dist/HyperSaveInstance.luau; then
+            echo "::error::dist/HyperSaveInstance.luau is out of date. Run 'npm run build' and commit the result."
+            exit 1
+          fi
+
+      - name: Verify loader pin matches the committed bundle
+        run: node scripts/update_loader_pin.js --check
 
       - name: Run Master Audit & Roblox Runtime Simulation
         run: npm test

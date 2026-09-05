@@ -13,7 +13,10 @@ const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const OUTPUT_FILE = path.join(DIST_DIR, 'HyperSaveInstance.luau');
 
 function getAllFiles(dir, fileList = []) {
-    const files = fs.readdirSync(dir);
+    // Sorted so the bundle is byte-identical across filesystems. macOS returns
+    // readdir in ~alphabetical order and ext4 returns hash order, which would
+    // make the CI's dist differ from the committed one for no real reason.
+    const files = fs.readdirSync(dir).sort();
     for (const file of files) {
         const fullPath = path.join(dir, file);
         if (fs.statSync(fullPath).isDirectory()) {

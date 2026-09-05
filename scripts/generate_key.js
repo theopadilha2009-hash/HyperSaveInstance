@@ -4,8 +4,6 @@
  * Example: node scripts/generate_key.js enterprise "Lucas_VIP"
  */
 
-const crypto = require('crypto');
-
 function generateLicenseKey(tier = 'enterprise', clientName = 'VIP Client') {
     const cleanTier = tier.toLowerCase();
     const seed = Date.now() + Math.floor(Math.random() * 100000);

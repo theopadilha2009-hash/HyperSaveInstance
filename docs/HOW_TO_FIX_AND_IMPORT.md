@@ -20,7 +20,7 @@ O **HyperSave Studio Suite** resolve essas situações de forma automatizada com
 1. Abra o **Roblox Studio**.
 2. Abra qualquer projeto ou crie um lugar em branco.
 3. Na barra superior do Studio, acesse a aba **Plugins** e clique no botão **Plugins Folder** (Pasta de Plugins locais).
-4. Copie o arquivo [plugin/HyperSaveImporter.server.luau](file:///Users/usuario1/Projetos%20pessoais/HyperSaveInstance/plugin/HyperSaveImporter.server.luau) para dentro dessa pasta.
+4. Copie o arquivo `plugin/HyperSaveImporter.server.luau` (na raiz do repositório) para dentro dessa pasta.
 5. O botão **"HyperSave Studio Suite"** aparecerá na barra de ferramentas do Studio.
 
 ---

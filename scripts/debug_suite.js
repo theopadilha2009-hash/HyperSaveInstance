@@ -1,11 +1,14 @@
 /**
- * HyperSaveInstance - Comprehensive Deep Debug & Unit Test Suite
- * Tests Base64, LZ4 compression roundtrip, Stream buffers, XML generation,
- * Reflection tables, Bundle integrity, and File exports.
+ * HyperSaveInstance - Debug & Audit Suite
+ *
+ * Tests Base64 and XML escaping by executing the actual Luau modules in a Lua
+ * VM, plus static checks over the Reflection tables, the bundle and the plugin.
  */
 
 const fs = require('fs');
 const path = require('path');
+const { lua, lauxlib, lualib, to_luastring } = require('fengari');
+const luaparse = require('luaparse');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_PATH = path.join(ROOT_DIR, 'dist', 'HyperSaveInstance.luau');
@@ -24,7 +27,61 @@ function assert(condition, testName, details = '') {
     }
 }
 
-// Pure JS reference implementation of Base64 to test Base64 contract
+
+// Loads one src/ module into a Lua VM and returns a caller for its functions.
+// The previous suite tested Node's Buffer and a JS-local escapeXml, so neither
+// src/Utils/Base64.luau nor src/Core/SerializerXml.luau was ever executed.
+
+// Mirrors the annotation stripping in scripts/bundle.js so Luau source can be
+// parsed by luaparse, which only understands Lua 5.1.
+function stripLuauTypes(code) {
+    return code
+        .replace(/^\s*(export\s+)?type\s+[^\n]*(\n\s+[^\n]*)*/gm, '')
+        .replace(/::\s*[\w.<>{}|?\s]+/g, '')
+        .replace(/\)\s*:\s*[\w.<>{}|?()\s,]+(?=\s*\n)/g, ')')
+        .replace(/(\w+)\s*:\s*[\w.<>{}|?]+(\??)(\s*[,)])/g, '$1$3');
+}
+
+function loadLuauModule(relPath) {
+    const source = fs.readFileSync(path.join(ROOT_DIR, 'src', relPath), 'utf8');
+    // The bundler strips Luau type annotations the same way before shipping.
+    const stripped = source
+        .replace(/^\s*(export\s+)?type\s+[\w<>,\s]+=[^\n]*(\n\s+[^\n]*)*/gm, '')
+        .replace(/::\s*[\w.<>{}|?\s]+/g, '')
+        .replace(/:\s*[\w.<>{}|?]+(\??)\s*(?=[,)=])/g, '')
+        .replace(/\)\s*:\s*[\w.<>{}|?()\s,]+(?=\s*\n)/g, ')');
+
+    const L = lauxlib.luaL_newstate();
+    lualib.luaL_openlibs(L);
+    if (lauxlib.luaL_dostring(L, to_luastring(stripped)) !== lua.LUA_OK) {
+        throw new Error(`${relPath}: ${lua.lua_tojsstring(L, -1)}`);
+    }
+    return {
+        call(fnName, ...args) {
+            lua.lua_getfield(L, -1, to_luastring(fnName));
+            if (!lua.lua_isfunction(L, -1)) {
+                lua.lua_pop(L, 1);
+                throw new Error(`${relPath}: ${fnName} is not a function`);
+            }
+            for (const a of args) {
+                if (Buffer.isBuffer(a)) lua.lua_pushstring(L, a);
+                else if (typeof a === 'string') lua.lua_pushstring(L, Buffer.from(a, 'binary'));
+                else if (typeof a === 'number') lua.lua_pushnumber(L, a);
+                else if (typeof a === 'boolean') lua.lua_pushboolean(L, a);
+                else throw new Error('unsupported arg type');
+            }
+            if (lua.lua_pcall(L, args.length, 1, 0) !== lua.LUA_OK) {
+                const err = lua.lua_tojsstring(L, -1);
+                lua.lua_pop(L, 1);
+                throw new Error(`${relPath}.${fnName}: ${err}`);
+            }
+            const raw = lua.lua_tostring(L, -1);
+            lua.lua_pop(L, 1);
+            return Buffer.from(raw);
+        }
+    };
+}
+
 function testBase64Logic() {
     console.log('\n--- 1. Testing Base64 Encoding / Decoding Logic ---');
     const testCases = [
@@ -40,28 +97,83 @@ function testBase64Logic() {
         JSON.stringify({ Terrain: "Voxels", Material: 1, Occupancy: 255 })
     ];
 
+    let mod;
+    try {
+        mod = loadLuauModule(path.join('Utils', 'Base64.luau'));
+    } catch (err) {
+        assert(false, 'Load src/Utils/Base64.luau', err.message);
+        return;
+    }
+
     for (const str of testCases) {
-        const encoded = Buffer.from(str, 'utf8').toString('base64');
-        const decoded = Buffer.from(encoded, 'base64').toString('utf8');
-        assert(decoded === str, `Base64 Roundtrip: "${str.substring(0, 20)}..."`);
+        const label = `"${str.substring(0, 20)}..."`;
+        try {
+            const input = Buffer.from(str, 'binary');
+            const encoded = mod.call('Encode', input).toString('binary');
+            const expected = input.toString('base64');
+            assert(encoded === expected, `Base64 Encode matches reference: ${label}`, `got ${encoded}, want ${expected}`);
+            const decoded = mod.call('Decode', Buffer.from(encoded, 'binary'));
+            assert(decoded.equals(input), `Base64 Roundtrip through Luau: ${label}`, `got ${JSON.stringify(decoded.toString('binary'))}`);
+        } catch (err) {
+            assert(false, `Base64 ${label}`, err.message);
+        }
     }
 }
 
 // Test XML Escaping Logic
 function testXmlEscaping() {
     console.log('\n--- 2. Testing XML Escaping & Format Verification ---');
-    const escapeXml = (str) => {
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;');
+
+    // escapeXml is a local inside SerializerXml.luau, so it is extracted and run
+    // as-is rather than reimplemented here — a JS copy would pass even if the
+    // Luau one broke.
+    const src = fs.readFileSync(path.join(ROOT_DIR, 'src', 'Core', 'SerializerXml.luau'), 'utf8');
+    const match = src.match(/local function escapeXml\(str: string\): string([\s\S]*?)\nend\n/);
+    if (!match) {
+        assert(false, 'Extract escapeXml from SerializerXml.luau');
+        return;
+    }
+
+    const L = lauxlib.luaL_newstate();
+    lualib.luaL_openlibs(L);
+    const fnSrc = `local function escapeXml(str)${match[1]}\nend\nreturn escapeXml`;
+    if (lauxlib.luaL_dostring(L, to_luastring(fnSrc)) !== lua.LUA_OK) {
+        assert(false, 'Compile escapeXml', lua.lua_tojsstring(L, -1));
+        return;
+    }
+
+    const escape = (input) => {
+        lua.lua_pushvalue(L, -1);
+        lua.lua_pushstring(L, to_luastring(input));
+        if (lua.lua_pcall(L, 1, 1, 0) !== lua.LUA_OK) {
+            const err = lua.lua_tojsstring(L, -1);
+            lua.lua_pop(L, 1);
+            throw new Error(err);
+        }
+        const out = lua.lua_tojsstring(L, -1);
+        lua.lua_pop(L, 1);
+        return out;
     };
 
-    const input = '<Folder name="Test & Demo" quote=\'single\'>';
-    const expected = '&lt;Folder name=&quot;Test &amp; Demo&quot; quote=&apos;single&apos;&gt;';
-    assert(escapeXml(input) === expected, 'XML Entity Escaping');
+    const cases = [
+        ['<Folder name="Test & Demo" quote=\'single\'>', '&lt;Folder name=&quot;Test &amp; Demo&quot; quote=&apos;single&apos;&gt;'],
+        ['plain text', 'plain text'],
+        ['', ''],
+        // Ampersand must be escaped first, or the entities it produces get
+        // double-escaped into &amp;lt;.
+        ['a & b < c', 'a &amp; b &lt; c'],
+        ['&amp;', '&amp;amp;'],
+        ['<<>>', '&lt;&lt;&gt;&gt;'],
+    ];
+
+    for (const [input, expected] of cases) {
+        try {
+            const got = escape(input);
+            assert(got === expected, `XML escape: ${JSON.stringify(input)}`, `got ${JSON.stringify(got)}, want ${JSON.stringify(expected)}`);
+        } catch (err) {
+            assert(false, `XML escape: ${JSON.stringify(input)}`, err.message);
+        }
+    }
 }
 
 // Test Reflection database coverage
@@ -166,7 +278,6 @@ function testBundle() {
     assert(!leftoverRequires, 'Zero leftover untransformed require() calls');
 
     // AST syntax validation
-    const luaparse = require('luaparse');
     let astValid = false;
     let parseErr = '';
     try {
@@ -184,6 +295,31 @@ function testPlugin() {
     assert(fs.existsSync(PLUGIN_PATH), 'plugin/HyperSaveImporter.server.luau exists');
     const content = fs.readFileSync(PLUGIN_PATH, 'utf8');
     assert(content.includes('CreateToolbar') && content.includes('DockWidgetPluginGui'), 'Plugin Toolbar & Widget UI declared');
+
+    // A syntax error in the plugin only shows up when Studio loads it, which no
+    // check here would have caught — the previous test was a substring match.
+    const stripped = stripLuauTypes(content);
+    try {
+        luaparse.parse(stripped, { luaVersion: '5.1' });
+        assert(true, 'Plugin parses as valid Lua');
+    } catch (err) {
+        assert(false, 'Plugin parses as valid Lua', `${err.message} (line ${err.line || '?'})`);
+    }
+
+    // Counts rather than a substring match: asserting only that
+    // TryBeginRecording appears somewhere would pass on a single usage while
+    // most handlers still call the deprecated SetWaypoint.
+    const begins = (content.match(/TryBeginRecording/g) || []).length;
+    const finishes = (content.match(/FinishRecording\(/g) || []).length;
+    assert(begins > 0 && begins === finishes,
+        'Every TryBeginRecording has a matching FinishRecording',
+        `${begins} begins, ${finishes} finishes`);
+
+    const before = (content.match(/SetWaypoint\("Before/g) || []).length;
+    const after = (content.match(/SetWaypoint\("After/g) || []).length;
+    assert(before === after,
+        'Legacy SetWaypoint pairs are balanced',
+        `${before} Before, ${after} After — an unpaired Before leaves a dangling undo entry`);
 }
 
 function runAll() {

@@ -2862,18 +2862,29 @@ NetworkSniffer.IsActive = false
 NetworkSniffer.CapturedLogs = {}
 NetworkSniffer.Listeners = {}
 
--- Format arguments safely into readable string / json
-local function serializeArgs(args)
-    local s, json = pcall(function()
-        return HttpService:JSONEncode(args)
-    end)
-    if s and json then return json end
-
+-- Describe the SHAPE of the arguments, never their content.
+-- Remote payloads in a live server carry other players' data; logging the values
+-- would write third-party information to this machine's disk.
+local function describeArgs(args)
     local parts = {}
-    for i, v in ipairs(args) do
-        table.insert(parts, tostring(v) .. " (" .. typeof(v) .. ")")
+    for i = 1, (args.n or #args) do
+        local v = args[i]
+        local t = typeof(v)
+        if t == "string" then
+            table.insert(parts, string.format("string(%d)", #v))
+        elseif t == "number" or t == "boolean" or t == "nil" then
+            table.insert(parts, t)
+        elseif t == "Instance" then
+            table.insert(parts, "Instance<" .. v.ClassName .. ">")
+        elseif t == "table" then
+            local count = 0
+            for _ in pairs(v) do count = count + 1 end
+            table.insert(parts, string.format("table{%d}", count))
+        else
+            table.insert(parts, t)
+        end
     end
-    return "{" .. table.concat(parts, ", ") .. "}"
+    return "(" .. table.concat(parts, ", ") .. ")"
 end
 
 -- Start live packet sniffing
@@ -2934,8 +2945,7 @@ function NetworkSniffer.LogCall(callType, remote, args)
         RemoteName = remote.Name,
         RemotePath = remote:GetFullName(),
         ArgCount = #args,
-        ArgsPreview = serializeArgs(args),
-        RawArgs = args,
+        ArgsShape = describeArgs(args),
     }
 
     table.insert(NetworkSniffer.CapturedLogs, entry)
@@ -2963,7 +2973,7 @@ function NetworkSniffer.ExportLogs()
     if not s or not json then
         local lines = {}
         for _, log in ipairs(NetworkSniffer.CapturedLogs) do
-            table.insert(lines, string.format("[%s] [%s] %s -> %s", log.Timestamp, log.Type, log.RemotePath, log.ArgsPreview))
+            table.insert(lines, string.format("[%s] [%s] %s -> %s", log.Timestamp, log.Type, log.RemotePath, log.ArgsShape))
         end
         json = table.concat(lines, "\n")
     end
@@ -3004,11 +3014,11 @@ function NetworkSniffer.ExportRemoteSpyScript()
             table.insert(lines, string.format("    local remote = %s", path))
             table.insert(lines, "    if remote then")
             if log.Type == "FireServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
-                table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsPreview))
+                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsShape))
             elseif log.Type == "InvokeServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsPreview))
-                table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsPreview))
+                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsShape))
             end
             table.insert(lines, "    end")
             table.insert(lines, "end)")
@@ -6351,142 +6361,6 @@ return Web3DExporter
 
 end)
 
-__define__("Loader", function()
---[[
-    HyperSaveInstance - Universal Smart Bootstrapper & Multi-CDN Resilient Loader
-    Author: Theo Lorentz Padilha (https://github.com/theopadilha2009-hash)
-    Auto-detects environment, provides instant visual feedback, and loads real-time raw bundle.
-]]
-
-local isSilent = false
-pcall(function()
-    local genv = (getgenv and getgenv()) or _G
-    if genv then
-        isSilent = (genv.HyperSave_Silent == true) or (genv.SilentMode == true) or (genv.HyperSave_Ghost == true)
-    end
-end)
-
-local function getRandomString(len)
-    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    local res = {}
-    for i = 1, (len or 16) do
-        local r = math.random(1, #chars)
-        table.insert(res, string.sub(chars, r, r))
-    end
-    return table.concat(res)
-end
-
-local function createInstantBanner(text, isError)
-    if isSilent then return end
-
-    pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
-        local rawParent = (gethui and gethui())
-        if not rawParent then
-            local plrs = clonerefFn(game:GetService("Players"))
-            local lp = plrs and (plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player"))
-            rawParent = (lp and lp:FindFirstChildOfClass("PlayerGui")) or clonerefFn(game:GetService("CoreGui"))
-        end
-        if not rawParent then return end
-
-        local container = nil
-        if rawParent:IsA("LayerCollector") or rawParent:IsA("ScreenGui") then
-            container = rawParent
-        else
-            local sg = Instance.new("ScreenGui")
-            sg.Name = getRandomString(16)
-            sg.DisplayOrder = 9999999
-            sg.ResetOnSpawn = false
-            sg.Enabled = true
-            pcall(function()
-                if syn and syn.protect_gui then
-                    syn.protect_gui(sg)
-                elseif protectgui then
-                    protectgui(sg)
-                elseif protect_gui then
-                    protect_gui(sg)
-                end
-            end)
-            sg.Parent = rawParent
-            container = sg
-        end
-
-        local f = Instance.new("Frame")
-        f.Name = getRandomString(16)
-        f.Size = UDim2.new(0, 340, 0, 48)
-        f.Position = UDim2.new(0.5, -170, 0, 24)
-        f.BackgroundColor3 = isError and Color3.fromRGB(40, 10, 20) or Color3.fromRGB(16, 12, 28)
-        f.BorderSizePixel = 0
-        f.Parent = container
-
-        local c = Instance.new("UICorner")
-        c.CornerRadius = UDim.new(0, 10)
-        c.Parent = f
-
-        local s = Instance.new("UIStroke")
-        s.Color = isError and Color3.fromRGB(244, 63, 94) or Color3.fromRGB(168, 85, 247)
-        s.Thickness = 1.5
-        s.Parent = f
-
-        local l = Instance.new("TextLabel")
-        l.Size = UDim2.new(1, -20, 1, 0)
-        l.Position = UDim2.new(0, 10, 0, 0)
-        l.Text = text
-        l.TextColor3 = Color3.fromRGB(255, 255, 255)
-        l.Font = Enum.Font.GothamBold
-        l.TextSize = 12
-        l.BackgroundTransparency = 1
-        l.Parent = f
-
-        task.delay(isError and 6 or 3.5, function()
-            pcall(function()
-                f:Destroy()
-                if container and container ~= rawParent and #container:GetChildren() == 0 then
-                    container:Destroy()
-                end
-            end)
-        end)
-    end)
-end
-
-createInstantBanner("⚡ [HyperSave] Baixando módulos seguros...", false)
-
-local cacheBuster = tostring(os.time()) .. "_" .. tostring(math.random(100000, 999999))
-local url = "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau?nocache=" .. cacheBuster
-
-local s, result = pcall(function()
-    return game:HttpGet(url, true)
-end)
-
-if not s or type(result) ~= "string" or #result < 10000 then
-    createInstantBanner("❌ Falha de rede ao baixar HyperSave.", true)
-    warn("[HyperSave] Falha ao baixar bundle: " .. tostring(result))
-    return
-end
-
-createInstantBanner("💀 [HyperSave] Inicializando Suíte...", false)
-
-local execSuccess, execFunc = pcall(function()
-    return loadstring(result)
-end)
-
-if not execSuccess or type(execFunc) ~= "function" then
-    createInstantBanner("❌ Erro de compilação Luau: " .. tostring(execFunc), true)
-    warn("[HyperSave] Erro no loadstring: " .. tostring(execFunc))
-    return
-end
-
-local runSuccess, hsi = pcall(execFunc)
-if not runSuccess then
-    createInstantBanner("❌ Erro na execução: " .. tostring(hsi), true)
-    warn("[HyperSave] Erro na execução: " .. tostring(hsi))
-    return
-end
-
-return hsi
-
-end)
-
 __define__("UI/Interface", function()
 --[[
     HyperSaveInstance - Modern Glassmorphic HUD & Master In-Game Suite
@@ -8438,7 +8312,7 @@ function Interface:BuildNetworkTab()
 
     NetworkSniffer.OnCall(function(entry)
         local row = Instance.new("TextLabel")
-        row.Text = string.format("[%s] [%s] %s -> %s", entry.Timestamp, entry.Type, entry.RemoteName, entry.ArgsPreview)
+        row.Text = string.format("[%s] [%s] %s -> %s", entry.Timestamp, entry.Type, entry.RemoteName, entry.ArgsShape)
         row.Font = Theme.FontRegular
         row.TextSize = 10
         row.TextColor3 = (entry.Type == "FireServer") and Theme.TextPrimary or Theme.TextSecondary
@@ -10349,10 +10223,9 @@ function LicenseManager.ValidateKey(rawKey)
 
     local cleanKey = string.upper(string.gsub(rawKey, "%s+", ""))
     
-    -- Master / Dev Keys
-    if cleanKey == "THEO-DEV-ROOT-2026" or cleanKey == "THEO-OWNER-ACCESS" then
-        return true, "Enterprise", "Theo Lorentz Padilha (Master Developer)"
-    end
+    -- Chaves de desenvolvedor nao ficam no codigo versionado: este arquivo e
+    -- publicado no bundle, entao qualquer constante aqui e publica. Para uso
+    -- proprio, gere uma chave Enterprise com scripts/generate_key.js.
 
     -- Enterprise Pattern: THEO-ENT-XXXX-XXXX-XXXX
     local p1, p2, p3 = string.match(cleanKey, "^THEO%-ENT%-(%x%x%x%x)%-(%x%x%x%x)%-(%x%x%x%x)$")
