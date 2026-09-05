@@ -3,9 +3,13 @@
     Scans, previews, plays and extracts all music tracks and sound effects in the game.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local SoundService = nil
-pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
+pcall(function()
+    SoundService = clonerefFn(game:GetService("SoundService"))
+end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local AudioRipper = {}
@@ -17,11 +21,11 @@ export type AudioInfo = {
     CleanId: string,
     Path: string,
     Volume: number,
-    TimeLength: number
+    TimeLength: number,
 }
 
 -- Collect all sound instances in the game
-function AudioRipper.ScanSounds(): {AudioInfo}
+function AudioRipper.ScanSounds(): { AudioInfo }
     local sounds = {}
     local seenIds = {}
 
@@ -36,7 +40,7 @@ function AudioRipper.ScanSounds(): {AudioInfo}
                     CleanId = cleanId,
                     Path = inst:GetFullName(),
                     Volume = inst.Volume,
-                    TimeLength = inst.TimeLength
+                    TimeLength = inst.TimeLength,
                 })
             end
         end
@@ -46,9 +50,23 @@ function AudioRipper.ScanSounds(): {AudioInfo}
         end
     end
 
-    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "Lighting", "StarterGui", "StarterPack", "StarterPlayer", "Chat", "MaterialService"}) do
-        local s, service = pcall(function() return clonerefFn(game:GetService(sName)) end)
-        if s and service then scan(service) end
+    for _, sName in ipairs({
+        "Workspace",
+        "SoundService",
+        "ReplicatedStorage",
+        "Lighting",
+        "StarterGui",
+        "StarterPack",
+        "StarterPlayer",
+        "Chat",
+        "MaterialService",
+    }) do
+        local s, service = pcall(function()
+            return clonerefFn(game:GetService(sName))
+        end)
+        if s and service then
+            scan(service)
+        end
     end
 
     return sounds
@@ -90,7 +108,7 @@ function AudioRipper.ExportSoundList(): string
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_Soundtrack_%d.txt", placeId)
 
-    local lines = {"=== HyperSaveInstance - Game Soundtrack & Audio List ===", ""}
+    local lines = { "=== HyperSaveInstance - Game Soundtrack & Audio List ===", "" }
     for i, snd in ipairs(list) do
         table.insert(lines, string.format("[%d] %s | ID: %s | URL: rbxassetid://%s", i, snd.Name, snd.CleanId, snd.CleanId))
     end

@@ -8,7 +8,9 @@ local LZ4 = {}
 function LZ4.Compress(input: string): string
     local bit = bit32 or bit
     local inputLen = #input
-    if inputLen == 0 then return "" end
+    if inputLen == 0 then
+        return ""
+    end
 
     local hashTable = {}
     local out = {}
@@ -131,7 +133,9 @@ function LZ4.Decompress(compressed: string, uncompressedSize: number): string
             outLen = outLen + litLen
         end
 
-        if outLen >= uncompressedSize or i > cLen then break end
+        if outLen >= uncompressedSize or i > cLen then
+            break
+        end
 
         local offset = bit.bor(string.byte(compressed, i), bit.lshift(string.byte(compressed, i + 1), 8))
         i = i + 2

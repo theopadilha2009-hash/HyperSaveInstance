@@ -56,7 +56,9 @@ end
 
 function Interface:BindKeybinds()
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
+        if gameProcessed then
+            return
+        end
         if input.KeyCode == (self.Config.ToggleKeybind or Enum.KeyCode.RightShift) then
             if self.MainFrame then
                 self.MainFrame.Visible = not self.MainFrame.Visible
@@ -79,7 +81,9 @@ function Interface:BuildUI()
     if parent and (parent:IsA("LayerCollector") or parent:IsA("ScreenGui")) then
         pcall(function()
             local old = parent:FindFirstChild(containerName)
-            if old then old:Destroy() end
+            if old then
+                old:Destroy()
+            end
         end)
         local container = Instance.new("Frame")
         container.Name = containerName
@@ -90,7 +94,9 @@ function Interface:BuildUI()
     else
         pcall(function()
             local old = parent:FindFirstChild(guiName) or parent:FindFirstChild("HyperSaveInstance_UI")
-            if old then old:Destroy() end
+            if old then
+                old:Destroy()
+            end
         end)
 
         local screenGui = Instance.new("ScreenGui")
@@ -104,9 +110,13 @@ function Interface:BuildUI()
 
         Stealth.ProtectGui(screenGui)
 
-        local ok = pcall(function() screenGui.Parent = parent end)
+        local ok = pcall(function()
+            screenGui.Parent = parent
+        end)
         if not ok or not screenGui.Parent then
-            pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
+            pcall(function()
+                screenGui.Parent = game:GetService("CoreGui")
+            end)
             if not screenGui.Parent and not self.Config.StealthMode then
                 pcall(function()
                     local plrs = game:GetService("Players")
@@ -155,15 +165,18 @@ function Interface:BuildUI()
     UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and fDragging then
             local delta = input.Position - fDragStart
-            floatingBtn.Position = UDim2.new(fStartPos.X.Scale, fStartPos.X.Offset + delta.X, fStartPos.Y.Scale, fStartPos.Y.Offset + delta.Y)
+            floatingBtn.Position =
+                UDim2.new(fStartPos.X.Scale, fStartPos.X.Offset + delta.X, fStartPos.Y.Scale, fStartPos.Y.Offset + delta.Y)
         end
     end)
 
     Theme.AnimateButton(floatingBtn, function()
-        if self.MainFrame then self.MainFrame.Visible = true end
+        if self.MainFrame then
+            self.MainFrame.Visible = true
+        end
         floatingBtn.Visible = false
     end)
-    
+
     local camera = workspace.CurrentCamera
     local vpSize = (camera and camera.ViewportSize) or Vector2.new(1280, 720)
     local winWidth = math.clamp(vpSize.X - 24, 320, 670)
@@ -415,7 +428,7 @@ function Interface:BuildUI()
             badge.Text = "Enterprise Ativo"
             badge.TextColor3 = Theme.AccentSuccess
             bStroke.Color = Theme.AccentSuccess
-            
+
             pcall(function()
                 Environment.WriteFile("HyperSave_License.key", kInput.Text)
             end)
@@ -500,7 +513,9 @@ function Interface:BuildUI()
     cCloneBtn.Position = UDim2.new(0, 175, 0.5, -11)
     Theme.AddCorner(cCloneBtn, Theme.CornerSmall)
     cCloneBtn.Parent = compactBar
-    Theme.AnimateButton(cCloneBtn, function() self:StartClone() end)
+    Theme.AnimateButton(cCloneBtn, function()
+        self:StartClone()
+    end)
 
     local cExpandBtn = Instance.new("TextButton")
     cExpandBtn.Text = "Expandir ↗"
@@ -532,7 +547,9 @@ function Interface:BuildUI()
                 fpsCount = 0
                 lastUpdate = now
                 local ping = 0
-                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                pcall(function()
+                    ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+                end)
                 if compactBar and compactBar.Visible then
                     cStats.Text = string.format("FPS: %d • Ping: %dms", fps, ping)
                 end
@@ -585,18 +602,18 @@ function Interface:BuildUI()
 
     -- Navigation buttons (Clean, Plain Text, Zero Emojis)
     local tabs = {
-        {"Dashboard", "Dashboard"},
-        {"Selector", "Objetos"},
-        {"AudioRipper", "Áudios"},
-        {"LightingRipper", "Iluminação"},
-        {"GuiRipper", "Interfaces"},
-        {"Network", "Rede"},
-        {"Universe", "Universos"},
-        {"ObjExport", "Exportar 3D"},
-        {"Tutorial", "Como Usar"},
-        {"Settings", "Configurações"},
-        {"Console", "Console"},
-        {"About", "Sobre"}
+        { "Dashboard", "Dashboard" },
+        { "Selector", "Objetos" },
+        { "AudioRipper", "Áudios" },
+        { "LightingRipper", "Iluminação" },
+        { "GuiRipper", "Interfaces" },
+        { "Network", "Rede" },
+        { "Universe", "Universos" },
+        { "ObjExport", "Exportar 3D" },
+        { "Tutorial", "Como Usar" },
+        { "Settings", "Configurações" },
+        { "Console", "Console" },
+        { "About", "Sobre" },
     }
 
     self.TabFrames = {}
@@ -633,18 +650,42 @@ function Interface:BuildUI()
     end
 
     -- Build Individual Tab Pages with error boundary protection
-    pcall(function() self:BuildDashboardTab() end)
-    pcall(function() self:BuildSelectorTab() end)
-    pcall(function() self:BuildAudioRipperTab() end)
-    pcall(function() self:BuildLightingRipperTab() end)
-    pcall(function() self:BuildGuiRipperTab() end)
-    pcall(function() self:BuildNetworkTab() end)
-    pcall(function() self:BuildUniverseTab() end)
-    pcall(function() self:BuildObjExportTab() end)
-    pcall(function() self:BuildTutorialTab() end)
-    pcall(function() self:BuildSettingsTab() end)
-    pcall(function() self:BuildConsoleTab() end)
-    pcall(function() self:BuildAboutTab() end)
+    pcall(function()
+        self:BuildDashboardTab()
+    end)
+    pcall(function()
+        self:BuildSelectorTab()
+    end)
+    pcall(function()
+        self:BuildAudioRipperTab()
+    end)
+    pcall(function()
+        self:BuildLightingRipperTab()
+    end)
+    pcall(function()
+        self:BuildGuiRipperTab()
+    end)
+    pcall(function()
+        self:BuildNetworkTab()
+    end)
+    pcall(function()
+        self:BuildUniverseTab()
+    end)
+    pcall(function()
+        self:BuildObjExportTab()
+    end)
+    pcall(function()
+        self:BuildTutorialTab()
+    end)
+    pcall(function()
+        self:BuildSettingsTab()
+    end)
+    pcall(function()
+        self:BuildConsoleTab()
+    end)
+    pcall(function()
+        self:BuildAboutTab()
+    end)
 
     -- Animate Splash Card completion and reveal Main Window
     pcall(function()
@@ -655,7 +696,7 @@ function Interface:BuildUI()
             if self.SplashCard then
                 Theme.Tween(self.SplashCard, 0.15, {
                     Size = UDim2.new(0, 300, 0, 120),
-                    BackgroundTransparency = 1
+                    BackgroundTransparency = 1,
                 })
                 for _, child in ipairs(self.SplashCard:GetDescendants()) do
                     if child:IsA("TextLabel") then
@@ -665,14 +706,16 @@ function Interface:BuildUI()
                     end
                 end
                 task.delay(0.18, function()
-                    pcall(function() self.SplashCard:Destroy() end)
+                    pcall(function()
+                        self.SplashCard:Destroy()
+                    end)
                 end)
             end
 
             if self.MainFrame then
                 self.MainFrame.Visible = true
                 Theme.Tween(self.MainFrame, 0.25, {
-                    Size = UDim2.new(0, winWidth, 0, winHeight)
+                    Size = UDim2.new(0, winWidth, 0, winHeight),
                 }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
             end
         end)
@@ -690,12 +733,16 @@ function Interface:SwitchTab(targetTab: string)
             btn.TextColor3 = Theme.TextPrimary
             btn.BackgroundColor3 = Theme.AccentPrimary
             btn.BackgroundTransparency = 0
-            if stroke then stroke.Color = Theme.BorderLight end
+            if stroke then
+                stroke.Color = Theme.BorderLight
+            end
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
             btn.BackgroundTransparency = 1
-            if stroke then stroke.Color = Theme.Border end
+            if stroke then
+                stroke.Color = Theme.Border
+            end
         end
     end
 end
@@ -747,12 +794,12 @@ function Interface:BuildDashboardTab()
     presetLayout.SortOrder = Enum.SortOrder.LayoutOrder
     presetLayout.Parent = presetContainer
 
-    local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
+    local presetList = { "Full", "Fast", "VisualsOnly", "ScriptsOnly" }
     local presetDisplay = {
         Full = "Completo",
         Fast = "Rápido",
         VisualsOnly = "Apenas Mapa",
-        ScriptsOnly = "Apenas Scripts"
+        ScriptsOnly = "Apenas Scripts",
     }
 
     self.PresetButtons = {}
@@ -777,11 +824,15 @@ function Interface:BuildDashboardTab()
                 if k == pKey then
                     b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    if stroke then stroke.Color = Theme.BorderLight end
+                    if stroke then
+                        stroke.Color = Theme.BorderLight
+                    end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    if stroke then stroke.Color = Theme.Border end
+                    if stroke then
+                        stroke.Color = Theme.Border
+                    end
                 end
             end
             self:Log("Modo selecionado: " .. pKey)
@@ -813,9 +864,9 @@ function Interface:BuildDashboardTab()
     formatLayout.Parent = formatContainer
 
     local formats = {
-        {"rbxlx", "RBXLX (XML)"},
-        {"rbxl", "RBXL (Binário)"},
-        {"lua", "Script Luau"}
+        { "rbxlx", "RBXLX (XML)" },
+        { "rbxl", "RBXL (Binário)" },
+        { "lua", "Script Luau" },
     }
     self.FormatButtons = {}
 
@@ -841,11 +892,15 @@ function Interface:BuildDashboardTab()
                 if k == fKey then
                     b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    if stroke then stroke.Color = Theme.BorderLight end
+                    if stroke then
+                        stroke.Color = Theme.BorderLight
+                    end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    if stroke then stroke.Color = Theme.Border end
+                    if stroke then
+                        stroke.Color = Theme.Border
+                    end
                 end
             end
             self:Log("Formato definido: ." .. fKey)
@@ -942,10 +997,14 @@ function Interface:BuildDashboardTab()
 
     Theme.AnimateButton(copyFilePathBtn, function()
         local name = self.SavedFilePath
-        if #name == 0 then name = self.Engine:GetDefaultFileName() end
+        if #name == 0 then
+            name = self.Engine:GetDefaultFileName()
+        end
         Environment.SetClipboard(name)
         copyFilePathBtn.Text = "✓ Copiado!"
-        task.delay(2, function() copyFilePathBtn.Text = "Copiar Caminho do Arquivo" end)
+        task.delay(2, function()
+            copyFilePathBtn.Text = "Copiar Caminho do Arquivo"
+        end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
@@ -962,10 +1021,14 @@ function Interface:BuildDashboardTab()
 
     Theme.AnimateButton(copyAssetsPathBtn, function()
         local name = self.SavedAssetPath
-        if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
+        if #name == 0 then
+            name = self.Engine:GetDefaultAssetFolder()
+        end
         Environment.SetClipboard(name)
         copyAssetsPathBtn.Text = "✓ Copiado!"
-        task.delay(2, function() copyAssetsPathBtn.Text = "Copiar Pasta de Assets" end)
+        task.delay(2, function()
+            copyAssetsPathBtn.Text = "Copiar Pasta de Assets"
+        end)
     end)
 
     -- Live Telemetry Stats Row
@@ -1028,9 +1091,13 @@ function Interface:BuildDashboardTab()
                 fpsCount = 0
                 lastUpdate = now
                 local ping = 0
-                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                pcall(function()
+                    ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+                end)
                 local mem = 0
-                pcall(function() mem = math.round(Stats:GetTotalMemoryUsageMb()) end)
+                pcall(function()
+                    mem = math.round(Stats:GetTotalMemoryUsageMb())
+                end)
 
                 if fpsValLbl and fpsValLbl.Parent then
                     fpsValLbl.Text = tostring(fps)
@@ -1171,11 +1238,13 @@ function Interface:BuildSelectorTab()
     -- Helper to update info display & ViewportFrame
     local function inspectInstance(inst: Instance?)
         self.CurrentTargetInstance = inst
-        
+
         -- Clear previous 3D viewport clones
         pcall(function()
             for _, c in ipairs(vpFrame:GetChildren()) do
-                if c:IsA("Instance") and not c:IsA("Camera") then c:Destroy() end
+                if c:IsA("Instance") and not c:IsA("Camera") then
+                    c:Destroy()
+                end
             end
         end)
 
@@ -1193,12 +1262,22 @@ function Interface:BuildSelectorTab()
         local meshes = 0
 
         for _, desc in ipairs(inst:GetDescendants()) do
-            if desc:IsA("BasePart") then parts = parts + 1 end
-            if desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then meshes = meshes + 1 end
-            if desc:IsA("LuaSourceContainer") then scripts = scripts + 1 end
+            if desc:IsA("BasePart") then
+                parts = parts + 1
+            end
+            if desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then
+                meshes = meshes + 1
+            end
+            if desc:IsA("LuaSourceContainer") then
+                scripts = scripts + 1
+            end
         end
-        if inst:IsA("BasePart") then parts = parts + 1 end
-        if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
+        if inst:IsA("BasePart") then
+            parts = parts + 1
+        end
+        if inst:IsA("LuaSourceContainer") then
+            scripts = scripts + 1
+        end
 
         targetTitle.Text = string.format("Alvo: %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.TextPrimary
@@ -1255,7 +1334,9 @@ function Interface:BuildSelectorTab()
                     local runServ = game:GetService("RunService")
                     self.VpRotationConn = runServ.RenderStepped:Connect(function()
                         if not vpFrame or not vpFrame.Parent or not self.CurrentTargetInstance then
-                            if self.VpRotationConn then self.VpRotationConn:Disconnect() end
+                            if self.VpRotationConn then
+                                self.VpRotationConn:Disconnect()
+                            end
                             return
                         end
                         local angle = os.clock() * 0.9
@@ -1382,12 +1463,16 @@ function Interface:BuildSelectorTab()
 
     -- Event: 3D Raycast click button
     Theme.AnimateButton(raycastBtn, function()
-        if self.MainFrame then self.MainFrame.Visible = false end
+        if self.MainFrame then
+            self.MainFrame.Visible = false
+        end
         resultLabel.Text = "Mira 3D ativa. Clique em qualquer objeto no jogo para selecionar."
         resultLabel.TextColor3 = Theme.TextPrimary
 
         self.Raycast:Start(function(selected)
-            if self.MainFrame then self.MainFrame.Visible = true end
+            if self.MainFrame then
+                self.MainFrame.Visible = true
+            end
             if selected then
                 searchBox.Text = selected.Name
                 inspectInstance(selected)
@@ -1504,7 +1589,9 @@ function Interface:BuildSelectorTab()
             for _, t in ipairs(self.SelectedTargets) do
                 pcall(function()
                     local c = t:Clone()
-                    if c then c.Parent = folder end
+                    if c then
+                        c.Parent = folder
+                    end
                 end)
             end
 
@@ -1517,7 +1604,9 @@ function Interface:BuildSelectorTab()
                 resultLabel.Text = "Falha ao salvar pacote: " .. tostring(msg)
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
-            pcall(function() folder:Destroy() end)
+            pcall(function()
+                folder:Destroy()
+            end)
         end)
     end)
 end
@@ -1608,9 +1697,13 @@ function Interface:BuildAudioRipperTab()
         local q = string.lower(query or "")
         local visibleCount = 0
         for _, item in ipairs(allSoundRows) do
-            local match = (q == "") or string.find(string.lower(item.Data.Name), q, 1, true) or string.find(string.lower(item.Data.CleanId), q, 1, true)
+            local match = (q == "")
+                or string.find(string.lower(item.Data.Name), q, 1, true)
+                or string.find(string.lower(item.Data.CleanId), q, 1, true)
             item.Row.Visible = match
-            if match then visibleCount = visibleCount + 1 end
+            if match then
+                visibleCount = visibleCount + 1
+            end
         end
         audioScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 36)
     end
@@ -1623,7 +1716,9 @@ function Interface:BuildAudioRipperTab()
         scanAudioBtn.Text = "Buscando..."
         allSoundRows = {}
         for _, child in ipairs(audioScroll:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
         end
 
         task.spawn(function()
@@ -1679,7 +1774,9 @@ function Interface:BuildAudioRipperTab()
                 Theme.AnimateButton(copyBtn, function()
                     Environment.SetClipboard(snd.CleanId)
                     copyBtn.Text = "✓"
-                    task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
+                    task.delay(1.5, function()
+                        copyBtn.Text = "Copiar ID"
+                    end)
                 end)
 
                 table.insert(allSoundRows, { Row = row, Data = snd })
@@ -1699,7 +1796,9 @@ function Interface:BuildAudioRipperTab()
             end
         end)
         stopAudioBtn.Text = "Parado"
-        task.delay(1, function() stopAudioBtn.Text = "Parar Áudio" end)
+        task.delay(1, function()
+            stopAudioBtn.Text = "Parar Áudio"
+        end)
     end)
 
     Theme.AnimateButton(exportAudioListBtn, function()
@@ -1736,7 +1835,8 @@ function Interface:BuildLightingRipperTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Extrai as propriedades visuais de iluminação, Skybox, Atmosphere (densidade, névoa e cores), SunRays, Bloom, Blur e ColorCorrection para um arquivo .rbxmx editável no Studio."
+    desc.Text =
+        "Extrai as propriedades visuais de iluminação, Skybox, Atmosphere (densidade, névoa e cores), SunRays, Bloom, Blur e ColorCorrection para um arquivo .rbxmx editável no Studio."
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -1813,7 +1913,8 @@ function Interface:BuildGuiRipperTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Extrai todas as interfaces ativas (ScreenGuis, menus, lojas, inventários e HUDs) com seus respectivos scripts para um arquivo .rbxmx independente."
+    desc.Text =
+        "Extrai todas as interfaces ativas (ScreenGuis, menus, lojas, inventários e HUDs) com seus respectivos scripts para um arquivo .rbxmx independente."
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -2051,7 +2152,9 @@ function Interface:BuildUniverseTab()
     Theme.AnimateButton(scanBtn, function()
         scanBtn.Text = "Buscando..."
         for _, child in ipairs(placeScroll:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+            if child:IsA("Frame") or child:IsA("TextLabel") then
+                child:Destroy()
+            end
         end
 
         task.spawn(function()
@@ -2112,7 +2215,9 @@ function Interface:BuildUniverseTab()
                 Theme.AnimateButton(copyIdBtn, function()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
                     copyIdBtn.Text = "✓"
-                    task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
+                    task.delay(1.5, function()
+                        copyIdBtn.Text = "Copiar ID"
+                    end)
                 end)
             end
 
@@ -2130,20 +2235,24 @@ function Interface:BuildUniverseTab()
             else
                 snapshotBtn.Text = "Erro"
             end
-            task.delay(2, function() snapshotBtn.Text = "Salvar Snapshot" end)
+            task.delay(2, function()
+                snapshotBtn.Text = "Salvar Snapshot"
+            end)
         end)
     end)
 
     Theme.AnimateButton(compareDiffBtn, function()
         compareDiffBtn.Text = "Comparando..."
         for _, child in ipairs(placeScroll:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+            if child:IsA("Frame") or child:IsA("TextLabel") then
+                child:Destroy()
+            end
         end
 
         task.spawn(function()
             local diff = PlaceDiffTracker.Compare({ Instances = {}, PlaceId = game.PlaceId or 0, InstanceCount = 0 })
             local s, reportFile = PlaceDiffTracker.ExportDiffReport(diff)
-            
+
             local lbl = Instance.new("TextLabel")
             lbl.Text = diff.Summary .. (s and ("\nRelatório salvo: " .. reportFile) or "")
             lbl.Font = Theme.FontRegular
@@ -2155,9 +2264,13 @@ function Interface:BuildUniverseTab()
             lbl.BackgroundTransparency = 1
             lbl.Parent = placeScroll
 
-            if s then Environment.SetClipboard(reportFile) end
+            if s then
+                Environment.SetClipboard(reportFile)
+            end
             compareDiffBtn.Text = "✓ Concluído"
-            task.delay(2, function() compareDiffBtn.Text = "Comparar Diff" end)
+            task.delay(2, function()
+                compareDiffBtn.Text = "Comparar Diff"
+            end)
         end)
     end)
 end
@@ -2186,7 +2299,8 @@ function Interface:BuildObjExportTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Converte os modelos e peças do mapa para arquivos .obj e .mtl com materiais prontos para Blender, Maya, Unity ou Unreal Engine."
+    desc.Text =
+        "Converte os modelos e peças do mapa para arquivos .obj e .mtl com materiais prontos para Blender, Maya, Unity ou Unreal Engine."
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -2294,10 +2408,22 @@ function Interface:BuildTutorialTab()
     scroll.Parent = parent
 
     local steps = {
-        {"Passo 1: Iniciar a Cópia", "Acesse a aba 'Dashboard' e clique no botão azul 'Salvar Mapa Completo'. O processo começará a extrair todas as instâncias do jogo."},
-        {"Passo 2: Aguardar o Processamento", "A barra de progresso acompanhará o download de texturas, sons, modelos 3D, terreno e scripts do mapa."},
-        {"Passo 3: Localização dos Arquivos", "O arquivo gerado (.rbxlx ou .rbxl) é salvo diretamente na pasta 'workspace' do seu executor no computador."},
-        {"Passo 4: Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. O mapa estará 100% carregado e pronto para edição."},
+        {
+            "Passo 1: Iniciar a Cópia",
+            "Acesse a aba 'Dashboard' e clique no botão azul 'Salvar Mapa Completo'. O processo começará a extrair todas as instâncias do jogo.",
+        },
+        {
+            "Passo 2: Aguardar o Processamento",
+            "A barra de progresso acompanhará o download de texturas, sons, modelos 3D, terreno e scripts do mapa.",
+        },
+        {
+            "Passo 3: Localização dos Arquivos",
+            "O arquivo gerado (.rbxlx ou .rbxl) é salvo diretamente na pasta 'workspace' do seu executor no computador.",
+        },
+        {
+            "Passo 4: Abrir no Roblox Studio",
+            "1. Abra o Roblox Studio.\n2. Clique em 'File' -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. O mapa estará 100% carregado e pronto para edição.",
+        },
     }
 
     for i, step in ipairs(steps) do
@@ -2348,7 +2474,9 @@ function Interface:BuildTutorialTab()
     copyScriptCard.Parent = scroll
 
     Theme.AnimateButton(copyScriptCard, function()
-        Environment.SetClipboard('loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()')
+        Environment.SetClipboard(
+            'loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()'
+        )
         copyScriptCard.Text = "✓ Comando Copiado!"
         task.delay(2, function()
             copyScriptCard.Text = "Copiar Comando de Execução (loadstring)"
@@ -2410,26 +2538,26 @@ function Interface:BuildSettingsTab()
     end)
 
     local toggles = {
-        {"AutoAntiAFK", "Anti-AFK Automático (Evita desconexão por inatividade)", self.Config.AutoAntiAFK},
-        {"AutoExploreStreaming", "Carregador Espacial (StreamingEnabled)", self.Config.AutoExploreStreaming},
-        {"StealthMode", "Modo Stealth (Evasão de Anti-Cheat)", self.Config.StealthMode},
-        {"SaveAnimations", "Capturar e Salvar Animações (KeyframeSequences)", self.Config.SaveAnimations},
-        {"SafeAssetDownload", "Proteção de Ping (Pausa se Ping > 180ms)", self.Config.SafeAssetDownload},
-        {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh)", self.Config.DownloadRawAssets},
-        {"OptimizeGeometry", "Otimizador de Geometria (Deduplicação de Malhas)", self.Config.OptimizeGeometry},
-        {"SaveTerrain", "Salvar Terreno Completo (Propriedades e Materiais)", self.Config.SaveTerrain},
-        {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (Chunks 3D)", self.Config.SaveTerrainVoxels},
-        {"SaveLighting", "Preservar Iluminação e Efeitos Atmosféricos", self.Config.SaveLighting},
-        {"SaveSounds", "Preservar Sons e Efeitos Sonoros", self.Config.SaveSounds},
-        {"SaveUnions", "Preservar Uniões CSG e NegateOperations", self.Config.SaveUnions},
-        {"SaveSurfaceAppearance", "Preservar Texturas PBR e SurfaceAppearances", self.Config.SaveSurfaceAppearance},
-        {"DecompileScripts", "Descompilar Scripts (LocalScripts e ModuleScripts)", self.Config.DecompileScripts},
-        {"IsolateStarterPlayer", "Isolar Scripts do Player para StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
-        {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Server Scripts", self.Config.SaveServerScriptPlaceholders},
-        {"SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer},
-        {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
-        {"SaveAttributes", "Salvar Atributos Modernos de Instâncias", self.Config.SaveAttributes},
-        {"SaveTags", "Salvar Tags do CollectionService", self.Config.SaveTags},
+        { "AutoAntiAFK", "Anti-AFK Automático (Evita desconexão por inatividade)", self.Config.AutoAntiAFK },
+        { "AutoExploreStreaming", "Carregador Espacial (StreamingEnabled)", self.Config.AutoExploreStreaming },
+        { "StealthMode", "Modo Stealth (Evasão de Anti-Cheat)", self.Config.StealthMode },
+        { "SaveAnimations", "Capturar e Salvar Animações (KeyframeSequences)", self.Config.SaveAnimations },
+        { "SafeAssetDownload", "Proteção de Ping (Pausa se Ping > 180ms)", self.Config.SafeAssetDownload },
+        { "DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh)", self.Config.DownloadRawAssets },
+        { "OptimizeGeometry", "Otimizador de Geometria (Deduplicação de Malhas)", self.Config.OptimizeGeometry },
+        { "SaveTerrain", "Salvar Terreno Completo (Propriedades e Materiais)", self.Config.SaveTerrain },
+        { "SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (Chunks 3D)", self.Config.SaveTerrainVoxels },
+        { "SaveLighting", "Preservar Iluminação e Efeitos Atmosféricos", self.Config.SaveLighting },
+        { "SaveSounds", "Preservar Sons e Efeitos Sonoros", self.Config.SaveSounds },
+        { "SaveUnions", "Preservar Uniões CSG e NegateOperations", self.Config.SaveUnions },
+        { "SaveSurfaceAppearance", "Preservar Texturas PBR e SurfaceAppearances", self.Config.SaveSurfaceAppearance },
+        { "DecompileScripts", "Descompilar Scripts (LocalScripts e ModuleScripts)", self.Config.DecompileScripts },
+        { "IsolateStarterPlayer", "Isolar Scripts do Player para StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer },
+        { "SaveServerScriptPlaceholders", "Reconstrução Inteligente de Server Scripts", self.Config.SaveServerScriptPlaceholders },
+        { "SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer },
+        { "SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances },
+        { "SaveAttributes", "Salvar Atributos Modernos de Instâncias", self.Config.SaveAttributes },
+        { "SaveTags", "Salvar Tags do CollectionService", self.Config.SaveTags },
     }
 
     for i, item in ipairs(toggles) do
@@ -2647,7 +2775,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
         btnGithub.Text = "✓ Copiado!"
-        task.delay(2, function() btnGithub.Text = "GitHub" end)
+        task.delay(2, function()
+            btnGithub.Text = "GitHub"
+        end)
     end)
 
     -- LinkedIn Profile Button
@@ -2666,7 +2796,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnLinkedIn, function()
         Environment.SetClipboard("https://www.linkedin.com/in/theo-lorentz-padilha-0b9b99287/")
         btnLinkedIn.Text = "✓ Copiado!"
-        task.delay(2, function() btnLinkedIn.Text = "LinkedIn" end)
+        task.delay(2, function()
+            btnLinkedIn.Text = "LinkedIn"
+        end)
     end)
 
     -- Repository Link Button
@@ -2685,7 +2817,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
         btnRepo.Text = "✓ Copiado!"
-        task.delay(2, function() btnRepo.Text = "Repositório" end)
+        task.delay(2, function()
+            btnRepo.Text = "Repositório"
+        end)
     end)
 
     -- Discord Server Button
@@ -2703,7 +2837,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnDiscord, function()
         Environment.SetClipboard("https://discord.gg/Tk5zyA83UZ")
         btnDiscord.Text = "✓ Copiado!"
-        task.delay(2, function() btnDiscord.Text = "Discord" end)
+        task.delay(2, function()
+            btnDiscord.Text = "Discord"
+        end)
     end)
 
     -- System Diagnostics Card
@@ -2727,13 +2863,13 @@ function Interface:BuildAboutTab()
     sysTitle.Parent = sysCard
 
     local diagItems = {
-        {"Plataforma:", Environment.GetPlatform()},
-        {"Executor:", Environment.GetExecutorName()},
-        {"Escrita de Arquivo (writefile):", Environment.HasFileSystem() and "Ativo (Totalmente Suportado)" or "Indisponível"},
-        {"Descompilador Luau:", Environment.HasDecompiler() and "Ativo (Descompilação Completa)" or "Modo Bytecode / Fallback"},
-        {"Bypass de StreamingEnabled:", "Ativo (StreamExplorer Espacial)"},
-        {"Emulador de DataStore & VIP:", "Ativo (1.000.000 Coins / VIP Liberado)"},
-        {"Atalho de Teclado (HUD):", "[RightShift] ou Botão Flutuante"},
+        { "Plataforma:", Environment.GetPlatform() },
+        { "Executor:", Environment.GetExecutorName() },
+        { "Escrita de Arquivo (writefile):", Environment.HasFileSystem() and "Ativo (Totalmente Suportado)" or "Indisponível" },
+        { "Descompilador Luau:", Environment.HasDecompiler() and "Ativo (Descompilação Completa)" or "Modo Bytecode / Fallback" },
+        { "Bypass de StreamingEnabled:", "Ativo (StreamExplorer Espacial)" },
+        { "Emulador de DataStore & VIP:", "Ativo (1.000.000 Coins / VIP Liberado)" },
+        { "Atalho de Teclado (HUD):", "[RightShift] ou Botão Flutuante" },
     }
 
     for i, item in ipairs(diagItems) do
@@ -2757,7 +2893,8 @@ function Interface:BuildAboutTab()
         lblVal.Text = item[2]
         lblVal.Font = Theme.FontRegular
         lblVal.TextSize = 10
-        lblVal.TextColor3 = (string.find(item[2], "Ativo") or string.find(item[2], "Suportado")) and Theme.AccentSuccess or Theme.TextPrimary
+        lblVal.TextColor3 = (string.find(item[2], "Ativo") or string.find(item[2], "Suportado")) and Theme.AccentSuccess
+            or Theme.TextPrimary
         lblVal.TextXAlignment = Enum.TextXAlignment.Right
         lblVal.Size = UDim2.new(0.5, 0, 1, 0)
         lblVal.Position = UDim2.new(0.5, 0, 0, 0)
@@ -2786,7 +2923,8 @@ function Interface:BuildAboutTab()
     featTitle.Parent = featCard
 
     local featDesc = Instance.new("TextLabel")
-    featDesc.Text = "• Seletor de Alvos 3D com Raycast e Multi-Seleção\n• Terreno SmoothVoxels 3D, Iluminação PBR e Áudios\n• Importador Oficial para Roblox Studio com Master Fix\n• Descompilador Luau Integrado e Proteção Anti-AFK"
+    featDesc.Text =
+        "• Seletor de Alvos 3D com Raycast e Multi-Seleção\n• Terreno SmoothVoxels 3D, Iluminação PBR e Áudios\n• Importador Oficial para Roblox Studio com Master Fix\n• Descompilador Luau Integrado e Proteção Anti-AFK"
     featDesc.Font = Theme.FontRegular
     featDesc.TextSize = 10
     featDesc.TextColor3 = Theme.TextSecondary
@@ -2832,15 +2970,19 @@ function Interface:BindEngineEvents()
         end
         if self.ProgressBarFill then
             Theme.Tween(self.ProgressBarFill, 0.2, {
-                Size = UDim2.new(math.clamp(prog.Percentage / 100, 0, 1), 0, 1, 0)
+                Size = UDim2.new(math.clamp(prog.Percentage / 100, 0, 1), 0, 1, 0),
             })
         end
 
         local color = Theme.TextSecondary
         if prog.Stage == "Done" then
             color = Theme.AccentSuccess
-            if prog.SavedFile then self.SavedFilePath = prog.SavedFile end
-            if prog.AssetsFolder then self.SavedAssetPath = prog.AssetsFolder end
+            if prog.SavedFile then
+                self.SavedFilePath = prog.SavedFile
+            end
+            if prog.AssetsFolder then
+                self.SavedAssetPath = prog.AssetsFolder
+            end
 
             if self.CloneButton then
                 self.CloneButton.Text = "✓ Salvo com sucesso!"

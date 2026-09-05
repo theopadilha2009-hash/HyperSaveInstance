@@ -4,13 +4,21 @@
     in the game world to inspect its hierarchy and save it with all internal scripts.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local UserInputService = nil
-pcall(function() UserInputService = clonerefFn(game:GetService("UserInputService")) end)
+pcall(function()
+    UserInputService = clonerefFn(game:GetService("UserInputService"))
+end)
 local RunService = nil
-pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
+pcall(function()
+    RunService = clonerefFn(game:GetService("RunService"))
+end)
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 local Stealth = require(script.Parent.Parent.Utils.Stealth)
 
 local RaycastSelector = {}
@@ -42,16 +50,20 @@ function RaycastSelector:InitVisuals()
         hl.OutlineColor = Color3.fromRGB(255, 255, 255)
         hl.OutlineTransparency = 0
         hl.Enabled = false
-        
+
         Stealth.ProtectGui(hl)
 
         -- Store in gethui or CoreGui safely
         local parent = nil
         if gethui then
-            pcall(function() parent = gethui() end)
+            pcall(function()
+                parent = gethui()
+            end)
         end
         if not parent then
-            pcall(function() parent = clonerefFn(game:GetService("CoreGui")) end)
+            pcall(function()
+                parent = clonerefFn(game:GetService("CoreGui"))
+            end)
         end
         hl.Parent = parent or workspace
         self.Highlight = hl
@@ -60,7 +72,9 @@ end
 
 -- Find the most meaningful parent Model or Tool from a clicked BasePart
 function RaycastSelector:ResolveTarget(part: BasePart): Instance
-    if not part then return nil end
+    if not part then
+        return nil
+    end
 
     local current: Instance? = part
     local bestModel: Instance = part
@@ -81,7 +95,9 @@ end
 -- Perform raycast from mouse screen position into 3D world
 function RaycastSelector:RaycastMouse(): (Instance?, Vector3?)
     local camera = workspace.CurrentCamera
-    if not camera then return nil, nil end
+    if not camera then
+        return nil, nil
+    end
 
     local mousePos = UserInputService:GetMouseLocation()
     local unitRay = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
@@ -114,7 +130,9 @@ end
 
 -- Start interactive click-to-select mode in 3D world
 function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance?) -> ())?)
-    if self.IsActive then self:Stop() end
+    if self.IsActive then
+        self:Stop()
+    end
 
     self.IsActive = true
     self.OnSelectedCallback = onSelected
@@ -122,12 +140,14 @@ function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance
 
     -- RenderStepped hover raycast
     local hoverConn = RunService.RenderStepped:Connect(function()
-        if not self.IsActive then return end
+        if not self.IsActive then
+            return
+        end
 
         local target = self:RaycastMouse()
         if target ~= self.HoveredInstance then
             self.HoveredInstance = target
-            
+
             if self.Highlight then
                 if target and (target:IsA("Model") or target:IsA("BasePart")) then
                     self.Highlight.Adornee = target
@@ -147,7 +167,9 @@ function RaycastSelector:Start(onSelected: (Instance) -> (), onHover: ((Instance
 
     -- Click listener
     local clickConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not self.IsActive then return end
+        if not self.IsActive then
+            return
+        end
 
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             local target = self.HoveredInstance or self:RaycastMouse()
@@ -170,7 +192,9 @@ end
 function RaycastSelector:Stop()
     self.IsActive = false
     for _, conn in ipairs(self.Connections) do
-        pcall(function() conn:Disconnect() end)
+        pcall(function()
+            conn:Disconnect()
+        end)
     end
     self.Connections = {}
 
@@ -185,7 +209,9 @@ end
 function RaycastSelector:Destroy()
     self:Stop()
     if self.Highlight then
-        pcall(function() self.Highlight:Destroy() end)
+        pcall(function()
+            self.Highlight:Destroy()
+        end)
         self.Highlight = nil
     end
 end

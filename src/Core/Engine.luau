@@ -4,7 +4,9 @@
 ]]
 
 local SoundService = nil
-pcall(function() SoundService = game:GetService("SoundService") end)
+pcall(function()
+    SoundService = game:GetService("SoundService")
+end)
 
 local Environment = require(script.Parent.Parent.Utils.Environment)
 local AntiAFK = require(script.Parent.Parent.Utils.AntiAFK)
@@ -25,7 +27,7 @@ Engine.__index = Engine
 
 -- Status types
 export type SaveProgress = {
-    Stage: string,              -- "Idle" | "Scanning" | "Preloading" | "Exploring" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
+    Stage: string, -- "Idle" | "Scanning" | "Preloading" | "Exploring" | "Assets" | "Terrain" | "Decompiling" | "Serializing" | "Writing" | "Done" | "Error"
     Current: number,
     Total: number,
     Percentage: number,
@@ -36,7 +38,9 @@ export type SaveProgress = {
 
 function Engine.NormalizeOptions(rawOptions: table?): table
     local opts = table.clone(Defaults)
-    if not rawOptions or type(rawOptions) ~= "table" then return opts end
+    if not rawOptions or type(rawOptions) ~= "table" then
+        return opts
+    end
 
     for k, v in pairs(rawOptions) do
         local lk = string.lower(tostring(k))
@@ -44,21 +48,38 @@ function Engine.NormalizeOptions(rawOptions: table?): table
             opts.DecompileScripts = not (v == true)
         elseif lk == "mode" then
             local lm = string.lower(tostring(v))
-            if lm == "full" then opts.Mode = "Full"
-            elseif lm == "fast" then opts.Mode = "Fast"
-            elseif lm == "visualsonly" or lm == "visuals" then opts.Mode = "VisualsOnly"
-            elseif lm == "scriptsonly" or lm == "scripts" then opts.Mode = "ScriptsOnly"
-            elseif lm == "onlymap" or lm == "maponly" or lm == "map" then opts.Mode = "OnlyMap"
-            elseif lm == "uionly" or lm == "ui" or lm == "guionly" then opts.Mode = "UIOnly"
-            elseif lm == "ghost" or lm == "stealth" then opts.Mode = "Ghost"
-            elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
-            elseif lm == "beeswarm" or lm == "bss" or lm == "bee_swarm" then opts.Mode = "BeeSwarm"
-            elseif lm == "bloxfruits" or lm == "blox_fruits" or lm == "bf" then opts.Mode = "BloxFruits"
-            elseif lm == "petsimulator99" or lm == "petsim" or lm == "ps99" or lm == "pet_simulator_99" then opts.Mode = "PetSimulator99"
-            elseif lm == "arsenal" then opts.Mode = "Arsenal"
-            elseif lm == "doors" then opts.Mode = "Doors"
-            elseif lm == "towerdefense" or lm == "tds" or lm == "tower_defense" then opts.Mode = "TowerDefense"
-            else opts.Mode = v end
+            if lm == "full" then
+                opts.Mode = "Full"
+            elseif lm == "fast" then
+                opts.Mode = "Fast"
+            elseif lm == "visualsonly" or lm == "visuals" then
+                opts.Mode = "VisualsOnly"
+            elseif lm == "scriptsonly" or lm == "scripts" then
+                opts.Mode = "ScriptsOnly"
+            elseif lm == "onlymap" or lm == "maponly" or lm == "map" then
+                opts.Mode = "OnlyMap"
+            elseif lm == "uionly" or lm == "ui" or lm == "guionly" then
+                opts.Mode = "UIOnly"
+            elseif lm == "ghost" or lm == "stealth" then
+                opts.Mode = "Ghost"
+            elseif lm == "optimized" then
+                opts.Mode = "Full"
+                opts.OptimizeGeometry = true
+            elseif lm == "beeswarm" or lm == "bss" or lm == "bee_swarm" then
+                opts.Mode = "BeeSwarm"
+            elseif lm == "bloxfruits" or lm == "blox_fruits" or lm == "bf" then
+                opts.Mode = "BloxFruits"
+            elseif lm == "petsimulator99" or lm == "petsim" or lm == "ps99" or lm == "pet_simulator_99" then
+                opts.Mode = "PetSimulator99"
+            elseif lm == "arsenal" then
+                opts.Mode = "Arsenal"
+            elseif lm == "doors" then
+                opts.Mode = "Doors"
+            elseif lm == "towerdefense" or lm == "tds" or lm == "tower_defense" then
+                opts.Mode = "TowerDefense"
+            else
+                opts.Mode = v
+            end
             Defaults.ApplyPreset(opts, opts.Mode)
         elseif lk == "decompileignore" or lk == "decompile_ignore" then
             opts.DecompileIgnore = v
@@ -70,7 +91,12 @@ function Engine.NormalizeOptions(rawOptions: table?): table
             opts.DecompileTimeout = tonumber(v) or 12
         elseif lk == "ignorelist" or lk == "ignore_list" then
             opts.IgnoreList = v
-        elseif lk == "isolatestarterplayer" or lk == "isolate_starter_player" or lk == "isolatelocalplayer" or lk == "isolate_local_player" then
+        elseif
+            lk == "isolatestarterplayer"
+            or lk == "isolate_starter_player"
+            or lk == "isolatelocalplayer"
+            or lk == "isolate_local_player"
+        then
             opts.IsolateStarterPlayer = (v == true)
         elseif lk == "filepath" or lk == "file_path" or lk == "filename" or lk == "file_name" then
             opts.FilePath = tostring(v)
@@ -149,24 +175,34 @@ end
 
 -- Play completion audio chime
 function Engine:PlayChime()
-    if not self.Config.PlaySoundOnComplete or self.Config.SilentMode then return end
+    if not self.Config.PlaySoundOnComplete or self.Config.SilentMode then
+        return
+    end
     pcall(function()
         local sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
         sound.Volume = 0.6
         sound.Parent = SoundService
         sound:Play()
-        sound.Ended:Connect(function() sound:Destroy() end)
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
     end)
 end
 
 -- Check if instance should be saved
 function Engine:ShouldSaveInstance(inst: Instance): boolean
     local cName = inst.ClassName
-    if ClassBlacklist.Classes[cName] then return false end
-    if ClassBlacklist.Names[inst.Name] then return false end
+    if ClassBlacklist.Classes[cName] then
+        return false
+    end
+    if ClassBlacklist.Names[inst.Name] then
+        return false
+    end
 
-    if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
+    if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then
+        return false
+    end
     if self.Config.IgnoredGui and (inst == self.Config.IgnoredGui or inst:IsDescendantOf(self.Config.IgnoredGui)) then
         return false
     end
@@ -193,22 +229,28 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
 
     local cfg = table.clone(self.Config)
     if customConfig then
-        for k, v in pairs(customConfig) do cfg[k] = v end
+        for k, v in pairs(customConfig) do
+            cfg[k] = v
+        end
     end
 
     local cleanName = string.gsub(target.Name, "[^%w_%-]", "_")
     local fileName = string.format("HyperSave_Model_%s_%d.%s", cleanName, os.time(), cfg.Format or "rbxm")
 
-    local allInstances = {target}
+    local allInstances = { target }
     local scriptInstances = {}
 
     local function scan(inst: Instance)
-        if not self:ShouldSaveInstance(inst) then return end
+        if not self:ShouldSaveInstance(inst) then
+            return
+        end
         table.insert(allInstances, inst)
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
         end
-        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child)
+        end
     end
     scan(target)
 
@@ -217,7 +259,7 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
         scriptSources = Decompiler.DecompileBatch(scriptInstances, cfg)
     end
 
-    local output = SerializerXml.Serialize({target}, scriptSources, nil, cfg)
+    local output = SerializerXml.Serialize({ target }, scriptSources, nil, cfg)
     local writeOk = Environment.WriteFile(fileName, output)
 
     if writeOk then
@@ -231,25 +273,31 @@ function Engine:SaveTarget(target: Instance, customConfig: table?): (boolean, st
 end
 
 -- Save multiple target instances into a single combined .rbxm / .rbxlx pack
-function Engine:SaveTargetBatch(targets: {Instance}, customConfig: table?): (boolean, string)
+function Engine:SaveTargetBatch(targets: { Instance }, customConfig: table?): (boolean, string)
     if not targets or #targets == 0 then
         return false, "No target instances specified for batch export!"
     end
 
     local cfg = table.clone(self.Config)
     if customConfig then
-        for k, v in pairs(customConfig) do cfg[k] = v end
+        for k, v in pairs(customConfig) do
+            cfg[k] = v
+        end
     end
 
     local fileName = string.format("HyperSave_MultiPack_%d_items_%d.%s", #targets, os.time(), cfg.Format or "rbxm")
     local scriptInstances = {}
 
     local function scan(inst: Instance)
-        if not self:ShouldSaveInstance(inst) then return end
+        if not self:ShouldSaveInstance(inst) then
+            return
+        end
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
         end
-        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child)
+        end
     end
 
     for _, target in ipairs(targets) do
@@ -305,7 +353,7 @@ function Engine:Start(): (boolean, string)
             Percentage = 4,
             Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
         })
-        local allowPhysicalTeleport = (not self.Config.SafeStreaming) and (not self.Config.StealthMode)
+        local allowPhysicalTeleport = (not self.Config.SafeStreaming) and not self.Config.StealthMode
         StreamExplorer.ExploreMap(512, function(cur, tot, pos)
             local pct = 4 + math.floor((cur / tot) * 6)
             self:EmitProgress({
@@ -319,9 +367,9 @@ function Engine:Start(): (boolean, string)
     end
 
     -- Step 1: Collect Root Services to save
-    local rootInstances: {Instance} = {}
-    local allInstances: {Instance} = {}
-    local scriptInstances: {LuaSourceContainer} = {}
+    local rootInstances: { Instance } = {}
+    local allInstances: { Instance } = {}
+    local scriptInstances: { LuaSourceContainer } = {}
 
     for _, serviceName in ipairs(ClassBlacklist.SaveServices) do
         local success, service = pcall(function()
@@ -340,7 +388,9 @@ function Engine:Start(): (boolean, string)
         local nils = Environment.GetNilInstances()
         for _, nInst in ipairs(nils) do
             if self:ShouldSaveInstance(nInst) then
-                pcall(function() nInst.Parent = nilFolder end)
+                pcall(function()
+                    nInst.Parent = nilFolder
+                end)
             end
         end
         if #nilFolder:GetChildren() > 0 then
@@ -445,7 +495,9 @@ function Engine:Start(): (boolean, string)
     local synthesizedSpawn = nil
     if self.Config.GenerateSafeSpawn then
         pcall(function()
-            local clonerefFn = cloneref or function(obj) return obj end
+            local clonerefFn = cloneref or function(obj)
+                return obj
+            end
             local Players = clonerefFn(game:GetService("Players"))
             local localPlayer = Players and (Players.LocalPlayer or Players:FindFirstChildOfClass("Player"))
             local char = localPlayer and localPlayer.Character
@@ -482,7 +534,9 @@ function Engine:Start(): (boolean, string)
     local lastYield = os.clock()
 
     local function scan(inst: Instance)
-        if not inst or visited[inst] then return end
+        if not inst or visited[inst] then
+            return
+        end
         visited[inst] = true
         scannedCounter = scannedCounter + 1
 
@@ -492,7 +546,9 @@ function Engine:Start(): (boolean, string)
             lastYield = os.clock()
         end
 
-        if not self:ShouldSaveInstance(inst) then return end
+        if not self:ShouldSaveInstance(inst) then
+            return
+        end
         table.insert(allInstances, inst)
 
         if inst:IsA("LuaSourceContainer") then
@@ -547,7 +603,9 @@ function Engine:Start(): (boolean, string)
     if self.Config.DownloadRawAssets then
         local assets = AssetDownloader.CollectAssets(allInstances)
         local totalAssets = 0
-        for _ in pairs(assets) do totalAssets = totalAssets + 1 end
+        for _ in pairs(assets) do
+            totalAssets = totalAssets + 1
+        end
 
         if totalAssets > 0 then
             self:EmitProgress({
@@ -590,7 +648,7 @@ function Engine:Start(): (boolean, string)
     end
 
     -- Step 4: Decompile Scripts
-    local scriptSources: {[LuaSourceContainer]: string} = {}
+    local scriptSources: { [LuaSourceContainer]: string } = {}
     if self.Config.DecompileScripts and totalScripts > 0 then
         self:EmitProgress({
             Stage = "Decompiling",
@@ -682,8 +740,14 @@ function Engine:Start(): (boolean, string)
             end
         end
 
-        local successMsg = string.format("Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
-            totalInstances, totalScripts, downloadedCount, elapsed, fullPathHint)
+        local successMsg = string.format(
+            "Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
+            totalInstances,
+            totalScripts,
+            downloadedCount,
+            elapsed,
+            fullPathHint
+        )
 
         self:EmitProgress({
             Stage = "Done",
@@ -725,10 +789,14 @@ function Engine:Start(): (boolean, string)
             task.spawn(function()
                 pcall(function()
                     local req = (syn and syn.request) or (http and http.request) or http_request or request
-                    if not req then return end
+                    if not req then
+                        return
+                    end
 
                     local MarketplaceService = game:GetService("MarketplaceService")
-                    local placeInfo = pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
+                    local placeInfo = pcall(function()
+                        return MarketplaceService:GetProductInfo(game.PlaceId)
+                    end)
                     local placeName = (type(placeInfo) == "table" and placeInfo.Name) or (workspace and workspace.Name) or "Roblox Place"
 
                     local payload = {
@@ -736,7 +804,12 @@ function Engine:Start(): (boolean, string)
                         embeds = {
                             {
                                 title = "PLACE CLONED SUCCESSFULLY",
-                                description = string.format("**Map:** `%s`\n**Place ID:** `%d`\n**Output File:** `%s`", tostring(placeName), game.PlaceId, targetFileName),
+                                description = string.format(
+                                    "**Map:** `%s`\n**Place ID:** `%d`\n**Output File:** `%s`",
+                                    tostring(placeName),
+                                    game.PlaceId,
+                                    targetFileName
+                                ),
                                 color = 11022583,
                                 fields = {
                                     { name = "Instances", value = tostring(totalInstances), inline = true },
@@ -747,9 +820,9 @@ function Engine:Start(): (boolean, string)
                                     { name = "Author", value = "Theo Lorentz Padilha", inline = true },
                                 },
                                 footer = { text = "HyperSaveInstance v2.1 // Gothic Cyberpunk Engine" },
-                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-                            }
-                        }
+                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                            },
+                        },
                     }
 
                     local json = game:GetService("HttpService"):JSONEncode(payload)
@@ -757,7 +830,7 @@ function Engine:Start(): (boolean, string)
                         Url = self.Config.DiscordWebhookUrl,
                         Method = "POST",
                         Headers = { ["Content-Type"] = "application/json" },
-                        Body = json
+                        Body = json,
                     })
                 end)
             end)

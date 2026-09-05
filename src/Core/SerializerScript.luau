@@ -19,8 +19,21 @@ local function formatValueLua(val: any, propType: string): string
         return string.format("Vector2.new(%.4f, %.4f)", val.X, val.Y)
     elseif t == "CFrame" then
         local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = val:GetComponents()
-        return string.format("CFrame.new(%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f)",
-            x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22)
+        return string.format(
+            "CFrame.new(%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f)",
+            x,
+            y,
+            z,
+            r00,
+            r01,
+            r02,
+            r10,
+            r11,
+            r12,
+            r20,
+            r21,
+            r22
+        )
     elseif t == "Color3" then
         return string.format("Color3.fromRGB(%d, %d, %d)", math.floor(val.R * 255), math.floor(val.G * 255), math.floor(val.B * 255))
     elseif t == "UDim" then
@@ -35,7 +48,12 @@ local function formatValueLua(val: any, propType: string): string
     return "nil"
 end
 
-function SerializerScript.Serialize(instances: {Instance}, scriptSources: {[LuaSourceContainer]: string}, terrainData: table?, options: table?): string
+function SerializerScript.Serialize(
+    instances: { Instance },
+    scriptSources: { [LuaSourceContainer]: string },
+    terrainData: table?,
+    options: table?
+): string
     local opts = options or {}
     local out = {}
     local function append(str: string)
@@ -65,10 +83,10 @@ local function buildGame()
         local className = inst.ClassName
 
         if inst.Parent == game then
-            append(string.format('    local %s = game:GetService(%q)\n', varName, className))
+            append(string.format("    local %s = game:GetService(%q)\n", varName, className))
         else
-            append(string.format('    local %s = Instance.new(%q)\n', varName, className))
-            append(string.format('    %s.Name = %q\n', varName, inst.Name))
+            append(string.format("    local %s = Instance.new(%q)\n", varName, className))
+            append(string.format("    %s.Name = %q\n", varName, inst.Name))
 
             -- Properties
             local propList = Reflection.GetPropertiesForClass(className)
@@ -77,11 +95,13 @@ local function buildGame()
                 local propType = propInfo.Type
 
                 if propName ~= "Name" and propName ~= "Source" and not propInfo.ReadOnly then
-                    local s, val = pcall(function() return (inst :: any)[propName] end)
+                    local s, val = pcall(function()
+                        return (inst :: any)[propName]
+                    end)
                     if s and val ~= nil then
                         local luaVal = formatValueLua(val, propType)
                         if luaVal ~= "nil" then
-                            append(string.format('    pcall(function() %s.%s = %s end)\n', varName, propName, luaVal))
+                            append(string.format("    pcall(function() %s.%s = %s end)\n", varName, propName, luaVal))
                         end
                     end
                 end
@@ -93,7 +113,7 @@ local function buildGame()
                 if #src > 0 then
                     -- Safely escape any matching closing bracket if present
                     local safeSrc = string.gsub(src, "%]%===%]", "]=== ]")
-                    append(string.format('    pcall(function() %s.Source = [===[%s]===] end)\n', varName, safeSrc))
+                    append(string.format("    pcall(function() %s.Source = [===[%s]===] end)\n", varName, safeSrc))
                 end
             end
 
@@ -103,7 +123,7 @@ local function buildGame()
                 for k, v in pairs(attrs) do
                     local luaV = formatValueLua(v, typeof(v))
                     if luaV ~= "nil" then
-                        append(string.format('    pcall(function() %s:SetAttribute(%q, %s) end)\n', varName, k, luaV))
+                        append(string.format("    pcall(function() %s:SetAttribute(%q, %s) end)\n", varName, k, luaV))
                     end
                 end
             end
@@ -112,11 +132,11 @@ local function buildGame()
             if opts.SaveTags ~= false then
                 local tags = Reflection.GetTags(inst)
                 for _, tag in ipairs(tags) do
-                    append(string.format('    pcall(function() CollectionService:AddTag(%s, %q) end)\n', varName, tag))
+                    append(string.format("    pcall(function() CollectionService:AddTag(%s, %q) end)\n", varName, tag))
                 end
             end
 
-            append(string.format('    %s.Parent = %s\n\n', varName, parentVar))
+            append(string.format("    %s.Parent = %s\n\n", varName, parentVar))
         end
 
         for _, child in ipairs(inst:GetChildren()) do

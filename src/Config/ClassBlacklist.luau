@@ -54,7 +54,7 @@ local ClassBlacklist = {
         "LocalizationService",
         "TextChatService",
         "InsertService",
-    }
+    },
 }
 
 return ClassBlacklist

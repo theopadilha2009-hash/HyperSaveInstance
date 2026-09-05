@@ -34,16 +34,16 @@ local function isSilent(): boolean
     pcall(function()
         local genv = (getgenv and getgenv()) or _G
         if genv then
-            silent = (genv.HyperSave_Silent == true)
-                or (genv.SilentMode == true)
-                or (genv.HyperSave_Ghost == true)
+            silent = (genv.HyperSave_Silent == true) or (genv.SilentMode == true) or (genv.HyperSave_Ghost == true)
         end
     end)
     return silent
 end
 
 local function report(message: string)
-    if isSilent() then return end
+    if isSilent() then
+        return
+    end
     warn("[HyperSaveInstance] " .. message)
 end
 

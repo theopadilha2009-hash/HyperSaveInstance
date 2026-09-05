@@ -33,7 +33,9 @@ local function forEachDescendant(root, callback, onProgress)
     for i = 1, total do
         callback(descendants[i])
         if i % 2000 == 0 then
-            if onProgress then onProgress(i, total) end
+            if onProgress then
+                onProgress(i, total)
+            end
             task.wait()
         end
     end
@@ -45,12 +47,13 @@ end
 -- soundtrack of the place with one beep.
 local function findUnplayableSounds(sounds)
     local failed = {}
-    if #sounds == 0 then return failed, true end
+    if #sounds == 0 then
+        return failed, true
+    end
 
     local ok = pcall(function()
         ContentProvider:PreloadAsync(sounds, function(contentId, status)
-            if status == Enum.AssetFetchStatus.Failure
-                or status == Enum.AssetFetchStatus.TimedOut then
+            if status == Enum.AssetFetchStatus.Failure or status == Enum.AssetFetchStatus.TimedOut then
                 failed[contentId] = true
             end
         end)
@@ -78,15 +81,7 @@ local openBtn = toolbar:CreateButton(
 )
 
 -- Create DockWidget GUI inside Studio
-local widgetInfo = DockWidgetPluginGuiInfo.new(
-    Enum.InitialDockState.Float,
-    false,
-    false,
-    460,
-    520,
-    380,
-    400
-)
+local widgetInfo = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, false, false, 460, 520, 380, 400)
 
 local widget = plugin:CreateDockWidgetPluginGui("HyperSave_StudioImporterSuite", widgetInfo)
 widget.Title = "HyperSave Studio Suite"
@@ -272,7 +267,10 @@ btnMaster.MouseButton1Click:Connect(function()
     local unlockedParts = 0
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("PackageLink") then
-            pcall(function() desc:Destroy() unlockedPackages = unlockedPackages + 1 end)
+            pcall(function()
+                desc:Destroy()
+                unlockedPackages = unlockedPackages + 1
+            end)
         elseif desc:IsA("BasePart") and desc.Locked then
             desc.Locked = false
             unlockedParts = unlockedParts + 1
@@ -304,7 +302,9 @@ btnMaster.MouseButton1Click:Connect(function()
     local protectedScripts = 0
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("LocalScript") or desc:IsA("ModuleScript") then
-            local s, src = pcall(function() return desc.Source end)
+            local s, src = pcall(function()
+                return desc.Source
+            end)
             if s and src and (string.find(src, "Failed to decompile") or string.find(src, "decompilation failed")) then
                 desc.Source = "-- [HyperSave Safe Stub]\nreturn function(...) return true end\n"
                 protectedScripts = protectedScripts + 1
@@ -384,18 +384,29 @@ end)
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("RemoteFunction") then
             countFuncs = countFuncs + 1
-            code = code .. string.format("\npcall(function() (%s).OnServerInvoke = function(p, ...) return true, {Success=true} end end)", desc:GetFullName())
+            code = code
+                .. string.format(
+                    "\npcall(function() (%s).OnServerInvoke = function(p, ...) return true, {Success=true} end end)",
+                    desc:GetFullName()
+                )
         elseif desc:IsA("RemoteEvent") then
             countEvents = countEvents + 1
             code = code .. string.format("\npcall(function() (%s).OnServerEvent:Connect(function(p, ...) end) end)", desc:GetFullName())
         end
     end
 
-    pcall(function() serverScript.Source = code end)
+    pcall(function()
+        serverScript.Source = code
+    end)
 
     ChangeHistoryService:SetWaypoint("After HyperSave Master Repair")
-    local summary = string.format("✓ Reparo concluído: %d pacotes desvinculados, %d áudios corrigidos, %d scripts blindados e %d remotes conectados.",
-        unlockedPackages, fixedAudio, protectedScripts, countFuncs + countEvents)
+    local summary = string.format(
+        "✓ Reparo concluído: %d pacotes desvinculados, %d áudios corrigidos, %d scripts blindados e %d remotes conectados.",
+        unlockedPackages,
+        fixedAudio,
+        protectedScripts,
+        countFuncs + countEvents
+    )
     setStatus(summary, Color3.fromRGB(16, 185, 129))
 end)
 
@@ -488,7 +499,11 @@ end)
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("RemoteFunction") then
             countFuncs = countFuncs + 1
-            code = code .. string.format("\npcall(function() (%s).OnServerInvoke = function(p, ...) return true, {Success=true} end end)", desc:GetFullName())
+            code = code
+                .. string.format(
+                    "\npcall(function() (%s).OnServerInvoke = function(p, ...) return true, {Success=true} end end)",
+                    desc:GetFullName()
+                )
         elseif desc:IsA("RemoteEvent") then
             countEvents = countEvents + 1
             code = code .. string.format("\npcall(function() (%s).OnServerEvent:Connect(function(p, ...) end) end)", desc:GetFullName())
@@ -507,7 +522,10 @@ end)
     end)
 
     ChangeHistoryService:SetWaypoint("After HyperSave Server Synthesizer")
-    setStatus(string.format("✓ Servidor gerado com %d RemoteEvents e %d RemoteFunctions.", countEvents, countFuncs), Color3.fromRGB(16, 185, 129))
+    setStatus(
+        string.format("✓ Servidor gerado com %d RemoteEvents e %d RemoteFunctions.", countEvents, countFuncs),
+        Color3.fromRGB(16, 185, 129)
+    )
 end)
 
 -- ============================================================================
@@ -549,7 +567,10 @@ btnAudio.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Audio Sanitizer")
-    setStatus(string.format("✓ %d de %d sons estavam inacessíveis e foram substituídos (os demais foram mantidos).", fixedCount, #candidates), Color3.fromRGB(16, 185, 129))
+    setStatus(
+        string.format("✓ %d de %d sons estavam inacessíveis e foram substituídos (os demais foram mantidos).", fixedCount, #candidates),
+        Color3.fromRGB(16, 185, 129)
+    )
 end)
 
 -- ============================================================================
@@ -571,7 +592,9 @@ btnScripts.MouseButton1Click:Connect(function()
     local protected = 0
     for _, desc in ipairs(game:GetDescendants()) do
         if desc:IsA("LocalScript") or desc:IsA("ModuleScript") then
-            local s, src = pcall(function() return desc.Source end)
+            local s, src = pcall(function()
+                return desc.Source
+            end)
             if s and src then
                 if string.find(src, "Failed to decompile") or string.find(src, "decompilation failed") then
                     desc.Source = "-- [HyperSave Safe Stub]\nreturn function(...) return true end\n"
@@ -619,17 +642,17 @@ btnUnlock.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Permission Unlock")
-    setStatus(string.format("✓ %d pacotes desvinculados e %d peças destravadas.", unlockedPackages, unlockedParts), Color3.fromRGB(16, 185, 129))
+    setStatus(
+        string.format("✓ %d pacotes desvinculados e %d peças destravadas.", unlockedPackages, unlockedParts),
+        Color3.fromRGB(16, 185, 129)
+    )
 end)
 
 -- ============================================================================
 -- FEATURE 5: INJETOR DE CÓDIGO LUA
 -- ============================================================================
-local cardCode = createCard(
-    "5. Executar Código Luau Manual",
-    "Permite colar blocos de script para reconstruir instâncias ou manipular objetos.",
-    5
-)
+local cardCode =
+    createCard("5. Executar Código Luau Manual", "Permite colar blocos de script para reconstruir instâncias ou manipular objetos.", 5)
 cardCode.Size = UDim2.new(1, 0, 0, 150)
 cardCode.Parent = scroll
 
@@ -785,8 +808,13 @@ btnAudit.MouseButton1Click:Connect(function()
         end
     end
 
-    local summary = string.format("✓ Auditoria concluída: %d Malhas, %d Texturas, %d Sons, %d Animações identificadas.",
-        meshes, textures, sounds, animations)
+    local summary = string.format(
+        "✓ Auditoria concluída: %d Malhas, %d Texturas, %d Sons, %d Animações identificadas.",
+        meshes,
+        textures,
+        sounds,
+        animations
+    )
     setStatus(summary, Color3.fromRGB(16, 185, 129))
 end)
 
@@ -823,7 +851,10 @@ btnPhysics.MouseButton1Click:Connect(function()
     end
 
     ChangeHistoryService:SetWaypoint("After HyperSave Physics Stabilizer")
-    setStatus(string.format("✓ %d peças estáticas ancoradas com sucesso para estabilidade física.", anchoredCount), Color3.fromRGB(16, 185, 129))
+    setStatus(
+        string.format("✓ %d peças estáticas ancoradas com sucesso para estabilidade física.", anchoredCount),
+        Color3.fromRGB(16, 185, 129)
+    )
 end)
 
 -- ============================================================================
@@ -845,7 +876,10 @@ btnSpawn.MouseButton1Click:Connect(function()
     if existingSpawn then
         -- Nada a registrar: abrir o waypoint aqui deixava um "Before" sem par
         -- no histórico de undo sempre que já existia um spawn.
-        setStatus(string.format("✓ SpawnLocation existente já encontrado em: %s", existingSpawn:GetFullName()), Color3.fromRGB(16, 185, 129))
+        setStatus(
+            string.format("✓ SpawnLocation existente já encontrado em: %s", existingSpawn:GetFullName()),
+            Color3.fromRGB(16, 185, 129)
+        )
     else
         local recording = ChangeHistoryService:TryBeginRecording("HyperSaveSpawnRestorer", "Restaurar SpawnLocation")
         local spawn = Instance.new("SpawnLocation")
@@ -907,7 +941,9 @@ local function assetIdFromFileName(name: string): string?
 end
 
 local function numericId(contentId: string): string?
-    if type(contentId) ~= "string" then return nil end
+    if type(contentId) ~= "string" then
+        return nil
+    end
     return string.match(contentId, "rbxassetid://(%d+)")
         or string.match(contentId, "rbxasset://.-(%d+)")
         or string.match(contentId, "^(%d+)$")
@@ -950,7 +986,10 @@ btnImport.MouseButton1Click:Connect(function()
         return
     end
 
-    setStatus(string.format("Manifesto lido: %d assets. Selecione agora os arquivos baixados.", manifestCount), Color3.fromRGB(59, 130, 246))
+    setStatus(
+        string.format("Manifesto lido: %d assets. Selecione agora os arquivos baixados.", manifestCount),
+        Color3.fromRGB(59, 130, 246)
+    )
 
     local okAssets, assetFiles = pcall(function()
         return StudioService:PromptImportFilesAsync({ "png", "jpg", "jpeg", "mp3", "ogg", "mesh", "rbxanim", "dat" })
@@ -996,7 +1035,9 @@ btnImport.MouseButton1Click:Connect(function()
     local okScan, scanErr = pcall(function()
         forEachDescendant(game, function(inst)
             local props = CONTENT_PROPERTIES[inst.ClassName]
-            if not props then return end
+            if not props then
+                return
+            end
 
             local touched = false
             for _, propName in ipairs(props) do
@@ -1010,8 +1051,8 @@ btnImport.MouseButton1Click:Connect(function()
                         local okWrite = pcall(function()
                             -- Keep the original so this is reversible even
                             -- outside the undo stack.
-                            inst:SetAttribute("HyperSaveOriginal_" .. propName, value)
-                            ;(inst :: any)[propName] = tempId
+                            inst:SetAttribute("HyperSaveOriginal_" .. propName, value);
+                            (inst :: any)[propName] = tempId
                         end)
                         if okWrite then
                             rewritten = rewritten + 1
@@ -1028,30 +1069,29 @@ btnImport.MouseButton1Click:Connect(function()
         end)
     end)
 
-    ChangeHistoryService:FinishRecording(
-        recording,
-        okScan and Enum.FinishRecordingOperation.Commit or Enum.FinishRecordingOperation.Cancel
-    )
+    ChangeHistoryService:FinishRecording(recording, okScan and Enum.FinishRecordingOperation.Commit or Enum.FinishRecordingOperation.Cancel)
 
     if not okScan then
         setStatus("Falha durante a varredura, alterações revertidas: " .. tostring(scanErr), Color3.fromRGB(239, 68, 68))
         return
     end
 
-    setStatus(string.format(
-        "✓ %d referências religadas em %d instâncias (%d arquivos usados, %d ignorados). Ids rbxtemp:// valem nesta sessão do Studio.",
-        rewritten, instancesTouched, matchedFiles, unmatchedFiles
-    ), Color3.fromRGB(16, 185, 129))
+    setStatus(
+        string.format(
+            "✓ %d referências religadas em %d instâncias (%d arquivos usados, %d ignorados). Ids rbxtemp:// valem nesta sessão do Studio.",
+            rewritten,
+            instancesTouched,
+            matchedFiles,
+            unmatchedFiles
+        ),
+        Color3.fromRGB(16, 185, 129)
+    )
 end)
 
 -- ============================================================================
 -- FEATURE 11: DESENVOLVEDOR
 -- ============================================================================
-local cardDev = createCard(
-    "Theo Lorentz Padilha",
-    "Desenvolvido por Theo Lorentz Padilha. O link do repositório está abaixo.",
-    13
-)
+local cardDev = createCard("Theo Lorentz Padilha", "Desenvolvido por Theo Lorentz Padilha. O link do repositório está abaixo.", 13)
 cardDev.Parent = scroll
 
 -- O botão anterior dizia "copiado" sem tocar em clipboard nenhum. Plugins não

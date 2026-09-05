@@ -16,7 +16,9 @@ local function getPathExpression(inst: Instance): string
         curr = curr.Parent
     end
 
-    if #segments == 0 then return "nil" end
+    if #segments == 0 then
+        return "nil"
+    end
 
     local serviceName = segments[1]
     local expr = string.format("game:GetService(%q)", serviceName)
@@ -38,7 +40,9 @@ local function sanitizeIdentifier(name: string): string
 end
 
 -- Collect all Remote instances across the place
-function ServerSynthesizer.CollectRemotes(rootInstances: {Instance}): {Events: {Instance}, Functions: {Instance}, Unreliable: {Instance}}
+function ServerSynthesizer.CollectRemotes(
+    rootInstances: { Instance }
+): { Events: { Instance }, Functions: { Instance }, Unreliable: { Instance } }
     local remotes = {
         Events = {},
         Functions = {},
@@ -67,7 +71,9 @@ function ServerSynthesizer.CollectRemotes(rootInstances: {Instance}): {Events: {
 end
 
 -- Generate full Luau source code for the synthetic ServerScriptService dispatcher
-function ServerSynthesizer.GenerateDispatcherSource(remotes: {Events: {Instance}, Functions: {Instance}, Unreliable: {Instance}}): string
+function ServerSynthesizer.GenerateDispatcherSource(
+    remotes: { Events: { Instance }, Functions: { Instance }, Unreliable: { Instance } }
+): string
     local lines = {}
     local function add(line: string)
         table.insert(lines, line)
@@ -187,7 +193,8 @@ end)
     for _, rf in ipairs(remotes.Functions) do
         local fullName = rf:GetFullName()
 
-        add(string.format([=[
+        add(string.format(
+            [=[
 -- RemoteFunction: %s
 task.spawn(function()
     local target = %s
@@ -226,7 +233,12 @@ task.spawn(function()
         end
     end
 end)
-]=], fullName, getPathExpression(rf), rf.Name, rf.Name))
+]=],
+            fullName,
+            getPathExpression(rf),
+            rf.Name,
+            rf.Name
+        ))
     end
 
     -- Hook RemoteEvents
@@ -237,7 +249,8 @@ end)
     for _, re in ipairs(remotes.Events) do
         local fullName = re:GetFullName()
 
-        add(string.format([=[
+        add(string.format(
+            [=[
 -- RemoteEvent: %s
 task.spawn(function()
     local target = %s
@@ -248,7 +261,11 @@ task.spawn(function()
         end)
     end
 end)
-]=], fullName, getPathExpression(re), re.Name))
+]=],
+            fullName,
+            getPathExpression(re),
+            re.Name
+        ))
     end
 
     -- Hook UnreliableRemoteEvents
@@ -260,7 +277,8 @@ end)
         for _, ure in ipairs(remotes.Unreliable) do
             local fullName = ure:GetFullName()
 
-            add(string.format([=[
+            add(string.format(
+                [=[
 -- UnreliableRemoteEvent: %s
 task.spawn(function()
     local target = %s
@@ -271,7 +289,11 @@ task.spawn(function()
         end)
     end
 end)
-]=], fullName, getPathExpression(ure), ure.Name))
+]=],
+                fullName,
+                getPathExpression(ure),
+                ure.Name
+            ))
         end
     end
 
@@ -284,7 +306,7 @@ print("[HyperSave Backend] Server dispatcher ready! All remotes are now respondi
 end
 
 -- Create synthetic ServerScriptService Folder & Script instances
-function ServerSynthesizer.SynthesizeService(rootInstances: {Instance}): Instance
+function ServerSynthesizer.SynthesizeService(rootInstances: { Instance }): Instance
     local remotes = ServerSynthesizer.CollectRemotes(rootInstances)
     local sourceCode = ServerSynthesizer.GenerateDispatcherSource(remotes)
 

@@ -38,7 +38,9 @@ function Web3DExporter.ExportModelToHTML(targetRoot: Instance?, options: table?)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HyperSave 3D Web Viewer - ]==], safeName, [==[</title>
+    <title>HyperSave 3D Web Viewer - ]==],
+        safeName,
+        [==[</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -143,14 +145,18 @@ function Web3DExporter.ExportModelToHTML(targetRoot: Instance?, options: table?)
     <div id="header-card" class="panel">
         <div class="title">
             <span>HyperSave 3D</span>
-            <span class="badge">]==], safeName, [==[</span>
+            <span class="badge">]==],
+        safeName,
+        [==[</span>
         </div>
         <div class="subtitle">Por Theo Lorentz Padilha • Visualizador WebGL</div>
     </div>
 
     <div id="stats-card" class="panel">
         <div><strong>Status:</strong> <span style="color:#10B981">Carregado</span></div>
-        <div><strong>Place ID:</strong> ]==], tostring(placeId), [==[</div>
+        <div><strong>Place ID:</strong> ]==],
+        tostring(placeId),
+        [==[</div>
         <div><strong>Controles:</strong> Botão esquerdo (Girar) | Direito (Pan) | Scroll (Zoom)</div>
     </div>
 
@@ -164,7 +170,9 @@ function Web3DExporter.ExportModelToHTML(targetRoot: Instance?, options: table?)
     <div id="webgl-canvas"></div>
 
     <script>
-        const rawObjData = `]==], escapedObj, [==[`;
+        const rawObjData = `]==],
+        escapedObj,
+        [==[`;
 
         let scene, camera, renderer, controls, currentMeshGroup;
         let isWireframe = false;
@@ -314,7 +322,7 @@ function Web3DExporter.ExportModelToHTML(targetRoot: Instance?, options: table?)
         };
     </script>
 </body>
-</html>]==]
+</html>]==],
     }
 
     local fullHtml = table.concat(htmlParts, "")

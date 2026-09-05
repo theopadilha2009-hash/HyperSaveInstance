@@ -5,14 +5,20 @@
 
 local Stealth = {}
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = clonerefFn(game:GetService("HttpService"))
+end)
 
 -- Generate ephemeral GUID for instance naming (Prevents static string signature detection)
 function Stealth.GenerateEphemeralGUID(): string
     if HttpService and HttpService.GenerateGUID then
-        local s, guid = pcall(function() return HttpService:GenerateGUID(false) end)
+        local s, guid = pcall(function()
+            return HttpService:GenerateGUID(false)
+        end)
         if s and guid then
             return string.gsub(guid, "%-", "")
         end
@@ -85,13 +91,17 @@ function Stealth.SafeGetProperty(instance: Instance, property: string): any
     local success, val = pcall(function()
         return (instance :: any)[property]
     end)
-    if success then return val end
+    if success then
+        return val
+    end
     return nil
 end
 
 -- Mask Luau functions as native C closures to prevent hook detection
 function Stealth.MaskClosure(fn: (...any) -> ...any): (...any) -> ...any
-    if typeof(fn) ~= "function" then return fn end
+    if typeof(fn) ~= "function" then
+        return fn
+    end
     local masked = fn
     pcall(function()
         if newcclosure then
@@ -103,7 +113,9 @@ end
 
 -- Lock metatable to prevent external inspection or tampering
 function Stealth.ProtectMetatable(tbl: table): table
-    if type(tbl) ~= "table" then return tbl end
+    if type(tbl) ~= "table" then
+        return tbl
+    end
     pcall(function()
         local mt = getrawmetatable and getrawmetatable(tbl) or getmetatable(tbl)
         if mt then
@@ -125,17 +137,21 @@ end
 
 -- Check if instance belongs to Roblox internal telemetry or CoreGui
 function Stealth.IsInternalOrProtected(instance: Instance): boolean
-    if not instance then return true end
+    if not instance then
+        return true
+    end
     local isInternal = false
     pcall(function()
         local name = instance.Name
         local className = instance.ClassName
-        if string.find(name, "RobloxNetworkAutoTest") or
-           string.find(name, "Telemetry") or
-           string.find(name, "MemStorageConnection") or
-           string.find(name, "CoreScript") or
-           className == "PluginMouse" or
-           className == "RobloxPluginGui" then
+        if
+            string.find(name, "RobloxNetworkAutoTest")
+            or string.find(name, "Telemetry")
+            or string.find(name, "MemStorageConnection")
+            or string.find(name, "CoreScript")
+            or className == "PluginMouse"
+            or className == "RobloxPluginGui"
+        then
             isInternal = true
         end
     end)

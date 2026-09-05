@@ -5,12 +5,16 @@
     Includes a Snapshot Memory Accumulator to preserve streamed-out chunks in memory.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 
 local StreamExplorer = {
-    CapturedInstances = {}
+    CapturedInstances = {},
 }
 
 -- Scan map bounds and calculate bounding box
@@ -21,7 +25,9 @@ function StreamExplorer.GetMapBoundingBox(): (Vector3, Vector3)
     -- Check if Terrain exists
     local terrain = workspace.Terrain
     if terrain then
-        local s, extents = pcall(function() return terrain.MaxExtents end)
+        local s, extents = pcall(function()
+            return terrain.MaxExtents
+        end)
         if s and extents then
             minVec = Vector3.new(extents.Min.X * 4, -100, extents.Min.Z * 4)
             maxVec = Vector3.new(extents.Max.X * 4, 500, extents.Max.Z * 4)
@@ -59,7 +65,7 @@ function StreamExplorer.AccumulateCurrentInstances()
 end
 
 -- Get all accumulated instances across all visited chunks
-function StreamExplorer.GetAccumulatedInstances(): {Instance}
+function StreamExplorer.GetAccumulatedInstances(): { Instance }
     local list = {}
     for inst, _ in pairs(StreamExplorer.CapturedInstances) do
         table.insert(list, inst)
@@ -73,14 +79,20 @@ function StreamExplorer.ClearAccumulator()
 end
 
 -- Perform stealth grid sweep to load chunks safely without moving character
-function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current: number, total: number, pos: Vector3) -> (), allowPhysicalTeleport: boolean?): boolean
+function StreamExplorer.ExploreMap(
+    stepSize: number?,
+    progressCallback: (current: number, total: number, pos: Vector3) -> (),
+    allowPhysicalTeleport: boolean?
+): boolean
     if not workspace.StreamingEnabled then
         StreamExplorer.AccumulateCurrentInstances()
         return true
     end
 
     local player = nil
-    pcall(function() player = Players and Players.LocalPlayer end)
+    pcall(function()
+        player = Players and Players.LocalPlayer
+    end)
     local camera = workspace.CurrentCamera
     local originalCameraCFrame = camera and camera.CFrame
     local originalCameraType = camera and camera.CameraType
@@ -125,11 +137,17 @@ function StreamExplorer.ExploreMap(stepSize: number?, progressCallback: (current
         -- 2. Non-intrusive stream request
         local requested = false
         if player and player.RequestStreamAroundAsync then
-            local s = pcall(function() player:RequestStreamAroundAsync(targetPos) end)
-            if s then requested = true end
+            local s = pcall(function()
+                player:RequestStreamAroundAsync(targetPos)
+            end)
+            if s then
+                requested = true
+            end
         end
         if not requested and workspace and workspace.RequestStreamAroundAsync then
-            pcall(function() workspace:RequestStreamAroundAsync(targetPos) end)
+            pcall(function()
+                workspace:RequestStreamAroundAsync(targetPos)
+            end)
         end
 
         -- 3. Optional physical teleport (Only if user explicitly forced it)

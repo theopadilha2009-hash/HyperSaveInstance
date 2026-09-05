@@ -20,10 +20,10 @@ local function getScriptPath(scriptInstance: LuaSourceContainer): string
 end
 
 -- Extract detected network events and functions invoked by this script
-function Decompiler.ExtractNetworkSignatures(code: string): {string}
+function Decompiler.ExtractNetworkSignatures(code: string): { string }
     local signatures = {}
     local seen = {}
-    
+
     for remoteCall in string.gmatch(code, "([%w_%.:]+):[Ff]ire[Ss]erver%(") do
         if not seen[remoteCall] then
             seen[remoteCall] = true
@@ -42,7 +42,7 @@ function Decompiler.ExtractNetworkSignatures(code: string): {string}
 end
 
 -- Extract module dependencies required by this script
-function Decompiler.ExtractDependencies(code: string): {string}
+function Decompiler.ExtractDependencies(code: string): { string }
     local deps = {}
     local seen = {}
 
@@ -59,7 +59,9 @@ end
 
 -- Deobfuscate escaped character sequences and string.char blocks
 function Decompiler.DeobfuscateStrings(code: string): string
-    if not code or #code == 0 then return "" end
+    if not code or #code == 0 then
+        return ""
+    end
 
     local deobfuscated = code
 
@@ -89,7 +91,7 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
     local path = getScriptPath(scriptInstance)
     local dateStr = os.date("%Y-%m-%d %H:%M:%S")
     local execName = Environment.GetExecutorName()
-    
+
     local extraInfo = ""
     if code and #code > 0 then
         local sigs = Decompiler.ExtractNetworkSignatures(code)
@@ -110,7 +112,8 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
         end
     end
 
-    return string.format([=[
+    return string.format(
+        [=[
 --[[
     ================================================================================
     [HyperSaveInstance v2.0 - Decompiled Script]
@@ -123,12 +126,21 @@ local function generateHeader(scriptInstance: LuaSourceContainer, status: string
     ================================================================================
 ]]
 
-]=], scriptInstance.ClassName, path, status, execName, dateStr, extraInfo)
+]=],
+        scriptInstance.ClassName,
+        path,
+        status,
+        execName,
+        dateStr,
+        extraInfo
+    )
 end
 
 -- Intelligent script beautifier & bytecode artifact cleaner
 function Decompiler.Beautify(code: string): string
-    if not code or #code == 0 then return "" end
+    if not code or #code == 0 then
+        return ""
+    end
 
     local beautified = Decompiler.DeobfuscateStrings(code)
 
@@ -144,10 +156,22 @@ function Decompiler.Beautify(code: string): string
 
     -- 3. Replace generic service variables (e.g. local v1 = game:GetService("Players"))
     local commonServices = {
-        "Players", "ReplicatedStorage", "ReplicatedFirst", "RunService", "TweenService",
-        "UserInputService", "HttpService", "SoundService", "Lighting", "Debris",
-        "MarketplaceService", "TeleportService", "StarterGui", "ContextActionService",
-        "CollectionService", "DataStoreService"
+        "Players",
+        "ReplicatedStorage",
+        "ReplicatedFirst",
+        "RunService",
+        "TweenService",
+        "UserInputService",
+        "HttpService",
+        "SoundService",
+        "Lighting",
+        "Debris",
+        "MarketplaceService",
+        "TeleportService",
+        "StarterGui",
+        "ContextActionService",
+        "CollectionService",
+        "DataStoreService",
     }
 
     local replacements = {}
@@ -218,7 +242,9 @@ print(string.format("[HyperSaveInstance Backend] Server script %%s initialized."
 
     -- Attach listeners for local remotes
     for _, remoteName in ipairs(remotes) do
-        code = code .. string.format([=[
+        code = code
+            .. string.format(
+                [=[
 local %s = parent:FindFirstChild(%q)
 if %s and %s:IsA("RemoteEvent") then
     %s.OnServerEvent:Connect(function(player, ...)
@@ -228,12 +254,21 @@ if %s and %s:IsA("RemoteEvent") then
     end)
 end
 
-]=], string.gsub(remoteName, "[^%w_]", "_"), remoteName, string.gsub(remoteName, "[^%w_]", "_"), string.gsub(remoteName, "[^%w_]", "_"), string.gsub(remoteName, "[^%w_]", "_"), remoteName)
+]=],
+                string.gsub(remoteName, "[^%w_]", "_"),
+                remoteName,
+                string.gsub(remoteName, "[^%w_]", "_"),
+                string.gsub(remoteName, "[^%w_]", "_"),
+                string.gsub(remoteName, "[^%w_]", "_"),
+                remoteName
+            )
     end
 
     -- Attach listeners for local RemoteFunctions
     for _, funcName in ipairs(functions) do
-        code = code .. string.format([=[
+        code = code
+            .. string.format(
+                [=[
 local %s = parent:FindFirstChild(%q)
 if %s and %s:IsA("RemoteFunction") then
     %s.OnServerInvoke = function(player, ...)
@@ -243,7 +278,14 @@ if %s and %s:IsA("RemoteFunction") then
     end
 end
 
-]=], string.gsub(funcName, "[^%w_]", "_"), funcName, string.gsub(funcName, "[^%w_]", "_"), string.gsub(funcName, "[^%w_]", "_"), string.gsub(funcName, "[^%w_]", "_"), funcName)
+]=],
+                string.gsub(funcName, "[^%w_]", "_"),
+                funcName,
+                string.gsub(funcName, "[^%w_]", "_"),
+                string.gsub(funcName, "[^%w_]", "_"),
+                string.gsub(funcName, "[^%w_]", "_"),
+                funcName
+            )
     end
 
     return code
@@ -265,7 +307,10 @@ local function synthesizeClientFallbackMock(scriptInstance: LuaSourceContainer):
     end
 
     for _, child in ipairs(scriptInstance:GetChildren()) do
-        table.insert(childrenDesc, string.format("local %s = script:WaitForChild(%q) -- %s", string.gsub(child.Name, "[^%w_]", "_"), child.Name, child.ClassName))
+        table.insert(
+            childrenDesc,
+            string.format("local %s = script:WaitForChild(%q) -- %s", string.gsub(child.Name, "[^%w_]", "_"), child.Name, child.ClassName)
+        )
     end
 
     local mockCode = [=[
@@ -292,14 +337,23 @@ local Character = LocalPlayer and (LocalPlayer.Character or LocalPlayer.Characte
 
     mockCode = mockCode .. "\n-- Discovered Local Network Remotes:\n"
     for _, rem in ipairs(remotes) do
-        mockCode = mockCode .. string.format("local %s = script.Parent:FindFirstChild(%q) -- %s\n", string.gsub(rem.Name, "[^%w_]", "_"), rem.Name, rem.Class)
+        mockCode = mockCode
+            .. string.format(
+                "local %s = script.Parent:FindFirstChild(%q) -- %s\n",
+                string.gsub(rem.Name, "[^%w_]", "_"),
+                rem.Name,
+                rem.Class
+            )
     end
 
-    mockCode = mockCode .. [=[
+    mockCode = mockCode
+        .. [=[
 
 -- Main Client Routine Initializer
 local function Initialize()
-    print("[HyperSaveInstance Mock] Initialized client component for: ]=] .. scriptName .. [=[")
+    print("[HyperSaveInstance Mock] Initialized client component for: ]=]
+        .. scriptName
+        .. [=[")
 end
 
 task.spawn(Initialize)
@@ -329,11 +383,11 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
             local pattern = (type(k) == "string" and k) or (type(v) == "string" and v) or nil
             local targetInst = (typeof(k) == "Instance" and k) or (typeof(v) == "Instance" and v) or nil
             if targetInst and (scriptInstance == targetInst or scriptInstance:IsDescendantOf(targetInst)) then
-                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
-                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", targetInst:GetFullName())
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule")
+                    .. string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", targetInst:GetFullName())
             elseif pattern and (string.find(scriptInstance.Name, pattern, 1, true) or string.find(fullName, pattern, 1, true)) then
-                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
-                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule")
+                    .. string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
             end
         end
     end
@@ -350,8 +404,8 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
     -- Server Scripts with server execution (Protected by FilteringEnabled -> Generate RemoteSpy Dispatcher)
     if isServerScript then
         if options.SaveServerScriptPlaceholders then
-            return generateHeader(scriptInstance, "Reconstructed Server Backend (RemoteSpy Dispatcher)") ..
-                generateServerDispatcher(scriptInstance)
+            return generateHeader(scriptInstance, "Reconstructed Server Backend (RemoteSpy Dispatcher)")
+                .. generateServerDispatcher(scriptInstance)
         else
             return "-- [Server Script - Protected by FilteringEnabled]\n"
         end
@@ -396,18 +450,26 @@ function Decompiler.DecompileSingle(scriptInstance: LuaSourceContainer, options:
         local success, bytecode = pcall(bytecodeFn, scriptInstance)
         if success and bytecode and #bytecode > 0 then
             local b64 = Base64.Encode(bytecode)
-            return generateHeader(scriptInstance, "Extracted Raw Bytecode (Decompiler Unavailable)") ..
-                string.format("-- Raw Luau Bytecode (Base64 Encoded, Size: %d bytes):\nlocal rawBytecodeBase64 = %q\nreturn rawBytecodeBase64\n", #bytecode, b64)
+            return generateHeader(scriptInstance, "Extracted Raw Bytecode (Decompiler Unavailable)")
+                .. string.format(
+                    "-- Raw Luau Bytecode (Base64 Encoded, Size: %d bytes):\nlocal rawBytecodeBase64 = %q\nreturn rawBytecodeBase64\n",
+                    #bytecode,
+                    b64
+                )
         end
     end
 
     -- 4. Fallback: Intelligent AST Mock Generator (Prevents broken scripts in Studio)
-    return generateHeader(scriptInstance, "Auto-Synthesized Client AST Mock (Decompiler Bypass)") ..
-        synthesizeClientFallbackMock(scriptInstance)
+    return generateHeader(scriptInstance, "Auto-Synthesized Client AST Mock (Decompiler Bypass)")
+        .. synthesizeClientFallbackMock(scriptInstance)
 end
 
 -- Batch decompile multiple scripts concurrently with worker pool
-function Decompiler.DecompileBatch(scripts: {LuaSourceContainer}, options: table, progressCallback: (current: number, total: number, script: LuaSourceContainer) -> ()): {[LuaSourceContainer]: string}
+function Decompiler.DecompileBatch(
+    scripts: { LuaSourceContainer },
+    options: table,
+    progressCallback: (current: number, total: number, script: LuaSourceContainer) -> ()
+): { [LuaSourceContainer]: string }
     local results = {}
     local total = #scripts
     local completed = 0

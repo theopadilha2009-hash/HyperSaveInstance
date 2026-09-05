@@ -1,0 +1,9 @@
+# O bundler (scripts/bundle.js) transforma require() e remove anotacoes de tipo
+# com regex de uma linha. Formatacao que quebre uma chamada em varias linhas
+# passa despercebida por ele, entao a largura e generosa de proposito.
+column_width = 140
+line_endings = "Unix"
+indent_type = "Spaces"
+indent_width = 4
+quote_style = "AutoPreferDouble"
+call_parentheses = "Always"
