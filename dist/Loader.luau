@@ -19,13 +19,13 @@
     bundle is committed. Run it before publishing a release.
 ]]
 
-local PINNED_COMMIT = "ae9108bc1b8e1fcd2184e7c84779e1d97aa4a945"
+local PINNED_COMMIT = "cab2f5215b831885a336b5b573a43b9d5ebbdcc5"
 -- Kept as the two 16-bit Adler halves instead of one combined 32-bit value:
 -- the combined form exceeds 2^31 for most inputs and different Lua runtimes
 -- disagree on how they represent that.
-local EXPECTED_ADLER_A = 24721
-local EXPECTED_ADLER_B = 6821
-local EXPECTED_BYTES = 424209
+local EXPECTED_ADLER_A = 56853
+local EXPECTED_ADLER_B = 5476
+local EXPECTED_BYTES = 424607
 
 local REPO = "theopadilha2009-hash/HyperSaveInstance"
 
