@@ -51,6 +51,21 @@ jobs:
       - name: Verify loader pin matches the committed bundle
         run: node scripts/update_loader_pin.js --check
 
+      # selene nao existe no npm; binario da release, versao fixa. stylua e
+      # eslint vem do package-lock via `npm ci`.
+      - name: Install selene
+        run: |
+          curl -sSfL -o /tmp/selene.zip \
+            https://github.com/Kampfkarren/selene/releases/download/${SELENE_VERSION}/selene-${SELENE_VERSION}-linux.zip
+          unzip -q -o /tmp/selene.zip -d /usr/local/bin
+          chmod +x /usr/local/bin/selene
+          selene --version
+        env:
+          SELENE_VERSION: 0.31.0
+
+      - name: Lint
+        run: npm run lint
+
       - name: Run Master Audit & Roblox Runtime Simulation
         run: npm test
 

@@ -4,8 +4,6 @@
  */
 
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
 
 const RAW_URL = "https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau";
 
