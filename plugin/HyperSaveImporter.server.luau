@@ -543,7 +543,6 @@ cardAudio.Parent = scroll
 local btnAudio = createButton(cardAudio, "Reparar Áudios Bloqueados", Color3.fromRGB(37, 99, 235))
 
 btnAudio.MouseButton1Click:Connect(function()
-    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveAudioSanitizer", "Reparar áudios bloqueados")
     setStatus("Analisando instâncias de Sound no jogo...", Color3.fromRGB(59, 130, 246))
 
     local candidates = {}
@@ -553,15 +552,15 @@ btnAudio.MouseButton1Click:Connect(function()
         end
     end)
 
+    -- PreloadAsync bloqueia esperando a rede, e nada é mutado antes do veredito.
+    -- Abrir a gravação só depois evita segurá-la aberta durante essa espera.
     local failed, verdictOk = findUnplayableSounds(candidates)
     if not verdictOk then
-        -- Sem veredito confiável nenhum som é trocado: cancelar evita deixar um passo vazio no undo.
-        if recording then
-            ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Cancel)
-        end
         setStatus("Não foi possível verificar quais áudios estão bloqueados; nada foi alterado.", Color3.fromRGB(245, 158, 11))
         return
     end
+
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveAudioSanitizer", "Reparar áudios bloqueados")
 
     local fixedCount = 0
     for _, desc in ipairs(candidates) do

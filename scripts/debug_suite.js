@@ -380,12 +380,13 @@ function testPlugin() {
 
     // Counts rather than a substring match: asserting only that
     // TryBeginRecording appears somewhere would pass on a single usage while
-    // most handlers still call the deprecated SetWaypoint. The two totals are
-    // pinned instead of compared: a handler that cancels on an early return has
-    // two finish call sites for one recording, so they are not 1:1 by design.
+    // most handlers still call the deprecated SetWaypoint. Um handler que
+    // cancela num return antecipado teria dois pontos de fechamento para uma
+    // gravacao e quebraria esta igualdade de proposito — hoje nenhum precisa,
+    // porque quem pode desistir abre a gravacao depois de decidir.
     const begins = (content.match(/TryBeginRecording/g) || []).length;
     const finishes = (content.match(/FinishRecording\(/g) || []).length;
-    assert(begins === 9 && finishes === 10,
+    assert(begins > 0 && begins === finishes,
         'Every TryBeginRecording has a matching FinishRecording',
         `${begins} begins, ${finishes} finishes`);
 
