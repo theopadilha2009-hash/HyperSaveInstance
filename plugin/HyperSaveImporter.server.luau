@@ -259,7 +259,7 @@ local btnMaster = createButton(cardMaster, "Executar Reparo Mestre Total", Color
 btnMaster.Size = UDim2.new(1, -24, 0, 36)
 
 btnMaster.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Master Repair")
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveMasterRepair", "Reparo mestre total")
     setStatus("Executando reparo mestre total...", Color3.fromRGB(59, 130, 246))
 
     -- 1. Destravar permissões & packages
@@ -399,7 +399,9 @@ end)
         serverScript.Source = code
     end)
 
-    ChangeHistoryService:SetWaypoint("After HyperSave Master Repair")
+    if recording then
+        ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
     local summary = string.format(
         "✓ Reparo concluído: %d pacotes desvinculados, %d áudios corrigidos, %d scripts blindados e %d remotes conectados.",
         unlockedPackages,
@@ -541,7 +543,6 @@ cardAudio.Parent = scroll
 local btnAudio = createButton(cardAudio, "Reparar Áudios Bloqueados", Color3.fromRGB(37, 99, 235))
 
 btnAudio.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Audio Sanitizer")
     setStatus("Analisando instâncias de Sound no jogo...", Color3.fromRGB(59, 130, 246))
 
     local candidates = {}
@@ -551,11 +552,15 @@ btnAudio.MouseButton1Click:Connect(function()
         end
     end)
 
+    -- PreloadAsync bloqueia esperando a rede, e nada é mutado antes do veredito.
+    -- Abrir a gravação só depois evita segurá-la aberta durante essa espera.
     local failed, verdictOk = findUnplayableSounds(candidates)
     if not verdictOk then
         setStatus("Não foi possível verificar quais áudios estão bloqueados; nada foi alterado.", Color3.fromRGB(245, 158, 11))
         return
     end
+
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveAudioSanitizer", "Reparar áudios bloqueados")
 
     local fixedCount = 0
     for _, desc in ipairs(candidates) do
@@ -566,7 +571,9 @@ btnAudio.MouseButton1Click:Connect(function()
         end
     end
 
-    ChangeHistoryService:SetWaypoint("After HyperSave Audio Sanitizer")
+    if recording then
+        ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
     setStatus(
         string.format("✓ %d de %d sons estavam inacessíveis e foram substituídos (os demais foram mantidos).", fixedCount, #candidates),
         Color3.fromRGB(16, 185, 129)
@@ -586,7 +593,7 @@ cardScripts.Parent = scroll
 local btnScripts = createButton(cardScripts, "Blindar Scripts Locais", Color3.fromRGB(37, 99, 235))
 
 btnScripts.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Script Shield")
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveScriptShield", "Blindar scripts descompilados")
     setStatus("Verificando scripts...", Color3.fromRGB(59, 130, 246))
 
     local protected = 0
@@ -604,7 +611,9 @@ btnScripts.MouseButton1Click:Connect(function()
         end
     end
 
-    ChangeHistoryService:SetWaypoint("After HyperSave Script Shield")
+    if recording then
+        ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
     setStatus(string.format("✓ %d scripts protegidos contra travamentos.", protected), Color3.fromRGB(16, 185, 129))
 end)
 
@@ -689,10 +698,14 @@ btnExec.MouseButton1Click:Connect(function()
         return
     end
 
-    ChangeHistoryService:SetWaypoint("Before Manual Exec")
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveManualExec", "Executar código Luau manual")
     local ok, execErr = pcall(fn)
+    if recording then
+        -- Código que estoura no meio deixa alterações parciais; cancelar devolve a cena ao estado anterior.
+        ChangeHistoryService:FinishRecording(recording, ok and Enum.FinishRecordingOperation.Commit or Enum.FinishRecordingOperation.Cancel)
+    end
+
     if ok then
-        ChangeHistoryService:SetWaypoint("After Manual Exec")
         setStatus("✓ Código executado com sucesso no Studio.", Color3.fromRGB(16, 185, 129))
     else
         setStatus("Erro ao executar: " .. tostring(execErr), Color3.fromRGB(220, 38, 38))
@@ -712,7 +725,7 @@ cardLight.Parent = scroll
 local btnLight = createButton(cardLight, "Aplicar Iluminação Future / PBR", Color3.fromRGB(37, 99, 235))
 
 btnLight.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Cinematic Lighting")
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveCinematicLighting", "Aplicar iluminação Future/PBR")
     setStatus("Aplicando tecnologia Future e efeitos visuais...", Color3.fromRGB(59, 130, 246))
 
     local Lighting = game:GetService("Lighting")
@@ -738,7 +751,9 @@ btnLight.MouseButton1Click:Connect(function()
         colorCorr.Saturation = 0.1
     end)
 
-    ChangeHistoryService:SetWaypoint("After HyperSave Cinematic Lighting")
+    if recording then
+        ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
     setStatus("✓ Iluminação atualizada para qualidade Future / PBR.", Color3.fromRGB(16, 185, 129))
 end)
 
@@ -755,7 +770,7 @@ cardRigs.Parent = scroll
 local btnRigs = createButton(cardRigs, "Estabilizar NPCs e Rigs", Color3.fromRGB(37, 99, 235))
 
 btnRigs.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Rig Stabilizer")
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSaveRigStabilizer", "Estabilizar NPCs e rigs")
     setStatus("Estabilizando Humanoids e Rigs no Workspace...", Color3.fromRGB(59, 130, 246))
 
     local stabilized = 0
@@ -772,7 +787,9 @@ btnRigs.MouseButton1Click:Connect(function()
         end
     end
 
-    ChangeHistoryService:SetWaypoint("After HyperSave Rig Stabilizer")
+    if recording then
+        ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
     setStatus(string.format("✓ %d NPCs/Rigs estabilizados com sucesso.", stabilized), Color3.fromRGB(16, 185, 129))
 end)
 
@@ -831,7 +848,7 @@ cardPhysics.Parent = scroll
 local btnPhysics = createButton(cardPhysics, "Ancorar Construções do Workspace", Color3.fromRGB(37, 99, 235))
 
 btnPhysics.MouseButton1Click:Connect(function()
-    ChangeHistoryService:SetWaypoint("Before HyperSave Physics Stabilizer")
+    local recording = ChangeHistoryService:TryBeginRecording("HyperSavePhysicsStabilizer", "Ancorar construções do workspace")
     setStatus("Ancorando partes do mapa...", Color3.fromRGB(59, 130, 246))
 
     local anchoredCount = 0
@@ -850,7 +867,9 @@ btnPhysics.MouseButton1Click:Connect(function()
         end
     end
 
-    ChangeHistoryService:SetWaypoint("After HyperSave Physics Stabilizer")
+    if recording then
+        ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
     setStatus(
         string.format("✓ %d peças estáticas ancoradas com sucesso para estabilidade física.", anchoredCount),
         Color3.fromRGB(16, 185, 129)
