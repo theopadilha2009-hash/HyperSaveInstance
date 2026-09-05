@@ -235,6 +235,10 @@ function AssetDownloader.DownloadAll(
     for w = 1, maxWorkers do
         task.spawn(function()
             while currentIndex <= total do
+                if opts._CancelChecker and opts._CancelChecker() then
+                    break
+                end
+
                 local myIndex = currentIndex
                 currentIndex = currentIndex + 1
 
@@ -246,11 +250,18 @@ function AssetDownloader.DownloadAll(
                         local currentFps = AssetDownloader.GetClientFPS()
                         local retryCount = 0
                         while (currentPing > 160 or currentFps < 35) and retryCount < 12 do
+                            if opts._CancelChecker and opts._CancelChecker() then
+                                break
+                            end
                             task.wait(0.25)
                             currentPing = AssetDownloader.GetClientPing()
                             currentFps = AssetDownloader.GetClientFPS()
                             retryCount = retryCount + 1
                         end
+                    end
+
+                    if opts._CancelChecker and opts._CancelChecker() then
+                        break
                     end
 
                     local extension = ".dat"
@@ -283,6 +294,9 @@ function AssetDownloader.DownloadAll(
                     local body = nil
                     local maxRetries = 2
                     for attempt = 1, maxRetries + 1 do
+                        if opts._CancelChecker and opts._CancelChecker() then
+                            break
+                        end
                         body = httpRequest(item.Url)
                         if not body or #body == 0 then
                             local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
@@ -323,6 +337,9 @@ function AssetDownloader.DownloadAll(
     end
 
     while activeWorkers > 0 and (downloaded + failed) < total do
+        if opts._CancelChecker and opts._CancelChecker() then
+            break
+        end
         task.wait(0.05)
     end
 

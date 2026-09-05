@@ -1055,6 +1055,10 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
     for w = 1, maxWorkers do
         task.spawn(function()
             while currentIndex <= total do
+                if opts._CancelChecker and opts._CancelChecker() then
+                    break
+                end
+
                 local myIndex = currentIndex
                 currentIndex = currentIndex + 1
 
@@ -1066,11 +1070,18 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
                         local currentFps = AssetDownloader.GetClientFPS()
                         local retryCount = 0
                         while (currentPing > 160 or currentFps < 35) and retryCount < 12 do
+                            if opts._CancelChecker and opts._CancelChecker() then
+                                break
+                            end
                             task.wait(0.25)
                             currentPing = AssetDownloader.GetClientPing()
                             currentFps = AssetDownloader.GetClientFPS()
                             retryCount = retryCount + 1
                         end
+                    end
+
+                    if opts._CancelChecker and opts._CancelChecker() then
+                        break
                     end
 
                     local extension = ".dat"
@@ -1103,6 +1114,9 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
                     local body = nil
                     local maxRetries = 2
                     for attempt = 1, maxRetries + 1 do
+                        if opts._CancelChecker and opts._CancelChecker() then
+                            break
+                        end
                         body = httpRequest(item.Url)
                         if not body or #body == 0 then
                             local v2Url = string.format("https://assetdelivery.roblox.com/v2/assetId/%s", item.Id)
@@ -1143,6 +1157,9 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
     end
 
     while activeWorkers > 0 and (downloaded + failed) < total do
+        if opts._CancelChecker and opts._CancelChecker() then
+            break
+        end
         task.wait(0.05)
     end
 
@@ -1975,6 +1992,10 @@ function Decompiler.DecompileBatch(scripts, options, progressCallback)
     for w = 1, workers do
         local t = task.spawn(function()
             while queueIndex <= total do
+                if options._CancelChecker and options._CancelChecker() then
+                    break
+                end
+
                 local myIndex = queueIndex
                 queueIndex = queueIndex + 1
 
@@ -1996,6 +2017,9 @@ function Decompiler.DecompileBatch(scripts, options, progressCallback)
 
     -- Wait for all scripts to finish
     while completed < total do
+        if options._CancelChecker and options._CancelChecker() then
+            break
+        end
         task.wait(0.1)
     end
 
@@ -2145,6 +2169,20 @@ function Engine.new(customConfig)
     end
 
     return self
+end
+
+function Engine:Cancel()
+    if not self.IsRunning then
+        return
+    end
+    self.CancelRequested = true
+    self:EmitProgress({
+        Stage = "Cancelled",
+        Current = 0,
+        Total = 0,
+        Percentage = 0,
+        Message = "⚠️ Salvamento cancelado pelo usuário.",
+    })
 end
 
 function Engine:OnProgress(callback)
@@ -2331,6 +2369,9 @@ function Engine:Start()
 
     self.IsRunning = true
     self.CancelRequested = false
+    self.Config._CancelChecker = function()
+        return self.CancelRequested
+    end
     local startTime = os.clock()
 
     if self.Config.StealthMode then
@@ -2535,6 +2576,9 @@ function Engine:Start()
     local lastYield = os.clock()
 
     local function scan(inst)
+        if self.CancelRequested then
+            return
+        end
         if not inst or visited[inst] then
             return
         end
@@ -2547,6 +2591,10 @@ function Engine:Start()
             lastYield = os.clock()
         end
 
+        if self.CancelRequested then
+            return
+        end
+
         if not self:ShouldSaveInstance(inst) then
             return
         end
@@ -2557,12 +2605,23 @@ function Engine:Start()
         end
 
         for _, child in ipairs(inst:GetChildren()) do
+            if self.CancelRequested then
+                break
+            end
             scan(child)
         end
     end
 
     for _, root in ipairs(rootInstances) do
+        if self.CancelRequested then
+            break
+        end
         scan(root)
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Process any accumulated streaming instances preserved from stream-out chunks
@@ -2571,6 +2630,11 @@ function Engine:Start()
         if not visited[accInst] and self:ShouldSaveInstance(accInst) then
             scan(accInst)
         end
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Pre-warm asset cache for instant reflection read
@@ -2585,6 +2649,11 @@ function Engine:Start()
             table.insert(rootInstances, serverService)
             scan(serverService)
         end)
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     if synthesizedSpawn then
@@ -2631,6 +2700,11 @@ function Engine:Start()
         end
     end
 
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
+    end
+
     -- Step 3: Extract Terrain
     local terrainData = nil
     if self.Config.SaveTerrain then
@@ -2646,6 +2720,11 @@ function Engine:Start()
         if terrain then
             terrainData = TerrainSerializer.ExtractTerrainData(terrain, self.Config)
         end
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Step 4: Decompile Scripts
@@ -2675,6 +2754,11 @@ function Engine:Start()
         end
     end
 
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
+    end
+
     -- Memory Watchdog & Cache Flush to prevent OOM crash on massive games
     pcall(function()
         collectgarbage("collect")
@@ -2700,6 +2784,11 @@ function Engine:Start()
         outputContent = SerializerScript.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     else
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Step 5.5: Validate XML output if enabled
@@ -6989,7 +7078,10 @@ local RaycastSelector = __require__("Core/RaycastSelector")
 local PlaceDiffTracker = __require__("Core/PlaceDiffTracker")
 local Web3DExporter = __require__("Core/Web3DExporter")
 local LicenseManager = __require__("Utils/LicenseManager")
+local AntiAFK = __require__("Utils/AntiAFK")
 local Stealth = __require__("Utils/Stealth")
+
+local VERSION = "2.0.0"
 
 -- Attempt auto-load of saved enterprise key
 pcall(function()
@@ -7286,11 +7378,194 @@ function Interface:BuildUI()
     badge.TextSize = 10
     badge.TextColor3 = isEnt and Theme.AccentSuccess or Theme.TextSecondary
     badge.BackgroundColor3 = Theme.Background
-    badge.Size = UDim2.new(0, 120, 0, 24)
-    badge.Position = UDim2.new(0, 175, 0.5, -12)
+    badge.Size = UDim2.new(0, 100, 0, 24)
+    badge.Position = UDim2.new(0, 160, 0.5, -12)
     Theme.AddCorner(badge, Theme.CornerSmall)
     local bStroke = Theme.AddStroke(badge, isEnt and Theme.AccentSuccess or Theme.Border, 1)
     badge.Parent = header
+
+    -- Anti-AFK Header Badge
+    local antiAfkBadge = Instance.new("TextButton")
+    antiAfkBadge.Name = "HeaderAntiAFK"
+    antiAfkBadge.Text = AntiAFK.IsEnabled() and "🛡️ Anti-AFK: ON" or "🛡️ Anti-AFK: OFF"
+    antiAfkBadge.Font = Theme.FontSemiBold
+    antiAfkBadge.TextSize = 10
+    antiAfkBadge.TextColor3 = AntiAFK.IsEnabled() and Theme.AccentSuccess or Theme.TextMuted
+    antiAfkBadge.BackgroundColor3 = Theme.Background
+    antiAfkBadge.Size = UDim2.new(0, 105, 0, 24)
+    antiAfkBadge.Position = UDim2.new(0, 268, 0.5, -12)
+    Theme.AddCorner(antiAfkBadge, Theme.CornerSmall)
+    local aStroke = Theme.AddStroke(antiAfkBadge, AntiAFK.IsEnabled() and Theme.AccentSuccess or Theme.Border, 1)
+    antiAfkBadge.Parent = header
+    self.AntiAfkHeaderBadge = antiAfkBadge
+
+    Theme.AnimateButton(antiAfkBadge, function()
+        local newState = AntiAFK.Toggle()
+        self.Config.AutoAntiAFK = newState
+        self:Log(
+            newState and "🛡️ Proteção Anti-AFK Ativada!" or "🛡️ Proteção Anti-AFK Desativada.",
+            newState and Theme.AccentSuccess or Theme.TextMuted
+        )
+    end)
+
+    -- Update Checker Header Button
+    local updateHeaderBtn = Instance.new("TextButton")
+    updateHeaderBtn.Name = "HeaderUpdateBtn"
+    updateHeaderBtn.Text = "🔄 v" .. VERSION
+    updateHeaderBtn.Font = Theme.FontSemiBold
+    updateHeaderBtn.TextSize = 10
+    updateHeaderBtn.TextColor3 = Theme.TextPrimary
+    updateHeaderBtn.BackgroundColor3 = Theme.Background
+    updateHeaderBtn.Size = UDim2.new(0, 75, 0, 24)
+    updateHeaderBtn.Position = UDim2.new(0, 380, 0.5, -12)
+    Theme.AddCorner(updateHeaderBtn, Theme.CornerSmall)
+    Theme.AddStroke(updateHeaderBtn, Theme.Border, 1)
+    updateHeaderBtn.Parent = header
+    self.UpdateHeaderBtn = updateHeaderBtn
+
+    -- Update Center Modal Dialog
+    local updateModal = Instance.new("Frame")
+    updateModal.Name = "UpdateModal"
+    updateModal.Size = UDim2.new(1, 0, 1, 0)
+    updateModal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    updateModal.BackgroundTransparency = 0.4
+    updateModal.Visible = false
+    updateModal.ZIndex = 50
+    updateModal.Parent = main
+    self.UpdateModal = updateModal
+
+    local updateCard = Instance.new("Frame")
+    updateCard.Size = UDim2.new(0, 380, 0, 190)
+    updateCard.Position = UDim2.new(0.5, -190, 0.5, -95)
+    updateCard.BackgroundColor3 = Theme.Background
+    updateCard.ZIndex = 51
+    Theme.AddCorner(updateCard, Theme.CornerMedium)
+    Theme.AddStroke(updateCard, Theme.Border, 1)
+    updateCard.Parent = updateModal
+
+    local uTitle = Instance.new("TextLabel")
+    uTitle.Text = "🚀 Central de Atualizações (HyperSave)"
+    uTitle.Font = Theme.FontTitle
+    uTitle.TextSize = 12
+    uTitle.TextColor3 = Theme.TextPrimary
+    uTitle.Size = UDim2.new(1, -24, 0, 22)
+    uTitle.Position = UDim2.new(0, 12, 0, 12)
+    uTitle.BackgroundTransparency = 1
+    uTitle.ZIndex = 52
+    uTitle.Parent = updateCard
+
+    local uVerInstalled = Instance.new("TextLabel")
+    uVerInstalled.Text = "Versão Instalada: v" .. VERSION .. " (Gothic Cyberpunk Engine)"
+    uVerInstalled.Font = Theme.FontSemiBold
+    uVerInstalled.TextSize = 10
+    uVerInstalled.TextColor3 = Theme.AccentSuccess
+    uVerInstalled.TextXAlignment = Enum.TextXAlignment.Left
+    uVerInstalled.Size = UDim2.new(1, -24, 0, 16)
+    uVerInstalled.Position = UDim2.new(0, 12, 0, 36)
+    uVerInstalled.BackgroundTransparency = 1
+    uVerInstalled.ZIndex = 52
+    uVerInstalled.Parent = updateCard
+
+    local uStatus = Instance.new("TextLabel")
+    uStatus.Text = "Status: Clique em 'Verificar Agora' para checar o repositório oficial."
+    uStatus.Font = Theme.FontRegular
+    uStatus.TextSize = 10
+    uStatus.TextColor3 = Theme.TextSecondary
+    uStatus.TextXAlignment = Enum.TextXAlignment.Left
+    uStatus.Size = UDim2.new(1, -24, 0, 34)
+    uStatus.Position = UDim2.new(0, 12, 0, 56)
+    uStatus.BackgroundTransparency = 1
+    uStatus.TextWrapped = true
+    uStatus.ZIndex = 52
+    uStatus.Parent = updateCard
+
+    local uCheckBtn = Instance.new("TextButton")
+    uCheckBtn.Text = "🔄 Verificar Agora"
+    uCheckBtn.Font = Theme.FontSemiBold
+    uCheckBtn.TextSize = 10
+    uCheckBtn.TextColor3 = Theme.TextPrimary
+    uCheckBtn.BackgroundColor3 = Theme.AccentPrimary
+    uCheckBtn.Size = UDim2.new(0.33, -8, 0, 28)
+    uCheckBtn.Position = UDim2.new(0, 12, 0, 138)
+    uCheckBtn.ZIndex = 52
+    Theme.AddCorner(uCheckBtn, Theme.CornerSmall)
+    uCheckBtn.Parent = updateCard
+
+    local uCopyLoaderBtn = Instance.new("TextButton")
+    uCopyLoaderBtn.Text = "📋 Copiar Loader"
+    uCopyLoaderBtn.Font = Theme.FontSemiBold
+    uCopyLoaderBtn.TextSize = 10
+    uCopyLoaderBtn.TextColor3 = Theme.TextPrimary
+    uCopyLoaderBtn.BackgroundColor3 = Theme.CardBg
+    uCopyLoaderBtn.Size = UDim2.new(0.33, -8, 0, 28)
+    uCopyLoaderBtn.Position = UDim2.new(0.33, 8, 0, 138)
+    uCopyLoaderBtn.ZIndex = 52
+    Theme.AddCorner(uCopyLoaderBtn, Theme.CornerSmall)
+    Theme.AddStroke(uCopyLoaderBtn, Theme.Border, 1)
+    uCopyLoaderBtn.Parent = updateCard
+
+    local uCloseBtn = Instance.new("TextButton")
+    uCloseBtn.Text = "Fechar"
+    uCloseBtn.Font = Theme.FontSemiBold
+    uCloseBtn.TextSize = 10
+    uCloseBtn.TextColor3 = Theme.TextSecondary
+    uCloseBtn.BackgroundColor3 = Theme.CardBg
+    uCloseBtn.Size = UDim2.new(0.33, -8, 0, 28)
+    uCloseBtn.Position = UDim2.new(0.66, 4, 0, 138)
+    uCloseBtn.ZIndex = 52
+    Theme.AddCorner(uCloseBtn, Theme.CornerSmall)
+    Theme.AddStroke(uCloseBtn, Theme.Border, 1)
+    uCloseBtn.Parent = updateCard
+
+    Theme.AnimateButton(updateHeaderBtn, function()
+        updateModal.Visible = true
+    end)
+
+    Theme.AnimateButton(uCloseBtn, function()
+        updateModal.Visible = false
+    end)
+
+    Theme.AnimateButton(uCopyLoaderBtn, function()
+        local loaderScript = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/loader.luau"))()'
+        Environment.SetClipboard(loaderScript)
+        uCopyLoaderBtn.Text = "✓ Copiado!"
+        task.delay(2, function()
+            uCopyLoaderBtn.Text = "📋 Copiar Loader"
+        end)
+    end)
+
+    Theme.AnimateButton(uCheckBtn, function()
+        uStatus.Text = "Consultando GitHub em busca de novas versões..."
+        uStatus.TextColor3 = Theme.TextPrimary
+        uCheckBtn.Text = "Verificando..."
+
+        task.spawn(function()
+            local success, body = pcall(function()
+                return game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/package.json", true)
+            end)
+
+            uCheckBtn.Text = "🔄 Verificar Agora"
+
+            if success and type(body) == "string" and #body > 0 then
+                local remoteVer = string.match(body, [["version"%s*:%s*"([^"]+)"]])
+                if remoteVer then
+                    if remoteVer == VERSION then
+                        uStatus.Text = "✓ Você está na versão mais recente (v" .. VERSION .. ")! Nenhuma atualização necessária."
+                        uStatus.TextColor3 = Theme.AccentSuccess
+                    else
+                        uStatus.Text = "⚡ Nova versão disponível no GitHub: v" .. remoteVer .. "!\nClique em 'Copiar Loader' para obter o script atualizado."
+                        uStatus.TextColor3 = Theme.AccentWarning
+                    end
+                else
+                    uStatus.Text = "✓ Você está usando a versão v" .. VERSION .. " (Servidor GitHub respondendo)."
+                    uStatus.TextColor3 = Theme.AccentSuccess
+                end
+            else
+                uStatus.Text = "⚠️ Não foi possível verificar online. Verifique sua conexão com a internet."
+                uStatus.TextColor3 = Theme.AccentDanger
+            end
+        end)
+    end)
 
     -- License Activation Modal Dialog
     local keyModal = Instance.new("Frame")
@@ -7721,7 +7996,7 @@ end
 function Interface:BuildDashboardTab()
     local parent = self.TabFrames["Dashboard"]
 
-    -- Big Action Clone Button
+    -- Save / Clone & Cancel Buttons Row
     local cloneBtn = Instance.new("TextButton")
     cloneBtn.Name = "CloneButton"
     cloneBtn.Text = "Salvar Mapa Completo (.rbxlx)"
@@ -7736,8 +8011,112 @@ function Interface:BuildDashboardTab()
     cloneBtn.Parent = parent
     self.CloneButton = cloneBtn
 
+    local cancelBtn = Instance.new("TextButton")
+    cancelBtn.Name = "CancelButton"
+    cancelBtn.Text = "✕ Parar"
+    cancelBtn.Font = Theme.FontTitle
+    cancelBtn.TextSize = 12
+    cancelBtn.TextColor3 = Theme.TextPrimary
+    cancelBtn.BackgroundColor3 = Theme.AccentDanger
+    cancelBtn.Size = UDim2.new(0.32, -10, 0, 42)
+    cancelBtn.Position = UDim2.new(0.68, 16, 0, 14)
+    cancelBtn.Visible = false
+    Theme.AddCorner(cancelBtn, Theme.CornerMedium)
+    Theme.AddStroke(cancelBtn, Theme.Border, 1)
+    cancelBtn.Parent = parent
+    self.CancelButton = cancelBtn
+
     Theme.AnimateButton(cloneBtn, function()
         self:StartClone()
+    end)
+
+    Theme.AnimateButton(cancelBtn, function()
+        if self.Engine.IsRunning then
+            cancelBtn.Text = "Parando..."
+            self.Engine:Cancel()
+            self:Log("Cancelamento solicitado pelo usuário. Finalizando...", Theme.AccentWarning)
+        end
+    end)
+
+    -- Anti-AFK Live Status Card & Quick Toggle
+    local antiAfkCard = Instance.new("Frame")
+    antiAfkCard.Name = "AntiAfkDashCard"
+    antiAfkCard.Size = UDim2.new(1, -32, 0, 32)
+    antiAfkCard.Position = UDim2.new(0, 16, 0, 62)
+    antiAfkCard.BackgroundColor3 = Theme.CardBg
+    Theme.AddCorner(antiAfkCard, Theme.CornerSmall)
+    local afkCardStroke = Theme.AddStroke(antiAfkCard, AntiAFK.IsEnabled() and Theme.AccentSuccess or Theme.Border, 1)
+    antiAfkCard.Parent = parent
+
+    local afkIconLbl = Instance.new("TextLabel")
+    afkIconLbl.Text = "🛡️ Proteção Anti-AFK (Anti-Kick 20m):"
+    afkIconLbl.Font = Theme.FontSemiBold
+    afkIconLbl.TextSize = 10
+    afkIconLbl.TextColor3 = Theme.TextPrimary
+    afkIconLbl.TextXAlignment = Enum.TextXAlignment.Left
+    afkIconLbl.Size = UDim2.new(0.6, 0, 1, 0)
+    afkIconLbl.Position = UDim2.new(0, 10, 0, 0)
+    afkIconLbl.BackgroundTransparency = 1
+    afkIconLbl.Parent = antiAfkCard
+
+    local afkStatusText = Instance.new("TextLabel")
+    afkStatusText.Text = AntiAFK.IsEnabled() and "● LIGADO" or "○ DESLIGADO"
+    afkStatusText.Font = Theme.FontTitle
+    afkStatusText.TextSize = 10
+    afkStatusText.TextColor3 = AntiAFK.IsEnabled() and Theme.AccentSuccess or Theme.TextMuted
+    afkStatusText.TextXAlignment = Enum.TextXAlignment.Left
+    afkStatusText.Size = UDim2.new(0.2, 0, 1, 0)
+    afkStatusText.Position = UDim2.new(0, 230, 0, 0)
+    afkStatusText.BackgroundTransparency = 1
+    afkStatusText.Parent = antiAfkCard
+    self.AntiAfkStatusText = afkStatusText
+
+    local afkToggleBtn = Instance.new("TextButton")
+    afkToggleBtn.Text = AntiAFK.IsEnabled() and "DESATIVAR" or "ATIVAR"
+    afkToggleBtn.Font = Theme.FontSemiBold
+    afkToggleBtn.TextSize = 9
+    afkToggleBtn.TextColor3 = Theme.TextPrimary
+    afkToggleBtn.BackgroundColor3 = AntiAFK.IsEnabled() and Theme.CardActive or Theme.AccentPrimary
+    afkToggleBtn.Size = UDim2.new(0, 90, 0, 22)
+    afkToggleBtn.Position = UDim2.new(1, -96, 0.5, -11)
+    Theme.AddCorner(afkToggleBtn, Theme.CornerSmall)
+    afkToggleBtn.Parent = antiAfkCard
+    self.AntiAfkDashToggleBtn = afkToggleBtn
+
+    local function updateAntiAfkUI(enabled)
+        if self.AntiAfkHeaderBadge then
+            self.AntiAfkHeaderBadge.Text = enabled and "🛡️ Anti-AFK: ON" or "🛡️ Anti-AFK: OFF"
+            self.AntiAfkHeaderBadge.TextColor3 = enabled and Theme.AccentSuccess or Theme.TextMuted
+            local stroke = self.AntiAfkHeaderBadge:FindFirstChildOfClass("UIStroke")
+            if stroke then
+                stroke.Color = enabled and Theme.AccentSuccess or Theme.Border
+            end
+        end
+        if self.AntiAfkStatusText then
+            self.AntiAfkStatusText.Text = enabled and "● LIGADO" or "○ DESLIGADO"
+            self.AntiAfkStatusText.TextColor3 = enabled and Theme.AccentSuccess or Theme.TextMuted
+        end
+        if self.AntiAfkDashToggleBtn then
+            self.AntiAfkDashToggleBtn.Text = enabled and "DESATIVAR" or "ATIVAR"
+            self.AntiAfkDashToggleBtn.BackgroundColor3 = enabled and Theme.CardActive or Theme.AccentPrimary
+        end
+        if afkCardStroke then
+            afkCardStroke.Color = enabled and Theme.AccentSuccess or Theme.Border
+        end
+    end
+
+    AntiAFK.OnStateChanged(function(enabled)
+        updateAntiAfkUI(enabled)
+    end)
+
+    Theme.AnimateButton(afkToggleBtn, function()
+        local newState = AntiAFK.Toggle()
+        self.Config.AutoAntiAFK = newState
+        updateAntiAfkUI(newState)
+        self:Log(
+            newState and "🛡️ Proteção Anti-AFK Ativada!" or "🛡️ Proteção Anti-AFK Desativada.",
+            newState and Theme.AccentSuccess or Theme.TextMuted
+        )
     end)
 
     -- Preset Selection Container
@@ -7748,13 +8127,13 @@ function Interface:BuildDashboardTab()
     presetLabel.TextColor3 = Theme.TextSecondary
     presetLabel.TextXAlignment = Enum.TextXAlignment.Left
     presetLabel.Size = UDim2.new(1, -32, 0, 16)
-    presetLabel.Position = UDim2.new(0, 16, 0, 66)
+    presetLabel.Position = UDim2.new(0, 16, 0, 100)
     presetLabel.BackgroundTransparency = 1
     presetLabel.Parent = parent
 
     local presetContainer = Instance.new("Frame")
-    presetContainer.Size = UDim2.new(1, -32, 0, 30)
-    presetContainer.Position = UDim2.new(0, 16, 0, 86)
+    presetContainer.Size = UDim2.new(1, -32, 0, 28)
+    presetContainer.Position = UDim2.new(0, 16, 0, 118)
     presetContainer.BackgroundTransparency = 1
     presetContainer.Parent = parent
 
@@ -7817,13 +8196,13 @@ function Interface:BuildDashboardTab()
     formatLabel.TextColor3 = Theme.TextSecondary
     formatLabel.TextXAlignment = Enum.TextXAlignment.Left
     formatLabel.Size = UDim2.new(1, -32, 0, 16)
-    formatLabel.Position = UDim2.new(0, 16, 0, 126)
+    formatLabel.Position = UDim2.new(0, 16, 0, 152)
     formatLabel.BackgroundTransparency = 1
     formatLabel.Parent = parent
 
     local formatContainer = Instance.new("Frame")
-    formatContainer.Size = UDim2.new(1, -32, 0, 30)
-    formatContainer.Position = UDim2.new(0, 16, 0, 146)
+    formatContainer.Size = UDim2.new(1, -32, 0, 28)
+    formatContainer.Position = UDim2.new(0, 16, 0, 170)
     formatContainer.BackgroundTransparency = 1
     formatContainer.Parent = parent
 
@@ -7880,7 +8259,7 @@ function Interface:BuildDashboardTab()
     -- Progress Container (Clean Card)
     local progressCard = Instance.new("Frame")
     progressCard.Size = UDim2.new(1, -32, 0, 114)
-    progressCard.Position = UDim2.new(0, 16, 0, 186)
+    progressCard.Position = UDim2.new(0, 16, 0, 204)
     progressCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(progressCard, Theme.CornerMedium)
     Theme.AddStroke(progressCard, Theme.Border, 1)
@@ -8003,8 +8382,8 @@ function Interface:BuildDashboardTab()
 
     -- Live Telemetry Stats Row
     local telemetryCard = Instance.new("Frame")
-    telemetryCard.Size = UDim2.new(1, -32, 0, 46)
-    telemetryCard.Position = UDim2.new(0, 16, 0, 310)
+    telemetryCard.Size = UDim2.new(1, -32, 0, 44)
+    telemetryCard.Position = UDim2.new(0, 16, 0, 324)
     telemetryCard.BackgroundColor3 = Theme.CardBg
     Theme.AddCorner(telemetryCard, Theme.CornerMedium)
     Theme.AddStroke(telemetryCard, Theme.Border, 1)
@@ -9931,6 +10310,15 @@ function Interface:BindEngineEvents()
     self.Engine:OnProgress(function(prog)
         if self.StatusHeader then
             self.StatusHeader.Text = "Status: " .. prog.Stage
+            if prog.Stage == "Done" then
+                self.StatusHeader.TextColor3 = Theme.AccentSuccess
+            elseif prog.Stage == "Error" then
+                self.StatusHeader.TextColor3 = Theme.AccentDanger
+            elseif prog.Stage == "Cancelled" then
+                self.StatusHeader.TextColor3 = Theme.AccentWarning
+            else
+                self.StatusHeader.TextColor3 = Theme.AccentPrimary
+            end
         end
         if self.PctLabel then
             self.PctLabel.Text = tostring(prog.Percentage) .. "%"
@@ -9954,14 +10342,35 @@ function Interface:BindEngineEvents()
                 self.SavedAssetPath = prog.AssetsFolder
             end
 
+            if self.CancelButton then
+                self.CancelButton.Visible = false
+            end
             if self.CloneButton then
+                self.CloneButton.Size = UDim2.new(1, -32, 0, 42)
                 self.CloneButton.Text = "✓ Salvo com sucesso!"
                 task.delay(4, function()
                     self.CloneButton.Text = "Salvar Mapa Completo (.rbxlx)"
                 end)
             end
+        elseif prog.Stage == "Cancelled" then
+            color = Theme.AccentWarning
+            if self.CancelButton then
+                self.CancelButton.Visible = false
+                self.CancelButton.Text = "✕ Parar"
+            end
+            if self.CloneButton then
+                self.CloneButton.Size = UDim2.new(1, -32, 0, 42)
+                self.CloneButton.Text = "Salvar Mapa Completo (.rbxlx)"
+            end
         elseif prog.Stage == "Error" then
             color = Theme.AccentDanger
+            if self.CancelButton then
+                self.CancelButton.Visible = false
+            end
+            if self.CloneButton then
+                self.CloneButton.Size = UDim2.new(1, -32, 0, 42)
+                self.CloneButton.Text = "Salvar Mapa Completo (.rbxlx)"
+            end
         elseif prog.Stage == "Exploring" then
             color = Theme.TextPrimary
         elseif prog.Stage == "Assets" then
@@ -9980,13 +10389,26 @@ function Interface:StartClone()
     end
 
     if self.CloneButton then
+        self.CloneButton.Size = UDim2.new(0.68, -26, 0, 42)
         self.CloneButton.Text = "Salvando mapa..."
+    end
+    if self.CancelButton then
+        self.CancelButton.Size = UDim2.new(0.32, -10, 0, 42)
+        self.CancelButton.Position = UDim2.new(0.68, 16, 0, 14)
+        self.CancelButton.Text = "✕ Parar"
+        self.CancelButton.Visible = true
     end
 
     task.spawn(function()
         local success, result = self.Engine:Start()
-        if not success then
+        if not success and not self.Engine.CancelRequested then
             self:Log("Erro ao salvar: " .. tostring(result), Theme.AccentDanger)
+        end
+        if self.CancelButton then
+            self.CancelButton.Visible = false
+        end
+        if self.CloneButton then
+            self.CloneButton.Size = UDim2.new(1, -32, 0, 42)
         end
     end)
 end
@@ -10196,12 +10618,24 @@ end)
 local AntiAFK = {}
 local isEnabled = false
 local idleConnection = nil
+local stateListeners = {}
+
+local function notifyListeners(state)
+    for _, fn in ipairs(stateListeners) do
+        task.spawn(fn, state)
+    end
+end
+
+function AntiAFK.OnStateChanged(callback)
+    table.insert(stateListeners, callback)
+end
 
 function AntiAFK.Enable()
     if isEnabled then
         return
     end
     isEnabled = true
+    notifyListeners(true)
 
     pcall(function()
         local plrs = Players or game:GetService("Players")
@@ -10256,11 +10690,24 @@ function AntiAFK.Enable()
 end
 
 function AntiAFK.Disable()
+    if not isEnabled then
+        return
+    end
     isEnabled = false
+    notifyListeners(false)
     if idleConnection then
         idleConnection:Disconnect()
         idleConnection = nil
     end
+end
+
+function AntiAFK.Toggle()
+    if isEnabled then
+        AntiAFK.Disable()
+    else
+        AntiAFK.Enable()
+    end
+    return isEnabled
 end
 
 function AntiAFK.IsEnabled()
@@ -10268,6 +10715,7 @@ function AntiAFK.IsEnabled()
 end
 
 return AntiAFK
+
 
 end)
 

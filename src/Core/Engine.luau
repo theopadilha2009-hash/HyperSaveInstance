@@ -146,6 +146,20 @@ function Engine.new(customConfig: table?)
     return self
 end
 
+function Engine:Cancel()
+    if not self.IsRunning then
+        return
+    end
+    self.CancelRequested = true
+    self:EmitProgress({
+        Stage = "Cancelled",
+        Current = 0,
+        Total = 0,
+        Percentage = 0,
+        Message = "⚠️ Salvamento cancelado pelo usuário.",
+    })
+end
+
 function Engine:OnProgress(callback: (progress: SaveProgress) -> ())
     table.insert(self.ProgressListeners, callback)
 end
@@ -330,6 +344,9 @@ function Engine:Start(): (boolean, string)
 
     self.IsRunning = true
     self.CancelRequested = false
+    self.Config._CancelChecker = function()
+        return self.CancelRequested
+    end
     local startTime = os.clock()
 
     if self.Config.StealthMode then
@@ -534,6 +551,9 @@ function Engine:Start(): (boolean, string)
     local lastYield = os.clock()
 
     local function scan(inst: Instance)
+        if self.CancelRequested then
+            return
+        end
         if not inst or visited[inst] then
             return
         end
@@ -546,6 +566,10 @@ function Engine:Start(): (boolean, string)
             lastYield = os.clock()
         end
 
+        if self.CancelRequested then
+            return
+        end
+
         if not self:ShouldSaveInstance(inst) then
             return
         end
@@ -556,12 +580,23 @@ function Engine:Start(): (boolean, string)
         end
 
         for _, child in ipairs(inst:GetChildren()) do
+            if self.CancelRequested then
+                break
+            end
             scan(child)
         end
     end
 
     for _, root in ipairs(rootInstances) do
+        if self.CancelRequested then
+            break
+        end
         scan(root)
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Process any accumulated streaming instances preserved from stream-out chunks
@@ -570,6 +605,11 @@ function Engine:Start(): (boolean, string)
         if not visited[accInst] and self:ShouldSaveInstance(accInst) then
             scan(accInst)
         end
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Pre-warm asset cache for instant reflection read
@@ -584,6 +624,11 @@ function Engine:Start(): (boolean, string)
             table.insert(rootInstances, serverService)
             scan(serverService)
         end)
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     if synthesizedSpawn then
@@ -630,6 +675,11 @@ function Engine:Start(): (boolean, string)
         end
     end
 
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
+    end
+
     -- Step 3: Extract Terrain
     local terrainData = nil
     if self.Config.SaveTerrain then
@@ -645,6 +695,11 @@ function Engine:Start(): (boolean, string)
         if terrain then
             terrainData = TerrainSerializer.ExtractTerrainData(terrain, self.Config)
         end
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Step 4: Decompile Scripts
@@ -674,6 +729,11 @@ function Engine:Start(): (boolean, string)
         end
     end
 
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
+    end
+
     -- Memory Watchdog & Cache Flush to prevent OOM crash on massive games
     pcall(function()
         collectgarbage("collect")
@@ -699,6 +759,11 @@ function Engine:Start(): (boolean, string)
         outputContent = SerializerScript.Serialize(rootInstances, scriptSources, terrainData, self.Config)
     else
         outputContent = SerializerXml.Serialize(rootInstances, scriptSources, terrainData, self.Config)
+    end
+
+    if self.CancelRequested then
+        self.IsRunning = false
+        return false, "Salvamento cancelado pelo usuário."
     end
 
     -- Step 5.5: Validate XML output if enabled

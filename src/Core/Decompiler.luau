@@ -482,6 +482,10 @@ function Decompiler.DecompileBatch(
     for w = 1, workers do
         local t = task.spawn(function()
             while queueIndex <= total do
+                if options._CancelChecker and options._CancelChecker() then
+                    break
+                end
+
                 local myIndex = queueIndex
                 queueIndex = queueIndex + 1
 
@@ -503,6 +507,9 @@ function Decompiler.DecompileBatch(
 
     -- Wait for all scripts to finish
     while completed < total do
+        if options._CancelChecker and options._CancelChecker() then
+            break
+        end
         task.wait(0.1)
     end
 

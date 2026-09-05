@@ -14,12 +14,24 @@ end)
 local AntiAFK = {}
 local isEnabled = false
 local idleConnection = nil
+local stateListeners = {}
+
+local function notifyListeners(state: boolean)
+    for _, fn in ipairs(stateListeners) do
+        task.spawn(fn, state)
+    end
+end
+
+function AntiAFK.OnStateChanged(callback: (enabled: boolean) -> ())
+    table.insert(stateListeners, callback)
+end
 
 function AntiAFK.Enable()
     if isEnabled then
         return
     end
     isEnabled = true
+    notifyListeners(true)
 
     pcall(function()
         local plrs = Players or game:GetService("Players")
@@ -74,11 +86,24 @@ function AntiAFK.Enable()
 end
 
 function AntiAFK.Disable()
+    if not isEnabled then
+        return
+    end
     isEnabled = false
+    notifyListeners(false)
     if idleConnection then
         idleConnection:Disconnect()
         idleConnection = nil
     end
+end
+
+function AntiAFK.Toggle(): boolean
+    if isEnabled then
+        AntiAFK.Disable()
+    else
+        AntiAFK.Enable()
+    end
+    return isEnabled
 end
 
 function AntiAFK.IsEnabled(): boolean
@@ -86,3 +111,4 @@ function AntiAFK.IsEnabled(): boolean
 end
 
 return AntiAFK
+
