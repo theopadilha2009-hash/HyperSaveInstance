@@ -3,9 +3,13 @@
     Logs and intercepts RemoteEvent / RemoteFunction calls to reverse-engineer client-server network protocols.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = clonerefFn(game:GetService("HttpService"))
+end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local NetworkSniffer = {}
@@ -29,7 +33,9 @@ local function describeArgs(args): string
             table.insert(parts, "Instance<" .. v.ClassName .. ">")
         elseif t == "table" then
             local count = 0
-            for _ in pairs(v) do count = count + 1 end
+            for _ in pairs(v) do
+                count = count + 1
+            end
             table.insert(parts, string.format("table{%d}", count))
         else
             table.insert(parts, t)
@@ -40,7 +46,9 @@ end
 
 -- Start live packet sniffing
 function NetworkSniffer.Start()
-    if NetworkSniffer.IsActive then return end
+    if NetworkSniffer.IsActive then
+        return
+    end
     NetworkSniffer.IsActive = true
 
     -- Hook Metamethod __namecall if executor supports hookmetamethod
@@ -61,12 +69,12 @@ function NetworkSniffer.Start()
 
             if NetworkSniffer.IsActive and typeof(self) == "Instance" and method then
                 if method == "FireServer" and self:IsA("RemoteEvent") then
-                    local args = {...}
+                    local args = { ... }
                     task.spawn(function()
                         NetworkSniffer.LogCall("FireServer", self, args)
                     end)
                 elseif method == "InvokeServer" and self:IsA("RemoteFunction") then
-                    local args = {...}
+                    local args = { ... }
                     task.spawn(function()
                         NetworkSniffer.LogCall("InvokeServer", self, args)
                     end)
@@ -148,10 +156,10 @@ function NetworkSniffer.ExportRemoteSpyScript(): (boolean, string)
         "    ================================================================================",
         "--]]",
         "",
-        "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-        "local Players = game:GetService(\"Players\")",
+        'local ReplicatedStorage = game:GetService("ReplicatedStorage")',
+        'local Players = game:GetService("Players")',
         "",
-        "print(\"[HyperSave Remote Replicator] Starting reconstructed network traffic dispatch...\")",
+        'print("[HyperSave Remote Replicator] Starting reconstructed network traffic dispatch...")',
         "",
     }
 
@@ -165,10 +173,16 @@ function NetworkSniffer.ExportRemoteSpyScript(): (boolean, string)
             table.insert(lines, string.format("    local remote = %s", path))
             table.insert(lines, "    if remote then")
             if log.Type == "FireServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(
+                    lines,
+                    string.format('        print("[Remote Test] Firing %%s with %%s", remote:GetFullName(), %q)', log.ArgsShape)
+                )
                 table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsShape))
             elseif log.Type == "InvokeServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(
+                    lines,
+                    string.format('        print("[Remote Test] Invoking %%s with %%s", remote:GetFullName(), %q)', log.ArgsShape)
+                )
                 table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsShape))
             end
             table.insert(lines, "    end")

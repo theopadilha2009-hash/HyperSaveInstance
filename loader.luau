@@ -19,13 +19,13 @@
     bundle is committed. Run it before publishing a release.
 ]]
 
-local PINNED_COMMIT = "3871fa85282d5530990175a4a5f9266fc9fbbfc7"
+local PINNED_COMMIT = "27f8bbd4afe41126791c2efba10749248fe0c952"
 -- Kept as the two 16-bit Adler halves instead of one combined 32-bit value:
 -- the combined form exceeds 2^31 for most inputs and different Lua runtimes
 -- disagree on how they represent that.
-local EXPECTED_ADLER_A = 51619
-local EXPECTED_ADLER_B = 25289
-local EXPECTED_BYTES = 394262
+local EXPECTED_ADLER_A = 44034
+local EXPECTED_ADLER_B = 41380
+local EXPECTED_BYTES = 406926
 
 local REPO = "theopadilha2009-hash/HyperSaveInstance"
 
@@ -34,16 +34,16 @@ local function isSilent(): boolean
     pcall(function()
         local genv = (getgenv and getgenv()) or _G
         if genv then
-            silent = (genv.HyperSave_Silent == true)
-                or (genv.SilentMode == true)
-                or (genv.HyperSave_Ghost == true)
+            silent = (genv.HyperSave_Silent == true) or (genv.SilentMode == true) or (genv.HyperSave_Ghost == true)
         end
     end)
     return silent
 end
 
 local function report(message: string)
-    if isSilent() then return end
+    if isSilent() then
+        return
+    end
     warn("[HyperSaveInstance] " .. message)
 end
 

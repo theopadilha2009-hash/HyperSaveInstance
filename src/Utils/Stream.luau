@@ -60,14 +60,18 @@ end
 
 -- Reader methods
 function Stream:ReadByte(): number
-    if self.Position > self.Length then return 0 end
+    if self.Position > self.Length then
+        return 0
+    end
     local byte = string.byte(self.Source, self.Position)
     self.Position = self.Position + 1
     return byte
 end
 
 function Stream:ReadBytes(count: number): string
-    if self.Position > self.Length then return "" end
+    if self.Position > self.Length then
+        return ""
+    end
     local chunk = string.sub(self.Source, self.Position, self.Position + count - 1)
     self.Position = self.Position + count
     return chunk

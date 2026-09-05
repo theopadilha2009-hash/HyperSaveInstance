@@ -8,16 +8,18 @@ local UniverseTracker = {}
 export type SubPlaceInfo = {
     PlaceId: number,
     Name: string,
-    IsRoot: boolean
+    IsRoot: boolean,
 }
 
 -- Fetch all places belonging to current Game Universe
-function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
+function UniverseTracker.GetUniversePlaces(): { SubPlaceInfo }
     local places = {}
     local currentPlaceId = game.PlaceId or 0
     local rootName = "Root Place"
 
-    local clonerefFn = cloneref or function(obj) return obj end
+    local clonerefFn = cloneref or function(obj)
+        return obj
+    end
     pcall(function()
         local mp = clonerefFn(game:GetService("MarketplaceService"))
         if mp then
@@ -29,7 +31,7 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
     table.insert(places, {
         PlaceId = currentPlaceId,
         Name = rootName,
-        IsRoot = true
+        IsRoot = true,
     })
 
     -- Query AssetService for places in universe
@@ -46,7 +48,7 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
                     table.insert(places, {
                         PlaceId = item.PlaceId,
                         Name = item.Name or ("Sub-Place " .. tostring(item.PlaceId)),
-                        IsRoot = false
+                        IsRoot = false,
                     })
                 end
             end
@@ -54,8 +56,12 @@ function UniverseTracker.GetUniversePlaces(): {SubPlaceInfo}
 
         processPage()
         while not pages.IsFinished do
-            local nextSuccess = pcall(function() pages:AdvanceToNextPageAsync() end)
-            if not nextSuccess then break end
+            local nextSuccess = pcall(function()
+                pages:AdvanceToNextPageAsync()
+            end)
+            if not nextSuccess then
+                break
+            end
             processPage()
         end
     end
@@ -66,9 +72,11 @@ end
 -- Export Universe places hierarchy to JSON file
 function UniverseTracker.ExportUniverseMap(customPath: string?): (boolean, string)
     local Environment = require(script.Parent.Parent.Utils.Environment)
-    local clonerefFn = cloneref or function(obj) return obj end
+    local clonerefFn = cloneref or function(obj)
+        return obj
+    end
     local HttpService = clonerefFn(game:GetService("HttpService"))
-    
+
     local places = UniverseTracker.GetUniversePlaces()
     local currentPlaceId = game.PlaceId or 0
     local fileName = customPath or string.format("HyperSave_Universe_%d.json", currentPlaceId)
@@ -78,7 +86,7 @@ function UniverseTracker.ExportUniverseMap(customPath: string?): (boolean, strin
             UniverseRootPlaceId = currentPlaceId,
             TotalPlaces = #places,
             ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
-            Places = places
+            Places = places,
         })
     end)
 

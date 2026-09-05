@@ -17,7 +17,7 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
         WaterWaveSpeed = 10,
         MaterialColors = "",
         HasVoxels = false,
-        VoxelChunks = {}
+        VoxelChunks = {},
     }
 
     if not terrain or not terrain:IsA("Terrain") then
@@ -25,13 +25,27 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
     end
 
     -- Extract basic properties safely
-    pcall(function() data.Decoration = terrain.Decoration end)
-    pcall(function() data.WaterColor = terrain.WaterColor end)
-    pcall(function() data.WaterReflectance = terrain.WaterReflectance end)
-    pcall(function() data.WaterTransparency = terrain.WaterTransparency end)
-    pcall(function() data.WaterWaveSize = terrain.WaterWaveSize end)
-    pcall(function() data.WaterWaveSpeed = terrain.WaterWaveSpeed end)
-    pcall(function() data.MaterialColors = terrain.MaterialColors end)
+    pcall(function()
+        data.Decoration = terrain.Decoration
+    end)
+    pcall(function()
+        data.WaterColor = terrain.WaterColor
+    end)
+    pcall(function()
+        data.WaterReflectance = terrain.WaterReflectance
+    end)
+    pcall(function()
+        data.WaterTransparency = terrain.WaterTransparency
+    end)
+    pcall(function()
+        data.WaterWaveSize = terrain.WaterWaveSize
+    end)
+    pcall(function()
+        data.WaterWaveSpeed = terrain.WaterWaveSpeed
+    end)
+    pcall(function()
+        data.MaterialColors = terrain.MaterialColors
+    end)
 
     if not options.SaveTerrainVoxels then
         return data
@@ -63,11 +77,7 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
                 if chunkCount % 12 == 0 then
                     task.wait(0.001)
                 end
-                local chunkMin = Vector3int16.new(
-                    minVoxel.X + cx * step,
-                    minVoxel.Y + cy * step,
-                    minVoxel.Z + cz * step
-                )
+                local chunkMin = Vector3int16.new(minVoxel.X + cx * step, minVoxel.Y + cy * step, minVoxel.Z + cz * step)
                 local chunkMax = Vector3int16.new(
                     math.min(chunkMin.X + step, maxVoxel.X),
                     math.min(chunkMin.Y + step, maxVoxel.Y),
@@ -106,7 +116,7 @@ function TerrainSerializer.ExtractTerrainData(terrain: Terrain, options: table)
                             Max = chunkMax,
                             Size = size,
                             Materials = Base64.Encode(table.concat(rawMat)),
-                            Occupancies = Base64.Encode(table.concat(rawOcc))
+                            Occupancies = Base64.Encode(table.concat(rawOcc)),
                         })
                     end
                 end

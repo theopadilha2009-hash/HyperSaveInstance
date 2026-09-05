@@ -19,8 +19,8 @@ local function httpRequest(url: string): string?
                 ["User-Agent"] = "Roblox/WinInet",
                 ["Accept"] = "*/*",
                 ["Accept-Encoding"] = "gzip, deflate",
-                ["Connection"] = "keep-alive"
-            }
+                ["Connection"] = "keep-alive",
+            },
         })
         if s and res and (res.StatusCode == 200 or res.Success) then
             return res.Body
@@ -52,7 +52,7 @@ function AssetDownloader.ExtractId(assetUrl: string | number): string?
 end
 
 -- Collect all unique asset URLs and IDs from game hierarchy
-function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type: string, Id: string, Url: string, SourceName: string}}
+function AssetDownloader.CollectAssets(instances: { Instance }): { [string]: { Type: string, Id: string, Url: string, SourceName: string } }
     local assets = {}
 
     local function registerAsset(assetType: string, rawVal: any, sourceName: string)
@@ -63,7 +63,7 @@ function AssetDownloader.CollectAssets(instances: {Instance}): {[string]: {Type:
                 Type = assetType,
                 Id = id,
                 Url = downloadUrl,
-                SourceName = sourceName
+                SourceName = sourceName,
             }
         end
     end
@@ -115,7 +115,9 @@ end
 function AssetDownloader.GetClientPing(): number
     local ping = 45
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local stats = clonerefFn(game:GetService("Stats"))
         local net = stats and stats:FindFirstChild("Network")
         local ssi = net and net:FindFirstChild("ServerStatsItem")
@@ -131,7 +133,9 @@ end
 function AssetDownloader.GetClientFPS(): number
     local fps = 60
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local ws = clonerefFn(game:GetService("Workspace"))
         if ws and ws.GetRealPhysicsFPS then
             local val = ws:GetRealPhysicsFPS()
@@ -144,8 +148,10 @@ function AssetDownloader.GetClientFPS(): number
 end
 
 -- Export structured JSON manifest for offline downloading
-function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath: string): (boolean, string)
-    local clonerefFn = cloneref or function(obj) return obj end
+function AssetDownloader.ExportManifest(assets: { [string]: table }, manifestPath: string): (boolean, string)
+    local clonerefFn = cloneref or function(obj)
+        return obj
+    end
     local HttpService = clonerefFn(game:GetService("HttpService"))
     local list = {}
     local summary = {
@@ -163,7 +169,7 @@ function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath:
             Id = id,
             Type = item.Type,
             Url = item.Url,
-            SourceName = item.SourceName
+            SourceName = item.SourceName,
         })
         if summary[item.Type] ~= nil then
             summary[item.Type] = summary[item.Type] + 1
@@ -178,7 +184,7 @@ function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath:
             TotalAssets = #list,
             CategorySummary = summary,
             ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
-            Assets = list
+            Assets = list,
         })
     end)
 
@@ -191,7 +197,12 @@ function AssetDownloader.ExportManifest(assets: {[string]: table}, manifestPath:
 end
 
 -- Download all collected assets safely with Ping Guard, FPS Throttling & Exponential Backoff
-function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: string, options: table, progressCallback: (current: number, total: number, asset: table) -> ()): (number, number)
+function AssetDownloader.DownloadAll(
+    assets: { [string]: table },
+    baseFolder: string,
+    options: table,
+    progressCallback: (current: number, total: number, asset: table) -> ()
+): (number, number)
     local opts = options or {}
     Environment.MakeFolder(baseFolder)
     Environment.MakeFolder(baseFolder .. "/audios")
@@ -208,14 +219,17 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
     end
 
     local total = #assetList
-    if total == 0 then return 0, 0 end
+    if total == 0 then
+        return 0, 0
+    end
 
     local downloaded = 0
     local failed = 0
     local currentIndex = 1
 
     -- In safe mode, constrain workers to 3-4 to keep network and CPU usage imperceptible
-    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 3, 1, 4) or math.clamp(opts.AssetDownloadWorkers or 6, 2, 8)
+    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 3, 1, 4)
+        or math.clamp(opts.AssetDownloadWorkers or 6, 2, 8)
     local activeWorkers = maxWorkers
 
     for w = 1, maxWorkers do
@@ -256,7 +270,14 @@ function AssetDownloader.DownloadAll(assets: {[string]: table}, baseFolder: stri
                         subDir = "animations"
                     end
 
-                    local fileName = string.format("%s/%s/%s_%s%s", baseFolder, subDir, item.Id, string.gsub(item.SourceName, "[^%w_%-]", "_"), extension)
+                    local fileName = string.format(
+                        "%s/%s/%s_%s%s",
+                        baseFolder,
+                        subDir,
+                        item.Id,
+                        string.gsub(item.SourceName, "[^%w_%-]", "_"),
+                        extension
+                    )
 
                     -- 2. Exponential backoff retry handler
                     local body = nil

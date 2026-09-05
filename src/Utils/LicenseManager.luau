@@ -51,7 +51,7 @@ function LicenseManager.ValidateKey(rawKey: string): (boolean, LicenseTier, stri
     end
 
     local cleanKey = string.upper(string.gsub(rawKey, "%s+", ""))
-    
+
     -- Chaves de desenvolvedor nao ficam no codigo versionado: este arquivo e
     -- publicado no bundle, entao qualquer constante aqui e publica. Para uso
     -- proprio, gere uma chave Enterprise com scripts/generate_key.js.
@@ -62,7 +62,7 @@ function LicenseManager.ValidateKey(rawKey: string): (boolean, LicenseTier, stri
         local n1 = tonumber(p1, 16) or 0
         local n2 = tonumber(p2, 16) or 0
         local n3 = tonumber(p3, 16) or 0
-        
+
         -- Cryptographic parity check: (n1 * 3 + n2 * 7) % 65535 == n3
         if (n1 * 3 + n2 * 7) % 65535 == n3 then
             return true, "Enterprise", "Enterprise Licensee [0x" .. p1 .. "]"

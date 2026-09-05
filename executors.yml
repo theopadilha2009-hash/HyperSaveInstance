@@ -1,0 +1,127 @@
+---
+# Globais que os executores injetam. Nao fazem parte do Roblox: sem declara-las
+# aqui o Selene marca as 164 como undefined_variable e o ruido esconde os bugs
+# de verdade. Esta lista tambem serve de inventario do que a suite depende do
+# executor — se um nome sair daqui, alguma feature deixou de ter suporte.
+base: roblox
+globals:
+  Clipboard:
+    any: true
+  HYDROGEN_LOADED:
+    any: true
+  KRNL_LOADED:
+    any: true
+  MACSPLOIT_LOADED:
+    any: true
+  OXYGEN_LOADED:
+    any: true
+  appendfile:
+    any: true
+  bit:
+    any: true
+  checkcaller:
+    any: true
+  cloneref:
+    any: true
+  custom_decompile:
+    any: true
+  decompile:
+    any: true
+  delfile:
+    any: true
+  disassemble:
+    any: true
+  dumpstring:
+    any: true
+  fluxus:
+    any: true
+  get_nil_instances:
+    any: true
+  get_script_bytecode:
+    any: true
+  getexecutorinfo:
+    any: true
+  getexecutorname:
+    any: true
+  getgenv:
+    any: true
+  gethiddenproperty:
+    any: true
+  gethui:
+    any: true
+  getnamecallmethod:
+    any: true
+  getnilinstances:
+    any: true
+  getrawmetatable:
+    any: true
+  getrenv:
+    any: true
+  getscriptbytecode:
+    any: true
+  getspecialinfo:
+    any: true
+  hookmetamethod:
+    any: true
+  http:
+    any: true
+  http_request:
+    any: true
+  identifyexecutor:
+    any: true
+  is_sirhurt_closure:
+    any: true
+  isfile:
+    any: true
+  isfolder:
+    any: true
+  listfiles:
+    any: true
+  makefolder:
+    any: true
+  newcclosure:
+    any: true
+  protect_gui:
+    any: true
+  protectgui:
+    any: true
+  readfile:
+    any: true
+  request:
+    any: true
+  set_thread_identity:
+    any: true
+  setclipboard:
+    any: true
+  setidentity:
+    any: true
+  setreadonly:
+    any: true
+  setthreadidentity:
+    any: true
+  syn:
+    any: true
+  toclipboard:
+    any: true
+  writefile:
+    any: true
+  # Injetados pelo executor sobre objetos do Roblox: chamados com `:`, entao
+  # precisam de `method: true` ou o selene os acusa de "is not a method".
+  game.HttpGet:
+    method: true
+    args:
+      - type: string
+      - type: bool
+        required: false
+  game.HttpGetAsync:
+    method: true
+    args:
+      - type: string
+      - type: bool
+        required: false
+  workspace.RequestStreamAroundAsync:
+    method: true
+    args:
+      - type: any
+      - type: number
+        required: false

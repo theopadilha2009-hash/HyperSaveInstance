@@ -4,9 +4,13 @@
     newly added instances, modified scripts, and removed models in game updates.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = clonerefFn(game:GetService("HttpService"))
+end)
 local Environment = require(script.Parent.Parent.Utils.Environment)
 
 local PlaceDiffTracker = {}
@@ -18,21 +22,23 @@ function PlaceDiffTracker.CreateSnapshot(root: Instance?): table
         PlaceId = game.PlaceId or 0,
         Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         InstanceCount = 0,
-        Instances = {}
+        Instances = {},
     }
 
     local function scan(inst: Instance, path: string)
         local curPath = path .. "/" .. inst.Name
         local class = inst.ClassName
         local childrenCount = #inst:GetChildren()
-        
+
         local info = {
             Class = class,
-            Children = childrenCount
+            Children = childrenCount,
         }
 
         if inst:IsA("LuaSourceContainer") then
-            local s, src = pcall(function() return (inst :: any).Source end)
+            local s, src = pcall(function()
+                return (inst :: any).Source
+            end)
             if s and src then
                 info.SourceLen = #src
             end
@@ -48,7 +54,9 @@ function PlaceDiffTracker.CreateSnapshot(root: Instance?): table
 
     for _, serv in ipairs(target:GetChildren()) do
         if not string.find(serv.ClassName, "Core") and not string.find(serv.Name, "Roblox") then
-            pcall(function() scan(serv, "") end)
+            pcall(function()
+                scan(serv, "")
+            end)
         end
     end
 
@@ -59,7 +67,7 @@ end
 function PlaceDiffTracker.SaveSnapshot(name: string?, root: Instance?): (boolean, string)
     local snapName = name or string.format("HyperSave_Snapshot_%d_%s.json", game.PlaceId or 0, os.date("%Y%m%d_%H%M%S"))
     local snapData = PlaceDiffTracker.CreateSnapshot(root)
-    
+
     local s, json = pcall(function()
         return HttpService:JSONEncode(snapData)
     end)
@@ -83,7 +91,9 @@ function PlaceDiffTracker.Compare(prevSnapshotOrFile: any, curSnapshot: table?):
         if not content then
             return { Success = false, Error = "Arquivo de snapshot anterior não encontrado." }
         end
-        local s, parsed = pcall(function() return HttpService:JSONDecode(content) end)
+        local s, parsed = pcall(function()
+            return HttpService:JSONDecode(content)
+        end)
         if not s or not parsed then
             return { Success = false, Error = "JSON de snapshot anterior inválido." }
         end
@@ -100,7 +110,7 @@ function PlaceDiffTracker.Compare(prevSnapshotOrFile: any, curSnapshot: table?):
         Added = {},
         Removed = {},
         Modified = {},
-        Summary = ""
+        Summary = "",
     }
 
     -- Detect added and modified
@@ -122,8 +132,13 @@ function PlaceDiffTracker.Compare(prevSnapshotOrFile: any, curSnapshot: table?):
         end
     end
 
-    diff.Summary = string.format("Diff: +%d adicionados, -%d removidos, ~%d modificados (Total Atual: %d)",
-        #diff.Added, #diff.Removed, #diff.Modified, curr.InstanceCount)
+    diff.Summary = string.format(
+        "Diff: +%d adicionados, -%d removidos, ~%d modificados (Total Atual: %d)",
+        #diff.Added,
+        #diff.Removed,
+        #diff.Modified,
+        curr.InstanceCount
+    )
 
     return diff
 end
@@ -146,7 +161,7 @@ function PlaceDiffTracker.ExportDiffReport(diff: table): (boolean, string)
         string.format("Resumo: %s", diff.Summary),
         "================================================================================",
         "",
-        string.format("--- [1] NOVAS INSTÂNCIAS ADICIONADAS (%d) ---", #diff.Added)
+        string.format("--- [1] NOVAS INSTÂNCIAS ADICIONADAS (%d) ---", #diff.Added),
     }
 
     for i, item in ipairs(diff.Added) do

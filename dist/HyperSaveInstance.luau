@@ -163,7 +163,7 @@ local ClassBlacklist = {
         "LocalizationService",
         "TextChatService",
         "InsertService",
-    }
+    },
 }
 
 return ClassBlacklist
@@ -177,80 +177,80 @@ __define__("Config/Defaults", function()
 
 local Defaults = {
     -- General Settings
-    Mode = "Full",                         -- "Full" | "Fast" | "VisualsOnly" | "ScriptsOnly" | "Custom"
-    Format = "rbxlx",                       -- "rbxlx" (Roblox XML) | "rbxl" (Roblox Binary) | "lua" (Studio Script)
-    FilePath = "",                         -- Auto-generated if empty: HyperSaveInstance/<PlaceName>_<PlaceId>.<Format>
-    ShowUI = true,                         -- Open HUD interface by default
-    AutoStart = false,                     -- Start immediately without waiting for button click if loaded via script
-    SilentMode = false,                    -- Headless / 100% Silent Mode (No UI, no notifications, no sounds, no prints)
-    RandomizeGuiName = true,               -- Randomize ScreenGui name with stealth random hash
+    Mode = "Full", -- "Full" | "Fast" | "VisualsOnly" | "ScriptsOnly" | "Custom"
+    Format = "rbxlx", -- "rbxlx" (Roblox XML) | "rbxl" (Roblox Binary) | "lua" (Studio Script)
+    FilePath = "", -- Auto-generated if empty: HyperSaveInstance/<PlaceName>_<PlaceId>.<Format>
+    ShowUI = true, -- Open HUD interface by default
+    AutoStart = false, -- Start immediately without waiting for button click if loaded via script
+    SilentMode = false, -- Headless / 100% Silent Mode (No UI, no notifications, no sounds, no prints)
+    RandomizeGuiName = true, -- Randomize ScreenGui name with stealth random hash
     ToggleKeybind = Enum.KeyCode.RightShift, -- Keyboard shortcut to toggle HUD visibility
 
     -- Anti-AFK & Stealth Protection
-    AutoAntiAFK = true,                    -- Prevents idle disconnection (Error 268/273)
-    StealthMode = true,                    -- Obfuscates memory references and thread identity
-    SafeStreaming = true,                  -- Non-teleport streaming replication (prevents movement anti-cheat kicks)
+    AutoAntiAFK = true, -- Prevents idle disconnection (Error 268/273)
+    StealthMode = true, -- Obfuscates memory references and thread identity
+    SafeStreaming = true, -- Non-teleport streaming replication (prevents movement anti-cheat kicks)
 
     -- Total Raw Asset Downloader
-    DownloadRawAssets = true,              -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
-    AssetDownloadWorkers = 4,              -- Safe worker count to prevent rate limits on public servers
-    SafeAssetDownload = true,              -- Token-bucket throttled downloading with jitter
-    PingGuard = true,                      -- Dynamic ping monitoring (auto-pauses if ping > 180ms)
-    ExportAssetManifest = true,            -- Export HyperSave_Manifest_<PlaceId>.json for offline downloading
-    AssetFolderName = "",                  -- Auto-generated if empty: HyperSave_Assets_<PlaceId>
+    DownloadRawAssets = true, -- Download raw audio (.mp3), textures (.png), 3D meshes (.mesh) to folder
+    AssetDownloadWorkers = 4, -- Safe worker count to prevent rate limits on public servers
+    SafeAssetDownload = true, -- Token-bucket throttled downloading with jitter
+    PingGuard = true, -- Dynamic ping monitoring (auto-pauses if ping > 180ms)
+    ExportAssetManifest = true, -- Export HyperSave_Manifest_<PlaceId>.json for offline downloading
+    AssetFolderName = "", -- Auto-generated if empty: HyperSave_Assets_<PlaceId>
 
     -- Smart Optimizer (Strictly Optional / Disabled by default to preserve 100% raw map integrity)
-    OptimizeGeometry = false,              -- Optional deduplication of redundant structures
+    OptimizeGeometry = false, -- Optional deduplication of redundant structures
 
     -- Visual & Asset Fidelity (10/10)
-    SaveTerrain = true,                    -- Save Terrain properties & decorations
-    SaveTerrainVoxels = true,              -- Extract voxel occupancy & materials (SmoothTerrain)
-    TerrainVoxelStep = 64,                 -- Chunk step for reading voxels safely
-    SaveLighting = true,                   -- Lighting, Atmosphere, Sky, PostEffects
-    SaveMaterials = true,                  -- MaterialService, MaterialVariants
-    SaveSounds = true,                     -- Sounds & SoundGroups & Reverb
-    SaveUnions = true,                     -- CSG UnionOperations & NegateOperations
-    SaveMeshParts = true,                  -- MeshParts, SpecialMesh, Textures
-    SaveSurfaceAppearance = true,          -- PBR SurfaceAppearance textures
-    SaveAnimations = true,                 -- Animation instances & KeyframeSequences
-    SaveAttributes = true,                 -- Modern instance:GetAttributes()
-    SaveTags = true,                       -- CollectionService tags
+    SaveTerrain = true, -- Save Terrain properties & decorations
+    SaveTerrainVoxels = true, -- Extract voxel occupancy & materials (SmoothTerrain)
+    TerrainVoxelStep = 64, -- Chunk step for reading voxels safely
+    SaveLighting = true, -- Lighting, Atmosphere, Sky, PostEffects
+    SaveMaterials = true, -- MaterialService, MaterialVariants
+    SaveSounds = true, -- Sounds & SoundGroups & Reverb
+    SaveUnions = true, -- CSG UnionOperations & NegateOperations
+    SaveMeshParts = true, -- MeshParts, SpecialMesh, Textures
+    SaveSurfaceAppearance = true, -- PBR SurfaceAppearance textures
+    SaveAnimations = true, -- Animation instances & KeyframeSequences
+    SaveAttributes = true, -- Modern instance:GetAttributes()
+    SaveTags = true, -- CollectionService tags
 
     -- Scripts & Code Extraction (10/10)
-    DecompileScripts = true,               -- Decompile LocalScripts and ModuleScripts
-    DecompileTimeout = 12,                 -- Timeout in seconds per script
-    DecompileMaxRetries = 2,               -- Retries on failure/timeout
-    DecompileParallelWorkers = 8,          -- Concurrent workers for fast decompilation
-    DecompileIgnoreCore = true,            -- Ignore CoreGui / internal scripts
-    SaveServerScriptPlaceholders = true,   -- Generate RemoteSpy dispatcher stubs for server scripts
-    SynthesizeServer = true,               -- Auto-generate ServerScriptService mock backend for Remotes
-    AutoCaptureAnimations = true,          -- Capture Motor6D joint transforms into KeyframeSequence
-    ExtractBytecodeFallback = true,        -- Extract bytecode dump if decompiler is unavailable
+    DecompileScripts = true, -- Decompile LocalScripts and ModuleScripts
+    DecompileTimeout = 12, -- Timeout in seconds per script
+    DecompileMaxRetries = 2, -- Retries on failure/timeout
+    DecompileParallelWorkers = 8, -- Concurrent workers for fast decompilation
+    DecompileIgnoreCore = true, -- Ignore CoreGui / internal scripts
+    SaveServerScriptPlaceholders = true, -- Generate RemoteSpy dispatcher stubs for server scripts
+    SynthesizeServer = true, -- Auto-generate ServerScriptService mock backend for Remotes
+    AutoCaptureAnimations = true, -- Capture Motor6D joint transforms into KeyframeSequence
+    ExtractBytecodeFallback = true, -- Extract bytecode dump if decompiler is unavailable
 
     -- Services & Hierarchy
-    SavePlayers = false,                   -- Avoid saving temporary character avatars unless desired
-    SaveNilInstances = true,               -- Extract isolated / nil instances if executor supports getnilinstances
-    PreloadStreaming = true,               -- Stream around map before saving if StreamingEnabled is on
-    AutoExploreStreaming = false,          -- Full map grid teleport sweep for StreamingEnabled
-    StreamingPreloadRadius = 1024,         -- Preload simulation radius
-    IsolateStarterPlayer = true,           -- Copy PlayerScripts/PlayerGui to StarterPlayer/StarterGui
-    GenerateSafeSpawn = true,              -- Create SpawnLocation at player position to prevent falling into void
-    EmulatePlayableGame = true,            -- Enable DataStore & VIP gamepass emulation for instant Studio playability
+    SavePlayers = false, -- Avoid saving temporary character avatars unless desired
+    SaveNilInstances = true, -- Extract isolated / nil instances if executor supports getnilinstances
+    PreloadStreaming = true, -- Stream around map before saving if StreamingEnabled is on
+    AutoExploreStreaming = false, -- Full map grid teleport sweep for StreamingEnabled
+    StreamingPreloadRadius = 1024, -- Preload simulation radius
+    IsolateStarterPlayer = true, -- Copy PlayerScripts/PlayerGui to StarterPlayer/StarterGui
+    GenerateSafeSpawn = true, -- Create SpawnLocation at player position to prevent falling into void
+    EmulatePlayableGame = true, -- Enable DataStore & VIP gamepass emulation for instant Studio playability
 
     -- Performance & Throttling
-    ChunkSize = 250,                       -- Instances processed per frame/tick to prevent lag/freeze
-    YieldInterval = 0.01,                  -- task.wait() interval between batches
-    AdaptiveFPSGuard = true,               -- Dynamically adjust throttle delay based on framerate delta
-    MaxMemoryBudgetMB = 1024,              -- Memory limit safety check
-    AssetDownloadWorkers = 8,              -- Concurrent workers for asset downloader pool
+    ChunkSize = 250, -- Instances processed per frame/tick to prevent lag/freeze
+    YieldInterval = 0.01, -- task.wait() interval between batches
+    AdaptiveFPSGuard = true, -- Dynamically adjust throttle delay based on framerate delta
+    MaxMemoryBudgetMB = 1024, -- Memory limit safety check
+    AssetDownloadWorkers = 8, -- Concurrent workers for asset downloader pool
 
     -- Logging, Reports & Validation
-    VerboseLogs = true,                    -- Detailed console logs
-    ValidateOutputXml = true,              -- Validate XML well-formedness before saving
-    SaveSummaryReport = true,              -- Save JSON execution summary report (.json)
-    PlaySoundOnComplete = true,            -- Play audio chime when save completes
-    CopyToClipboardOnComplete = true,      -- Copy file path to clipboard on complete
-    DiscordWebhookUrl = "",                -- Optional Discord Webhook URL for clone notifications
+    VerboseLogs = true, -- Detailed console logs
+    ValidateOutputXml = true, -- Validate XML well-formedness before saving
+    SaveSummaryReport = true, -- Save JSON execution summary report (.json)
+    PlaySoundOnComplete = true, -- Play audio chime when save completes
+    CopyToClipboardOnComplete = true, -- Copy file path to clipboard on complete
+    DiscordWebhookUrl = "", -- Optional Discord Webhook URL for clone notifications
 }
 
 -- Preset configurations
@@ -556,7 +556,7 @@ local Presets = {
             "TowerRadiusRings",
         },
         OptimizeGeometry = false,
-    }
+    },
 }
 
 Defaults.Presets = Presets
@@ -584,11 +584,17 @@ __define__("Core/AnimationRecorder", function()
     native KeyframeSequence instances that can be published to the user's account in Studio.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local RunService = nil
-pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
+pcall(function()
+    RunService = clonerefFn(game:GetService("RunService"))
+end)
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 
 local AnimationRecorder = {}
 AnimationRecorder.IsRecording = false
@@ -598,7 +604,9 @@ AnimationRecorder.ActiveConnection = nil
 -- Record an active animation track from a Humanoid by sampling joint transforms
 function AnimationRecorder.RecordTrack(humanoid, trackName, durationSeconds, onComplete)
     local character = humanoid.Parent
-    if not character then return end
+    if not character then
+        return
+    end
 
     -- Collect all Motor6D joints
     local motors = {}
@@ -608,7 +616,9 @@ function AnimationRecorder.RecordTrack(humanoid, trackName, durationSeconds, onC
         end
     end
 
-    if #motors == 0 then return end
+    if #motors == 0 then
+        return
+    end
 
     local keyframeSeq = Instance.new("KeyframeSequence")
     keyframeSeq.Name = trackName or "RecordedAnimation"
@@ -673,7 +683,9 @@ end
 
 -- Auto-hook into character animation playback
 function AnimationRecorder.StartAutoCapture()
-    if AnimationRecorder.IsRecording then return end
+    if AnimationRecorder.IsRecording then
+        return
+    end
     AnimationRecorder.IsRecording = true
 
     local function hookHumanoid(humanoid)
@@ -684,7 +696,7 @@ function AnimationRecorder.StartAutoCapture()
                     animName = track.Animation.Name
                 end
             end)
-            
+
             -- Prevent duplicate recordings
             if not AnimationRecorder.RecordedSequences[animName] then
                 AnimationRecorder.RecordedSequences[animName] = true
@@ -697,7 +709,9 @@ function AnimationRecorder.StartAutoCapture()
     if localPlayer then
         if localPlayer.Character then
             local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hookHumanoid(hum) end
+            if hum then
+                hookHumanoid(hum)
+            end
         end
         localPlayer.CharacterAdded:Connect(function(char)
             local hum = char:WaitForChild("Humanoid", 5)
@@ -730,7 +744,7 @@ function AnimationRecorder.ScanActiveTracks()
                         Length = track.Length,
                         Speed = track.Speed,
                         Humanoid = hum,
-                        Track = track
+                        Track = track,
                     })
                 end
             end
@@ -740,7 +754,9 @@ function AnimationRecorder.ScanActiveTracks()
     local localPlayer = Players and Players.LocalPlayer
     if localPlayer and localPlayer.Character then
         local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then checkHumanoid(hum) end
+        if hum then
+            checkHumanoid(hum)
+        end
     end
 
     if workspace then
@@ -785,7 +801,7 @@ function AnimationRecorder.ExportRecordedAnimations()
     local fileName = string.format("HyperSave_Animations_%s.rbxm", tostring(game.PlaceId or "0"))
     local xml = SerializerXml.Serialize(animFolder, {
         SaveTerrain = false,
-        DecompileScripts = false
+        DecompileScripts = false,
     })
 
     if Environment.HasFileSystem() then
@@ -828,8 +844,8 @@ local function httpRequest(url)
                 ["User-Agent"] = "Roblox/WinInet",
                 ["Accept"] = "*/*",
                 ["Accept-Encoding"] = "gzip, deflate",
-                ["Connection"] = "keep-alive"
-            }
+                ["Connection"] = "keep-alive",
+            },
         })
         if s and res and (res.StatusCode == 200 or res.Success) then
             return res.Body
@@ -872,7 +888,7 @@ function AssetDownloader.CollectAssets(instances)
                 Type = assetType,
                 Id = id,
                 Url = downloadUrl,
-                SourceName = sourceName
+                SourceName = sourceName,
             }
         end
     end
@@ -924,7 +940,9 @@ end
 function AssetDownloader.GetClientPing()
     local ping = 45
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local stats = clonerefFn(game:GetService("Stats"))
         local net = stats and stats:FindFirstChild("Network")
         local ssi = net and net:FindFirstChild("ServerStatsItem")
@@ -940,7 +958,9 @@ end
 function AssetDownloader.GetClientFPS()
     local fps = 60
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local ws = clonerefFn(game:GetService("Workspace"))
         if ws and ws.GetRealPhysicsFPS then
             local val = ws:GetRealPhysicsFPS()
@@ -954,7 +974,9 @@ end
 
 -- Export structured JSON manifest for offline downloading
 function AssetDownloader.ExportManifest(assets, manifestPath)
-    local clonerefFn = cloneref or function(obj) return obj end
+    local clonerefFn = cloneref or function(obj)
+        return obj
+    end
     local HttpService = clonerefFn(game:GetService("HttpService"))
     local list = {}
     local summary = {
@@ -972,7 +994,7 @@ function AssetDownloader.ExportManifest(assets, manifestPath)
             Id = id,
             Type = item.Type,
             Url = item.Url,
-            SourceName = item.SourceName
+            SourceName = item.SourceName,
         })
         if summary[item.Type] ~= nil then
             summary[item.Type] = summary[item.Type] + 1
@@ -987,7 +1009,7 @@ function AssetDownloader.ExportManifest(assets, manifestPath)
             TotalAssets = #list,
             CategorySummary = summary,
             ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
-            Assets = list
+            Assets = list,
         })
     end)
 
@@ -1017,14 +1039,17 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
     end
 
     local total = #assetList
-    if total == 0 then return 0, 0 end
+    if total == 0 then
+        return 0, 0
+    end
 
     local downloaded = 0
     local failed = 0
     local currentIndex = 1
 
     -- In safe mode, constrain workers to 3-4 to keep network and CPU usage imperceptible
-    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 3, 1, 4) or math.clamp(opts.AssetDownloadWorkers or 6, 2, 8)
+    local maxWorkers = opts.SafeAssetDownload ~= false and math.clamp(opts.AssetDownloadWorkers or 3, 1, 4)
+        or math.clamp(opts.AssetDownloadWorkers or 6, 2, 8)
     local activeWorkers = maxWorkers
 
     for w = 1, maxWorkers do
@@ -1065,7 +1090,14 @@ function AssetDownloader.DownloadAll(assets, baseFolder, options, progressCallba
                         subDir = "animations"
                     end
 
-                    local fileName = string.format("%s/%s/%s_%s%s", baseFolder, subDir, item.Id, string.gsub(item.SourceName, "[^%w_%-]", "_"), extension)
+                    local fileName = string.format(
+                        "%s/%s/%s_%s%s",
+                        baseFolder,
+                        subDir,
+                        item.Id,
+                        string.gsub(item.SourceName, "[^%w_%-]", "_"),
+                        extension
+                    )
 
                     -- 2. Exponential backoff retry handler
                     local body = nil
@@ -1156,14 +1188,24 @@ function AssetHandler.ExtractUnionData(union)
         RenderFidelity = Enum.RenderFidelity.Precise,
         CollisionFidelity = Enum.CollisionFidelity.Default,
         UsePartColor = false,
-        SmoothingAngle = 0
+        SmoothingAngle = 0,
     }
 
-    pcall(function() data.AssetId = union.AssetId end)
-    pcall(function() data.RenderFidelity = union.RenderFidelity end)
-    pcall(function() data.CollisionFidelity = union.CollisionFidelity end)
-    pcall(function() data.UsePartColor = union.UsePartColor end)
-    pcall(function() data.SmoothingAngle = union.SmoothingAngle end)
+    pcall(function()
+        data.AssetId = union.AssetId
+    end)
+    pcall(function()
+        data.RenderFidelity = union.RenderFidelity
+    end)
+    pcall(function()
+        data.CollisionFidelity = union.CollisionFidelity
+    end)
+    pcall(function()
+        data.UsePartColor = union.UsePartColor
+    end)
+    pcall(function()
+        data.SmoothingAngle = union.SmoothingAngle
+    end)
 
     -- Extract hidden CSG geometry buffers if executor supports gethiddenproperty or getspecialinfo
     local getspecial = getspecialinfo or (syn and syn.get_special_info)
@@ -1213,26 +1255,50 @@ function AssetHandler.ProcessMeshOrUnion(instance, options)
         DoubleSided = false,
         VertexColor = Vector3.new(1, 1, 1),
         AssetId = "",
-        UnionData = nil
+        UnionData = nil,
     }
 
     if instance:IsA("MeshPart") then
-        pcall(function() info.MeshId = instance.MeshId end)
-        pcall(function() info.TextureId = instance.TextureID end)
-        pcall(function() info.RenderFidelity = instance.RenderFidelity end)
-        pcall(function() info.CollisionFidelity = instance.CollisionFidelity end)
-        pcall(function() info.DoubleSided = instance.DoubleSided end)
-        pcall(function() info.VertexColor = instance.VertexColor end)
+        pcall(function()
+            info.MeshId = instance.MeshId
+        end)
+        pcall(function()
+            info.TextureId = instance.TextureID
+        end)
+        pcall(function()
+            info.RenderFidelity = instance.RenderFidelity
+        end)
+        pcall(function()
+            info.CollisionFidelity = instance.CollisionFidelity
+        end)
+        pcall(function()
+            info.DoubleSided = instance.DoubleSided
+        end)
+        pcall(function()
+            info.VertexColor = instance.VertexColor
+        end)
     elseif instance:IsA("UnionOperation") or instance:IsA("NegateOperation") then
         info.UnionData = AssetHandler.ExtractUnionData(instance )
         info.AssetId = info.UnionData.AssetId
     elseif instance:IsA("SpecialMesh") then
-        pcall(function() info.MeshId = instance.MeshId end)
-        pcall(function() info.TextureId = instance.TextureId end)
-        pcall(function() info.MeshType = instance.MeshType end)
-        pcall(function() info.Scale = instance.Scale end)
-        pcall(function() info.Offset = instance.Offset end)
-        pcall(function() info.VertexColor = instance.VertexColor end)
+        pcall(function()
+            info.MeshId = instance.MeshId
+        end)
+        pcall(function()
+            info.TextureId = instance.TextureId
+        end)
+        pcall(function()
+            info.MeshType = instance.MeshType
+        end)
+        pcall(function()
+            info.Scale = instance.Scale
+        end)
+        pcall(function()
+            info.Offset = instance.Offset
+        end)
+        pcall(function()
+            info.VertexColor = instance.VertexColor
+        end)
     end
 
     return info
@@ -1244,40 +1310,64 @@ function AssetHandler.ProcessSurfaceAppearance(instance)
         ColorMap = "",
         NormalMap = "",
         RoughnessMap = "",
-        AlphaMode = 0
+        AlphaMode = 0,
     }
     pcall(function()
         if Enum.AlphaMode and Enum.AlphaMode.Overlay then
             pbr.AlphaMode = Enum.AlphaMode.Overlay
         end
     end)
-    pcall(function() pbr.ColorMap = instance.ColorMap end)
-    pcall(function() pbr.NormalMap = instance.NormalMap end)
-    pcall(function() pbr.RoughnessMap = instance.RoughnessMap end)
-    pcall(function() pbr.MetalnessMap = instance.MetalnessMap end)
-    pcall(function() pbr.AlphaMode = instance.AlphaMode end)
+    pcall(function()
+        pbr.ColorMap = instance.ColorMap
+    end)
+    pcall(function()
+        pbr.NormalMap = instance.NormalMap
+    end)
+    pcall(function()
+        pbr.RoughnessMap = instance.RoughnessMap
+    end)
+    pcall(function()
+        pbr.MetalnessMap = instance.MetalnessMap
+    end)
+    pcall(function()
+        pbr.AlphaMode = instance.AlphaMode
+    end)
     return pbr
 end
 
 -- Preload & warm assets in memory
 function AssetHandler.WarmAssets(instances)
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local ContentProvider = clonerefFn(game:GetService("ContentProvider"))
-        if not ContentProvider then return end
+        if not ContentProvider then
+            return
+        end
 
         local batch = {}
         for _, inst in ipairs(instances) do
-            if inst:IsA("MeshPart") or inst:IsA("Decal") or inst:IsA("Texture") or inst:IsA("SurfaceAppearance") or inst:IsA("SpecialMesh") then
+            if
+                inst:IsA("MeshPart")
+                or inst:IsA("Decal")
+                or inst:IsA("Texture")
+                or inst:IsA("SurfaceAppearance")
+                or inst:IsA("SpecialMesh")
+            then
                 table.insert(batch, inst)
                 if #batch >= 80 then
-                    pcall(function() ContentProvider:PreloadAsync(batch) end)
+                    pcall(function()
+                        ContentProvider:PreloadAsync(batch)
+                    end)
                     table.clear(batch)
                 end
             end
         end
         if #batch > 0 then
-            pcall(function() ContentProvider:PreloadAsync(batch) end)
+            pcall(function()
+                ContentProvider:PreloadAsync(batch)
+            end)
         end
     end)
 end
@@ -1292,9 +1382,13 @@ __define__("Core/AudioRipper", function()
     Scans, previews, plays and extracts all music tracks and sound effects in the game.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local SoundService = nil
-pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
+pcall(function()
+    SoundService = clonerefFn(game:GetService("SoundService"))
+end)
 local Environment = __require__("Utils/Environment")
 
 local AudioRipper = {}
@@ -1318,7 +1412,7 @@ function AudioRipper.ScanSounds()
                     CleanId = cleanId,
                     Path = inst:GetFullName(),
                     Volume = inst.Volume,
-                    TimeLength = inst.TimeLength
+                    TimeLength = inst.TimeLength,
                 })
             end
         end
@@ -1328,9 +1422,23 @@ function AudioRipper.ScanSounds()
         end
     end
 
-    for _, sName in ipairs({"Workspace", "SoundService", "ReplicatedStorage", "Lighting", "StarterGui", "StarterPack", "StarterPlayer", "Chat", "MaterialService"}) do
-        local s, service = pcall(function() return clonerefFn(game:GetService(sName)) end)
-        if s and service then scan(service) end
+    for _, sName in ipairs({
+        "Workspace",
+        "SoundService",
+        "ReplicatedStorage",
+        "Lighting",
+        "StarterGui",
+        "StarterPack",
+        "StarterPlayer",
+        "Chat",
+        "MaterialService",
+    }) do
+        local s, service = pcall(function()
+            return clonerefFn(game:GetService(sName))
+        end)
+        if s and service then
+            scan(service)
+        end
     end
 
     return sounds
@@ -1372,7 +1480,7 @@ function AudioRipper.ExportSoundList()
     local placeId = game.PlaceId or 0
     local fileName = string.format("HyperSave_Soundtrack_%d.txt", placeId)
 
-    local lines = {"=== HyperSaveInstance - Game Soundtrack & Audio List ===", ""}
+    local lines = { "=== HyperSaveInstance - Game Soundtrack & Audio List ===", "" }
     for i, snd in ipairs(list) do
         table.insert(lines, string.format("[%d] %s | ID: %s | URL: rbxassetid://%s", i, snd.Name, snd.CleanId, snd.CleanId))
     end
@@ -1412,7 +1520,7 @@ end
 function Decompiler.ExtractNetworkSignatures(code)
     local signatures = {}
     local seen = {}
-    
+
     for remoteCall in string.gmatch(code, "([%w_%.:]+):[Ff]ire[Ss]erver%(") do
         if not seen[remoteCall] then
             seen[remoteCall] = true
@@ -1448,7 +1556,9 @@ end
 
 -- Deobfuscate escaped character sequences and string.char blocks
 function Decompiler.DeobfuscateStrings(code)
-    if not code or #code == 0 then return "" end
+    if not code or #code == 0 then
+        return ""
+    end
 
     local deobfuscated = code
 
@@ -1478,7 +1588,7 @@ local function generateHeader(scriptInstance, status, code)
     local path = getScriptPath(scriptInstance)
     local dateStr = os.date("%Y-%m-%d %H:%M:%S")
     local execName = Environment.GetExecutorName()
-    
+
     local extraInfo = ""
     if code and #code > 0 then
         local sigs = Decompiler.ExtractNetworkSignatures(code)
@@ -1499,7 +1609,8 @@ local function generateHeader(scriptInstance, status, code)
         end
     end
 
-    return string.format([=[
+    return string.format(
+        [=[
 --[[
     ================================================================================
     [HyperSaveInstance v2.0 - Decompiled Script]
@@ -1512,12 +1623,21 @@ local function generateHeader(scriptInstance, status, code)
     ================================================================================
 ]]
 
-]=], scriptInstance.ClassName, path, status, execName, dateStr, extraInfo)
+]=],
+        scriptInstance.ClassName,
+        path,
+        status,
+        execName,
+        dateStr,
+        extraInfo
+    )
 end
 
 -- Intelligent script beautifier & bytecode artifact cleaner
 function Decompiler.Beautify(code)
-    if not code or #code == 0 then return "" end
+    if not code or #code == 0 then
+        return ""
+    end
 
     local beautified = Decompiler.DeobfuscateStrings(code)
 
@@ -1533,10 +1653,22 @@ function Decompiler.Beautify(code)
 
     -- 3. Replace generic service variables (e.g. local v1 = game:GetService("Players"))
     local commonServices = {
-        "Players", "ReplicatedStorage", "ReplicatedFirst", "RunService", "TweenService",
-        "UserInputService", "HttpService", "SoundService", "Lighting", "Debris",
-        "MarketplaceService", "TeleportService", "StarterGui", "ContextActionService",
-        "CollectionService", "DataStoreService"
+        "Players",
+        "ReplicatedStorage",
+        "ReplicatedFirst",
+        "RunService",
+        "TweenService",
+        "UserInputService",
+        "HttpService",
+        "SoundService",
+        "Lighting",
+        "Debris",
+        "MarketplaceService",
+        "TeleportService",
+        "StarterGui",
+        "ContextActionService",
+        "CollectionService",
+        "DataStoreService",
     }
 
     local replacements = {}
@@ -1607,7 +1739,9 @@ print(string.format("[HyperSaveInstance Backend] Server script %%s initialized."
 
     -- Attach listeners for local remotes
     for _, remoteName in ipairs(remotes) do
-        code = code .. string.format([=[
+        code = code
+            .. string.format(
+                [=[
 local %s = parent:FindFirstChild(%q)
 if %s and %s:IsA("RemoteEvent") then
     %s.OnServerEvent:Connect(function(player, ...)
@@ -1617,12 +1751,21 @@ if %s and %s:IsA("RemoteEvent") then
     end)
 end
 
-]=], string.gsub(remoteName, "[^%w_]", "_"), remoteName, string.gsub(remoteName, "[^%w_]", "_"), string.gsub(remoteName, "[^%w_]", "_"), string.gsub(remoteName, "[^%w_]", "_"), remoteName)
+]=],
+                string.gsub(remoteName, "[^%w_]", "_"),
+                remoteName,
+                string.gsub(remoteName, "[^%w_]", "_"),
+                string.gsub(remoteName, "[^%w_]", "_"),
+                string.gsub(remoteName, "[^%w_]", "_"),
+                remoteName
+            )
     end
 
     -- Attach listeners for local RemoteFunctions
     for _, funcName in ipairs(functions) do
-        code = code .. string.format([=[
+        code = code
+            .. string.format(
+                [=[
 local %s = parent:FindFirstChild(%q)
 if %s and %s:IsA("RemoteFunction") then
     %s.OnServerInvoke = function(player, ...)
@@ -1632,7 +1775,14 @@ if %s and %s:IsA("RemoteFunction") then
     end
 end
 
-]=], string.gsub(funcName, "[^%w_]", "_"), funcName, string.gsub(funcName, "[^%w_]", "_"), string.gsub(funcName, "[^%w_]", "_"), string.gsub(funcName, "[^%w_]", "_"), funcName)
+]=],
+                string.gsub(funcName, "[^%w_]", "_"),
+                funcName,
+                string.gsub(funcName, "[^%w_]", "_"),
+                string.gsub(funcName, "[^%w_]", "_"),
+                string.gsub(funcName, "[^%w_]", "_"),
+                funcName
+            )
     end
 
     return code
@@ -1654,7 +1804,10 @@ local function synthesizeClientFallbackMock(scriptInstance)
     end
 
     for _, child in ipairs(scriptInstance:GetChildren()) do
-        table.insert(childrenDesc, string.format("local %s = script:WaitForChild(%q) -- %s", string.gsub(child.Name, "[^%w_]", "_"), child.Name, child.ClassName))
+        table.insert(
+            childrenDesc,
+            string.format("local %s = script:WaitForChild(%q) -- %s", string.gsub(child.Name, "[^%w_]", "_"), child.Name, child.ClassName)
+        )
     end
 
     local mockCode = [=[
@@ -1681,14 +1834,23 @@ local Character = LocalPlayer and (LocalPlayer.Character or LocalPlayer.Characte
 
     mockCode = mockCode .. "\n-- Discovered Local Network Remotes:\n"
     for _, rem in ipairs(remotes) do
-        mockCode = mockCode .. string.format("local %s = script.Parent:FindFirstChild(%q) -- %s\n", string.gsub(rem.Name, "[^%w_]", "_"), rem.Name, rem.Class)
+        mockCode = mockCode
+            .. string.format(
+                "local %s = script.Parent:FindFirstChild(%q) -- %s\n",
+                string.gsub(rem.Name, "[^%w_]", "_"),
+                rem.Name,
+                rem.Class
+            )
     end
 
-    mockCode = mockCode .. [=[
+    mockCode = mockCode
+        .. [=[
 
 -- Main Client Routine Initializer
 local function Initialize()
-    print("[HyperSaveInstance Mock] Initialized client component for: ]=] .. scriptName .. [=[")
+    print("[HyperSaveInstance Mock] Initialized client component for: ]=]
+        .. scriptName
+        .. [=[")
 end
 
 task.spawn(Initialize)
@@ -1718,11 +1880,11 @@ function Decompiler.DecompileSingle(scriptInstance, options)
             local pattern = (type(k) == "string" and k) or (type(v) == "string" and v) or nil
             local targetInst = (typeof(k) == "Instance" and k) or (typeof(v) == "Instance" and v) or nil
             if targetInst and (scriptInstance == targetInst or scriptInstance:IsDescendantOf(targetInst)) then
-                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
-                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", targetInst:GetFullName())
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule")
+                    .. string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", targetInst:GetFullName())
             elseif pattern and (string.find(scriptInstance.Name, pattern, 1, true) or string.find(fullName, pattern, 1, true)) then
-                return generateHeader(scriptInstance, "Decompile Skipped by Rule") ..
-                    string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
+                return generateHeader(scriptInstance, "Decompile Skipped by Rule")
+                    .. string.format("-- [Decompilation skipped by DecompileIgnore rule: %s]\n", tostring(pattern))
             end
         end
     end
@@ -1739,8 +1901,8 @@ function Decompiler.DecompileSingle(scriptInstance, options)
     -- Server Scripts with server execution (Protected by FilteringEnabled -> Generate RemoteSpy Dispatcher)
     if isServerScript then
         if options.SaveServerScriptPlaceholders then
-            return generateHeader(scriptInstance, "Reconstructed Server Backend (RemoteSpy Dispatcher)") ..
-                generateServerDispatcher(scriptInstance)
+            return generateHeader(scriptInstance, "Reconstructed Server Backend (RemoteSpy Dispatcher)")
+                .. generateServerDispatcher(scriptInstance)
         else
             return "-- [Server Script - Protected by FilteringEnabled]\n"
         end
@@ -1785,14 +1947,18 @@ function Decompiler.DecompileSingle(scriptInstance, options)
         local success, bytecode = pcall(bytecodeFn, scriptInstance)
         if success and bytecode and #bytecode > 0 then
             local b64 = Base64.Encode(bytecode)
-            return generateHeader(scriptInstance, "Extracted Raw Bytecode (Decompiler Unavailable)") ..
-                string.format("-- Raw Luau Bytecode (Base64 Encoded, Size: %d bytes):\nlocal rawBytecodeBase64 = %q\nreturn rawBytecodeBase64\n", #bytecode, b64)
+            return generateHeader(scriptInstance, "Extracted Raw Bytecode (Decompiler Unavailable)")
+                .. string.format(
+                    "-- Raw Luau Bytecode (Base64 Encoded, Size: %d bytes):\nlocal rawBytecodeBase64 = %q\nreturn rawBytecodeBase64\n",
+                    #bytecode,
+                    b64
+                )
         end
     end
 
     -- 4. Fallback: Intelligent AST Mock Generator (Prevents broken scripts in Studio)
-    return generateHeader(scriptInstance, "Auto-Synthesized Client AST Mock (Decompiler Bypass)") ..
-        synthesizeClientFallbackMock(scriptInstance)
+    return generateHeader(scriptInstance, "Auto-Synthesized Client AST Mock (Decompiler Bypass)")
+        .. synthesizeClientFallbackMock(scriptInstance)
 end
 
 -- Batch decompile multiple scripts concurrently with worker pool
@@ -1847,7 +2013,9 @@ __define__("Core/Engine", function()
 ]]
 
 local SoundService = nil
-pcall(function() SoundService = game:GetService("SoundService") end)
+pcall(function()
+    SoundService = game:GetService("SoundService")
+end)
 
 local Environment = __require__("Utils/Environment")
 local AntiAFK = __require__("Utils/AntiAFK")
@@ -1871,7 +2039,9 @@ Engine.__index = Engine
 
 function Engine.NormalizeOptions(rawOptions)
     local opts = table.clone(Defaults)
-    if not rawOptions or type(rawOptions) ~= "table" then return opts end
+    if not rawOptions or type(rawOptions) ~= "table" then
+        return opts
+    end
 
     for k, v in pairs(rawOptions) do
         local lk = string.lower(tostring(k))
@@ -1879,21 +2049,38 @@ function Engine.NormalizeOptions(rawOptions)
             opts.DecompileScripts = not (v == true)
         elseif lk == "mode" then
             local lm = string.lower(tostring(v))
-            if lm == "full" then opts.Mode = "Full"
-            elseif lm == "fast" then opts.Mode = "Fast"
-            elseif lm == "visualsonly" or lm == "visuals" then opts.Mode = "VisualsOnly"
-            elseif lm == "scriptsonly" or lm == "scripts" then opts.Mode = "ScriptsOnly"
-            elseif lm == "onlymap" or lm == "maponly" or lm == "map" then opts.Mode = "OnlyMap"
-            elseif lm == "uionly" or lm == "ui" or lm == "guionly" then opts.Mode = "UIOnly"
-            elseif lm == "ghost" or lm == "stealth" then opts.Mode = "Ghost"
-            elseif lm == "optimized" then opts.Mode = "Full"; opts.OptimizeGeometry = true
-            elseif lm == "beeswarm" or lm == "bss" or lm == "bee_swarm" then opts.Mode = "BeeSwarm"
-            elseif lm == "bloxfruits" or lm == "blox_fruits" or lm == "bf" then opts.Mode = "BloxFruits"
-            elseif lm == "petsimulator99" or lm == "petsim" or lm == "ps99" or lm == "pet_simulator_99" then opts.Mode = "PetSimulator99"
-            elseif lm == "arsenal" then opts.Mode = "Arsenal"
-            elseif lm == "doors" then opts.Mode = "Doors"
-            elseif lm == "towerdefense" or lm == "tds" or lm == "tower_defense" then opts.Mode = "TowerDefense"
-            else opts.Mode = v end
+            if lm == "full" then
+                opts.Mode = "Full"
+            elseif lm == "fast" then
+                opts.Mode = "Fast"
+            elseif lm == "visualsonly" or lm == "visuals" then
+                opts.Mode = "VisualsOnly"
+            elseif lm == "scriptsonly" or lm == "scripts" then
+                opts.Mode = "ScriptsOnly"
+            elseif lm == "onlymap" or lm == "maponly" or lm == "map" then
+                opts.Mode = "OnlyMap"
+            elseif lm == "uionly" or lm == "ui" or lm == "guionly" then
+                opts.Mode = "UIOnly"
+            elseif lm == "ghost" or lm == "stealth" then
+                opts.Mode = "Ghost"
+            elseif lm == "optimized" then
+                opts.Mode = "Full"
+                opts.OptimizeGeometry = true
+            elseif lm == "beeswarm" or lm == "bss" or lm == "bee_swarm" then
+                opts.Mode = "BeeSwarm"
+            elseif lm == "bloxfruits" or lm == "blox_fruits" or lm == "bf" then
+                opts.Mode = "BloxFruits"
+            elseif lm == "petsimulator99" or lm == "petsim" or lm == "ps99" or lm == "pet_simulator_99" then
+                opts.Mode = "PetSimulator99"
+            elseif lm == "arsenal" then
+                opts.Mode = "Arsenal"
+            elseif lm == "doors" then
+                opts.Mode = "Doors"
+            elseif lm == "towerdefense" or lm == "tds" or lm == "tower_defense" then
+                opts.Mode = "TowerDefense"
+            else
+                opts.Mode = v
+            end
             Defaults.ApplyPreset(opts, opts.Mode)
         elseif lk == "decompileignore" or lk == "decompile_ignore" then
             opts.DecompileIgnore = v
@@ -1905,7 +2092,12 @@ function Engine.NormalizeOptions(rawOptions)
             opts.DecompileTimeout = tonumber(v) or 12
         elseif lk == "ignorelist" or lk == "ignore_list" then
             opts.IgnoreList = v
-        elseif lk == "isolatestarterplayer" or lk == "isolate_starter_player" or lk == "isolatelocalplayer" or lk == "isolate_local_player" then
+        elseif
+            lk == "isolatestarterplayer"
+            or lk == "isolate_starter_player"
+            or lk == "isolatelocalplayer"
+            or lk == "isolate_local_player"
+        then
             opts.IsolateStarterPlayer = (v == true)
         elseif lk == "filepath" or lk == "file_path" or lk == "filename" or lk == "file_name" then
             opts.FilePath = tostring(v)
@@ -1984,24 +2176,34 @@ end
 
 -- Play completion audio chime
 function Engine:PlayChime()
-    if not self.Config.PlaySoundOnComplete or self.Config.SilentMode then return end
+    if not self.Config.PlaySoundOnComplete or self.Config.SilentMode then
+        return
+    end
     pcall(function()
         local sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://9069609200" -- Pleasant success chime
         sound.Volume = 0.6
         sound.Parent = SoundService
         sound:Play()
-        sound.Ended:Connect(function() sound:Destroy() end)
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
     end)
 end
 
 -- Check if instance should be saved
 function Engine:ShouldSaveInstance(inst)
     local cName = inst.ClassName
-    if ClassBlacklist.Classes[cName] then return false end
-    if ClassBlacklist.Names[inst.Name] then return false end
+    if ClassBlacklist.Classes[cName] then
+        return false
+    end
+    if ClassBlacklist.Names[inst.Name] then
+        return false
+    end
 
-    if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then return false end
+    if inst.Name == "HyperSaveInstance_UI" or inst.Name == "HyperSaveGUI" then
+        return false
+    end
     if self.Config.IgnoredGui and (inst == self.Config.IgnoredGui or inst:IsDescendantOf(self.Config.IgnoredGui)) then
         return false
     end
@@ -2028,22 +2230,28 @@ function Engine:SaveTarget(target, customConfig)
 
     local cfg = table.clone(self.Config)
     if customConfig then
-        for k, v in pairs(customConfig) do cfg[k] = v end
+        for k, v in pairs(customConfig) do
+            cfg[k] = v
+        end
     end
 
     local cleanName = string.gsub(target.Name, "[^%w_%-]", "_")
     local fileName = string.format("HyperSave_Model_%s_%d.%s", cleanName, os.time(), cfg.Format or "rbxm")
 
-    local allInstances = {target}
+    local allInstances = { target }
     local scriptInstances = {}
 
     local function scan(inst)
-        if not self:ShouldSaveInstance(inst) then return end
+        if not self:ShouldSaveInstance(inst) then
+            return
+        end
         table.insert(allInstances, inst)
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
         end
-        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child)
+        end
     end
     scan(target)
 
@@ -2052,7 +2260,7 @@ function Engine:SaveTarget(target, customConfig)
         scriptSources = Decompiler.DecompileBatch(scriptInstances, cfg)
     end
 
-    local output = SerializerXml.Serialize({target}, scriptSources, nil, cfg)
+    local output = SerializerXml.Serialize({ target }, scriptSources, nil, cfg)
     local writeOk = Environment.WriteFile(fileName, output)
 
     if writeOk then
@@ -2073,18 +2281,24 @@ function Engine:SaveTargetBatch(targets, customConfig)
 
     local cfg = table.clone(self.Config)
     if customConfig then
-        for k, v in pairs(customConfig) do cfg[k] = v end
+        for k, v in pairs(customConfig) do
+            cfg[k] = v
+        end
     end
 
     local fileName = string.format("HyperSave_MultiPack_%d_items_%d.%s", #targets, os.time(), cfg.Format or "rbxm")
     local scriptInstances = {}
 
     local function scan(inst)
-        if not self:ShouldSaveInstance(inst) then return end
+        if not self:ShouldSaveInstance(inst) then
+            return
+        end
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
         end
-        for _, child in ipairs(inst:GetChildren()) do scan(child) end
+        for _, child in ipairs(inst:GetChildren()) do
+            scan(child)
+        end
     end
 
     for _, target in ipairs(targets) do
@@ -2140,7 +2354,7 @@ function Engine:Start()
             Percentage = 4,
             Message = "Auto-Map Explorer: Sweeping coordinates to load all streaming chunks...",
         })
-        local allowPhysicalTeleport = (not self.Config.SafeStreaming) and (not self.Config.StealthMode)
+        local allowPhysicalTeleport = (not self.Config.SafeStreaming) and not self.Config.StealthMode
         StreamExplorer.ExploreMap(512, function(cur, tot, pos)
             local pct = 4 + math.floor((cur / tot) * 6)
             self:EmitProgress({
@@ -2175,7 +2389,9 @@ function Engine:Start()
         local nils = Environment.GetNilInstances()
         for _, nInst in ipairs(nils) do
             if self:ShouldSaveInstance(nInst) then
-                pcall(function() nInst.Parent = nilFolder end)
+                pcall(function()
+                    nInst.Parent = nilFolder
+                end)
             end
         end
         if #nilFolder:GetChildren() > 0 then
@@ -2280,7 +2496,9 @@ function Engine:Start()
     local synthesizedSpawn = nil
     if self.Config.GenerateSafeSpawn then
         pcall(function()
-            local clonerefFn = cloneref or function(obj) return obj end
+            local clonerefFn = cloneref or function(obj)
+                return obj
+            end
             local Players = clonerefFn(game:GetService("Players"))
             local localPlayer = Players and (Players.LocalPlayer or Players:FindFirstChildOfClass("Player"))
             local char = localPlayer and localPlayer.Character
@@ -2317,7 +2535,9 @@ function Engine:Start()
     local lastYield = os.clock()
 
     local function scan(inst)
-        if not inst or visited[inst] then return end
+        if not inst or visited[inst] then
+            return
+        end
         visited[inst] = true
         scannedCounter = scannedCounter + 1
 
@@ -2327,7 +2547,9 @@ function Engine:Start()
             lastYield = os.clock()
         end
 
-        if not self:ShouldSaveInstance(inst) then return end
+        if not self:ShouldSaveInstance(inst) then
+            return
+        end
         table.insert(allInstances, inst)
 
         if inst:IsA("LuaSourceContainer") then
@@ -2382,7 +2604,9 @@ function Engine:Start()
     if self.Config.DownloadRawAssets then
         local assets = AssetDownloader.CollectAssets(allInstances)
         local totalAssets = 0
-        for _ in pairs(assets) do totalAssets = totalAssets + 1 end
+        for _ in pairs(assets) do
+            totalAssets = totalAssets + 1
+        end
 
         if totalAssets > 0 then
             self:EmitProgress({
@@ -2517,8 +2741,14 @@ function Engine:Start()
             end
         end
 
-        local successMsg = string.format("Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
-            totalInstances, totalScripts, downloadedCount, elapsed, fullPathHint)
+        local successMsg = string.format(
+            "Done! Saved %d instances, %d scripts & %d raw assets in %.2fs to: %s",
+            totalInstances,
+            totalScripts,
+            downloadedCount,
+            elapsed,
+            fullPathHint
+        )
 
         self:EmitProgress({
             Stage = "Done",
@@ -2560,10 +2790,14 @@ function Engine:Start()
             task.spawn(function()
                 pcall(function()
                     local req = (syn and syn.request) or (http and http.request) or http_request or request
-                    if not req then return end
+                    if not req then
+                        return
+                    end
 
                     local MarketplaceService = game:GetService("MarketplaceService")
-                    local placeInfo = pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
+                    local placeInfo = pcall(function()
+                        return MarketplaceService:GetProductInfo(game.PlaceId)
+                    end)
                     local placeName = (type(placeInfo) == "table" and placeInfo.Name) or (workspace and workspace.Name) or "Roblox Place"
 
                     local payload = {
@@ -2571,7 +2805,12 @@ function Engine:Start()
                         embeds = {
                             {
                                 title = "PLACE CLONED SUCCESSFULLY",
-                                description = string.format("**Map:** `%s`\n**Place ID:** `%d`\n**Output File:** `%s`", tostring(placeName), game.PlaceId, targetFileName),
+                                description = string.format(
+                                    "**Map:** `%s`\n**Place ID:** `%d`\n**Output File:** `%s`",
+                                    tostring(placeName),
+                                    game.PlaceId,
+                                    targetFileName
+                                ),
                                 color = 11022583,
                                 fields = {
                                     { name = "Instances", value = tostring(totalInstances), inline = true },
@@ -2582,9 +2821,9 @@ function Engine:Start()
                                     { name = "Author", value = "Theo Lorentz Padilha", inline = true },
                                 },
                                 footer = { text = "HyperSaveInstance v2.1 // Gothic Cyberpunk Engine" },
-                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-                            }
-                        }
+                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                            },
+                        },
                     }
 
                     local json = game:GetService("HttpService"):JSONEncode(payload)
@@ -2592,7 +2831,7 @@ function Engine:Start()
                         Url = self.Config.DiscordWebhookUrl,
                         Method = "POST",
                         Headers = { ["Content-Type"] = "application/json" },
-                        Body = json
+                        Body = json,
                     })
                 end)
             end)
@@ -2625,11 +2864,17 @@ __define__("Core/GuiRipper", function()
     Extracts all ScreenGuis, Menus, Inventories, Health Bars, and HUDs to a standalone UI Pack or pure Luau code.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 local StarterGui = nil
-pcall(function() StarterGui = clonerefFn(game:GetService("StarterGui")) end)
+pcall(function()
+    StarterGui = clonerefFn(game:GetService("StarterGui"))
+end)
 local Environment = __require__("Utils/Environment")
 local SerializerXml = __require__("Core/SerializerXml")
 local Decompiler = __require__("Core/Decompiler")
@@ -2639,8 +2884,14 @@ local GuiRipper = {}
 -- Check if a GUI belongs to CoreGui / internal toolbars
 local function isInternalGui(gui)
     local name = gui.Name
-    if name == "RobloxGui" or name == "CoreScripts" or name == "HyperSaveInstance_UI" or
-       name == "TopBarApp" or name == "PurchasePrompt" or name == "InGameMenu" then
+    if
+        name == "RobloxGui"
+        or name == "CoreScripts"
+        or name == "HyperSaveInstance_UI"
+        or name == "TopBarApp"
+        or name == "PurchasePrompt"
+        or name == "InGameMenu"
+    then
         return true
     end
     return false
@@ -2663,7 +2914,9 @@ function GuiRipper.ExportAllGuis(options)
             if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not isInternalGui(gui) then
                 pcall(function()
                     local cl = gui:Clone()
-                    if cl then cl.Parent = folder end
+                    if cl then
+                        cl.Parent = folder
+                    end
                 end)
             end
         end
@@ -2675,10 +2928,16 @@ function GuiRipper.ExportAllGuis(options)
         local pGui = player:FindFirstChild("PlayerGui")
         if pGui then
             for _, gui in ipairs(pGui:GetChildren()) do
-                if (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui")) and not isInternalGui(gui) and not folder:FindFirstChild(gui.Name) then
+                if
+                    (gui:IsA("ScreenGui") or gui:IsA("BillboardGui") or gui:IsA("SurfaceGui"))
+                    and not isInternalGui(gui)
+                    and not folder:FindFirstChild(gui.Name)
+                then
                     pcall(function()
                         local cl = gui:Clone()
-                        if cl then cl.Parent = folder end
+                        if cl then
+                            cl.Parent = folder
+                        end
                     end)
                 end
             end
@@ -2689,16 +2948,18 @@ function GuiRipper.ExportAllGuis(options)
         if inst:IsA("LuaSourceContainer") then
             table.insert(scriptInstances, inst)
         end
-        for _, child in ipairs(inst:GetChildren()) do scanScripts(child) end
+        for _, child in ipairs(inst:GetChildren()) do
+            scanScripts(child)
+        end
     end
     scanScripts(folder)
 
     local scriptSources = {}
     if #scriptInstances > 0 then
-        scriptSources = Decompiler.DecompileBatch(scriptInstances, options or {DecompileScripts = true})
+        scriptSources = Decompiler.DecompileBatch(scriptInstances, options or { DecompileScripts = true })
     end
 
-    local xml = SerializerXml.Serialize({folder}, scriptSources, nil, {SaveAttributes = true, SaveTags = true})
+    local xml = SerializerXml.Serialize({ folder }, scriptSources, nil, { SaveAttributes = true, SaveTags = true })
     local writeOk = Environment.WriteFile(fileName, xml)
 
     if writeOk then
@@ -2722,10 +2983,10 @@ function GuiRipper.ExportGuiToLuaScript(targetGui)
         "    ================================================================================",
         "--]]",
         "",
-        "local CoreGui = game:GetService(\"CoreGui\")",
-        "local Players = game:GetService(\"Players\")",
+        'local CoreGui = game:GetService("CoreGui")',
+        'local Players = game:GetService("Players")',
         "local LocalPlayer = Players.LocalPlayer",
-        "local PlayerGui = LocalPlayer and LocalPlayer:WaitForChild(\"PlayerGui\")",
+        'local PlayerGui = LocalPlayer and LocalPlayer:WaitForChild("PlayerGui")',
         "",
         "local function CreateUI()",
     }
@@ -2737,7 +2998,9 @@ function GuiRipper.ExportGuiToLuaScript(targetGui)
         if not instToVar[inst] then
             varCounter = varCounter + 1
             local cleanName = string.gsub(inst.Name, "[^%w_]", "")
-            if #cleanName == 0 then cleanName = "inst" end
+            if #cleanName == 0 then
+                cleanName = "inst"
+            end
             instToVar[inst] = string.format("%s_%d", cleanName, varCounter)
         end
         return instToVar[inst]
@@ -2750,24 +3013,74 @@ function GuiRipper.ExportGuiToLuaScript(targetGui)
 
         pcall(function()
             if inst:IsA("GuiObject") then
-                table.insert(lines, string.format("    %s.Size = UDim2.new(%s, %s, %s, %s)", vName, inst.Size.X.Scale, inst.Size.X.Offset, inst.Size.Y.Scale, inst.Size.Y.Offset))
-                table.insert(lines, string.format("    %s.Position = UDim2.new(%s, %s, %s, %s)", vName, inst.Position.X.Scale, inst.Position.X.Offset, inst.Position.Y.Scale, inst.Position.Y.Offset))
-                table.insert(lines, string.format("    %s.BackgroundColor3 = Color3.fromRGB(%d, %d, %d)", vName, math.floor(inst.BackgroundColor3.R * 255), math.floor(inst.BackgroundColor3.G * 255), math.floor(inst.BackgroundColor3.B * 255)))
+                table.insert(
+                    lines,
+                    string.format(
+                        "    %s.Size = UDim2.new(%s, %s, %s, %s)",
+                        vName,
+                        inst.Size.X.Scale,
+                        inst.Size.X.Offset,
+                        inst.Size.Y.Scale,
+                        inst.Size.Y.Offset
+                    )
+                )
+                table.insert(
+                    lines,
+                    string.format(
+                        "    %s.Position = UDim2.new(%s, %s, %s, %s)",
+                        vName,
+                        inst.Position.X.Scale,
+                        inst.Position.X.Offset,
+                        inst.Position.Y.Scale,
+                        inst.Position.Y.Offset
+                    )
+                )
+                table.insert(
+                    lines,
+                    string.format(
+                        "    %s.BackgroundColor3 = Color3.fromRGB(%d, %d, %d)",
+                        vName,
+                        math.floor(inst.BackgroundColor3.R * 255),
+                        math.floor(inst.BackgroundColor3.G * 255),
+                        math.floor(inst.BackgroundColor3.B * 255)
+                    )
+                )
                 table.insert(lines, string.format("    %s.BackgroundTransparency = %s", vName, tostring(inst.BackgroundTransparency)))
             end
             if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
                 table.insert(lines, string.format("    %s.Text = %q", vName, (inst ).Text))
                 table.insert(lines, string.format("    %s.TextSize = %d", vName, (inst ).TextSize))
-                table.insert(lines, string.format("    %s.TextColor3 = Color3.fromRGB(%d, %d, %d)", vName, math.floor((inst ).TextColor3.R * 255), math.floor((inst ).TextColor3.G * 255), math.floor((inst ).TextColor3.B * 255)))
+                table.insert(
+                    lines,
+                    string.format(
+                        "    %s.TextColor3 = Color3.fromRGB(%d, %d, %d)",
+                        vName,
+                        math.floor((inst ).TextColor3.R * 255),
+                        math.floor((inst ).TextColor3.G * 255),
+                        math.floor((inst ).TextColor3.B * 255)
+                    )
+                )
             end
             if inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
                 table.insert(lines, string.format("    %s.Image = %q", vName, (inst ).Image))
             end
             if inst:IsA("UICorner") then
-                table.insert(lines, string.format("    %s.CornerRadius = UDim.new(%s, %s)", vName, inst.CornerRadius.Scale, inst.CornerRadius.Offset))
+                table.insert(
+                    lines,
+                    string.format("    %s.CornerRadius = UDim.new(%s, %s)", vName, inst.CornerRadius.Scale, inst.CornerRadius.Offset)
+                )
             end
             if inst:IsA("UIStroke") then
-                table.insert(lines, string.format("    %s.Color = Color3.fromRGB(%d, %d, %d)", vName, math.floor(inst.Color.R * 255), math.floor(inst.Color.G * 255), math.floor(inst.Color.B * 255)))
+                table.insert(
+                    lines,
+                    string.format(
+                        "    %s.Color = Color3.fromRGB(%d, %d, %d)",
+                        vName,
+                        math.floor(inst.Color.R * 255),
+                        math.floor(inst.Color.G * 255),
+                        math.floor(inst.Color.B * 255)
+                    )
+                )
                 table.insert(lines, string.format("    %s.Thickness = %s", vName, tostring(inst.Thickness)))
             end
         end)
@@ -2810,9 +3123,13 @@ __define__("Core/LightingRipper", function()
     Extracts realistic Skyboxes, Atmospheres, ColorCorrections, SunRays, and Post-Processing to a standalone preset.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local Lighting = nil
-pcall(function() Lighting = clonerefFn(game:GetService("Lighting")) end)
+pcall(function()
+    Lighting = clonerefFn(game:GetService("Lighting"))
+end)
 local Environment = __require__("Utils/Environment")
 local SerializerXml = __require__("Core/SerializerXml")
 
@@ -2829,11 +3146,13 @@ function LightingRipper.ExportLightingPreset()
     for _, child in ipairs(Lighting:GetChildren()) do
         pcall(function()
             local clone = child:Clone()
-            if clone then clone.Parent = folder end
+            if clone then
+                clone.Parent = folder
+            end
         end)
     end
 
-    local xml = SerializerXml.Serialize({Lighting, folder}, {}, nil, {SaveAttributes = true, SaveTags = true})
+    local xml = SerializerXml.Serialize({ Lighting, folder }, {}, nil, { SaveAttributes = true, SaveTags = true })
     local writeOk = Environment.WriteFile(fileName, xml)
 
     if writeOk then
@@ -2852,9 +3171,13 @@ __define__("Core/NetworkSniffer", function()
     Logs and intercepts RemoteEvent / RemoteFunction calls to reverse-engineer client-server network protocols.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = clonerefFn(game:GetService("HttpService"))
+end)
 local Environment = __require__("Utils/Environment")
 
 local NetworkSniffer = {}
@@ -2878,7 +3201,9 @@ local function describeArgs(args)
             table.insert(parts, "Instance<" .. v.ClassName .. ">")
         elseif t == "table" then
             local count = 0
-            for _ in pairs(v) do count = count + 1 end
+            for _ in pairs(v) do
+                count = count + 1
+            end
             table.insert(parts, string.format("table{%d}", count))
         else
             table.insert(parts, t)
@@ -2889,7 +3214,9 @@ end
 
 -- Start live packet sniffing
 function NetworkSniffer.Start()
-    if NetworkSniffer.IsActive then return end
+    if NetworkSniffer.IsActive then
+        return
+    end
     NetworkSniffer.IsActive = true
 
     -- Hook Metamethod __namecall if executor supports hookmetamethod
@@ -2910,12 +3237,12 @@ function NetworkSniffer.Start()
 
             if NetworkSniffer.IsActive and typeof(self) == "Instance" and method then
                 if method == "FireServer" and self:IsA("RemoteEvent") then
-                    local args = {...}
+                    local args = { ... }
                     task.spawn(function()
                         NetworkSniffer.LogCall("FireServer", self, args)
                     end)
                 elseif method == "InvokeServer" and self:IsA("RemoteFunction") then
-                    local args = {...}
+                    local args = { ... }
                     task.spawn(function()
                         NetworkSniffer.LogCall("InvokeServer", self, args)
                     end)
@@ -2997,10 +3324,10 @@ function NetworkSniffer.ExportRemoteSpyScript()
         "    ================================================================================",
         "--]]",
         "",
-        "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-        "local Players = game:GetService(\"Players\")",
+        'local ReplicatedStorage = game:GetService("ReplicatedStorage")',
+        'local Players = game:GetService("Players")',
         "",
-        "print(\"[HyperSave Remote Replicator] Starting reconstructed network traffic dispatch...\")",
+        'print("[HyperSave Remote Replicator] Starting reconstructed network traffic dispatch...")',
         "",
     }
 
@@ -3014,10 +3341,16 @@ function NetworkSniffer.ExportRemoteSpyScript()
             table.insert(lines, string.format("    local remote = %s", path))
             table.insert(lines, "    if remote then")
             if log.Type == "FireServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Firing %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(
+                    lines,
+                    string.format('        print("[Remote Test] Firing %%s with %%s", remote:GetFullName(), %q)', log.ArgsShape)
+                )
                 table.insert(lines, string.format("        -- remote:FireServer(unpack(%s))", log.ArgsShape))
             elseif log.Type == "InvokeServer" then
-                table.insert(lines, string.format("        print(\"[Remote Test] Invoking %%s with %%s\", remote:GetFullName(), %q)", log.ArgsShape))
+                table.insert(
+                    lines,
+                    string.format('        print("[Remote Test] Invoking %%s with %%s", remote:GetFullName(), %q)', log.ArgsShape)
+                )
                 table.insert(lines, string.format("        -- local res = remote:InvokeServer(unpack(%s))", log.ArgsShape))
             end
             table.insert(lines, "    end")
@@ -3073,7 +3406,9 @@ local function getBoxGeometry(cf, size, vertOffset)
                 cf:PointToWorldSpace(Vector3.new(-hx, hy, hz)),
             }
         end)
-        if s and c then corners = c end
+        if s and c then
+            corners = c
+        end
     end
 
     if #corners == 0 then
@@ -3129,12 +3464,12 @@ function ObjExporter.GenerateObj(targetRoot, options)
         "# HyperSaveInstance - Wavefront 3D OBJ Export",
         "# Exported by Theo Lorentz Padilha",
         "mtllib " .. baseName .. ".mtl",
-        ""
+        "",
     }
 
     local mtlLines = {
         "# HyperSaveInstance - Material Library (.mtl)",
-        ""
+        "",
     }
 
     local materialsSeen = {}
@@ -3222,7 +3557,7 @@ local Optimizer = {
         PrunedOrphans = 0,
         PrunedDuplicates = 0,
         TotalPruned = 0,
-    }
+    },
 }
 
 function Optimizer.OptimizeHierarchy(rootInstances, options)
@@ -3278,7 +3613,9 @@ function Optimizer.OptimizeHierarchy(rootInstances, options)
                 if seenSounds[child.SoundId] and not child:GetAttribute("Preserve") then
                     Optimizer.Stats.PrunedDuplicates = Optimizer.Stats.PrunedDuplicates + 1
                     Optimizer.Stats.TotalPruned = Optimizer.Stats.TotalPruned + 1
-                    pcall(function() child:Destroy() end)
+                    pcall(function()
+                        child:Destroy()
+                    end)
                 else
                     seenSounds[child.SoundId] = true
                     cleanRecursive(child)
@@ -3315,9 +3652,13 @@ __define__("Core/PlaceDiffTracker", function()
     newly added instances, modified scripts, and removed models in game updates.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = clonerefFn(game:GetService("HttpService"))
+end)
 local Environment = __require__("Utils/Environment")
 
 local PlaceDiffTracker = {}
@@ -3329,21 +3670,23 @@ function PlaceDiffTracker.CreateSnapshot(root)
         PlaceId = game.PlaceId or 0,
         Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         InstanceCount = 0,
-        Instances = {}
+        Instances = {},
     }
 
     local function scan(inst, path)
         local curPath = path .. "/" .. inst.Name
         local class = inst.ClassName
         local childrenCount = #inst:GetChildren()
-        
+
         local info = {
             Class = class,
-            Children = childrenCount
+            Children = childrenCount,
         }
 
         if inst:IsA("LuaSourceContainer") then
-            local s, src = pcall(function() return (inst ).Source end)
+            local s, src = pcall(function()
+                return (inst ).Source
+            end)
             if s and src then
                 info.SourceLen = #src
             end
@@ -3359,7 +3702,9 @@ function PlaceDiffTracker.CreateSnapshot(root)
 
     for _, serv in ipairs(target:GetChildren()) do
         if not string.find(serv.ClassName, "Core") and not string.find(serv.Name, "Roblox") then
-            pcall(function() scan(serv, "") end)
+            pcall(function()
+                scan(serv, "")
+            end)
         end
     end
 
@@ -3370,7 +3715,7 @@ end
 function PlaceDiffTracker.SaveSnapshot(name, root)
     local snapName = name or string.format("HyperSave_Snapshot_%d_%s.json", game.PlaceId or 0, os.date("%Y%m%d_%H%M%S"))
     local snapData = PlaceDiffTracker.CreateSnapshot(root)
-    
+
     local s, json = pcall(function()
         return HttpService:JSONEncode(snapData)
     end)
@@ -3394,7 +3739,9 @@ function PlaceDiffTracker.Compare(prevSnapshotOrFile, curSnapshot)
         if not content then
             return { Success = false, Error = "Arquivo de snapshot anterior não encontrado." }
         end
-        local s, parsed = pcall(function() return HttpService:JSONDecode(content) end)
+        local s, parsed = pcall(function()
+            return HttpService:JSONDecode(content)
+        end)
         if not s or not parsed then
             return { Success = false, Error = "JSON de snapshot anterior inválido." }
         end
@@ -3411,7 +3758,7 @@ function PlaceDiffTracker.Compare(prevSnapshotOrFile, curSnapshot)
         Added = {},
         Removed = {},
         Modified = {},
-        Summary = ""
+        Summary = "",
     }
 
     -- Detect added and modified
@@ -3433,8 +3780,13 @@ function PlaceDiffTracker.Compare(prevSnapshotOrFile, curSnapshot)
         end
     end
 
-    diff.Summary = string.format("Diff: +%d adicionados, -%d removidos, ~%d modificados (Total Atual: %d)",
-        #diff.Added, #diff.Removed, #diff.Modified, curr.InstanceCount)
+    diff.Summary = string.format(
+        "Diff: +%d adicionados, -%d removidos, ~%d modificados (Total Atual: %d)",
+        #diff.Added,
+        #diff.Removed,
+        #diff.Modified,
+        curr.InstanceCount
+    )
 
     return diff
 end
@@ -3457,7 +3809,7 @@ function PlaceDiffTracker.ExportDiffReport(diff)
         string.format("Resumo: %s", diff.Summary),
         "================================================================================",
         "",
-        string.format("--- [1] NOVAS INSTÂNCIAS ADICIONADAS (%d) ---", #diff.Added)
+        string.format("--- [1] NOVAS INSTÂNCIAS ADICIONADAS (%d) ---", #diff.Added),
     }
 
     for i, item in ipairs(diff.Added) do
@@ -3504,13 +3856,21 @@ __define__("Core/RaycastSelector", function()
     in the game world to inspect its hierarchy and save it with all internal scripts.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local UserInputService = nil
-pcall(function() UserInputService = clonerefFn(game:GetService("UserInputService")) end)
+pcall(function()
+    UserInputService = clonerefFn(game:GetService("UserInputService"))
+end)
 local RunService = nil
-pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
+pcall(function()
+    RunService = clonerefFn(game:GetService("RunService"))
+end)
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 local Stealth = __require__("Utils/Stealth")
 
 local RaycastSelector = {}
@@ -3542,16 +3902,20 @@ function RaycastSelector:InitVisuals()
         hl.OutlineColor = Color3.fromRGB(255, 255, 255)
         hl.OutlineTransparency = 0
         hl.Enabled = false
-        
+
         Stealth.ProtectGui(hl)
 
         -- Store in gethui or CoreGui safely
         local parent = nil
         if gethui then
-            pcall(function() parent = gethui() end)
+            pcall(function()
+                parent = gethui()
+            end)
         end
         if not parent then
-            pcall(function() parent = clonerefFn(game:GetService("CoreGui")) end)
+            pcall(function()
+                parent = clonerefFn(game:GetService("CoreGui"))
+            end)
         end
         hl.Parent = parent or workspace
         self.Highlight = hl
@@ -3560,7 +3924,9 @@ end
 
 -- Find the most meaningful parent Model or Tool from a clicked BasePart
 function RaycastSelector:ResolveTarget(part)
-    if not part then return nil end
+    if not part then
+        return nil
+    end
 
     local current = part
     local bestModel = part
@@ -3581,7 +3947,9 @@ end
 -- Perform raycast from mouse screen position into 3D world
 function RaycastSelector:RaycastMouse()
     local camera = workspace.CurrentCamera
-    if not camera then return nil, nil end
+    if not camera then
+        return nil, nil
+    end
 
     local mousePos = UserInputService:GetMouseLocation()
     local unitRay = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
@@ -3614,7 +3982,9 @@ end
 
 -- Start interactive click-to-select mode in 3D world
 function RaycastSelector:Start(onSelected)
-    if self.IsActive then self:Stop() end
+    if self.IsActive then
+        self:Stop()
+    end
 
     self.IsActive = true
     self.OnSelectedCallback = onSelected
@@ -3622,12 +3992,14 @@ function RaycastSelector:Start(onSelected)
 
     -- RenderStepped hover raycast
     local hoverConn = RunService.RenderStepped:Connect(function()
-        if not self.IsActive then return end
+        if not self.IsActive then
+            return
+        end
 
         local target = self:RaycastMouse()
         if target ~= self.HoveredInstance then
             self.HoveredInstance = target
-            
+
             if self.Highlight then
                 if target and (target:IsA("Model") or target:IsA("BasePart")) then
                     self.Highlight.Adornee = target
@@ -3647,7 +4019,9 @@ function RaycastSelector:Start(onSelected)
 
     -- Click listener
     local clickConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not self.IsActive then return end
+        if not self.IsActive then
+            return
+        end
 
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             local target = self.HoveredInstance or self:RaycastMouse()
@@ -3670,7 +4044,9 @@ end
 function RaycastSelector:Stop()
     self.IsActive = false
     for _, conn in ipairs(self.Connections) do
-        pcall(function() conn:Disconnect() end)
+        pcall(function()
+            conn:Disconnect()
+        end)
     end
     self.Connections = {}
 
@@ -3685,7 +4061,9 @@ end
 function RaycastSelector:Destroy()
     self:Stop()
     if self.Highlight then
-        pcall(function() self.Highlight:Destroy() end)
+        pcall(function()
+            self.Highlight:Destroy()
+        end)
         self.Highlight = nil
     end
 end
@@ -3700,984 +4078,988 @@ __define__("Core/Reflection", function()
     Preserves 100% of properties, meshes, textures, materials, sounds, terrain, physics, PBR, UI, attributes and tags.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local CollectionService = nil
-pcall(function() CollectionService = clonerefFn(game:GetService("CollectionService")) end)
+pcall(function()
+    CollectionService = clonerefFn(game:GetService("CollectionService"))
+end)
 
 local Reflection = {}
 
 -- Comprehensive Property Database for ALL Roblox Classes
 Reflection.ClassProperties = {
     ["Instance"] = {
-        {"Name", "string"},
-        {"Archivable", "bool"},
+        { "Name", "string" },
+        { "Archivable", "bool" },
     },
     ["PVInstance"] = {
-        {"Origin", "CoordinateFrame", true},
+        { "Origin", "CoordinateFrame", true },
     },
     ["BasePart"] = {
-        {"Size", "Vector3"},
-        {"CFrame", "CoordinateFrame"},
-        {"Position", "Vector3"},
-        {"Orientation", "Vector3"},
-        {"Color", "Color3"},
-        {"Material", "token"},
-        {"MaterialVariant", "string"},
-        {"Transparency", "float"},
-        {"Reflectance", "float"},
-        {"Anchored", "bool"},
-        {"CanCollide", "bool"},
-        {"CanTouch", "bool"},
-        {"CanQuery", "bool"},
-        {"CastShadow", "bool"},
-        {"Massless", "bool"},
-        {"RootPriority", "int"},
-        {"CustomPhysicalProperties", "PhysicalProperties"},
-        {"CollisionGroupId", "int"},
-        {"AssemblyLinearVelocity", "Vector3"},
-        {"AssemblyAngularVelocity", "Vector3"},
-        {"TopSurface", "token"},
-        {"BottomSurface", "token"},
-        {"LeftSurface", "token"},
-        {"RightSurface", "token"},
-        {"FrontSurface", "token"},
-        {"BackSurface", "token"},
+        { "Size", "Vector3" },
+        { "CFrame", "CoordinateFrame" },
+        { "Position", "Vector3" },
+        { "Orientation", "Vector3" },
+        { "Color", "Color3" },
+        { "Material", "token" },
+        { "MaterialVariant", "string" },
+        { "Transparency", "float" },
+        { "Reflectance", "float" },
+        { "Anchored", "bool" },
+        { "CanCollide", "bool" },
+        { "CanTouch", "bool" },
+        { "CanQuery", "bool" },
+        { "CastShadow", "bool" },
+        { "Massless", "bool" },
+        { "RootPriority", "int" },
+        { "CustomPhysicalProperties", "PhysicalProperties" },
+        { "CollisionGroupId", "int" },
+        { "AssemblyLinearVelocity", "Vector3" },
+        { "AssemblyAngularVelocity", "Vector3" },
+        { "TopSurface", "token" },
+        { "BottomSurface", "token" },
+        { "LeftSurface", "token" },
+        { "RightSurface", "token" },
+        { "FrontSurface", "token" },
+        { "BackSurface", "token" },
     },
     ["Part"] = {
-        {"Shape", "token"},
+        { "Shape", "token" },
     },
     ["MeshPart"] = {
-        {"MeshId", "Content"},
-        {"TextureID", "Content"},
-        {"RenderFidelity", "token"},
-        {"CollisionFidelity", "token"},
-        {"DoubleSided", "bool"},
-        {"VertexColor", "Vector3"},
+        { "MeshId", "Content" },
+        { "TextureID", "Content" },
+        { "RenderFidelity", "token" },
+        { "CollisionFidelity", "token" },
+        { "DoubleSided", "bool" },
+        { "VertexColor", "Vector3" },
     },
     ["UnionOperation"] = {
-        {"AssetId", "Content"},
-        {"RenderFidelity", "token"},
-        {"CollisionFidelity", "token"},
-        {"UsePartColor", "bool"},
-        {"SmoothingAngle", "float"},
+        { "AssetId", "Content" },
+        { "RenderFidelity", "token" },
+        { "CollisionFidelity", "token" },
+        { "UsePartColor", "bool" },
+        { "SmoothingAngle", "float" },
     },
     ["NegateOperation"] = {},
     ["SpecialMesh"] = {
-        {"MeshId", "Content"},
-        {"TextureId", "Content"},
-        {"MeshType", "token"},
-        {"Scale", "Vector3"},
-        {"Offset", "Vector3"},
-        {"VertexColor", "Vector3"},
+        { "MeshId", "Content" },
+        { "TextureId", "Content" },
+        { "MeshType", "token" },
+        { "Scale", "Vector3" },
+        { "Offset", "Vector3" },
+        { "VertexColor", "Vector3" },
     },
     ["Decal"] = {
-        {"Texture", "Content"},
-        {"Face", "token"},
-        {"Color3", "Color3"},
-        {"Transparency", "float"},
-        {"ZIndex", "int"},
+        { "Texture", "Content" },
+        { "Face", "token" },
+        { "Color3", "Color3" },
+        { "Transparency", "float" },
+        { "ZIndex", "int" },
     },
     ["Texture"] = {
-        {"StudsPerTileU", "float"},
-        {"StudsPerTileV", "float"},
-        {"OffsetStudsU", "float"},
-        {"OffsetStudsV", "float"},
+        { "StudsPerTileU", "float" },
+        { "StudsPerTileV", "float" },
+        { "OffsetStudsU", "float" },
+        { "OffsetStudsV", "float" },
     },
     ["SurfaceAppearance"] = {
-        {"ColorMap", "Content"},
-        {"NormalMap", "Content"},
-        {"RoughnessMap", "Content"},
-        {"MetalnessMap", "Content"},
-        {"AlphaMode", "token"},
+        { "ColorMap", "Content" },
+        { "NormalMap", "Content" },
+        { "RoughnessMap", "Content" },
+        { "MetalnessMap", "Content" },
+        { "AlphaMode", "token" },
     },
     ["MaterialVariant"] = {
-        {"BaseMaterial", "token"},
-        {"ColorMap", "Content"},
-        {"NormalMap", "Content"},
-        {"RoughnessMap", "Content"},
-        {"MetalnessMap", "Content"},
-        {"StudsPerTile", "float"},
-        {"MaterialPattern", "token"},
+        { "BaseMaterial", "token" },
+        { "ColorMap", "Content" },
+        { "NormalMap", "Content" },
+        { "RoughnessMap", "Content" },
+        { "MetalnessMap", "Content" },
+        { "StudsPerTile", "float" },
+        { "MaterialPattern", "token" },
     },
     ["Model"] = {
-        {"PrimaryPart", "Ref"},
-        {"Scale", "float"},
-        {"WorldPivot", "CoordinateFrame"},
+        { "PrimaryPart", "Ref" },
+        { "Scale", "float" },
+        { "WorldPivot", "CoordinateFrame" },
     },
     ["Folder"] = {},
     ["Configuration"] = {},
     ["Lighting"] = {
-        {"Ambient", "Color3"},
-        {"OutdoorAmbient", "Color3"},
-        {"Brightness", "float"},
-        {"ClockTime", "float"},
-        {"TimeOfDay", "string"},
-        {"GeographicLatitude", "float"},
-        {"FogColor", "Color3"},
-        {"FogEnd", "float"},
-        {"FogStart", "float"},
-        {"ColorShift_Bottom", "Color3"},
-        {"ColorShift_Top", "Color3"},
-        {"GlobalShadows", "bool"},
-        {"ShadowSoftness", "float"},
-        {"EnvironmentDiffuseScale", "float"},
-        {"EnvironmentSpecularScale", "float"},
-        {"Technology", "token"},
-        {"ExposureCompensation", "float"},
+        { "Ambient", "Color3" },
+        { "OutdoorAmbient", "Color3" },
+        { "Brightness", "float" },
+        { "ClockTime", "float" },
+        { "TimeOfDay", "string" },
+        { "GeographicLatitude", "float" },
+        { "FogColor", "Color3" },
+        { "FogEnd", "float" },
+        { "FogStart", "float" },
+        { "ColorShift_Bottom", "Color3" },
+        { "ColorShift_Top", "Color3" },
+        { "GlobalShadows", "bool" },
+        { "ShadowSoftness", "float" },
+        { "EnvironmentDiffuseScale", "float" },
+        { "EnvironmentSpecularScale", "float" },
+        { "Technology", "token" },
+        { "ExposureCompensation", "float" },
     },
     ["Atmosphere"] = {
-        {"Density", "float"},
-        {"Offset", "float"},
-        {"Color", "Color3"},
-        {"Decay", "Color3"},
-        {"Glare", "float"},
-        {"Haze", "float"},
+        { "Density", "float" },
+        { "Offset", "float" },
+        { "Color", "Color3" },
+        { "Decay", "Color3" },
+        { "Glare", "float" },
+        { "Haze", "float" },
     },
     ["Sky"] = {
-        {"SkyboxBk", "Content"},
-        {"SkyboxDn", "Content"},
-        {"SkyboxFt", "Content"},
-        {"SkyboxLf", "Content"},
-        {"SkyboxRt", "Content"},
-        {"SkyboxUp", "Content"},
-        {"SunTextureId", "Content"},
-        {"MoonTextureId", "Content"},
-        {"SunAngularPhase", "float"},
-        {"MoonAngularPhase", "float"},
-        {"CelestialBodiesShown", "bool"},
-        {"StarCount", "int"},
+        { "SkyboxBk", "Content" },
+        { "SkyboxDn", "Content" },
+        { "SkyboxFt", "Content" },
+        { "SkyboxLf", "Content" },
+        { "SkyboxRt", "Content" },
+        { "SkyboxUp", "Content" },
+        { "SunTextureId", "Content" },
+        { "MoonTextureId", "Content" },
+        { "SunAngularPhase", "float" },
+        { "MoonAngularPhase", "float" },
+        { "CelestialBodiesShown", "bool" },
+        { "StarCount", "int" },
     },
     ["BloomEffect"] = {
-        {"Enabled", "bool"},
-        {"Intensity", "float"},
-        {"Size", "float"},
-        {"Threshold", "float"},
+        { "Enabled", "bool" },
+        { "Intensity", "float" },
+        { "Size", "float" },
+        { "Threshold", "float" },
     },
     ["BlurEffect"] = {
-        {"Enabled", "bool"},
-        {"Size", "float"},
+        { "Enabled", "bool" },
+        { "Size", "float" },
     },
     ["ColorCorrectionEffect"] = {
-        {"Enabled", "bool"},
-        {"Brightness", "float"},
-        {"Contrast", "float"},
-        {"Saturation", "float"},
-        {"TintColor", "Color3"},
+        { "Enabled", "bool" },
+        { "Brightness", "float" },
+        { "Contrast", "float" },
+        { "Saturation", "float" },
+        { "TintColor", "Color3" },
     },
     ["SunRaysEffect"] = {
-        {"Enabled", "bool"},
-        {"Intensity", "float"},
-        {"Spread", "float"},
+        { "Enabled", "bool" },
+        { "Intensity", "float" },
+        { "Spread", "float" },
     },
     ["DepthOfFieldEffect"] = {
-        {"Enabled", "bool"},
-        {"FarIntensity", "float"},
-        {"FocusDistance", "float"},
-        {"InFocusRadius", "float"},
-        {"NearIntensity", "float"},
+        { "Enabled", "bool" },
+        { "FarIntensity", "float" },
+        { "FocusDistance", "float" },
+        { "InFocusRadius", "float" },
+        { "NearIntensity", "float" },
     },
     ["Sound"] = {
-        {"SoundId", "Content"},
-        {"Volume", "float"},
-        {"PlaybackSpeed", "float"},
-        {"Looped", "bool"},
-        {"Playing", "bool"},
-        {"TimePosition", "float"},
-        {"RollOffMaxDistance", "float"},
-        {"RollOffMinDistance", "float"},
-        {"RollOffMode", "token"},
-        {"SoundGroup", "Ref"},
+        { "SoundId", "Content" },
+        { "Volume", "float" },
+        { "PlaybackSpeed", "float" },
+        { "Looped", "bool" },
+        { "Playing", "bool" },
+        { "TimePosition", "float" },
+        { "RollOffMaxDistance", "float" },
+        { "RollOffMinDistance", "float" },
+        { "RollOffMode", "token" },
+        { "SoundGroup", "Ref" },
     },
     ["SoundGroup"] = {
-        {"Volume", "float"},
+        { "Volume", "float" },
     },
     ["EqualizerSoundEffect"] = {
-        {"HighGain", "float"},
-        {"MidGain", "float"},
-        {"LowGain", "float"},
-        {"Priority", "int"},
-        {"Enabled", "bool"},
+        { "HighGain", "float" },
+        { "MidGain", "float" },
+        { "LowGain", "float" },
+        { "Priority", "int" },
+        { "Enabled", "bool" },
     },
     ["ReverbSoundEffect"] = {
-        {"DecayTime", "float"},
-        {"Density", "float"},
-        {"Diffusion", "float"},
-        {"DryLevel", "float"},
-        {"WetLevel", "float"},
-        {"Priority", "int"},
-        {"Enabled", "bool"},
+        { "DecayTime", "float" },
+        { "Density", "float" },
+        { "Diffusion", "float" },
+        { "DryLevel", "float" },
+        { "WetLevel", "float" },
+        { "Priority", "int" },
+        { "Enabled", "bool" },
     },
     ["PitchShiftSoundEffect"] = {
-        {"Octave", "float"},
-        {"Priority", "int"},
-        {"Enabled", "bool"},
+        { "Octave", "float" },
+        { "Priority", "int" },
+        { "Enabled", "bool" },
     },
     ["DistortionSoundEffect"] = {
-        {"Level", "float"},
-        {"Priority", "int"},
-        {"Enabled", "bool"},
+        { "Level", "float" },
+        { "Priority", "int" },
+        { "Enabled", "bool" },
     },
     ["CompressorSoundEffect"] = {
-        {"Attack", "float"},
-        {"GainMakeup", "float"},
-        {"Ratio", "float"},
-        {"Release", "float"},
-        {"Threshold", "float"},
-        {"SideChain", "Ref"},
-        {"Priority", "int"},
-        {"Enabled", "bool"},
+        { "Attack", "float" },
+        { "GainMakeup", "float" },
+        { "Ratio", "float" },
+        { "Release", "float" },
+        { "Threshold", "float" },
+        { "SideChain", "Ref" },
+        { "Priority", "int" },
+        { "Enabled", "bool" },
     },
     ["ParticleEmitter"] = {
-        {"Texture", "Content"},
-        {"Rate", "float"},
-        {"Lifetime", "NumberRange"},
-        {"Speed", "NumberRange"},
-        {"SpreadAngle", "Vector2"},
-        {"Rotation", "NumberRange"},
-        {"RotSpeed", "NumberRange"},
-        {"Size", "NumberSequence"},
-        {"Color", "ColorSequence"},
-        {"Transparency", "NumberSequence"},
-        {"LightEmission", "float"},
-        {"LightInfluence", "float"},
-        {"ZOffset", "float"},
-        {"Drag", "float"},
-        {"Acceleration", "Vector3"},
-        {"VelocityInheritance", "float"},
-        {"LockedToPart", "bool"},
-        {"EmissionDirection", "token"},
-        {"Orientation", "token"},
-        {"Enabled", "bool"},
-        {"FlipbookFramerate", "NumberRange"},
-        {"FlipbookLayout", "token"},
-        {"FlipbookMode", "token"},
+        { "Texture", "Content" },
+        { "Rate", "float" },
+        { "Lifetime", "NumberRange" },
+        { "Speed", "NumberRange" },
+        { "SpreadAngle", "Vector2" },
+        { "Rotation", "NumberRange" },
+        { "RotSpeed", "NumberRange" },
+        { "Size", "NumberSequence" },
+        { "Color", "ColorSequence" },
+        { "Transparency", "NumberSequence" },
+        { "LightEmission", "float" },
+        { "LightInfluence", "float" },
+        { "ZOffset", "float" },
+        { "Drag", "float" },
+        { "Acceleration", "Vector3" },
+        { "VelocityInheritance", "float" },
+        { "LockedToPart", "bool" },
+        { "EmissionDirection", "token" },
+        { "Orientation", "token" },
+        { "Enabled", "bool" },
+        { "FlipbookFramerate", "NumberRange" },
+        { "FlipbookLayout", "token" },
+        { "FlipbookMode", "token" },
     },
     ["Beam"] = {
-        {"Texture", "Content"},
-        {"TextureLength", "float"},
-        {"TextureMode", "token"},
-        {"TextureSpeed", "float"},
-        {"Width0", "float"},
-        {"Width1", "float"},
-        {"CurveSize0", "float"},
-        {"CurveSize1", "float"},
-        {"Segments", "int"},
-        {"Color", "ColorSequence"},
-        {"Transparency", "NumberSequence"},
-        {"LightEmission", "float"},
-        {"LightInfluence", "float"},
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"FaceCamera", "bool"},
-        {"Enabled", "bool"},
+        { "Texture", "Content" },
+        { "TextureLength", "float" },
+        { "TextureMode", "token" },
+        { "TextureSpeed", "float" },
+        { "Width0", "float" },
+        { "Width1", "float" },
+        { "CurveSize0", "float" },
+        { "CurveSize1", "float" },
+        { "Segments", "int" },
+        { "Color", "ColorSequence" },
+        { "Transparency", "NumberSequence" },
+        { "LightEmission", "float" },
+        { "LightInfluence", "float" },
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "FaceCamera", "bool" },
+        { "Enabled", "bool" },
     },
     ["Trail"] = {
-        {"Texture", "Content"},
-        {"TextureLength", "float"},
-        {"TextureMode", "token"},
-        {"Lifetime", "float"},
-        {"MinLength", "float"},
-        {"WidthScale", "NumberSequence"},
-        {"Color", "ColorSequence"},
-        {"Transparency", "NumberSequence"},
-        {"LightEmission", "float"},
-        {"LightInfluence", "float"},
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"FaceCamera", "bool"},
-        {"Enabled", "bool"},
+        { "Texture", "Content" },
+        { "TextureLength", "float" },
+        { "TextureMode", "token" },
+        { "Lifetime", "float" },
+        { "MinLength", "float" },
+        { "WidthScale", "NumberSequence" },
+        { "Color", "ColorSequence" },
+        { "Transparency", "NumberSequence" },
+        { "LightEmission", "float" },
+        { "LightInfluence", "float" },
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "FaceCamera", "bool" },
+        { "Enabled", "bool" },
     },
     ["PointLight"] = {
-        {"Color", "Color3"},
-        {"Brightness", "float"},
-        {"Range", "float"},
-        {"Shadows", "bool"},
-        {"Enabled", "bool"},
+        { "Color", "Color3" },
+        { "Brightness", "float" },
+        { "Range", "float" },
+        { "Shadows", "bool" },
+        { "Enabled", "bool" },
     },
     ["SpotLight"] = {
-        {"Color", "Color3"},
-        {"Brightness", "float"},
-        {"Range", "float"},
-        {"Angle", "float"},
-        {"Face", "token"},
-        {"Shadows", "bool"},
-        {"Enabled", "bool"},
+        { "Color", "Color3" },
+        { "Brightness", "float" },
+        { "Range", "float" },
+        { "Angle", "float" },
+        { "Face", "token" },
+        { "Shadows", "bool" },
+        { "Enabled", "bool" },
     },
     ["SurfaceLight"] = {
-        {"Color", "Color3"},
-        {"Brightness", "float"},
-        {"Range", "float"},
-        {"Angle", "float"},
-        {"Face", "token"},
-        {"Shadows", "bool"},
-        {"Enabled", "bool"},
+        { "Color", "Color3" },
+        { "Brightness", "float" },
+        { "Range", "float" },
+        { "Angle", "float" },
+        { "Face", "token" },
+        { "Shadows", "bool" },
+        { "Enabled", "bool" },
     },
     ["Attachment"] = {
-        {"CFrame", "CoordinateFrame"},
-        {"Position", "Vector3"},
-        {"Orientation", "Vector3"},
-        {"Axis", "Vector3"},
-        {"SecondaryAxis", "Vector3"},
-        {"Visible", "bool"},
+        { "CFrame", "CoordinateFrame" },
+        { "Position", "Vector3" },
+        { "Orientation", "Vector3" },
+        { "Axis", "Vector3" },
+        { "SecondaryAxis", "Vector3" },
+        { "Visible", "bool" },
     },
     ["Bone"] = {
-        {"CFrame", "CoordinateFrame"},
-        {"Position", "Vector3"},
-        {"Orientation", "Vector3"},
-        {"Transform", "CoordinateFrame"},
+        { "CFrame", "CoordinateFrame" },
+        { "Position", "Vector3" },
+        { "Orientation", "Vector3" },
+        { "Transform", "CoordinateFrame" },
     },
     ["Motor6D"] = {
-        {"Part0", "Ref"},
-        {"Part1", "Ref"},
-        {"C0", "CoordinateFrame"},
-        {"C1", "CoordinateFrame"},
-        {"CurrentAngle", "float"},
-        {"DesiredAngle", "float"},
-        {"MaxVelocity", "float"},
-        {"Enabled", "bool"},
+        { "Part0", "Ref" },
+        { "Part1", "Ref" },
+        { "C0", "CoordinateFrame" },
+        { "C1", "CoordinateFrame" },
+        { "CurrentAngle", "float" },
+        { "DesiredAngle", "float" },
+        { "MaxVelocity", "float" },
+        { "Enabled", "bool" },
     },
     ["Weld"] = {
-        {"Part0", "Ref"},
-        {"Part1", "Ref"},
-        {"C0", "CoordinateFrame"},
-        {"C1", "CoordinateFrame"},
-        {"Enabled", "bool"},
+        { "Part0", "Ref" },
+        { "Part1", "Ref" },
+        { "C0", "CoordinateFrame" },
+        { "C1", "CoordinateFrame" },
+        { "Enabled", "bool" },
     },
     ["WeldConstraint"] = {
-        {"Part0", "Ref"},
-        {"Part1", "Ref"},
-        {"Enabled", "bool"},
+        { "Part0", "Ref" },
+        { "Part1", "Ref" },
+        { "Enabled", "bool" },
     },
     ["BallSocketConstraint"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"Enabled", "bool"},
-        {"LimitsEnabled", "bool"},
-        {"TwistLimitsEnabled", "bool"},
-        {"UpperAngle", "float"},
-        {"TwistLowerAngle", "float"},
-        {"TwistUpperAngle", "float"},
-        {"Restitution", "float"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "Enabled", "bool" },
+        { "LimitsEnabled", "bool" },
+        { "TwistLimitsEnabled", "bool" },
+        { "UpperAngle", "float" },
+        { "TwistLowerAngle", "float" },
+        { "TwistUpperAngle", "float" },
+        { "Restitution", "float" },
     },
     ["HingeConstraint"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"Enabled", "bool"},
-        {"ActuatorType", "token"},
-        {"AngularSpeed", "float"},
-        {"AngularVelocity", "float"},
-        {"MotorMaxAcceleration", "float"},
-        {"MotorMaxTorque", "float"},
-        {"LimitsEnabled", "bool"},
-        {"LowerAngle", "float"},
-        {"UpperAngle", "float"},
-        {"Restitution", "float"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "Enabled", "bool" },
+        { "ActuatorType", "token" },
+        { "AngularSpeed", "float" },
+        { "AngularVelocity", "float" },
+        { "MotorMaxAcceleration", "float" },
+        { "MotorMaxTorque", "float" },
+        { "LimitsEnabled", "bool" },
+        { "LowerAngle", "float" },
+        { "UpperAngle", "float" },
+        { "Restitution", "float" },
     },
     ["SpringConstraint"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"Enabled", "bool"},
-        {"Coils", "float"},
-        {"Damping", "float"},
-        {"FreeLength", "float"},
-        {"Radius", "float"},
-        {"Stiffness", "float"},
-        {"LimitsEnabled", "bool"},
-        {"MaxLength", "float"},
-        {"MinLength", "float"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "Enabled", "bool" },
+        { "Coils", "float" },
+        { "Damping", "float" },
+        { "FreeLength", "float" },
+        { "Radius", "float" },
+        { "Stiffness", "float" },
+        { "LimitsEnabled", "bool" },
+        { "MaxLength", "float" },
+        { "MinLength", "float" },
     },
     ["PrismaticConstraint"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"Enabled", "bool"},
-        {"ActuatorType", "token"},
-        {"Size", "float"},
-        {"Speed", "float"},
-        {"Velocity", "float"},
-        {"MotorMaxAcceleration", "float"},
-        {"MotorMaxForce", "float"},
-        {"LimitsEnabled", "bool"},
-        {"LowerLimit", "float"},
-        {"UpperLimit", "float"},
-        {"Restitution", "float"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "Enabled", "bool" },
+        { "ActuatorType", "token" },
+        { "Size", "float" },
+        { "Speed", "float" },
+        { "Velocity", "float" },
+        { "MotorMaxAcceleration", "float" },
+        { "MotorMaxForce", "float" },
+        { "LimitsEnabled", "bool" },
+        { "LowerLimit", "float" },
+        { "UpperLimit", "float" },
+        { "Restitution", "float" },
     },
     ["AlignPosition"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"Enabled", "bool"},
-        {"ApplyAtCenterOfMass", "bool"},
-        {"MaxAxesForce", "Vector3"},
-        {"MaxForce", "float"},
-        {"MaxVelocity", "float"},
-        {"Mode", "token"},
-        {"Position", "Vector3"},
-        {"ReactionForceEnabled", "bool"},
-        {"Responsiveness", "float"},
-        {"RigidityEnabled", "bool"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "Enabled", "bool" },
+        { "ApplyAtCenterOfMass", "bool" },
+        { "MaxAxesForce", "Vector3" },
+        { "MaxForce", "float" },
+        { "MaxVelocity", "float" },
+        { "Mode", "token" },
+        { "Position", "Vector3" },
+        { "ReactionForceEnabled", "bool" },
+        { "Responsiveness", "float" },
+        { "RigidityEnabled", "bool" },
     },
     ["AlignOrientation"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"Enabled", "bool"},
-        {"AlignType", "token"},
-        {"CFrame", "CoordinateFrame"},
-        {"MaxAngularVelocity", "float"},
-        {"MaxTorque", "float"},
-        {"Mode", "token"},
-        {"PrimaryAxisOnly", "bool"},
-        {"ReactionTorqueEnabled", "bool"},
-        {"Responsiveness", "float"},
-        {"RigidityEnabled", "bool"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "Enabled", "bool" },
+        { "AlignType", "token" },
+        { "CFrame", "CoordinateFrame" },
+        { "MaxAngularVelocity", "float" },
+        { "MaxTorque", "float" },
+        { "Mode", "token" },
+        { "PrimaryAxisOnly", "bool" },
+        { "ReactionTorqueEnabled", "bool" },
+        { "Responsiveness", "float" },
+        { "RigidityEnabled", "bool" },
     },
     ["ScreenGui"] = {
-        {"Enabled", "bool"},
-        {"ResetOnSpawn", "bool"},
-        {"DisplayOrder", "int"},
-        {"ZIndexBehavior", "token"},
-        {"IgnoreGuiInset", "bool"},
-        {"ClipToDeviceSafeArea", "bool"},
-        {"SafeAreaCompatibility", "token"},
-        {"ScreenInsets", "token"},
+        { "Enabled", "bool" },
+        { "ResetOnSpawn", "bool" },
+        { "DisplayOrder", "int" },
+        { "ZIndexBehavior", "token" },
+        { "IgnoreGuiInset", "bool" },
+        { "ClipToDeviceSafeArea", "bool" },
+        { "SafeAreaCompatibility", "token" },
+        { "ScreenInsets", "token" },
     },
     ["BillboardGui"] = {
-        {"Enabled", "bool"},
-        {"Adornee", "Ref"},
-        {"AlwaysOnTop", "bool"},
-        {"Size", "UDim2"},
-        {"SizeOffset", "Vector2"},
-        {"StudsOffset", "Vector3"},
-        {"StudsOffsetWorldSpace", "Vector3"},
-        {"ExtentsOffset", "Vector3"},
-        {"ExtentsOffsetWorldSpace", "Vector3"},
-        {"MaxDistance", "float"},
-        {"ZIndexBehavior", "token"},
-        {"LightInfluence", "float"},
+        { "Enabled", "bool" },
+        { "Adornee", "Ref" },
+        { "AlwaysOnTop", "bool" },
+        { "Size", "UDim2" },
+        { "SizeOffset", "Vector2" },
+        { "StudsOffset", "Vector3" },
+        { "StudsOffsetWorldSpace", "Vector3" },
+        { "ExtentsOffset", "Vector3" },
+        { "ExtentsOffsetWorldSpace", "Vector3" },
+        { "MaxDistance", "float" },
+        { "ZIndexBehavior", "token" },
+        { "LightInfluence", "float" },
     },
     ["SurfaceGui"] = {
-        {"Enabled", "bool"},
-        {"Adornee", "Ref"},
-        {"Face", "token"},
-        {"AlwaysOnTop", "bool"},
-        {"CanvasSize", "Vector2"},
-        {"PixelsPerStud", "float"},
-        {"LightInfluence", "float"},
-        {"ZIndexBehavior", "token"},
-        {"SizingMode", "token"},
+        { "Enabled", "bool" },
+        { "Adornee", "Ref" },
+        { "Face", "token" },
+        { "AlwaysOnTop", "bool" },
+        { "CanvasSize", "Vector2" },
+        { "PixelsPerStud", "float" },
+        { "LightInfluence", "float" },
+        { "ZIndexBehavior", "token" },
+        { "SizingMode", "token" },
     },
     ["CanvasGroup"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"GroupTransparency", "float"},
-        {"GroupColor3", "Color3"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "GroupTransparency", "float" },
+        { "GroupColor3", "Color3" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
     },
     ["Frame"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"BorderMode", "token"},
-        {"ClipsDescendants", "bool"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
-        {"LayoutOrder", "int"},
-        {"Rotation", "float"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "BorderMode", "token" },
+        { "ClipsDescendants", "bool" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
+        { "LayoutOrder", "int" },
+        { "Rotation", "float" },
     },
     ["ScrollingFrame"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"CanvasSize", "UDim2"},
-        {"CanvasPosition", "Vector2"},
-        {"ScrollBarThickness", "int"},
-        {"ScrollBarImageColor3", "Color3"},
-        {"ScrollBarImageTransparency", "float"},
-        {"ScrollingDirection", "token"},
-        {"AutomaticCanvasSize", "token"},
-        {"ElasticBehavior", "token"},
-        {"ClipsDescendants", "bool"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
-        {"LayoutOrder", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "CanvasSize", "UDim2" },
+        { "CanvasPosition", "Vector2" },
+        { "ScrollBarThickness", "int" },
+        { "ScrollBarImageColor3", "Color3" },
+        { "ScrollBarImageTransparency", "float" },
+        { "ScrollingDirection", "token" },
+        { "AutomaticCanvasSize", "token" },
+        { "ElasticBehavior", "token" },
+        { "ClipsDescendants", "bool" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
+        { "LayoutOrder", "int" },
     },
     ["TextLabel"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"Text", "string"},
-        {"TextColor3", "Color3"},
-        {"TextTransparency", "float"},
-        {"TextSize", "float"},
-        {"TextScaled", "bool"},
-        {"TextWrapped", "bool"},
-        {"TextXAlignment", "token"},
-        {"TextYAlignment", "token"},
-        {"Font", "token"},
-        {"FontFace", "Font"},
-        {"TextStrokeColor3", "Color3"},
-        {"TextStrokeTransparency", "float"},
-        {"LineHeight", "float"},
-        {"MaxVisibleGraphemes", "int"},
-        {"RichText", "bool"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
-        {"LayoutOrder", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "Text", "string" },
+        { "TextColor3", "Color3" },
+        { "TextTransparency", "float" },
+        { "TextSize", "float" },
+        { "TextScaled", "bool" },
+        { "TextWrapped", "bool" },
+        { "TextXAlignment", "token" },
+        { "TextYAlignment", "token" },
+        { "Font", "token" },
+        { "FontFace", "Font" },
+        { "TextStrokeColor3", "Color3" },
+        { "TextStrokeTransparency", "float" },
+        { "LineHeight", "float" },
+        { "MaxVisibleGraphemes", "int" },
+        { "RichText", "bool" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
+        { "LayoutOrder", "int" },
     },
     ["TextButton"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"Text", "string"},
-        {"TextColor3", "Color3"},
-        {"TextTransparency", "float"},
-        {"TextSize", "float"},
-        {"TextScaled", "bool"},
-        {"TextWrapped", "bool"},
-        {"TextXAlignment", "token"},
-        {"TextYAlignment", "token"},
-        {"Font", "token"},
-        {"FontFace", "Font"},
-        {"TextStrokeColor3", "Color3"},
-        {"TextStrokeTransparency", "float"},
-        {"RichText", "bool"},
-        {"AutoButtonColor", "bool"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
-        {"LayoutOrder", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "Text", "string" },
+        { "TextColor3", "Color3" },
+        { "TextTransparency", "float" },
+        { "TextSize", "float" },
+        { "TextScaled", "bool" },
+        { "TextWrapped", "bool" },
+        { "TextXAlignment", "token" },
+        { "TextYAlignment", "token" },
+        { "Font", "token" },
+        { "FontFace", "Font" },
+        { "TextStrokeColor3", "Color3" },
+        { "TextStrokeTransparency", "float" },
+        { "RichText", "bool" },
+        { "AutoButtonColor", "bool" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
+        { "LayoutOrder", "int" },
     },
     ["ImageLabel"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"Image", "Content"},
-        {"ImageColor3", "Color3"},
-        {"ImageTransparency", "float"},
-        {"ScaleType", "token"},
-        {"SliceCenter", "Rect"},
-        {"SliceScale", "float"},
-        {"TileSize", "UDim2"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
-        {"LayoutOrder", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "Image", "Content" },
+        { "ImageColor3", "Color3" },
+        { "ImageTransparency", "float" },
+        { "ScaleType", "token" },
+        { "SliceCenter", "Rect" },
+        { "SliceScale", "float" },
+        { "TileSize", "UDim2" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
+        { "LayoutOrder", "int" },
     },
     ["ImageButton"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"Image", "Content"},
-        {"ImageColor3", "Color3"},
-        {"ImageTransparency", "float"},
-        {"ScaleType", "token"},
-        {"SliceCenter", "Rect"},
-        {"AutoButtonColor", "bool"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
-        {"LayoutOrder", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "Image", "Content" },
+        { "ImageColor3", "Color3" },
+        { "ImageTransparency", "float" },
+        { "ScaleType", "token" },
+        { "SliceCenter", "Rect" },
+        { "AutoButtonColor", "bool" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
+        { "LayoutOrder", "int" },
     },
     ["TextBox"] = {
-        {"Size", "UDim2"},
-        {"Position", "UDim2"},
-        {"AnchorPoint", "Vector2"},
-        {"BackgroundColor3", "Color3"},
-        {"BackgroundTransparency", "float"},
-        {"BorderColor3", "Color3"},
-        {"BorderSizePixel", "int"},
-        {"Text", "string"},
-        {"PlaceholderText", "string"},
-        {"PlaceholderColor3", "Color3"},
-        {"TextColor3", "Color3"},
-        {"TextTransparency", "float"},
-        {"TextSize", "float"},
-        {"TextScaled", "bool"},
-        {"TextWrapped", "bool"},
-        {"TextXAlignment", "token"},
-        {"TextYAlignment", "token"},
-        {"Font", "token"},
-        {"FontFace", "Font"},
-        {"ClearTextOnFocus", "bool"},
-        {"MultiLine", "bool"},
-        {"Visible", "bool"},
-        {"ZIndex", "int"},
+        { "Size", "UDim2" },
+        { "Position", "UDim2" },
+        { "AnchorPoint", "Vector2" },
+        { "BackgroundColor3", "Color3" },
+        { "BackgroundTransparency", "float" },
+        { "BorderColor3", "Color3" },
+        { "BorderSizePixel", "int" },
+        { "Text", "string" },
+        { "PlaceholderText", "string" },
+        { "PlaceholderColor3", "Color3" },
+        { "TextColor3", "Color3" },
+        { "TextTransparency", "float" },
+        { "TextSize", "float" },
+        { "TextScaled", "bool" },
+        { "TextWrapped", "bool" },
+        { "TextXAlignment", "token" },
+        { "TextYAlignment", "token" },
+        { "Font", "token" },
+        { "FontFace", "Font" },
+        { "ClearTextOnFocus", "bool" },
+        { "MultiLine", "bool" },
+        { "Visible", "bool" },
+        { "ZIndex", "int" },
     },
     ["UICorner"] = {
-        {"CornerRadius", "UDim"},
+        { "CornerRadius", "UDim" },
     },
     ["UIGradient"] = {
-        {"Color", "ColorSequence"},
-        {"Transparency", "NumberSequence"},
-        {"Rotation", "float"},
-        {"Offset", "Vector2"},
-        {"Enabled", "bool"},
+        { "Color", "ColorSequence" },
+        { "Transparency", "NumberSequence" },
+        { "Rotation", "float" },
+        { "Offset", "Vector2" },
+        { "Enabled", "bool" },
     },
     ["UIStroke"] = {
-        {"Color", "Color3"},
-        {"Transparency", "float"},
-        {"Thickness", "float"},
-        {"ApplyStrokeMode", "token"},
-        {"LineJoinMode", "token"},
-        {"Enabled", "bool"},
+        { "Color", "Color3" },
+        { "Transparency", "float" },
+        { "Thickness", "float" },
+        { "ApplyStrokeMode", "token" },
+        { "LineJoinMode", "token" },
+        { "Enabled", "bool" },
     },
     ["UIPadding"] = {
-        {"PaddingTop", "UDim"},
-        {"PaddingBottom", "UDim"},
-        {"PaddingLeft", "UDim"},
-        {"PaddingRight", "UDim"},
+        { "PaddingTop", "UDim" },
+        { "PaddingBottom", "UDim" },
+        { "PaddingLeft", "UDim" },
+        { "PaddingRight", "UDim" },
     },
     ["UIListLayout"] = {
-        {"FillDirection", "token"},
-        {"HorizontalAlignment", "token"},
-        {"VerticalAlignment", "token"},
-        {"SortOrder", "token"},
-        {"Padding", "UDim"},
-        {"Wraps", "bool"},
+        { "FillDirection", "token" },
+        { "HorizontalAlignment", "token" },
+        { "VerticalAlignment", "token" },
+        { "SortOrder", "token" },
+        { "Padding", "UDim" },
+        { "Wraps", "bool" },
     },
     ["UIGridLayout"] = {
-        {"CellPadding", "UDim2"},
-        {"CellSize", "UDim2"},
-        {"FillDirection", "token"},
-        {"HorizontalAlignment", "token"},
-        {"VerticalAlignment", "token"},
-        {"SortOrder", "token"},
-        {"StartCorner", "token"},
-        {"FillDirectionMaxCells", "int"},
+        { "CellPadding", "UDim2" },
+        { "CellSize", "UDim2" },
+        { "FillDirection", "token" },
+        { "HorizontalAlignment", "token" },
+        { "VerticalAlignment", "token" },
+        { "SortOrder", "token" },
+        { "StartCorner", "token" },
+        { "FillDirectionMaxCells", "int" },
     },
     ["UIAspectRatioConstraint"] = {
-        {"AspectRatio", "float"},
-        {"AspectType", "token"},
-        {"DominantAxis", "token"},
+        { "AspectRatio", "float" },
+        { "AspectType", "token" },
+        { "DominantAxis", "token" },
     },
     ["UISizeConstraint"] = {
-        {"MaxSize", "Vector2"},
-        {"MinSize", "Vector2"},
+        { "MaxSize", "Vector2" },
+        { "MinSize", "Vector2" },
     },
     ["Highlight"] = {
-        {"Adornee", "Ref"},
-        {"FillColor", "Color3"},
-        {"FillTransparency", "float"},
-        {"OutlineColor", "Color3"},
-        {"OutlineTransparency", "float"},
-        {"DepthMode", "token"},
-        {"Enabled", "bool"},
+        { "Adornee", "Ref" },
+        { "FillColor", "Color3" },
+        { "FillTransparency", "float" },
+        { "OutlineColor", "Color3" },
+        { "OutlineTransparency", "float" },
+        { "DepthMode", "token" },
+        { "Enabled", "bool" },
     },
     ["RemoteEvent"] = {},
     ["RemoteFunction"] = {},
     ["BindableEvent"] = {},
     ["BindableFunction"] = {},
     ["LocalScript"] = {
-        {"Enabled", "bool"},
+        { "Enabled", "bool" },
     },
     ["ModuleScript"] = {},
     ["Script"] = {
-        {"Enabled", "bool"},
+        { "Enabled", "bool" },
     },
     ["Animation"] = {
-        {"AnimationId", "Content"},
+        { "AnimationId", "Content" },
     },
     ["AnimationTrack"] = {
-        {"Animation", "Ref"},
-        {"Priority", "token"},
-        {"Looped", "bool"},
-        {"Speed", "float"},
+        { "Animation", "Ref" },
+        { "Priority", "token" },
+        { "Looped", "bool" },
+        { "Speed", "float" },
     },
     ["Tool"] = {
-        {"CanBeDropped", "bool"},
-        {"ManualActivationOnly", "bool"},
-        {"RequiresHandle", "bool"},
-        {"ToolTip", "string"},
-        {"Grip", "CoordinateFrame"},
-        {"GripPos", "Vector3"},
-        {"TextureId", "Content"},
+        { "CanBeDropped", "bool" },
+        { "ManualActivationOnly", "bool" },
+        { "RequiresHandle", "bool" },
+        { "ToolTip", "string" },
+        { "Grip", "CoordinateFrame" },
+        { "GripPos", "Vector3" },
+        { "TextureId", "Content" },
     },
     ["Accessory"] = {
-        {"AccessoryType", "token"},
-        {"AttachmentPoint", "CoordinateFrame"},
+        { "AccessoryType", "token" },
+        { "AttachmentPoint", "CoordinateFrame" },
     },
     ["Shirt"] = {
-        {"ShirtTemplate", "Content"},
+        { "ShirtTemplate", "Content" },
     },
     ["Pants"] = {
-        {"PantsTemplate", "Content"},
+        { "PantsTemplate", "Content" },
     },
     ["ShirtGraphic"] = {
-        {"Graphic", "Content"},
+        { "Graphic", "Content" },
     },
     ["BodyColors"] = {
-        {"HeadColor3", "Color3"},
-        {"LeftArmColor3", "Color3"},
-        {"RightArmColor3", "Color3"},
-        {"LeftLegColor3", "Color3"},
-        {"RightLegColor3", "Color3"},
-        {"TorsoColor3", "Color3"},
+        { "HeadColor3", "Color3" },
+        { "LeftArmColor3", "Color3" },
+        { "RightArmColor3", "Color3" },
+        { "LeftLegColor3", "Color3" },
+        { "RightLegColor3", "Color3" },
+        { "TorsoColor3", "Color3" },
     },
     ["Humanoid"] = {
-        {"Health", "float"},
-        {"MaxHealth", "float"},
-        {"WalkSpeed", "float"},
-        {"JumpPower", "float"},
-        {"JumpHeight", "float"},
-        {"AutoRotate", "bool"},
-        {"RigType", "token"},
-        {"DisplayDistanceType", "token"},
-        {"DisplayName", "string"},
+        { "Health", "float" },
+        { "MaxHealth", "float" },
+        { "WalkSpeed", "float" },
+        { "JumpPower", "float" },
+        { "JumpHeight", "float" },
+        { "AutoRotate", "bool" },
+        { "RigType", "token" },
+        { "DisplayDistanceType", "token" },
+        { "DisplayName", "string" },
     },
     ["ValueBase"] = {
-        {"Value", "variant"},
+        { "Value", "variant" },
     },
-    ["StringValue"] = {{"Value", "string"}},
-    ["IntValue"] = {{"Value", "int64"}},
-    ["NumberValue"] = {{"Value", "double"}},
-    ["BoolValue"] = {{"Value", "bool"}},
-    ["ObjectValue"] = {{"Value", "Ref"}},
-    ["Color3Value"] = {{"Value", "Color3"}},
-    ["Vector3Value"] = {{"Value", "Vector3"}},
-    ["CFrameValue"] = {{"Value", "CoordinateFrame"}},
-    ["BrickColorValue"] = {{"Value", "token"}},
-    ["RayValue"] = {{"Value", "Ray"}},
+    ["StringValue"] = { { "Value", "string" } },
+    ["IntValue"] = { { "Value", "int64" } },
+    ["NumberValue"] = { { "Value", "double" } },
+    ["BoolValue"] = { { "Value", "bool" } },
+    ["ObjectValue"] = { { "Value", "Ref" } },
+    ["Color3Value"] = { { "Value", "Color3" } },
+    ["Vector3Value"] = { { "Value", "Vector3" } },
+    ["CFrameValue"] = { { "Value", "CoordinateFrame" } },
+    ["BrickColorValue"] = { { "Value", "token" } },
+    ["RayValue"] = { { "Value", "Ray" } },
 }
 
 -- Inheritance hierarchy tree
 Reflection.ClassHierarchy = {
-    ["Part"] = {"BasePart", "PVInstance", "Instance"},
-    ["MeshPart"] = {"BasePart", "PVInstance", "Instance"},
-    ["UnionOperation"] = {"BasePart", "PVInstance", "Instance"},
-    ["NegateOperation"] = {"BasePart", "PVInstance", "Instance"},
-    ["WedgePart"] = {"BasePart", "PVInstance", "Instance"},
-    ["CornerWedgePart"] = {"BasePart", "PVInstance", "Instance"},
-    ["TrussPart"] = {"BasePart", "PVInstance", "Instance"},
-    ["SpawnLocation"] = {"BasePart", "PVInstance", "Instance"},
-    ["Terrain"] = {"BasePart", "PVInstance", "Instance"},
-    ["Model"] = {"PVInstance", "Instance"},
-    ["WorldModel"] = {"Model", "PVInstance", "Instance"},
-    ["Tool"] = {"Model", "PVInstance", "Instance"},
-    ["Accessory"] = {"Instance"},
-    ["Shirt"] = {"Instance"},
-    ["Pants"] = {"Instance"},
-    ["ShirtGraphic"] = {"Instance"},
-    ["BodyColors"] = {"Instance"},
-    ["Humanoid"] = {"Instance"},
-    ["Folder"] = {"Instance"},
-    ["Configuration"] = {"Instance"},
-    ["Lighting"] = {"Instance"},
-    ["Atmosphere"] = {"Instance"},
-    ["Sky"] = {"Instance"},
-    ["BloomEffect"] = {"Instance"},
-    ["BlurEffect"] = {"Instance"},
-    ["ColorCorrectionEffect"] = {"Instance"},
-    ["SunRaysEffect"] = {"Instance"},
-    ["DepthOfFieldEffect"] = {"Instance"},
-    ["Sound"] = {"Instance"},
-    ["SoundGroup"] = {"Instance"},
-    ["EqualizerSoundEffect"] = {"Instance"},
-    ["ReverbSoundEffect"] = {"Instance"},
-    ["PitchShiftSoundEffect"] = {"Instance"},
-    ["DistortionSoundEffect"] = {"Instance"},
-    ["CompressorSoundEffect"] = {"Instance"},
-    ["ParticleEmitter"] = {"Instance"},
-    ["Beam"] = {"Instance"},
-    ["Trail"] = {"Instance"},
-    ["PointLight"] = {"Instance"},
-    ["SpotLight"] = {"Instance"},
-    ["SurfaceLight"] = {"Instance"},
-    ["Attachment"] = {"Instance"},
-    ["Bone"] = {"Attachment", "Instance"},
-    ["Motor6D"] = {"Instance"},
-    ["Weld"] = {"Instance"},
-    ["WeldConstraint"] = {"Instance"},
-    ["BallSocketConstraint"] = {"Instance"},
-    ["HingeConstraint"] = {"Instance"},
-    ["SpringConstraint"] = {"Instance"},
-    ["PrismaticConstraint"] = {"Instance"},
-    ["AlignPosition"] = {"Instance"},
-    ["AlignOrientation"] = {"Instance"},
-    ["ScreenGui"] = {"Instance"},
-    ["BillboardGui"] = {"Instance"},
-    ["SurfaceGui"] = {"Instance"},
-    ["CanvasGroup"] = {"Frame", "Instance"},
-    ["Frame"] = {"Instance"},
-    ["ScrollingFrame"] = {"Frame", "Instance"},
-    ["TextLabel"] = {"Frame", "Instance"},
-    ["TextButton"] = {"Frame", "Instance"},
-    ["ImageLabel"] = {"Frame", "Instance"},
-    ["ImageButton"] = {"Frame", "Instance"},
-    ["TextBox"] = {"Frame", "Instance"},
+    ["Part"] = { "BasePart", "PVInstance", "Instance" },
+    ["MeshPart"] = { "BasePart", "PVInstance", "Instance" },
+    ["UnionOperation"] = { "BasePart", "PVInstance", "Instance" },
+    ["NegateOperation"] = { "BasePart", "PVInstance", "Instance" },
+    ["WedgePart"] = { "BasePart", "PVInstance", "Instance" },
+    ["CornerWedgePart"] = { "BasePart", "PVInstance", "Instance" },
+    ["TrussPart"] = { "BasePart", "PVInstance", "Instance" },
+    ["SpawnLocation"] = { "BasePart", "PVInstance", "Instance" },
+    ["Terrain"] = { "BasePart", "PVInstance", "Instance" },
+    ["Model"] = { "PVInstance", "Instance" },
+    ["WorldModel"] = { "Model", "PVInstance", "Instance" },
+    ["Tool"] = { "Model", "PVInstance", "Instance" },
+    ["Accessory"] = { "Instance" },
+    ["Shirt"] = { "Instance" },
+    ["Pants"] = { "Instance" },
+    ["ShirtGraphic"] = { "Instance" },
+    ["BodyColors"] = { "Instance" },
+    ["Humanoid"] = { "Instance" },
+    ["Folder"] = { "Instance" },
+    ["Configuration"] = { "Instance" },
+    ["Lighting"] = { "Instance" },
+    ["Atmosphere"] = { "Instance" },
+    ["Sky"] = { "Instance" },
+    ["BloomEffect"] = { "Instance" },
+    ["BlurEffect"] = { "Instance" },
+    ["ColorCorrectionEffect"] = { "Instance" },
+    ["SunRaysEffect"] = { "Instance" },
+    ["DepthOfFieldEffect"] = { "Instance" },
+    ["Sound"] = { "Instance" },
+    ["SoundGroup"] = { "Instance" },
+    ["EqualizerSoundEffect"] = { "Instance" },
+    ["ReverbSoundEffect"] = { "Instance" },
+    ["PitchShiftSoundEffect"] = { "Instance" },
+    ["DistortionSoundEffect"] = { "Instance" },
+    ["CompressorSoundEffect"] = { "Instance" },
+    ["ParticleEmitter"] = { "Instance" },
+    ["Beam"] = { "Instance" },
+    ["Trail"] = { "Instance" },
+    ["PointLight"] = { "Instance" },
+    ["SpotLight"] = { "Instance" },
+    ["SurfaceLight"] = { "Instance" },
+    ["Attachment"] = { "Instance" },
+    ["Bone"] = { "Attachment", "Instance" },
+    ["Motor6D"] = { "Instance" },
+    ["Weld"] = { "Instance" },
+    ["WeldConstraint"] = { "Instance" },
+    ["BallSocketConstraint"] = { "Instance" },
+    ["HingeConstraint"] = { "Instance" },
+    ["SpringConstraint"] = { "Instance" },
+    ["PrismaticConstraint"] = { "Instance" },
+    ["AlignPosition"] = { "Instance" },
+    ["AlignOrientation"] = { "Instance" },
+    ["ScreenGui"] = { "Instance" },
+    ["BillboardGui"] = { "Instance" },
+    ["SurfaceGui"] = { "Instance" },
+    ["CanvasGroup"] = { "Frame", "Instance" },
+    ["Frame"] = { "Instance" },
+    ["ScrollingFrame"] = { "Frame", "Instance" },
+    ["TextLabel"] = { "Frame", "Instance" },
+    ["TextButton"] = { "Frame", "Instance" },
+    ["ImageLabel"] = { "Frame", "Instance" },
+    ["ImageButton"] = { "Frame", "Instance" },
+    ["TextBox"] = { "Frame", "Instance" },
     ["Highlight"] = {
-        {"Adornee", "Ref"},
-        {"FillColor", "Color3"},
-        {"FillTransparency", "float"},
-        {"OutlineColor", "Color3"},
-        {"OutlineTransparency", "float"},
-        {"DepthMode", "token"},
-        {"Enabled", "bool"},
+        { "Adornee", "Ref" },
+        { "FillColor", "Color3" },
+        { "FillTransparency", "float" },
+        { "OutlineColor", "Color3" },
+        { "OutlineTransparency", "float" },
+        { "DepthMode", "token" },
+        { "Enabled", "bool" },
     },
     ["ProximityPrompt"] = {
-        {"ActionText", "string"},
-        {"ObjectText", "string"},
-        {"HoldDuration", "float"},
-        {"MaxActivationDistance", "float"},
-        {"KeyboardKeyCode", "token"},
-        {"GamepadKeyCode", "token"},
-        {"RequiresLineOfSight", "bool"},
-        {"Enabled", "bool"},
-        {"ClickablePrompt", "bool"},
-        {"Exclusivity", "token"},
+        { "ActionText", "string" },
+        { "ObjectText", "string" },
+        { "HoldDuration", "float" },
+        { "MaxActivationDistance", "float" },
+        { "KeyboardKeyCode", "token" },
+        { "GamepadKeyCode", "token" },
+        { "RequiresLineOfSight", "bool" },
+        { "Enabled", "bool" },
+        { "ClickablePrompt", "bool" },
+        { "Exclusivity", "token" },
     },
     ["Clouds"] = {
-        {"Cover", "float"},
-        {"Density", "float"},
-        {"Color", "Color3"},
-        {"Enabled", "bool"},
+        { "Cover", "float" },
+        { "Density", "float" },
+        { "Color", "Color3" },
+        { "Enabled", "bool" },
     },
     ["PathfindingModifier"] = {
-        {"PassThrough", "bool"},
-        {"Label", "string"},
+        { "PassThrough", "bool" },
+        { "Label", "string" },
     },
     ["PathfindingLink"] = {
-        {"Attachment0", "Ref"},
-        {"Attachment1", "Ref"},
-        {"IsBidirectional", "bool"},
-        {"Label", "string"},
+        { "Attachment0", "Ref" },
+        { "Attachment1", "Ref" },
+        { "IsBidirectional", "bool" },
+        { "Label", "string" },
     },
     ["NoCollisionConstraint"] = {
-        {"Part0", "Ref"},
-        {"Part1", "Ref"},
-        {"Enabled", "bool"},
+        { "Part0", "Ref" },
+        { "Part1", "Ref" },
+        { "Enabled", "bool" },
     },
     ["AudioPlayer"] = {
-        {"AssetId", "Content"},
-        {"Volume", "float"},
-        {"Pitch", "float"},
-        {"Looping", "bool"},
-        {"TimePosition", "float"},
-        {"AutoPlay", "bool"},
+        { "AssetId", "Content" },
+        { "Volume", "float" },
+        { "Pitch", "float" },
+        { "Looping", "bool" },
+        { "TimePosition", "float" },
+        { "AutoPlay", "bool" },
     },
     ["AudioEmitter"] = {
-        {"AudioInteractionGroup", "string"},
-        {"DistanceAttenuation", "NumberSequence"},
+        { "AudioInteractionGroup", "string" },
+        { "DistanceAttenuation", "NumberSequence" },
     },
     ["AudioListener"] = {
-        {"AudioInteractionGroup", "string"},
+        { "AudioInteractionGroup", "string" },
     },
     ["Wire"] = {
-        {"SourceInstance", "Ref"},
-        {"TargetInstance", "Ref"},
+        { "SourceInstance", "Ref" },
+        { "TargetInstance", "Ref" },
     },
     ["LocalizationTable"] = {
-        {"SourceLocaleId", "string"},
+        { "SourceLocaleId", "string" },
     },
     ["Script"] = {
-        {"Enabled", "bool"},
-        {"RunContext", "token"},
+        { "Enabled", "bool" },
+        { "RunContext", "token" },
     },
     ["LocalScript"] = {
-        {"Enabled", "bool"},
+        { "Enabled", "bool" },
     },
     ["ModuleScript"] = {},
     ["UICorner"] = {
-        {"CornerRadius", "UDim"},
+        { "CornerRadius", "UDim" },
     },
     ["UIGradient"] = {
-        {"Color", "ColorSequence"},
-        {"Transparency", "NumberSequence"},
-        {"Offset", "Vector2"},
-        {"Rotation", "float"},
-        {"Enabled", "bool"},
+        { "Color", "ColorSequence" },
+        { "Transparency", "NumberSequence" },
+        { "Offset", "Vector2" },
+        { "Rotation", "float" },
+        { "Enabled", "bool" },
     },
     ["UIStroke"] = {
-        {"Color", "Color3"},
-        {"Thickness", "float"},
-        {"Transparency", "float"},
-        {"ApplyStrokeMode", "token"},
-        {"LineJoinMode", "token"},
-        {"Enabled", "bool"},
+        { "Color", "Color3" },
+        { "Thickness", "float" },
+        { "Transparency", "float" },
+        { "ApplyStrokeMode", "token" },
+        { "LineJoinMode", "token" },
+        { "Enabled", "bool" },
     },
     ["UIPadding"] = {
-        {"PaddingTop", "UDim"},
-        {"PaddingBottom", "UDim"},
-        {"PaddingLeft", "UDim"},
-        {"PaddingRight", "UDim"},
+        { "PaddingTop", "UDim" },
+        { "PaddingBottom", "UDim" },
+        { "PaddingLeft", "UDim" },
+        { "PaddingRight", "UDim" },
     },
     ["UIListLayout"] = {
-        {"FillDirection", "token"},
-        {"HorizontalAlignment", "token"},
-        {"VerticalAlignment", "token"},
-        {"SortOrder", "token"},
-        {"Padding", "UDim"},
+        { "FillDirection", "token" },
+        { "HorizontalAlignment", "token" },
+        { "VerticalAlignment", "token" },
+        { "SortOrder", "token" },
+        { "Padding", "UDim" },
     },
     ["UIGridLayout"] = {
-        {"CellPadding", "UDim2"},
-        {"CellSize", "UDim2"},
-        {"FillDirection", "token"},
-        {"FillDirectionMaxCells", "int"},
-        {"HorizontalAlignment", "token"},
-        {"VerticalAlignment", "token"},
-        {"SortOrder", "token"},
-        {"StartCorner", "token"},
+        { "CellPadding", "UDim2" },
+        { "CellSize", "UDim2" },
+        { "FillDirection", "token" },
+        { "FillDirectionMaxCells", "int" },
+        { "HorizontalAlignment", "token" },
+        { "VerticalAlignment", "token" },
+        { "SortOrder", "token" },
+        { "StartCorner", "token" },
     },
     ["UIAspectRatioConstraint"] = {
-        {"AspectRatio", "float"},
-        {"AspectType", "token"},
-        {"DominantAxis", "token"},
+        { "AspectRatio", "float" },
+        { "AspectType", "token" },
+        { "DominantAxis", "token" },
     },
     ["UISizeConstraint"] = {
-        {"MaxSize", "Vector2"},
-        {"MinSize", "Vector2"},
+        { "MaxSize", "Vector2" },
+        { "MinSize", "Vector2" },
     },
     ["Decal"] = {
-        {"Texture", "Content"},
-        {"Face", "token"},
-        {"Color3", "Color3"},
-        {"Transparency", "float"},
-        {"ZIndex", "int"},
+        { "Texture", "Content" },
+        { "Face", "token" },
+        { "Color3", "Color3" },
+        { "Transparency", "float" },
+        { "ZIndex", "int" },
     },
-    ["Texture"] = {"Decal", "Instance"},
-    ["SpecialMesh"] = {"Instance"},
-    ["SurfaceAppearance"] = {"Instance"},
-    ["MaterialVariant"] = {"Instance"},
-    ["RemoteEvent"] = {"Instance"},
-    ["RemoteFunction"] = {"Instance"},
-    ["BindableEvent"] = {"Instance"},
-    ["BindableFunction"] = {"Instance"},
-    ["LocalScript"] = {"Instance"},
-    ["ModuleScript"] = {"Instance"},
-    ["Script"] = {"Instance"},
-    ["Animation"] = {"Instance"},
-    ["StringValue"] = {"ValueBase", "Instance"},
-    ["IntValue"] = {"ValueBase", "Instance"},
-    ["NumberValue"] = {"ValueBase", "Instance"},
-    ["BoolValue"] = {"ValueBase", "Instance"},
-    ["ObjectValue"] = {"ValueBase", "Instance"},
-    ["Color3Value"] = {"ValueBase", "Instance"},
-    ["Vector3Value"] = {"ValueBase", "Instance"},
-    ["CFrameValue"] = {"ValueBase", "Instance"},
-    ["BrickColorValue"] = {"ValueBase", "Instance"},
-    ["RayValue"] = {"ValueBase", "Instance"},
+    ["Texture"] = { "Decal", "Instance" },
+    ["SpecialMesh"] = { "Instance" },
+    ["SurfaceAppearance"] = { "Instance" },
+    ["MaterialVariant"] = { "Instance" },
+    ["RemoteEvent"] = { "Instance" },
+    ["RemoteFunction"] = { "Instance" },
+    ["BindableEvent"] = { "Instance" },
+    ["BindableFunction"] = { "Instance" },
+    ["LocalScript"] = { "Instance" },
+    ["ModuleScript"] = { "Instance" },
+    ["Script"] = { "Instance" },
+    ["Animation"] = { "Instance" },
+    ["StringValue"] = { "ValueBase", "Instance" },
+    ["IntValue"] = { "ValueBase", "Instance" },
+    ["NumberValue"] = { "ValueBase", "Instance" },
+    ["BoolValue"] = { "ValueBase", "Instance" },
+    ["ObjectValue"] = { "ValueBase", "Instance" },
+    ["Color3Value"] = { "ValueBase", "Instance" },
+    ["Vector3Value"] = { "ValueBase", "Instance" },
+    ["CFrameValue"] = { "ValueBase", "Instance" },
+    ["BrickColorValue"] = { "ValueBase", "Instance" },
+    ["RayValue"] = { "ValueBase", "Instance" },
 }
 
 -- Cache resolved properties for fast access
@@ -4701,7 +5083,7 @@ function Reflection.GetPropertiesForClass(className)
                     table.insert(list, {
                         Name = propName,
                         Type = propType,
-                        ReadOnly = readOnly or false
+                        ReadOnly = readOnly or false,
                     })
                 end
             end
@@ -4896,8 +5278,21 @@ local function formatValueLua(val, propType)
         return string.format("Vector2.new(%.4f, %.4f)", val.X, val.Y)
     elseif t == "CFrame" then
         local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = val:GetComponents()
-        return string.format("CFrame.new(%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f)",
-            x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22)
+        return string.format(
+            "CFrame.new(%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f)",
+            x,
+            y,
+            z,
+            r00,
+            r01,
+            r02,
+            r10,
+            r11,
+            r12,
+            r20,
+            r21,
+            r22
+        )
     elseif t == "Color3" then
         return string.format("Color3.fromRGB(%d, %d, %d)", math.floor(val.R * 255), math.floor(val.G * 255), math.floor(val.B * 255))
     elseif t == "UDim" then
@@ -4942,10 +5337,10 @@ local function buildGame()
         local className = inst.ClassName
 
         if inst.Parent == game then
-            append(string.format('    local %s = game:GetService(%q)\n', varName, className))
+            append(string.format("    local %s = game:GetService(%q)\n", varName, className))
         else
-            append(string.format('    local %s = Instance.new(%q)\n', varName, className))
-            append(string.format('    %s.Name = %q\n', varName, inst.Name))
+            append(string.format("    local %s = Instance.new(%q)\n", varName, className))
+            append(string.format("    %s.Name = %q\n", varName, inst.Name))
 
             -- Properties
             local propList = Reflection.GetPropertiesForClass(className)
@@ -4954,11 +5349,13 @@ local function buildGame()
                 local propType = propInfo.Type
 
                 if propName ~= "Name" and propName ~= "Source" and not propInfo.ReadOnly then
-                    local s, val = pcall(function() return (inst )[propName] end)
+                    local s, val = pcall(function()
+                        return (inst )[propName]
+                    end)
                     if s and val ~= nil then
                         local luaVal = formatValueLua(val, propType)
                         if luaVal ~= "nil" then
-                            append(string.format('    pcall(function() %s.%s = %s end)\n', varName, propName, luaVal))
+                            append(string.format("    pcall(function() %s.%s = %s end)\n", varName, propName, luaVal))
                         end
                     end
                 end
@@ -4970,7 +5367,7 @@ local function buildGame()
                 if #src > 0 then
                     -- Safely escape any matching closing bracket if present
                     local safeSrc = string.gsub(src, "%]%===%]", "]=== ]")
-                    append(string.format('    pcall(function() %s.Source = [===[%s]===] end)\n', varName, safeSrc))
+                    append(string.format("    pcall(function() %s.Source = [===[%s]===] end)\n", varName, safeSrc))
                 end
             end
 
@@ -4980,7 +5377,7 @@ local function buildGame()
                 for k, v in pairs(attrs) do
                     local luaV = formatValueLua(v, typeof(v))
                     if luaV ~= "nil" then
-                        append(string.format('    pcall(function() %s:SetAttribute(%q, %s) end)\n', varName, k, luaV))
+                        append(string.format("    pcall(function() %s:SetAttribute(%q, %s) end)\n", varName, k, luaV))
                     end
                 end
             end
@@ -4989,11 +5386,11 @@ local function buildGame()
             if opts.SaveTags ~= false then
                 local tags = Reflection.GetTags(inst)
                 for _, tag in ipairs(tags) do
-                    append(string.format('    pcall(function() CollectionService:AddTag(%s, %q) end)\n', varName, tag))
+                    append(string.format("    pcall(function() CollectionService:AddTag(%s, %q) end)\n", varName, tag))
                 end
             end
 
-            append(string.format('    %s.Parent = %s\n\n', varName, parentVar))
+            append(string.format("    %s.Parent = %s\n\n", varName, parentVar))
         end
 
         for _, child in ipairs(inst:GetChildren()) do
@@ -5033,19 +5430,23 @@ local SerializerXml = {}
 
 -- XML Entity escaping
 local function escapeXml(str)
-    if not str then return "" end
+    if not str then
+        return ""
+    end
     str = tostring(str)
     str = string.gsub(str, "&", "&amp;")
     str = string.gsub(str, "<", "&lt;")
     str = string.gsub(str, ">", "&gt;")
-    str = string.gsub(str, "\"", "&quot;")
+    str = string.gsub(str, '"', "&quot;")
     str = string.gsub(str, "'", "&apos;")
     return str
 end
 
 -- Escape string content for ProtectedString or general text
 local function escapeCDataOrText(str)
-    if not str or #str == 0 then return "" end
+    if not str or #str == 0 then
+        return ""
+    end
     if string.find(str, "[<>&\"']") or string.find(str, "\n") or string.find(str, "\r") then
         local safe = string.gsub(str, "%]%]>", "]]]]><![CDATA[>")
         return "<![CDATA[" .. safe .. "]]>"
@@ -5058,7 +5459,18 @@ local function formatCFrame(cf)
     local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = cf:GetComponents()
     return string.format(
         "<X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z><R00>%.7g</R00><R01>%.7g</R01><R02>%.7g</R02><R10>%.7g</R10><R11>%.7g</R11><R12>%.7g</R12><R20>%.7g</R20><R21>%.7g</R21><R22>%.7g</R22>",
-        x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22
+        x,
+        y,
+        z,
+        r00,
+        r01,
+        r02,
+        r10,
+        r11,
+        r12,
+        r20,
+        r21,
+        r22
     )
 end
 
@@ -5084,7 +5496,9 @@ end
 
 -- Serialize instance attributes into binary/base64 XML format
 local function serializeAttributes(attrs)
-    if not attrs or next(attrs) == nil then return "" end
+    if not attrs or next(attrs) == nil then
+        return ""
+    end
     local str = ""
     for k, v in pairs(attrs) do
         str = str .. tostring(k) .. "=" .. tostring(v) .. ";"
@@ -5113,17 +5527,21 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
     end
 
     -- XML Header
-    append([[<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+    append(
+        [[<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<Meta name="ExplicitAutoJoints">true</Meta>
-]])
+]]
+    )
 
     -- Forward declaration
     local serializeInstance
 
     -- Recursive instance serializer
     serializeInstance = function(inst, depth)
-        if not inst or (inst.Parent == nil and depth > 1) then return end
-        
+        if not inst or (inst.Parent == nil and depth > 1) then
+            return
+        end
+
         processedCount = processedCount + 1
         if processedCount % 400 == 0 then
             task.wait(0.001) -- Micro-yield to prevent FPS crash on massive games
@@ -5134,7 +5552,7 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
         local ref = getRef(inst)
 
         append(string.format('%s<Item class="%s" referent="%s">\n', indent, className, ref))
-        append(string.format('%s\t<Properties>\n', indent))
+        append(string.format("%s\t<Properties>\n", indent))
 
         -- Name property
         append(string.format('%s\t\t<string name="Name">%s</string>\n', indent, escapeXml(inst.Name)))
@@ -5161,7 +5579,15 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
                 append(string.format('%s\t\t<BinaryString name="ChildData">%s</BinaryString>\n', indent, unionData.ChildData))
             end
             if unionData.InitialSize then
-                append(string.format('%s\t\t<Vector3 name="InitialSize"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n', indent, unionData.InitialSize.X, unionData.InitialSize.Y, unionData.InitialSize.Z))
+                append(
+                    string.format(
+                        '%s\t\t<Vector3 name="InitialSize"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n',
+                        indent,
+                        unionData.InitialSize.X,
+                        unionData.InitialSize.Y,
+                        unionData.InitialSize.Z
+                    )
+                )
             end
         end
 
@@ -5198,26 +5624,77 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
                     elseif propType == "int64" then
                         append(string.format('%s\t\t<int64 name="%s">%d</int64>\n', indent, propName, math.floor(tonumber(val) or 0)))
                     elseif propType == "Vector3" and typeof(val) == "Vector3" then
-                        append(string.format('%s\t\t<Vector3 name="%s"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n', indent, propName, tonumber(val.X) or 0, tonumber(val.Y) or 0, tonumber(val.Z) or 0))
+                        append(
+                            string.format(
+                                '%s\t\t<Vector3 name="%s"><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></Vector3>\n',
+                                indent,
+                                propName,
+                                tonumber(val.X) or 0,
+                                tonumber(val.Y) or 0,
+                                tonumber(val.Z) or 0
+                            )
+                        )
                     elseif propType == "Vector2" and typeof(val) == "Vector2" then
-                        append(string.format('%s\t\t<Vector2 name="%s"><X>%.7g</X><Y>%.7g</Y></Vector2>\n', indent, propName, tonumber(val.X) or 0, tonumber(val.Y) or 0))
+                        append(
+                            string.format(
+                                '%s\t\t<Vector2 name="%s"><X>%.7g</X><Y>%.7g</Y></Vector2>\n',
+                                indent,
+                                propName,
+                                tonumber(val.X) or 0,
+                                tonumber(val.Y) or 0
+                            )
+                        )
                     elseif propType == "CoordinateFrame" and typeof(val) == "CFrame" then
-                        append(string.format('%s\t\t<CoordinateFrame name="%s">%s</CoordinateFrame>\n', indent, propName, formatCFrame(val)))
+                        append(
+                            string.format('%s\t\t<CoordinateFrame name="%s">%s</CoordinateFrame>\n', indent, propName, formatCFrame(val))
+                        )
                     elseif propType == "Color3" and typeof(val) == "Color3" then
-                        append(string.format('%s\t\t<Color3 name="%s"><R>%.7g</R><G>%.7g</G><B>%.7g</B></Color3>\n', indent, propName, tonumber(val.R) or 0, tonumber(val.G) or 0, tonumber(val.B) or 0))
+                        append(
+                            string.format(
+                                '%s\t\t<Color3 name="%s"><R>%.7g</R><G>%.7g</G><B>%.7g</B></Color3>\n',
+                                indent,
+                                propName,
+                                tonumber(val.R) or 0,
+                                tonumber(val.G) or 0,
+                                tonumber(val.B) or 0
+                            )
+                        )
                     elseif propType == "UDim" and typeof(val) == "UDim" then
-                        append(string.format('%s\t\t<UDim name="%s"><S>%.7g</S><O>%d</O></UDim>\n', indent, propName, tonumber(val.Scale) or 0, math.floor(tonumber(val.Offset) or 0)))
+                        append(
+                            string.format(
+                                '%s\t\t<UDim name="%s"><S>%.7g</S><O>%d</O></UDim>\n',
+                                indent,
+                                propName,
+                                tonumber(val.Scale) or 0,
+                                math.floor(tonumber(val.Offset) or 0)
+                            )
+                        )
                     elseif propType == "UDim2" and typeof(val) == "UDim2" then
                         local xs = (type(val.X) == "table" and val.X.Scale) or (typeof(val.X) == "UDim" and val.X.Scale) or 0
                         local xo = (type(val.X) == "table" and val.X.Offset) or (typeof(val.X) == "UDim" and val.X.Offset) or 0
                         local ys = (type(val.Y) == "table" and val.Y.Scale) or (typeof(val.Y) == "UDim" and val.Y.Scale) or 0
                         local yo = (type(val.Y) == "table" and val.Y.Offset) or (typeof(val.Y) == "UDim" and val.Y.Offset) or 0
-                        append(string.format('%s\t\t<UDim2 name="%s"><XS>%.7g</XS><XO>%d</XO><YS>%.7g</YS><YO>%d</YO></UDim2>\n', indent, propName, tonumber(xs) or 0, math.floor(tonumber(xo) or 0), tonumber(ys) or 0, math.floor(tonumber(yo) or 0)))
+                        append(
+                            string.format(
+                                '%s\t\t<UDim2 name="%s"><XS>%.7g</XS><XO>%d</XO><YS>%.7g</YS><YO>%d</YO></UDim2>\n',
+                                indent,
+                                propName,
+                                tonumber(xs) or 0,
+                                math.floor(tonumber(xo) or 0),
+                                tonumber(ys) or 0,
+                                math.floor(tonumber(yo) or 0)
+                            )
+                        )
                     elseif propType == "token" then
-                        local tokenNum = (typeof(val) == "EnumItem" and val.Value) or (type(val) == "table" and val.Value) or tonumber(val) or 0
+                        local tokenNum = (typeof(val) == "EnumItem" and val.Value)
+                            or (type(val) == "table" and val.Value)
+                            or tonumber(val)
+                            or 0
                         append(string.format('%s\t\t<token name="%s">%d</token>\n', indent, propName, math.floor(tonumber(tokenNum) or 0)))
                     elseif propType == "Content" then
-                        append(string.format('%s\t\t<Content name="%s"><url>%s</url></Content>\n', indent, propName, escapeXml(tostring(val))))
+                        append(
+                            string.format('%s\t\t<Content name="%s"><url>%s</url></Content>\n', indent, propName, escapeXml(tostring(val)))
+                        )
                     elseif propType == "Ref" then
                         if typeof(val) == "Instance" then
                             append(string.format('%s\t\t<Ref name="%s">%s</Ref>\n', indent, propName, getRef(val)))
@@ -5225,22 +5702,89 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
                             append(string.format('%s\t\t<Ref name="%s">null</Ref>\n', indent, propName))
                         end
                     elseif propType == "ColorSequence" and typeof(val) == "ColorSequence" then
-                        append(string.format('%s\t\t<ColorSequence name="%s">%s</ColorSequence>\n', indent, propName, formatColorSequence(val)))
+                        append(
+                            string.format('%s\t\t<ColorSequence name="%s">%s</ColorSequence>\n', indent, propName, formatColorSequence(val))
+                        )
                     elseif propType == "NumberSequence" and typeof(val) == "NumberSequence" then
-                        append(string.format('%s\t\t<NumberSequence name="%s">%s</NumberSequence>\n', indent, propName, formatNumberSequence(val)))
+                        append(
+                            string.format(
+                                '%s\t\t<NumberSequence name="%s">%s</NumberSequence>\n',
+                                indent,
+                                propName,
+                                formatNumberSequence(val)
+                            )
+                        )
                     elseif propType == "NumberRange" and typeof(val) == "NumberRange" then
-                        append(string.format('%s\t\t<NumberRange name="%s">%.7g %.7g</NumberRange>\n', indent, propName, tonumber(val.Min) or 0, tonumber(val.Max) or 0))
+                        append(
+                            string.format(
+                                '%s\t\t<NumberRange name="%s">%.7g %.7g</NumberRange>\n',
+                                indent,
+                                propName,
+                                tonumber(val.Min) or 0,
+                                tonumber(val.Max) or 0
+                            )
+                        )
                     elseif propType == "Rect" and typeof(val) == "Rect" then
-                        append(string.format('%s\t\t<Rect2D name="%s"><min><X>%.7g</X><Y>%.7g</Y></min><max><X>%.7g</X><Y>%.7g</Y></max></Rect2D>\n', indent, propName, tonumber(val.Min.X) or 0, tonumber(val.Min.Y) or 0, tonumber(val.Max.X) or 0, tonumber(val.Max.Y) or 0))
+                        append(
+                            string.format(
+                                '%s\t\t<Rect2D name="%s"><min><X>%.7g</X><Y>%.7g</Y></min><max><X>%.7g</X><Y>%.7g</Y></max></Rect2D>\n',
+                                indent,
+                                propName,
+                                tonumber(val.Min.X) or 0,
+                                tonumber(val.Min.Y) or 0,
+                                tonumber(val.Max.X) or 0,
+                                tonumber(val.Max.Y) or 0
+                            )
+                        )
                     elseif propType == "Font" and typeof(val) == "Font" then
-                        append(string.format('%s\t\t<Font name="%s">\n%s\t\t\t<Family><url>%s</url></Family>\n%s\t\t\t<Weight>%d</Weight>\n%s\t\t\t<Style>%s</Style>\n%s\t\t</Font>\n',
-                            indent, propName, indent, escapeXml(tostring(val.Family)), indent, (val.Weight and tonumber(val.Weight.Value)) or 400, indent, (val.Style and tostring(val.Style.Name)) or "Normal", indent))
+                        append(
+                            string.format(
+                                '%s\t\t<Font name="%s">\n%s\t\t\t<Family><url>%s</url></Family>\n%s\t\t\t<Weight>%d</Weight>\n%s\t\t\t<Style>%s</Style>\n%s\t\t</Font>\n',
+                                indent,
+                                propName,
+                                indent,
+                                escapeXml(tostring(val.Family)),
+                                indent,
+                                (val.Weight and tonumber(val.Weight.Value)) or 400,
+                                indent,
+                                (val.Style and tostring(val.Style.Name)) or "Normal",
+                                indent
+                            )
+                        )
                     elseif propType == "PhysicalProperties" and typeof(val) == "PhysicalProperties" then
-                        append(string.format('%s\t\t<PhysicalProperties name="%s">\n%s\t\t\t<CustomPhysics>true</CustomPhysics>\n%s\t\t\t<Density>%.7g</Density>\n%s\t\t\t<Friction>%.7g</Friction>\n%s\t\t\t<Elasticity>%.7g</Elasticity>\n%s\t\t\t<FrictionWeight>%.7g</FrictionWeight>\n%s\t\t\t<ElasticityWeight>%.7g</ElasticityWeight>\n%s\t\t</PhysicalProperties>\n',
-                            indent, propName, indent, indent, tonumber(val.Density) or 0, indent, tonumber(val.Friction) or 0, indent, tonumber(val.Elasticity) or 0, indent, tonumber(val.FrictionWeight) or 0, indent, tonumber(val.ElasticityWeight) or 0, indent))
+                        append(
+                            string.format(
+                                '%s\t\t<PhysicalProperties name="%s">\n%s\t\t\t<CustomPhysics>true</CustomPhysics>\n%s\t\t\t<Density>%.7g</Density>\n%s\t\t\t<Friction>%.7g</Friction>\n%s\t\t\t<Elasticity>%.7g</Elasticity>\n%s\t\t\t<FrictionWeight>%.7g</FrictionWeight>\n%s\t\t\t<ElasticityWeight>%.7g</ElasticityWeight>\n%s\t\t</PhysicalProperties>\n',
+                                indent,
+                                propName,
+                                indent,
+                                indent,
+                                tonumber(val.Density) or 0,
+                                indent,
+                                tonumber(val.Friction) or 0,
+                                indent,
+                                tonumber(val.Elasticity) or 0,
+                                indent,
+                                tonumber(val.FrictionWeight) or 0,
+                                indent,
+                                tonumber(val.ElasticityWeight) or 0,
+                                indent
+                            )
+                        )
                     elseif propType == "Ray" and typeof(val) == "Ray" then
-                        append(string.format('%s\t\t<Ray name="%s"><origin><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></origin><direction><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></direction></Ray>\n',
-                            indent, propName, tonumber(val.Origin.X) or 0, tonumber(val.Origin.Y) or 0, tonumber(val.Origin.Z) or 0, tonumber(val.Direction.X) or 0, tonumber(val.Direction.Y) or 0, tonumber(val.Direction.Z) or 0))
+                        append(
+                            string.format(
+                                '%s\t\t<Ray name="%s"><origin><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></origin><direction><X>%.7g</X><Y>%.7g</Y><Z>%.7g</Z></direction></Ray>\n',
+                                indent,
+                                propName,
+                                tonumber(val.Origin.X) or 0,
+                                tonumber(val.Origin.Y) or 0,
+                                tonumber(val.Origin.Z) or 0,
+                                tonumber(val.Direction.X) or 0,
+                                tonumber(val.Direction.Y) or 0,
+                                tonumber(val.Direction.Z) or 0
+                            )
+                        )
                     end
                 end
             end
@@ -5251,7 +5795,9 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
             pcall(function()
                 local entries = (inst ):GetEntries()
                 if entries and #entries > 0 then
-                    local clonerefFn = cloneref or function(obj) return obj end
+                    local clonerefFn = cloneref or function(obj)
+                        return obj
+                    end
                     local HttpService = clonerefFn(game:GetService("HttpService"))
                     local json = HttpService:JSONEncode(entries)
                     append(string.format('%s\t\t<string name="Contents">%s</string>\n', indent, escapeXml(json)))
@@ -5270,7 +5816,9 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
 
         -- Instance Attributes (inst:GetAttributes())
         if opts.SaveAttributes ~= false and inst.GetAttributes then
-            local s, attrs = pcall(function() return inst:GetAttributes() end)
+            local s, attrs = pcall(function()
+                return inst:GetAttributes()
+            end)
             if s and attrs and next(attrs) ~= nil then
                 local b64Attrs = serializeAttributes(attrs)
                 if #b64Attrs > 0 then
@@ -5279,14 +5827,14 @@ function SerializerXml.Serialize(instances, scriptSources, terrainData, options)
             end
         end
 
-        append(string.format('%s\t</Properties>\n', indent))
+        append(string.format("%s\t</Properties>\n", indent))
 
         -- Children
         for _, child in ipairs(inst:GetChildren()) do
             serializeInstance(child, depth + 1)
         end
 
-        append(string.format('%s</Item>\n', indent))
+        append(string.format("%s</Item>\n", indent))
     end
 
     -- Process root services
@@ -5338,7 +5886,9 @@ local function getPathExpression(inst)
         curr = curr.Parent
     end
 
-    if #segments == 0 then return "nil" end
+    if #segments == 0 then
+        return "nil"
+    end
 
     local serviceName = segments[1]
     local expr = string.format("game:GetService(%q)", serviceName)
@@ -5509,7 +6059,8 @@ end)
     for _, rf in ipairs(remotes.Functions) do
         local fullName = rf:GetFullName()
 
-        add(string.format([=[
+        add(string.format(
+            [=[
 -- RemoteFunction: %s
 task.spawn(function()
     local target = %s
@@ -5548,7 +6099,12 @@ task.spawn(function()
         end
     end
 end)
-]=], fullName, getPathExpression(rf), rf.Name, rf.Name))
+]=],
+            fullName,
+            getPathExpression(rf),
+            rf.Name,
+            rf.Name
+        ))
     end
 
     -- Hook RemoteEvents
@@ -5559,7 +6115,8 @@ end)
     for _, re in ipairs(remotes.Events) do
         local fullName = re:GetFullName()
 
-        add(string.format([=[
+        add(string.format(
+            [=[
 -- RemoteEvent: %s
 task.spawn(function()
     local target = %s
@@ -5570,7 +6127,11 @@ task.spawn(function()
         end)
     end
 end)
-]=], fullName, getPathExpression(re), re.Name))
+]=],
+            fullName,
+            getPathExpression(re),
+            re.Name
+        ))
     end
 
     -- Hook UnreliableRemoteEvents
@@ -5582,7 +6143,8 @@ end)
         for _, ure in ipairs(remotes.Unreliable) do
             local fullName = ure:GetFullName()
 
-            add(string.format([=[
+            add(string.format(
+                [=[
 -- UnreliableRemoteEvent: %s
 task.spawn(function()
     local target = %s
@@ -5593,7 +6155,11 @@ task.spawn(function()
         end)
     end
 end)
-]=], fullName, getPathExpression(ure), ure.Name))
+]=],
+                fullName,
+                getPathExpression(ure),
+                ure.Name
+            ))
         end
     end
 
@@ -5635,12 +6201,16 @@ __define__("Core/StreamExplorer", function()
     Includes a Snapshot Memory Accumulator to preserve streamed-out chunks in memory.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 
 local StreamExplorer = {
-    CapturedInstances = {}
+    CapturedInstances = {},
 }
 
 -- Scan map bounds and calculate bounding box
@@ -5651,7 +6221,9 @@ function StreamExplorer.GetMapBoundingBox()
     -- Check if Terrain exists
     local terrain = workspace.Terrain
     if terrain then
-        local s, extents = pcall(function() return terrain.MaxExtents end)
+        local s, extents = pcall(function()
+            return terrain.MaxExtents
+        end)
         if s and extents then
             minVec = Vector3.new(extents.Min.X * 4, -100, extents.Min.Z * 4)
             maxVec = Vector3.new(extents.Max.X * 4, 500, extents.Max.Z * 4)
@@ -5710,7 +6282,9 @@ function StreamExplorer.ExploreMap(stepSize, progressCallback)
     end
 
     local player = nil
-    pcall(function() player = Players and Players.LocalPlayer end)
+    pcall(function()
+        player = Players and Players.LocalPlayer
+    end)
     local camera = workspace.CurrentCamera
     local originalCameraCFrame = camera and camera.CFrame
     local originalCameraType = camera and camera.CameraType
@@ -5755,11 +6329,17 @@ function StreamExplorer.ExploreMap(stepSize, progressCallback)
         -- 2. Non-intrusive stream request
         local requested = false
         if player and player.RequestStreamAroundAsync then
-            local s = pcall(function() player:RequestStreamAroundAsync(targetPos) end)
-            if s then requested = true end
+            local s = pcall(function()
+                player:RequestStreamAroundAsync(targetPos)
+            end)
+            if s then
+                requested = true
+            end
         end
         if not requested and workspace and workspace.RequestStreamAroundAsync then
-            pcall(function() workspace:RequestStreamAroundAsync(targetPos) end)
+            pcall(function()
+                workspace:RequestStreamAroundAsync(targetPos)
+            end)
         end
 
         -- 3. Optional physical teleport (Only if user explicitly forced it)
@@ -5826,7 +6406,7 @@ function TerrainSerializer.ExtractTerrainData(terrain, options)
         WaterWaveSpeed = 10,
         MaterialColors = "",
         HasVoxels = false,
-        VoxelChunks = {}
+        VoxelChunks = {},
     }
 
     if not terrain or not terrain:IsA("Terrain") then
@@ -5834,13 +6414,27 @@ function TerrainSerializer.ExtractTerrainData(terrain, options)
     end
 
     -- Extract basic properties safely
-    pcall(function() data.Decoration = terrain.Decoration end)
-    pcall(function() data.WaterColor = terrain.WaterColor end)
-    pcall(function() data.WaterReflectance = terrain.WaterReflectance end)
-    pcall(function() data.WaterTransparency = terrain.WaterTransparency end)
-    pcall(function() data.WaterWaveSize = terrain.WaterWaveSize end)
-    pcall(function() data.WaterWaveSpeed = terrain.WaterWaveSpeed end)
-    pcall(function() data.MaterialColors = terrain.MaterialColors end)
+    pcall(function()
+        data.Decoration = terrain.Decoration
+    end)
+    pcall(function()
+        data.WaterColor = terrain.WaterColor
+    end)
+    pcall(function()
+        data.WaterReflectance = terrain.WaterReflectance
+    end)
+    pcall(function()
+        data.WaterTransparency = terrain.WaterTransparency
+    end)
+    pcall(function()
+        data.WaterWaveSize = terrain.WaterWaveSize
+    end)
+    pcall(function()
+        data.WaterWaveSpeed = terrain.WaterWaveSpeed
+    end)
+    pcall(function()
+        data.MaterialColors = terrain.MaterialColors
+    end)
 
     if not options.SaveTerrainVoxels then
         return data
@@ -5872,11 +6466,7 @@ function TerrainSerializer.ExtractTerrainData(terrain, options)
                 if chunkCount % 12 == 0 then
                     task.wait(0.001)
                 end
-                local chunkMin = Vector3int16.new(
-                    minVoxel.X + cx * step,
-                    minVoxel.Y + cy * step,
-                    minVoxel.Z + cz * step
-                )
+                local chunkMin = Vector3int16.new(minVoxel.X + cx * step, minVoxel.Y + cy * step, minVoxel.Z + cz * step)
                 local chunkMax = Vector3int16.new(
                     math.min(chunkMin.X + step, maxVoxel.X),
                     math.min(chunkMin.Y + step, maxVoxel.Y),
@@ -5915,7 +6505,7 @@ function TerrainSerializer.ExtractTerrainData(terrain, options)
                             Max = chunkMax,
                             Size = size,
                             Materials = Base64.Encode(table.concat(rawMat)),
-                            Occupancies = Base64.Encode(table.concat(rawOcc))
+                            Occupancies = Base64.Encode(table.concat(rawOcc)),
                         })
                     end
                 end
@@ -5946,7 +6536,9 @@ function UniverseTracker.GetUniversePlaces()
     local currentPlaceId = game.PlaceId or 0
     local rootName = "Root Place"
 
-    local clonerefFn = cloneref or function(obj) return obj end
+    local clonerefFn = cloneref or function(obj)
+        return obj
+    end
     pcall(function()
         local mp = clonerefFn(game:GetService("MarketplaceService"))
         if mp then
@@ -5958,7 +6550,7 @@ function UniverseTracker.GetUniversePlaces()
     table.insert(places, {
         PlaceId = currentPlaceId,
         Name = rootName,
-        IsRoot = true
+        IsRoot = true,
     })
 
     -- Query AssetService for places in universe
@@ -5975,7 +6567,7 @@ function UniverseTracker.GetUniversePlaces()
                     table.insert(places, {
                         PlaceId = item.PlaceId,
                         Name = item.Name or ("Sub-Place " .. tostring(item.PlaceId)),
-                        IsRoot = false
+                        IsRoot = false,
                     })
                 end
             end
@@ -5983,8 +6575,12 @@ function UniverseTracker.GetUniversePlaces()
 
         processPage()
         while not pages.IsFinished do
-            local nextSuccess = pcall(function() pages:AdvanceToNextPageAsync() end)
-            if not nextSuccess then break end
+            local nextSuccess = pcall(function()
+                pages:AdvanceToNextPageAsync()
+            end)
+            if not nextSuccess then
+                break
+            end
             processPage()
         end
     end
@@ -5995,9 +6591,11 @@ end
 -- Export Universe places hierarchy to JSON file
 function UniverseTracker.ExportUniverseMap(customPath)
     local Environment = __require__("Utils/Environment")
-    local clonerefFn = cloneref or function(obj) return obj end
+    local clonerefFn = cloneref or function(obj)
+        return obj
+    end
     local HttpService = clonerefFn(game:GetService("HttpService"))
-    
+
     local places = UniverseTracker.GetUniversePlaces()
     local currentPlaceId = game.PlaceId or 0
     local fileName = customPath or string.format("HyperSave_Universe_%d.json", currentPlaceId)
@@ -6007,7 +6605,7 @@ function UniverseTracker.ExportUniverseMap(customPath)
             UniverseRootPlaceId = currentPlaceId,
             TotalPlaces = #places,
             ExportDate = os.date("%Y-%m-%d %H:%M:%S"),
-            Places = places
+            Places = places,
         })
     end)
 
@@ -6064,7 +6662,9 @@ function Web3DExporter.ExportModelToHTML(targetRoot, options)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HyperSave 3D Web Viewer - ]==], safeName, [==[</title>
+    <title>HyperSave 3D Web Viewer - ]==],
+        safeName,
+        [==[</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -6169,14 +6769,18 @@ function Web3DExporter.ExportModelToHTML(targetRoot, options)
     <div id="header-card" class="panel">
         <div class="title">
             <span>HyperSave 3D</span>
-            <span class="badge">]==], safeName, [==[</span>
+            <span class="badge">]==],
+        safeName,
+        [==[</span>
         </div>
         <div class="subtitle">Por Theo Lorentz Padilha • Visualizador WebGL</div>
     </div>
 
     <div id="stats-card" class="panel">
         <div><strong>Status:</strong> <span style="color:#10B981">Carregado</span></div>
-        <div><strong>Place ID:</strong> ]==], tostring(placeId), [==[</div>
+        <div><strong>Place ID:</strong> ]==],
+        tostring(placeId),
+        [==[</div>
         <div><strong>Controles:</strong> Botão esquerdo (Girar) | Direito (Pan) | Scroll (Zoom)</div>
     </div>
 
@@ -6190,7 +6794,9 @@ function Web3DExporter.ExportModelToHTML(targetRoot, options)
     <div id="webgl-canvas"></div>
 
     <script>
-        const rawObjData = `]==], escapedObj, [==[`;
+        const rawObjData = `]==],
+        escapedObj,
+        [==[`;
 
         let scene, camera, renderer, controls, currentMeshGroup;
         let isWireframe = false;
@@ -6340,7 +6946,7 @@ function Web3DExporter.ExportModelToHTML(targetRoot, options)
         };
     </script>
 </body>
-</html>]==]
+</html>]==],
     }
 
     local fullHtml = table.concat(htmlParts, "")
@@ -6420,7 +7026,9 @@ end
 
 function Interface:BindKeybinds()
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
+        if gameProcessed then
+            return
+        end
         if input.KeyCode == (self.Config.ToggleKeybind or Enum.KeyCode.RightShift) then
             if self.MainFrame then
                 self.MainFrame.Visible = not self.MainFrame.Visible
@@ -6443,7 +7051,9 @@ function Interface:BuildUI()
     if parent and (parent:IsA("LayerCollector") or parent:IsA("ScreenGui")) then
         pcall(function()
             local old = parent:FindFirstChild(containerName)
-            if old then old:Destroy() end
+            if old then
+                old:Destroy()
+            end
         end)
         local container = Instance.new("Frame")
         container.Name = containerName
@@ -6454,7 +7064,9 @@ function Interface:BuildUI()
     else
         pcall(function()
             local old = parent:FindFirstChild(guiName) or parent:FindFirstChild("HyperSaveInstance_UI")
-            if old then old:Destroy() end
+            if old then
+                old:Destroy()
+            end
         end)
 
         local screenGui = Instance.new("ScreenGui")
@@ -6468,9 +7080,13 @@ function Interface:BuildUI()
 
         Stealth.ProtectGui(screenGui)
 
-        local ok = pcall(function() screenGui.Parent = parent end)
+        local ok = pcall(function()
+            screenGui.Parent = parent
+        end)
         if not ok or not screenGui.Parent then
-            pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
+            pcall(function()
+                screenGui.Parent = game:GetService("CoreGui")
+            end)
             if not screenGui.Parent and not self.Config.StealthMode then
                 pcall(function()
                     local plrs = game:GetService("Players")
@@ -6519,15 +7135,18 @@ function Interface:BuildUI()
     UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and fDragging then
             local delta = input.Position - fDragStart
-            floatingBtn.Position = UDim2.new(fStartPos.X.Scale, fStartPos.X.Offset + delta.X, fStartPos.Y.Scale, fStartPos.Y.Offset + delta.Y)
+            floatingBtn.Position =
+                UDim2.new(fStartPos.X.Scale, fStartPos.X.Offset + delta.X, fStartPos.Y.Scale, fStartPos.Y.Offset + delta.Y)
         end
     end)
 
     Theme.AnimateButton(floatingBtn, function()
-        if self.MainFrame then self.MainFrame.Visible = true end
+        if self.MainFrame then
+            self.MainFrame.Visible = true
+        end
         floatingBtn.Visible = false
     end)
-    
+
     local camera = workspace.CurrentCamera
     local vpSize = (camera and camera.ViewportSize) or Vector2.new(1280, 720)
     local winWidth = math.clamp(vpSize.X - 24, 320, 670)
@@ -6779,7 +7398,7 @@ function Interface:BuildUI()
             badge.Text = "Enterprise Ativo"
             badge.TextColor3 = Theme.AccentSuccess
             bStroke.Color = Theme.AccentSuccess
-            
+
             pcall(function()
                 Environment.WriteFile("HyperSave_License.key", kInput.Text)
             end)
@@ -6864,7 +7483,9 @@ function Interface:BuildUI()
     cCloneBtn.Position = UDim2.new(0, 175, 0.5, -11)
     Theme.AddCorner(cCloneBtn, Theme.CornerSmall)
     cCloneBtn.Parent = compactBar
-    Theme.AnimateButton(cCloneBtn, function() self:StartClone() end)
+    Theme.AnimateButton(cCloneBtn, function()
+        self:StartClone()
+    end)
 
     local cExpandBtn = Instance.new("TextButton")
     cExpandBtn.Text = "Expandir ↗"
@@ -6896,7 +7517,9 @@ function Interface:BuildUI()
                 fpsCount = 0
                 lastUpdate = now
                 local ping = 0
-                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                pcall(function()
+                    ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+                end)
                 if compactBar and compactBar.Visible then
                     cStats.Text = string.format("FPS: %d • Ping: %dms", fps, ping)
                 end
@@ -6949,18 +7572,18 @@ function Interface:BuildUI()
 
     -- Navigation buttons (Clean, Plain Text, Zero Emojis)
     local tabs = {
-        {"Dashboard", "Dashboard"},
-        {"Selector", "Objetos"},
-        {"AudioRipper", "Áudios"},
-        {"LightingRipper", "Iluminação"},
-        {"GuiRipper", "Interfaces"},
-        {"Network", "Rede"},
-        {"Universe", "Universos"},
-        {"ObjExport", "Exportar 3D"},
-        {"Tutorial", "Como Usar"},
-        {"Settings", "Configurações"},
-        {"Console", "Console"},
-        {"About", "Sobre"}
+        { "Dashboard", "Dashboard" },
+        { "Selector", "Objetos" },
+        { "AudioRipper", "Áudios" },
+        { "LightingRipper", "Iluminação" },
+        { "GuiRipper", "Interfaces" },
+        { "Network", "Rede" },
+        { "Universe", "Universos" },
+        { "ObjExport", "Exportar 3D" },
+        { "Tutorial", "Como Usar" },
+        { "Settings", "Configurações" },
+        { "Console", "Console" },
+        { "About", "Sobre" },
     }
 
     self.TabFrames = {}
@@ -6997,18 +7620,42 @@ function Interface:BuildUI()
     end
 
     -- Build Individual Tab Pages with error boundary protection
-    pcall(function() self:BuildDashboardTab() end)
-    pcall(function() self:BuildSelectorTab() end)
-    pcall(function() self:BuildAudioRipperTab() end)
-    pcall(function() self:BuildLightingRipperTab() end)
-    pcall(function() self:BuildGuiRipperTab() end)
-    pcall(function() self:BuildNetworkTab() end)
-    pcall(function() self:BuildUniverseTab() end)
-    pcall(function() self:BuildObjExportTab() end)
-    pcall(function() self:BuildTutorialTab() end)
-    pcall(function() self:BuildSettingsTab() end)
-    pcall(function() self:BuildConsoleTab() end)
-    pcall(function() self:BuildAboutTab() end)
+    pcall(function()
+        self:BuildDashboardTab()
+    end)
+    pcall(function()
+        self:BuildSelectorTab()
+    end)
+    pcall(function()
+        self:BuildAudioRipperTab()
+    end)
+    pcall(function()
+        self:BuildLightingRipperTab()
+    end)
+    pcall(function()
+        self:BuildGuiRipperTab()
+    end)
+    pcall(function()
+        self:BuildNetworkTab()
+    end)
+    pcall(function()
+        self:BuildUniverseTab()
+    end)
+    pcall(function()
+        self:BuildObjExportTab()
+    end)
+    pcall(function()
+        self:BuildTutorialTab()
+    end)
+    pcall(function()
+        self:BuildSettingsTab()
+    end)
+    pcall(function()
+        self:BuildConsoleTab()
+    end)
+    pcall(function()
+        self:BuildAboutTab()
+    end)
 
     -- Animate Splash Card completion and reveal Main Window
     pcall(function()
@@ -7019,7 +7666,7 @@ function Interface:BuildUI()
             if self.SplashCard then
                 Theme.Tween(self.SplashCard, 0.15, {
                     Size = UDim2.new(0, 300, 0, 120),
-                    BackgroundTransparency = 1
+                    BackgroundTransparency = 1,
                 })
                 for _, child in ipairs(self.SplashCard:GetDescendants()) do
                     if child:IsA("TextLabel") then
@@ -7029,14 +7676,16 @@ function Interface:BuildUI()
                     end
                 end
                 task.delay(0.18, function()
-                    pcall(function() self.SplashCard:Destroy() end)
+                    pcall(function()
+                        self.SplashCard:Destroy()
+                    end)
                 end)
             end
 
             if self.MainFrame then
                 self.MainFrame.Visible = true
                 Theme.Tween(self.MainFrame, 0.25, {
-                    Size = UDim2.new(0, winWidth, 0, winHeight)
+                    Size = UDim2.new(0, winWidth, 0, winHeight),
                 }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
             end
         end)
@@ -7054,12 +7703,16 @@ function Interface:SwitchTab(targetTab)
             btn.TextColor3 = Theme.TextPrimary
             btn.BackgroundColor3 = Theme.AccentPrimary
             btn.BackgroundTransparency = 0
-            if stroke then stroke.Color = Theme.BorderLight end
+            if stroke then
+                stroke.Color = Theme.BorderLight
+            end
         else
             btn.TextColor3 = Theme.TextSecondary
             btn.BackgroundColor3 = Theme.CardBg
             btn.BackgroundTransparency = 1
-            if stroke then stroke.Color = Theme.Border end
+            if stroke then
+                stroke.Color = Theme.Border
+            end
         end
     end
 end
@@ -7111,12 +7764,12 @@ function Interface:BuildDashboardTab()
     presetLayout.SortOrder = Enum.SortOrder.LayoutOrder
     presetLayout.Parent = presetContainer
 
-    local presetList = {"Full", "Fast", "VisualsOnly", "ScriptsOnly"}
+    local presetList = { "Full", "Fast", "VisualsOnly", "ScriptsOnly" }
     local presetDisplay = {
         Full = "Completo",
         Fast = "Rápido",
         VisualsOnly = "Apenas Mapa",
-        ScriptsOnly = "Apenas Scripts"
+        ScriptsOnly = "Apenas Scripts",
     }
 
     self.PresetButtons = {}
@@ -7141,11 +7794,15 @@ function Interface:BuildDashboardTab()
                 if k == pKey then
                     b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    if stroke then stroke.Color = Theme.BorderLight end
+                    if stroke then
+                        stroke.Color = Theme.BorderLight
+                    end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    if stroke then stroke.Color = Theme.Border end
+                    if stroke then
+                        stroke.Color = Theme.Border
+                    end
                 end
             end
             self:Log("Modo selecionado: " .. pKey)
@@ -7177,9 +7834,9 @@ function Interface:BuildDashboardTab()
     formatLayout.Parent = formatContainer
 
     local formats = {
-        {"rbxlx", "RBXLX (XML)"},
-        {"rbxl", "RBXL (Binário)"},
-        {"lua", "Script Luau"}
+        { "rbxlx", "RBXLX (XML)" },
+        { "rbxl", "RBXL (Binário)" },
+        { "lua", "Script Luau" },
     }
     self.FormatButtons = {}
 
@@ -7205,11 +7862,15 @@ function Interface:BuildDashboardTab()
                 if k == fKey then
                     b.TextColor3 = Theme.TextPrimary
                     b.BackgroundColor3 = Theme.CardActive
-                    if stroke then stroke.Color = Theme.BorderLight end
+                    if stroke then
+                        stroke.Color = Theme.BorderLight
+                    end
                 else
                     b.TextColor3 = Theme.TextSecondary
                     b.BackgroundColor3 = Theme.CardBg
-                    if stroke then stroke.Color = Theme.Border end
+                    if stroke then
+                        stroke.Color = Theme.Border
+                    end
                 end
             end
             self:Log("Formato definido: ." .. fKey)
@@ -7306,10 +7967,14 @@ function Interface:BuildDashboardTab()
 
     Theme.AnimateButton(copyFilePathBtn, function()
         local name = self.SavedFilePath
-        if #name == 0 then name = self.Engine:GetDefaultFileName() end
+        if #name == 0 then
+            name = self.Engine:GetDefaultFileName()
+        end
         Environment.SetClipboard(name)
         copyFilePathBtn.Text = "✓ Copiado!"
-        task.delay(2, function() copyFilePathBtn.Text = "Copiar Caminho do Arquivo" end)
+        task.delay(2, function()
+            copyFilePathBtn.Text = "Copiar Caminho do Arquivo"
+        end)
     end)
 
     local copyAssetsPathBtn = Instance.new("TextButton")
@@ -7326,10 +7991,14 @@ function Interface:BuildDashboardTab()
 
     Theme.AnimateButton(copyAssetsPathBtn, function()
         local name = self.SavedAssetPath
-        if #name == 0 then name = self.Engine:GetDefaultAssetFolder() end
+        if #name == 0 then
+            name = self.Engine:GetDefaultAssetFolder()
+        end
         Environment.SetClipboard(name)
         copyAssetsPathBtn.Text = "✓ Copiado!"
-        task.delay(2, function() copyAssetsPathBtn.Text = "Copiar Pasta de Assets" end)
+        task.delay(2, function()
+            copyAssetsPathBtn.Text = "Copiar Pasta de Assets"
+        end)
     end)
 
     -- Live Telemetry Stats Row
@@ -7392,9 +8061,13 @@ function Interface:BuildDashboardTab()
                 fpsCount = 0
                 lastUpdate = now
                 local ping = 0
-                pcall(function() ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                pcall(function()
+                    ping = math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+                end)
                 local mem = 0
-                pcall(function() mem = math.round(Stats:GetTotalMemoryUsageMb()) end)
+                pcall(function()
+                    mem = math.round(Stats:GetTotalMemoryUsageMb())
+                end)
 
                 if fpsValLbl and fpsValLbl.Parent then
                     fpsValLbl.Text = tostring(fps)
@@ -7535,11 +8208,13 @@ function Interface:BuildSelectorTab()
     -- Helper to update info display & ViewportFrame
     local function inspectInstance(inst)
         self.CurrentTargetInstance = inst
-        
+
         -- Clear previous 3D viewport clones
         pcall(function()
             for _, c in ipairs(vpFrame:GetChildren()) do
-                if c:IsA("Instance") and not c:IsA("Camera") then c:Destroy() end
+                if c:IsA("Instance") and not c:IsA("Camera") then
+                    c:Destroy()
+                end
             end
         end)
 
@@ -7557,12 +8232,22 @@ function Interface:BuildSelectorTab()
         local meshes = 0
 
         for _, desc in ipairs(inst:GetDescendants()) do
-            if desc:IsA("BasePart") then parts = parts + 1 end
-            if desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then meshes = meshes + 1 end
-            if desc:IsA("LuaSourceContainer") then scripts = scripts + 1 end
+            if desc:IsA("BasePart") then
+                parts = parts + 1
+            end
+            if desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then
+                meshes = meshes + 1
+            end
+            if desc:IsA("LuaSourceContainer") then
+                scripts = scripts + 1
+            end
         end
-        if inst:IsA("BasePart") then parts = parts + 1 end
-        if inst:IsA("LuaSourceContainer") then scripts = scripts + 1 end
+        if inst:IsA("BasePart") then
+            parts = parts + 1
+        end
+        if inst:IsA("LuaSourceContainer") then
+            scripts = scripts + 1
+        end
 
         targetTitle.Text = string.format("Alvo: %s (%s)", inst.Name, inst.ClassName)
         targetTitle.TextColor3 = Theme.TextPrimary
@@ -7619,7 +8304,9 @@ function Interface:BuildSelectorTab()
                     local runServ = game:GetService("RunService")
                     self.VpRotationConn = runServ.RenderStepped:Connect(function()
                         if not vpFrame or not vpFrame.Parent or not self.CurrentTargetInstance then
-                            if self.VpRotationConn then self.VpRotationConn:Disconnect() end
+                            if self.VpRotationConn then
+                                self.VpRotationConn:Disconnect()
+                            end
                             return
                         end
                         local angle = os.clock() * 0.9
@@ -7746,12 +8433,16 @@ function Interface:BuildSelectorTab()
 
     -- Event: 3D Raycast click button
     Theme.AnimateButton(raycastBtn, function()
-        if self.MainFrame then self.MainFrame.Visible = false end
+        if self.MainFrame then
+            self.MainFrame.Visible = false
+        end
         resultLabel.Text = "Mira 3D ativa. Clique em qualquer objeto no jogo para selecionar."
         resultLabel.TextColor3 = Theme.TextPrimary
 
         self.Raycast:Start(function(selected)
-            if self.MainFrame then self.MainFrame.Visible = true end
+            if self.MainFrame then
+                self.MainFrame.Visible = true
+            end
             if selected then
                 searchBox.Text = selected.Name
                 inspectInstance(selected)
@@ -7868,7 +8559,9 @@ function Interface:BuildSelectorTab()
             for _, t in ipairs(self.SelectedTargets) do
                 pcall(function()
                     local c = t:Clone()
-                    if c then c.Parent = folder end
+                    if c then
+                        c.Parent = folder
+                    end
                 end)
             end
 
@@ -7881,7 +8574,9 @@ function Interface:BuildSelectorTab()
                 resultLabel.Text = "Falha ao salvar pacote: " .. tostring(msg)
                 resultLabel.TextColor3 = Theme.AccentDanger
             end
-            pcall(function() folder:Destroy() end)
+            pcall(function()
+                folder:Destroy()
+            end)
         end)
     end)
 end
@@ -7972,9 +8667,13 @@ function Interface:BuildAudioRipperTab()
         local q = string.lower(query or "")
         local visibleCount = 0
         for _, item in ipairs(allSoundRows) do
-            local match = (q == "") or string.find(string.lower(item.Data.Name), q, 1, true) or string.find(string.lower(item.Data.CleanId), q, 1, true)
+            local match = (q == "")
+                or string.find(string.lower(item.Data.Name), q, 1, true)
+                or string.find(string.lower(item.Data.CleanId), q, 1, true)
             item.Row.Visible = match
-            if match then visibleCount = visibleCount + 1 end
+            if match then
+                visibleCount = visibleCount + 1
+            end
         end
         audioScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 36)
     end
@@ -7987,7 +8686,9 @@ function Interface:BuildAudioRipperTab()
         scanAudioBtn.Text = "Buscando..."
         allSoundRows = {}
         for _, child in ipairs(audioScroll:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
         end
 
         task.spawn(function()
@@ -8043,7 +8744,9 @@ function Interface:BuildAudioRipperTab()
                 Theme.AnimateButton(copyBtn, function()
                     Environment.SetClipboard(snd.CleanId)
                     copyBtn.Text = "✓"
-                    task.delay(1.5, function() copyBtn.Text = "Copiar ID" end)
+                    task.delay(1.5, function()
+                        copyBtn.Text = "Copiar ID"
+                    end)
                 end)
 
                 table.insert(allSoundRows, { Row = row, Data = snd })
@@ -8063,7 +8766,9 @@ function Interface:BuildAudioRipperTab()
             end
         end)
         stopAudioBtn.Text = "Parado"
-        task.delay(1, function() stopAudioBtn.Text = "Parar Áudio" end)
+        task.delay(1, function()
+            stopAudioBtn.Text = "Parar Áudio"
+        end)
     end)
 
     Theme.AnimateButton(exportAudioListBtn, function()
@@ -8100,7 +8805,8 @@ function Interface:BuildLightingRipperTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Extrai as propriedades visuais de iluminação, Skybox, Atmosphere (densidade, névoa e cores), SunRays, Bloom, Blur e ColorCorrection para um arquivo .rbxmx editável no Studio."
+    desc.Text =
+        "Extrai as propriedades visuais de iluminação, Skybox, Atmosphere (densidade, névoa e cores), SunRays, Bloom, Blur e ColorCorrection para um arquivo .rbxmx editável no Studio."
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -8177,7 +8883,8 @@ function Interface:BuildGuiRipperTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Extrai todas as interfaces ativas (ScreenGuis, menus, lojas, inventários e HUDs) com seus respectivos scripts para um arquivo .rbxmx independente."
+    desc.Text =
+        "Extrai todas as interfaces ativas (ScreenGuis, menus, lojas, inventários e HUDs) com seus respectivos scripts para um arquivo .rbxmx independente."
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -8415,7 +9122,9 @@ function Interface:BuildUniverseTab()
     Theme.AnimateButton(scanBtn, function()
         scanBtn.Text = "Buscando..."
         for _, child in ipairs(placeScroll:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+            if child:IsA("Frame") or child:IsA("TextLabel") then
+                child:Destroy()
+            end
         end
 
         task.spawn(function()
@@ -8476,7 +9185,9 @@ function Interface:BuildUniverseTab()
                 Theme.AnimateButton(copyIdBtn, function()
                     Environment.SetClipboard(tostring(pInfo.PlaceId))
                     copyIdBtn.Text = "✓"
-                    task.delay(1.5, function() copyIdBtn.Text = "Copiar ID" end)
+                    task.delay(1.5, function()
+                        copyIdBtn.Text = "Copiar ID"
+                    end)
                 end)
             end
 
@@ -8494,20 +9205,24 @@ function Interface:BuildUniverseTab()
             else
                 snapshotBtn.Text = "Erro"
             end
-            task.delay(2, function() snapshotBtn.Text = "Salvar Snapshot" end)
+            task.delay(2, function()
+                snapshotBtn.Text = "Salvar Snapshot"
+            end)
         end)
     end)
 
     Theme.AnimateButton(compareDiffBtn, function()
         compareDiffBtn.Text = "Comparando..."
         for _, child in ipairs(placeScroll:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+            if child:IsA("Frame") or child:IsA("TextLabel") then
+                child:Destroy()
+            end
         end
 
         task.spawn(function()
             local diff = PlaceDiffTracker.Compare({ Instances = {}, PlaceId = game.PlaceId or 0, InstanceCount = 0 })
             local s, reportFile = PlaceDiffTracker.ExportDiffReport(diff)
-            
+
             local lbl = Instance.new("TextLabel")
             lbl.Text = diff.Summary .. (s and ("\nRelatório salvo: " .. reportFile) or "")
             lbl.Font = Theme.FontRegular
@@ -8519,9 +9234,13 @@ function Interface:BuildUniverseTab()
             lbl.BackgroundTransparency = 1
             lbl.Parent = placeScroll
 
-            if s then Environment.SetClipboard(reportFile) end
+            if s then
+                Environment.SetClipboard(reportFile)
+            end
             compareDiffBtn.Text = "✓ Concluído"
-            task.delay(2, function() compareDiffBtn.Text = "Comparar Diff" end)
+            task.delay(2, function()
+                compareDiffBtn.Text = "Comparar Diff"
+            end)
         end)
     end)
 end
@@ -8550,7 +9269,8 @@ function Interface:BuildObjExportTab()
     headerLbl.Parent = card
 
     local desc = Instance.new("TextLabel")
-    desc.Text = "Converte os modelos e peças do mapa para arquivos .obj e .mtl com materiais prontos para Blender, Maya, Unity ou Unreal Engine."
+    desc.Text =
+        "Converte os modelos e peças do mapa para arquivos .obj e .mtl com materiais prontos para Blender, Maya, Unity ou Unreal Engine."
     desc.Font = Theme.FontRegular
     desc.TextSize = 11
     desc.TextColor3 = Theme.TextSecondary
@@ -8658,10 +9378,22 @@ function Interface:BuildTutorialTab()
     scroll.Parent = parent
 
     local steps = {
-        {"Passo 1: Iniciar a Cópia", "Acesse a aba 'Dashboard' e clique no botão azul 'Salvar Mapa Completo'. O processo começará a extrair todas as instâncias do jogo."},
-        {"Passo 2: Aguardar o Processamento", "A barra de progresso acompanhará o download de texturas, sons, modelos 3D, terreno e scripts do mapa."},
-        {"Passo 3: Localização dos Arquivos", "O arquivo gerado (.rbxlx ou .rbxl) é salvo diretamente na pasta 'workspace' do seu executor no computador."},
-        {"Passo 4: Abrir no Roblox Studio", "1. Abra o Roblox Studio.\n2. Clique em 'File' -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. O mapa estará 100% carregado e pronto para edição."},
+        {
+            "Passo 1: Iniciar a Cópia",
+            "Acesse a aba 'Dashboard' e clique no botão azul 'Salvar Mapa Completo'. O processo começará a extrair todas as instâncias do jogo.",
+        },
+        {
+            "Passo 2: Aguardar o Processamento",
+            "A barra de progresso acompanhará o download de texturas, sons, modelos 3D, terreno e scripts do mapa.",
+        },
+        {
+            "Passo 3: Localização dos Arquivos",
+            "O arquivo gerado (.rbxlx ou .rbxl) é salvo diretamente na pasta 'workspace' do seu executor no computador.",
+        },
+        {
+            "Passo 4: Abrir no Roblox Studio",
+            "1. Abra o Roblox Studio.\n2. Clique em 'File' -> 'Open from File...'\n3. Selecione o arquivo gerado e clique em Abrir.\n4. O mapa estará 100% carregado e pronto para edição.",
+        },
     }
 
     for i, step in ipairs(steps) do
@@ -8712,7 +9444,9 @@ function Interface:BuildTutorialTab()
     copyScriptCard.Parent = scroll
 
     Theme.AnimateButton(copyScriptCard, function()
-        Environment.SetClipboard('loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()')
+        Environment.SetClipboard(
+            'loadstring(game:HttpGet("https://raw.githubusercontent.com/theopadilha2009-hash/HyperSaveInstance/main/dist/HyperSaveInstance.luau"))()'
+        )
         copyScriptCard.Text = "✓ Comando Copiado!"
         task.delay(2, function()
             copyScriptCard.Text = "Copiar Comando de Execução (loadstring)"
@@ -8774,26 +9508,26 @@ function Interface:BuildSettingsTab()
     end)
 
     local toggles = {
-        {"AutoAntiAFK", "Anti-AFK Automático (Evita desconexão por inatividade)", self.Config.AutoAntiAFK},
-        {"AutoExploreStreaming", "Carregador Espacial (StreamingEnabled)", self.Config.AutoExploreStreaming},
-        {"StealthMode", "Modo Stealth (Evasão de Anti-Cheat)", self.Config.StealthMode},
-        {"SaveAnimations", "Capturar e Salvar Animações (KeyframeSequences)", self.Config.SaveAnimations},
-        {"SafeAssetDownload", "Proteção de Ping (Pausa se Ping > 180ms)", self.Config.SafeAssetDownload},
-        {"DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh)", self.Config.DownloadRawAssets},
-        {"OptimizeGeometry", "Otimizador de Geometria (Deduplicação de Malhas)", self.Config.OptimizeGeometry},
-        {"SaveTerrain", "Salvar Terreno Completo (Propriedades e Materiais)", self.Config.SaveTerrain},
-        {"SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (Chunks 3D)", self.Config.SaveTerrainVoxels},
-        {"SaveLighting", "Preservar Iluminação e Efeitos Atmosféricos", self.Config.SaveLighting},
-        {"SaveSounds", "Preservar Sons e Efeitos Sonoros", self.Config.SaveSounds},
-        {"SaveUnions", "Preservar Uniões CSG e NegateOperations", self.Config.SaveUnions},
-        {"SaveSurfaceAppearance", "Preservar Texturas PBR e SurfaceAppearances", self.Config.SaveSurfaceAppearance},
-        {"DecompileScripts", "Descompilar Scripts (LocalScripts e ModuleScripts)", self.Config.DecompileScripts},
-        {"IsolateStarterPlayer", "Isolar Scripts do Player para StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer},
-        {"SaveServerScriptPlaceholders", "Reconstrução Inteligente de Server Scripts", self.Config.SaveServerScriptPlaceholders},
-        {"SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer},
-        {"SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances},
-        {"SaveAttributes", "Salvar Atributos Modernos de Instâncias", self.Config.SaveAttributes},
-        {"SaveTags", "Salvar Tags do CollectionService", self.Config.SaveTags},
+        { "AutoAntiAFK", "Anti-AFK Automático (Evita desconexão por inatividade)", self.Config.AutoAntiAFK },
+        { "AutoExploreStreaming", "Carregador Espacial (StreamingEnabled)", self.Config.AutoExploreStreaming },
+        { "StealthMode", "Modo Stealth (Evasão de Anti-Cheat)", self.Config.StealthMode },
+        { "SaveAnimations", "Capturar e Salvar Animações (KeyframeSequences)", self.Config.SaveAnimations },
+        { "SafeAssetDownload", "Proteção de Ping (Pausa se Ping > 180ms)", self.Config.SafeAssetDownload },
+        { "DownloadRawAssets", "Baixar Assets Brutos (.mp3, .png, .mesh)", self.Config.DownloadRawAssets },
+        { "OptimizeGeometry", "Otimizador de Geometria (Deduplicação de Malhas)", self.Config.OptimizeGeometry },
+        { "SaveTerrain", "Salvar Terreno Completo (Propriedades e Materiais)", self.Config.SaveTerrain },
+        { "SaveTerrainVoxels", "Extrair SmoothVoxels do Terreno (Chunks 3D)", self.Config.SaveTerrainVoxels },
+        { "SaveLighting", "Preservar Iluminação e Efeitos Atmosféricos", self.Config.SaveLighting },
+        { "SaveSounds", "Preservar Sons e Efeitos Sonoros", self.Config.SaveSounds },
+        { "SaveUnions", "Preservar Uniões CSG e NegateOperations", self.Config.SaveUnions },
+        { "SaveSurfaceAppearance", "Preservar Texturas PBR e SurfaceAppearances", self.Config.SaveSurfaceAppearance },
+        { "DecompileScripts", "Descompilar Scripts (LocalScripts e ModuleScripts)", self.Config.DecompileScripts },
+        { "IsolateStarterPlayer", "Isolar Scripts do Player para StarterPlayer/StarterGui", self.Config.IsolateStarterPlayer },
+        { "SaveServerScriptPlaceholders", "Reconstrução Inteligente de Server Scripts", self.Config.SaveServerScriptPlaceholders },
+        { "SynthesizeServer", "Sintetizador Automático de Backend para Remotes", self.Config.SynthesizeServer },
+        { "SaveNilInstances", "Salvar Instâncias Isoladas (Nil Instances)", self.Config.SaveNilInstances },
+        { "SaveAttributes", "Salvar Atributos Modernos de Instâncias", self.Config.SaveAttributes },
+        { "SaveTags", "Salvar Tags do CollectionService", self.Config.SaveTags },
     }
 
     for i, item in ipairs(toggles) do
@@ -9011,7 +9745,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnGithub, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash")
         btnGithub.Text = "✓ Copiado!"
-        task.delay(2, function() btnGithub.Text = "GitHub" end)
+        task.delay(2, function()
+            btnGithub.Text = "GitHub"
+        end)
     end)
 
     -- LinkedIn Profile Button
@@ -9030,7 +9766,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnLinkedIn, function()
         Environment.SetClipboard("https://www.linkedin.com/in/theo-lorentz-padilha-0b9b99287/")
         btnLinkedIn.Text = "✓ Copiado!"
-        task.delay(2, function() btnLinkedIn.Text = "LinkedIn" end)
+        task.delay(2, function()
+            btnLinkedIn.Text = "LinkedIn"
+        end)
     end)
 
     -- Repository Link Button
@@ -9049,7 +9787,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnRepo, function()
         Environment.SetClipboard("https://github.com/theopadilha2009-hash/HyperSaveInstance")
         btnRepo.Text = "✓ Copiado!"
-        task.delay(2, function() btnRepo.Text = "Repositório" end)
+        task.delay(2, function()
+            btnRepo.Text = "Repositório"
+        end)
     end)
 
     -- Discord Server Button
@@ -9067,7 +9807,9 @@ function Interface:BuildAboutTab()
     Theme.AnimateButton(btnDiscord, function()
         Environment.SetClipboard("https://discord.gg/Tk5zyA83UZ")
         btnDiscord.Text = "✓ Copiado!"
-        task.delay(2, function() btnDiscord.Text = "Discord" end)
+        task.delay(2, function()
+            btnDiscord.Text = "Discord"
+        end)
     end)
 
     -- System Diagnostics Card
@@ -9091,13 +9833,13 @@ function Interface:BuildAboutTab()
     sysTitle.Parent = sysCard
 
     local diagItems = {
-        {"Plataforma:", Environment.GetPlatform()},
-        {"Executor:", Environment.GetExecutorName()},
-        {"Escrita de Arquivo (writefile):", Environment.HasFileSystem() and "Ativo (Totalmente Suportado)" or "Indisponível"},
-        {"Descompilador Luau:", Environment.HasDecompiler() and "Ativo (Descompilação Completa)" or "Modo Bytecode / Fallback"},
-        {"Bypass de StreamingEnabled:", "Ativo (StreamExplorer Espacial)"},
-        {"Emulador de DataStore & VIP:", "Ativo (1.000.000 Coins / VIP Liberado)"},
-        {"Atalho de Teclado (HUD):", "[RightShift] ou Botão Flutuante"},
+        { "Plataforma:", Environment.GetPlatform() },
+        { "Executor:", Environment.GetExecutorName() },
+        { "Escrita de Arquivo (writefile):", Environment.HasFileSystem() and "Ativo (Totalmente Suportado)" or "Indisponível" },
+        { "Descompilador Luau:", Environment.HasDecompiler() and "Ativo (Descompilação Completa)" or "Modo Bytecode / Fallback" },
+        { "Bypass de StreamingEnabled:", "Ativo (StreamExplorer Espacial)" },
+        { "Emulador de DataStore & VIP:", "Ativo (1.000.000 Coins / VIP Liberado)" },
+        { "Atalho de Teclado (HUD):", "[RightShift] ou Botão Flutuante" },
     }
 
     for i, item in ipairs(diagItems) do
@@ -9121,7 +9863,8 @@ function Interface:BuildAboutTab()
         lblVal.Text = item[2]
         lblVal.Font = Theme.FontRegular
         lblVal.TextSize = 10
-        lblVal.TextColor3 = (string.find(item[2], "Ativo") or string.find(item[2], "Suportado")) and Theme.AccentSuccess or Theme.TextPrimary
+        lblVal.TextColor3 = (string.find(item[2], "Ativo") or string.find(item[2], "Suportado")) and Theme.AccentSuccess
+            or Theme.TextPrimary
         lblVal.TextXAlignment = Enum.TextXAlignment.Right
         lblVal.Size = UDim2.new(0.5, 0, 1, 0)
         lblVal.Position = UDim2.new(0.5, 0, 0, 0)
@@ -9150,7 +9893,8 @@ function Interface:BuildAboutTab()
     featTitle.Parent = featCard
 
     local featDesc = Instance.new("TextLabel")
-    featDesc.Text = "• Seletor de Alvos 3D com Raycast e Multi-Seleção\n• Terreno SmoothVoxels 3D, Iluminação PBR e Áudios\n• Importador Oficial para Roblox Studio com Master Fix\n• Descompilador Luau Integrado e Proteção Anti-AFK"
+    featDesc.Text =
+        "• Seletor de Alvos 3D com Raycast e Multi-Seleção\n• Terreno SmoothVoxels 3D, Iluminação PBR e Áudios\n• Importador Oficial para Roblox Studio com Master Fix\n• Descompilador Luau Integrado e Proteção Anti-AFK"
     featDesc.Font = Theme.FontRegular
     featDesc.TextSize = 10
     featDesc.TextColor3 = Theme.TextSecondary
@@ -9196,15 +9940,19 @@ function Interface:BindEngineEvents()
         end
         if self.ProgressBarFill then
             Theme.Tween(self.ProgressBarFill, 0.2, {
-                Size = UDim2.new(math.clamp(prog.Percentage / 100, 0, 1), 0, 1, 0)
+                Size = UDim2.new(math.clamp(prog.Percentage / 100, 0, 1), 0, 1, 0),
             })
         end
 
         local color = Theme.TextSecondary
         if prog.Stage == "Done" then
             color = Theme.AccentSuccess
-            if prog.SavedFile then self.SavedFilePath = prog.SavedFile end
-            if prog.AssetsFolder then self.SavedAssetPath = prog.AssetsFolder end
+            if prog.SavedFile then
+                self.SavedFilePath = prog.SavedFile
+            end
+            if prog.AssetsFolder then
+                self.SavedAssetPath = prog.AssetsFolder
+            end
 
             if self.CloneButton then
                 self.CloneButton.Text = "✓ Salvo com sucesso!"
@@ -9254,56 +10002,62 @@ __define__("UI/Theme", function()
     Focus: High contrast, crystal-clear readability, zero visual noise
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local TweenService = nil
-pcall(function() TweenService = clonerefFn(game:GetService("TweenService")) end)
+pcall(function()
+    TweenService = clonerefFn(game:GetService("TweenService"))
+end)
 local SoundService = nil
-pcall(function() SoundService = clonerefFn(game:GetService("SoundService")) end)
+pcall(function()
+    SoundService = clonerefFn(game:GetService("SoundService"))
+end)
 
 local Theme = {
     -- Backgrounds & Surfaces (Solid Dark Slate, High Contrast)
-    Background = Color3.fromRGB(18, 20, 26),          -- #12141A Base window
-    BackgroundTransparency = 0.0,                    -- Completely solid, no blur
-    CardBg = Color3.fromRGB(26, 30, 40),              -- #1A1E28 Elevated container
+    Background = Color3.fromRGB(18, 20, 26), -- #12141A Base window
+    BackgroundTransparency = 0.0, -- Completely solid, no blur
+    CardBg = Color3.fromRGB(26, 30, 40), -- #1A1E28 Elevated container
     CardTransparency = 0.0,
-    CardHover = Color3.fromRGB(36, 42, 56),          -- #242A38 Hover state
-    CardActive = Color3.fromRGB(42, 48, 64),         -- #2A3040 Active state
-    InputBg = Color3.fromRGB(14, 16, 22),             -- #0E1016 Textbox background
-    
+    CardHover = Color3.fromRGB(36, 42, 56), -- #242A38 Hover state
+    CardActive = Color3.fromRGB(42, 48, 64), -- #2A3040 Active state
+    InputBg = Color3.fromRGB(14, 16, 22), -- #0E1016 Textbox background
+
     -- Clean 1px Borders
-    Border = Color3.fromRGB(44, 50, 66),             -- #2C3242 Subtle edge
+    Border = Color3.fromRGB(44, 50, 66), -- #2C3242 Subtle edge
     BorderTransparency = 0.0,
-    BorderLight = Color3.fromRGB(59, 130, 246),      -- #3B82F6 Active blue border
-    BorderNeon = Color3.fromRGB(59, 130, 246),       -- Clean blue border
+    BorderLight = Color3.fromRGB(59, 130, 246), -- #3B82F6 Active blue border
+    BorderNeon = Color3.fromRGB(59, 130, 246), -- Clean blue border
     BorderCyber = Color3.fromRGB(59, 130, 246),
-    
+
     -- Accents (Clean, non-clashing)
-    AccentPrimary = Color3.fromRGB(37, 99, 235),    -- #2563EB Royal Blue (Action)
-    AccentSecondary = Color3.fromRGB(79, 70, 229),  -- #4F46E5 Indigo
-    AccentSuccess = Color3.fromRGB(16, 185, 129),    -- #10B981 Emerald
-    AccentWarning = Color3.fromRGB(245, 158, 11),    -- #F59E0B Amber
-    AccentDanger = Color3.fromRGB(220, 38, 38),      -- #DC2626 Coral Red
-    AccentCyan = Color3.fromRGB(14, 165, 233),       -- #0EA5E9 Sky Blue
-    AccentAcid = Color3.fromRGB(16, 185, 129),       -- Clean Green
+    AccentPrimary = Color3.fromRGB(37, 99, 235), -- #2563EB Royal Blue (Action)
+    AccentSecondary = Color3.fromRGB(79, 70, 229), -- #4F46E5 Indigo
+    AccentSuccess = Color3.fromRGB(16, 185, 129), -- #10B981 Emerald
+    AccentWarning = Color3.fromRGB(245, 158, 11), -- #F59E0B Amber
+    AccentDanger = Color3.fromRGB(220, 38, 38), -- #DC2626 Coral Red
+    AccentCyan = Color3.fromRGB(14, 165, 233), -- #0EA5E9 Sky Blue
+    AccentAcid = Color3.fromRGB(16, 185, 129), -- Clean Green
     AccentSkull = Color3.fromRGB(255, 255, 255),
     AccentGothic = Color3.fromRGB(255, 255, 255),
     AccentTheo = Color3.fromRGB(59, 130, 246),
     AccentDark = Color3.fromRGB(14, 16, 22),
- 
+
     -- Crystal-Clear Typography
-    TextPrimary = Color3.fromRGB(255, 255, 255),     -- Pure White (#FFFFFF)
-    TextSecondary = Color3.fromRGB(160, 174, 192),   -- Clean Light Gray (#A0AEC0)
-    TextMuted = Color3.fromRGB(113, 128, 150),       -- Muted Slate (#718096)
-    TextAccent = Color3.fromRGB(59, 130, 246),       -- Blue text highlight
+    TextPrimary = Color3.fromRGB(255, 255, 255), -- Pure White (#FFFFFF)
+    TextSecondary = Color3.fromRGB(160, 174, 192), -- Clean Light Gray (#A0AEC0)
+    TextMuted = Color3.fromRGB(113, 128, 150), -- Muted Slate (#718096)
+    TextAccent = Color3.fromRGB(59, 130, 246), -- Blue text highlight
     TextTheo = Color3.fromRGB(59, 130, 246),
     TextAcid = Color3.fromRGB(16, 185, 129),
- 
+
     -- Fonts (Gotham Family for crisp native rendering)
     FontTitle = Enum.Font.GothamBold,
     FontSemiBold = Enum.Font.GothamMedium,
     FontRegular = Enum.Font.Gotham,
     FontCode = Enum.Font.Gotham,
- 
+
     -- Subtle Radii (Modern software standard 6-8px)
     CornerLarge = UDim.new(0, 8),
     CornerMedium = UDim.new(0, 6),
@@ -9346,7 +10100,7 @@ function Theme.AddGradient(instance, c1, c2, rotation)
     local grad = Instance.new("UIGradient")
     grad.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, c1),
-        ColorSequenceKeypoint.new(1, c2)
+        ColorSequenceKeypoint.new(1, c2),
     })
     grad.Rotation = rotation or 45
     grad.Parent = instance
@@ -9362,7 +10116,9 @@ function Theme.PlayClick()
         s.Pitch = 1.3
         s.Parent = SoundService
         s:Play()
-        task.delay(0.6, function() s:Destroy() end)
+        task.delay(0.6, function()
+            s:Destroy()
+        end)
     end)
 end
 
@@ -9377,13 +10133,13 @@ function Theme.AnimateButton(btn, onClick)
     pcall(function()
         btn.MouseEnter:Connect(function()
             Theme.Tween(btn, 0.1, {
-                BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3
+                BackgroundColor3 = (btn.BackgroundColor3 == Theme.CardBg) and Theme.CardHover or btn.BackgroundColor3,
             })
         end)
 
         btn.MouseLeave:Connect(function()
             Theme.Tween(btn, 0.1, {
-                BackgroundColor3 = origBg
+                BackgroundColor3 = origBg,
             })
         end)
     end)
@@ -9414,7 +10170,9 @@ function Theme.GenerateActivityGraph()
 end
 
 function Theme.ScrambleText(label, targetText, duration)
-    pcall(function() label.Text = targetText end)
+    pcall(function()
+        label.Text = targetText
+    end)
 end
 
 return Theme
@@ -9427,16 +10185,22 @@ __define__("Utils/AntiAFK", function()
     Prevents Roblox Error 268/273 (20-minute idle disconnection) during long save sessions.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 
 local AntiAFK = {}
 local isEnabled = false
 local idleConnection = nil
 
 function AntiAFK.Enable()
-    if isEnabled then return end
+    if isEnabled then
+        return
+    end
     isEnabled = true
 
     pcall(function()
@@ -9444,8 +10208,10 @@ function AntiAFK.Enable()
         local localPlayer = plrs and (plrs.LocalPlayer or plrs:FindFirstChildOfClass("Player"))
         if localPlayer and localPlayer.Idled then
             idleConnection = localPlayer.Idled:Connect(function()
-                if not isEnabled then return end
-                
+                if not isEnabled then
+                    return
+                end
+
                 -- 1. Primary stealth method: Natural camera micro-oscillation
                 local handled = false
                 pcall(function()
@@ -9477,7 +10243,8 @@ function AntiAFK.Enable()
                 -- 3. Last resort fallback: VirtualUser
                 if not handled then
                     pcall(function()
-                        local vu = (game.GetService and game:GetService("VirtualUser")) or (game.FindService and game:FindService("VirtualUser"))
+                        local vu = (game.GetService and game:GetService("VirtualUser"))
+                            or (game.FindService and game:FindService("VirtualUser"))
                         if vu and vu.ClickButton2 then
                             vu:ClickButton2(Vector2.new(math.random(10, 50), math.random(10, 50)))
                         end
@@ -9531,7 +10298,9 @@ local function getBitOp()
 end
 
 function Base64.Encode(data)
-    if not data or #data == 0 then return "" end
+    if not data or #data == 0 then
+        return ""
+    end
     local bit = getBitOp()
     local l = #data
     local result = {}
@@ -9598,11 +10367,15 @@ function Base64.Encode(data)
 end
 
 function Base64.Decode(data)
-    if not data or #data == 0 then return "" end
+    if not data or #data == 0 then
+        return ""
+    end
     local bit = getBitOp()
     local clean = string.gsub(data, "%s+", "")
     local l = #clean
-    if l % 4 ~= 0 then return "" end
+    if l % 4 ~= 0 then
+        return ""
+    end
 
     local result = {}
     local idx = 1
@@ -9678,29 +10451,55 @@ __define__("Utils/Environment", function()
 local Environment = {}
 
 -- Service references (Safely wrapped in pcalls for all execution identities)
-local cloneref = cloneref or function(obj) return obj end
+local cloneref = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = cloneref(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = cloneref(game:GetService("HttpService"))
+end)
 local Players = nil
-pcall(function() Players = cloneref(game:GetService("Players")) end)
+pcall(function()
+    Players = cloneref(game:GetService("Players"))
+end)
 local CoreGui = nil
-pcall(function() CoreGui = cloneref(game:GetService("CoreGui")) end)
+pcall(function()
+    CoreGui = cloneref(game:GetService("CoreGui"))
+end)
 
 -- Universal Task polyfill
-local task = task or {
-    spawn = spawn or function(fn, ...) return coroutine.wrap(fn)(...) end,
-    wait = wait or function(t) return coroutine.yield(t) end,
-    delay = delay or function(t, fn) return task.spawn(function() task.wait(t); fn() end) end,
-    defer = function(fn, ...) return (spawn or task.spawn)(function(...) fn(...) end, ...) end
-}
+local task = task
+    or {
+        spawn = spawn or function(fn, ...)
+            return coroutine.wrap(fn)(...)
+        end,
+        wait = wait or function(t)
+            return coroutine.yield(t)
+        end,
+        delay = delay or function(t, fn)
+            return task.spawn(function()
+                task.wait(t)
+                fn()
+            end)
+        end,
+        defer = function(fn, ...)
+            return (spawn or task.spawn)(function(...)
+                fn(...)
+            end, ...)
+        end,
+    }
 
 -- Table & Math polyfills wrapped safely for readonly Luau environment
 pcall(function()
     if not table.clone then
         table.clone = function(t)
-            if type(t) ~= "table" then return t end
+            if type(t) ~= "table" then
+                return t
+            end
             local clone = {}
-            for k, v in pairs(t) do clone[k] = v end
+            for k, v in pairs(t) do
+                clone[k] = v
+            end
             return clone
         end
     end
@@ -9708,9 +10507,13 @@ end)
 pcall(function()
     if not table.find then
         table.find = function(t, val, init)
-            if type(t) ~= "table" then return nil end
+            if type(t) ~= "table" then
+                return nil
+            end
             for i = (init or 1), #t do
-                if t[i] == val then return i end
+                if t[i] == val then
+                    return i
+                end
             end
             return nil
         end
@@ -9765,14 +10568,23 @@ function Environment.GetPlatform()
     local exec = string.lower(Environment.GetExecutorName())
     if string.find(exec, "mac") or string.find(exec, "apple") or (getexecutorinfo and getexecutorinfo().platform == "macOS") then
         isMac = true
-    elseif string.find(exec, "delta") or string.find(exec, "codex") or string.find(exec, "arceus") or string.find(exec, "hydrogen mobile") then
+    elseif
+        string.find(exec, "delta")
+        or string.find(exec, "codex")
+        or string.find(exec, "arceus")
+        or string.find(exec, "hydrogen mobile")
+    then
         isMobile = true
     else
         isWindows = true
     end
 
-    if isMac then return "macOS" end
-    if isMobile then return "Mobile" end
+    if isMac then
+        return "macOS"
+    end
+    if isMobile then
+        return "Mobile"
+    end
     return "Windows / Desktop"
 end
 
@@ -9783,7 +10595,7 @@ local _appendfile = appendfile or (syn and syn.appendfile)
 local _makefolder = makefolder or (syn and syn.makefolder)
 local _isfolder = isfolder or (syn and syn.isfolder)
 local _isfile = isfile or (syn and syn.isfile)
-local _delfile = delfile or (syn and syn.delfile) or (delfile)
+local _delfile = delfile or (syn and syn.delfile) or delfile
 local _listfiles = listfiles or (syn and syn.listfiles)
 
 function Environment.HasFileSystem()
@@ -9796,7 +10608,9 @@ end
 
 -- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes
 function Environment.SanitizeFileName(name)
-    if not name or #name == 0 then return "Unnamed" end
+    if not name or #name == 0 then
+        return "Unnamed"
+    end
     local clean = string.gsub(name, '[<>:"/\\|?*%c%z]', "_")
     clean = string.gsub(clean, "^[%s%.]+", "")
     clean = string.gsub(clean, "[%s%.]+$", "")
@@ -9804,9 +10618,28 @@ function Environment.SanitizeFileName(name)
     -- Guard against reserved Windows device names
     local upper = string.upper(clean)
     local reserved = {
-        CON = true, PRN = true, AUX = true, NUL = true,
-        COM1 = true, COM2 = true, COM3 = true, COM4 = true, COM5 = true, COM6 = true, COM7 = true, COM8 = true, COM9 = true,
-        LPT1 = true, LPT2 = true, LPT3 = true, LPT4 = true, LPT5 = true, LPT6 = true, LPT7 = true, LPT8 = true, LPT9 = true
+        CON = true,
+        PRN = true,
+        AUX = true,
+        NUL = true,
+        COM1 = true,
+        COM2 = true,
+        COM3 = true,
+        COM4 = true,
+        COM5 = true,
+        COM6 = true,
+        COM7 = true,
+        COM8 = true,
+        COM9 = true,
+        LPT1 = true,
+        LPT2 = true,
+        LPT3 = true,
+        LPT4 = true,
+        LPT5 = true,
+        LPT6 = true,
+        LPT7 = true,
+        LPT8 = true,
+        LPT9 = true,
     }
     if reserved[upper] then
         clean = clean .. "_file"
@@ -9837,7 +10670,9 @@ function Environment.AppendFile(path, content)
         return success
     elseif _readfile and _writefile then
         local existing = ""
-        pcall(function() existing = _readfile(path) or "" end)
+        pcall(function()
+            existing = _readfile(path) or ""
+        end)
         return Environment.WriteFile(path, existing .. content)
     end
     return false
@@ -9846,7 +10681,9 @@ end
 function Environment.ReadFile(path)
     if _readfile then
         local success, result = pcall(_readfile, path)
-        if success then return result end
+        if success then
+            return result
+        end
     end
     return nil
 end
@@ -9879,7 +10716,7 @@ end
 function Environment.GetDecompilerFunction()
     local genv = (getgenv and getgenv()) or {}
     local renv = (getrenv and getrenv()) or {}
-    
+
     -- Check functions in order of fidelity
     local candidates = {
         genv.decompile,
@@ -9892,7 +10729,7 @@ function Environment.GetDecompilerFunction()
         genv.disassemble,
         disassemble,
     }
-    
+
     for _, fn in ipairs(candidates) do
         if type(fn) == "function" then
             return fn
@@ -9904,7 +10741,7 @@ end
 function Environment.GetBytecodeFunction()
     local genv = (getgenv and getgenv()) or {}
     local renv = (getrenv and getrenv()) or {}
-    
+
     local candidates = {
         genv.getscriptbytecode,
         getscriptbytecode,
@@ -9915,7 +10752,7 @@ function Environment.GetBytecodeFunction()
         genv.dumpstring,
         dumpstring,
     }
-    
+
     for _, fn in ipairs(candidates) do
         if type(fn) == "function" then
             return fn
@@ -9981,7 +10818,7 @@ end
 
 -- Nil instances extraction
 function Environment.GetNilInstances()
-    local getnil = getnilinstances or (syn and syn.get_nil_instances) or (get_nil_instances)
+    local getnil = getnilinstances or (syn and syn.get_nil_instances) or get_nil_instances
     if getnil then
         local success, res = pcall(getnil)
         if success and type(res) == "table" then
@@ -9996,10 +10833,16 @@ function Environment.GetHiddenProperties(instance, property)
     local gethidden = gethiddenproperty or (syn and syn.get_hidden_property)
     if gethidden then
         local success, val = pcall(gethidden, instance, property)
-        if success then return val end
+        if success then
+            return val
+        end
     end
-    local s, v = pcall(function() return (instance )[property] end)
-    if s then return v end
+    local s, v = pcall(function()
+        return (instance )[property]
+    end)
+    if s then
+        return v
+    end
     return nil
 end
 
@@ -10018,7 +10861,9 @@ local LZ4 = {}
 function LZ4.Compress(input)
     local bit = bit32 or bit
     local inputLen = #input
-    if inputLen == 0 then return "" end
+    if inputLen == 0 then
+        return ""
+    end
 
     local hashTable = {}
     local out = {}
@@ -10141,7 +10986,9 @@ function LZ4.Decompress(compressed, uncompressedSize)
             outLen = outLen + litLen
         end
 
-        if outLen >= uncompressedSize or i > cLen then break end
+        if outLen >= uncompressedSize or i > cLen then
+            break
+        end
 
         local offset = bit.bor(string.byte(compressed, i), bit.lshift(string.byte(compressed, i + 1), 8))
         i = i + 2
@@ -10222,7 +11069,7 @@ function LicenseManager.ValidateKey(rawKey)
     end
 
     local cleanKey = string.upper(string.gsub(rawKey, "%s+", ""))
-    
+
     -- Chaves de desenvolvedor nao ficam no codigo versionado: este arquivo e
     -- publicado no bundle, entao qualquer constante aqui e publica. Para uso
     -- proprio, gere uma chave Enterprise com scripts/generate_key.js.
@@ -10233,7 +11080,7 @@ function LicenseManager.ValidateKey(rawKey)
         local n1 = tonumber(p1, 16) or 0
         local n2 = tonumber(p2, 16) or 0
         local n3 = tonumber(p3, 16) or 0
-        
+
         -- Cryptographic parity check: (n1 * 3 + n2 * 7) % 65535 == n3
         if (n1 * 3 + n2 * 7) % 65535 == n3 then
             return true, "Enterprise", "Enterprise Licensee [0x" .. p1 .. "]"
@@ -10318,14 +11165,20 @@ __define__("Utils/Stealth", function()
 
 local Stealth = {}
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = clonerefFn(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = clonerefFn(game:GetService("HttpService"))
+end)
 
 -- Generate ephemeral GUID for instance naming (Prevents static string signature detection)
 function Stealth.GenerateEphemeralGUID()
     if HttpService and HttpService.GenerateGUID then
-        local s, guid = pcall(function() return HttpService:GenerateGUID(false) end)
+        local s, guid = pcall(function()
+            return HttpService:GenerateGUID(false)
+        end)
         if s and guid then
             return string.gsub(guid, "%-", "")
         end
@@ -10398,13 +11251,17 @@ function Stealth.SafeGetProperty(instance, property)
     local success, val = pcall(function()
         return (instance )[property]
     end)
-    if success then return val end
+    if success then
+        return val
+    end
     return nil
 end
 
 -- Mask Luau functions as native C closures to prevent hook detection
 function Stealth.MaskClosure(fn)
-    if typeof(fn) ~= "function" then return fn end
+    if typeof(fn) ~= "function" then
+        return fn
+    end
     local masked = fn
     pcall(function()
         if newcclosure then
@@ -10416,7 +11273,9 @@ end
 
 -- Lock metatable to prevent external inspection or tampering
 function Stealth.ProtectMetatable(tbl)
-    if type(tbl) ~= "table" then return tbl end
+    if type(tbl) ~= "table" then
+        return tbl
+    end
     pcall(function()
         local mt = getrawmetatable and getrawmetatable(tbl) or getmetatable(tbl)
         if mt then
@@ -10438,17 +11297,21 @@ end
 
 -- Check if instance belongs to Roblox internal telemetry or CoreGui
 function Stealth.IsInternalOrProtected(instance)
-    if not instance then return true end
+    if not instance then
+        return true
+    end
     local isInternal = false
     pcall(function()
         local name = instance.Name
         local className = instance.ClassName
-        if string.find(name, "RobloxNetworkAutoTest") or
-           string.find(name, "Telemetry") or
-           string.find(name, "MemStorageConnection") or
-           string.find(name, "CoreScript") or
-           className == "PluginMouse" or
-           className == "RobloxPluginGui" then
+        if
+            string.find(name, "RobloxNetworkAutoTest")
+            or string.find(name, "Telemetry")
+            or string.find(name, "MemStorageConnection")
+            or string.find(name, "CoreScript")
+            or className == "PluginMouse"
+            or className == "RobloxPluginGui"
+        then
             isInternal = true
         end
     end)
@@ -10522,14 +11385,18 @@ end
 
 -- Reader methods
 function Stream:ReadByte()
-    if self.Position > self.Length then return 0 end
+    if self.Position > self.Length then
+        return 0
+    end
     local byte = string.byte(self.Source, self.Position)
     self.Position = self.Position + 1
     return byte
 end
 
 function Stream:ReadBytes(count)
-    if self.Position > self.Length then return "" end
+    if self.Position > self.Length then
+        return ""
+    end
     local chunk = string.sub(self.Source, self.Position, self.Position + count - 1)
     self.Position = self.Position + count
     return chunk
@@ -10771,17 +11638,21 @@ end
 pcall(injectGlobals)
 
 -- Check if SilentMode or global silent override is active
-local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or (_G and (_G.HyperSave_Silent or _G.SilentMode))
+local isSilent = Defaults.SilentMode
+    or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode))
+    or (_G and (_G.HyperSave_Silent or _G.SilentMode))
 
 -- Instant StarterGui Notification (Only in non-silent mode)
 if not isSilent and Defaults.ShowUI then
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local sg = clonerefFn(game:GetService("StarterGui"))
         sg:SetCore("SendNotification", {
             Title = "HyperSaveInstance",
             Text = "Carregado por Theo Lorentz Padilha!",
-            Duration = 4
+            Duration = 4,
         })
     end)
 end

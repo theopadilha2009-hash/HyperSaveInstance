@@ -32,14 +32,24 @@ function AssetHandler.ExtractUnionData(union: UnionOperation | NegateOperation)
         RenderFidelity = Enum.RenderFidelity.Precise,
         CollisionFidelity = Enum.CollisionFidelity.Default,
         UsePartColor = false,
-        SmoothingAngle = 0
+        SmoothingAngle = 0,
     }
 
-    pcall(function() data.AssetId = union.AssetId end)
-    pcall(function() data.RenderFidelity = union.RenderFidelity end)
-    pcall(function() data.CollisionFidelity = union.CollisionFidelity end)
-    pcall(function() data.UsePartColor = union.UsePartColor end)
-    pcall(function() data.SmoothingAngle = union.SmoothingAngle end)
+    pcall(function()
+        data.AssetId = union.AssetId
+    end)
+    pcall(function()
+        data.RenderFidelity = union.RenderFidelity
+    end)
+    pcall(function()
+        data.CollisionFidelity = union.CollisionFidelity
+    end)
+    pcall(function()
+        data.UsePartColor = union.UsePartColor
+    end)
+    pcall(function()
+        data.SmoothingAngle = union.SmoothingAngle
+    end)
 
     -- Extract hidden CSG geometry buffers if executor supports gethiddenproperty or getspecialinfo
     local getspecial = getspecialinfo or (syn and syn.get_special_info)
@@ -89,26 +99,50 @@ function AssetHandler.ProcessMeshOrUnion(instance: Instance, options: table)
         DoubleSided = false,
         VertexColor = Vector3.new(1, 1, 1),
         AssetId = "",
-        UnionData = nil
+        UnionData = nil,
     }
 
     if instance:IsA("MeshPart") then
-        pcall(function() info.MeshId = instance.MeshId end)
-        pcall(function() info.TextureId = instance.TextureID end)
-        pcall(function() info.RenderFidelity = instance.RenderFidelity end)
-        pcall(function() info.CollisionFidelity = instance.CollisionFidelity end)
-        pcall(function() info.DoubleSided = instance.DoubleSided end)
-        pcall(function() info.VertexColor = instance.VertexColor end)
+        pcall(function()
+            info.MeshId = instance.MeshId
+        end)
+        pcall(function()
+            info.TextureId = instance.TextureID
+        end)
+        pcall(function()
+            info.RenderFidelity = instance.RenderFidelity
+        end)
+        pcall(function()
+            info.CollisionFidelity = instance.CollisionFidelity
+        end)
+        pcall(function()
+            info.DoubleSided = instance.DoubleSided
+        end)
+        pcall(function()
+            info.VertexColor = instance.VertexColor
+        end)
     elseif instance:IsA("UnionOperation") or instance:IsA("NegateOperation") then
         info.UnionData = AssetHandler.ExtractUnionData(instance :: any)
         info.AssetId = info.UnionData.AssetId
     elseif instance:IsA("SpecialMesh") then
-        pcall(function() info.MeshId = instance.MeshId end)
-        pcall(function() info.TextureId = instance.TextureId end)
-        pcall(function() info.MeshType = instance.MeshType end)
-        pcall(function() info.Scale = instance.Scale end)
-        pcall(function() info.Offset = instance.Offset end)
-        pcall(function() info.VertexColor = instance.VertexColor end)
+        pcall(function()
+            info.MeshId = instance.MeshId
+        end)
+        pcall(function()
+            info.TextureId = instance.TextureId
+        end)
+        pcall(function()
+            info.MeshType = instance.MeshType
+        end)
+        pcall(function()
+            info.Scale = instance.Scale
+        end)
+        pcall(function()
+            info.Offset = instance.Offset
+        end)
+        pcall(function()
+            info.VertexColor = instance.VertexColor
+        end)
     end
 
     return info
@@ -120,40 +154,64 @@ function AssetHandler.ProcessSurfaceAppearance(instance: SurfaceAppearance)
         ColorMap = "",
         NormalMap = "",
         RoughnessMap = "",
-        AlphaMode = 0
+        AlphaMode = 0,
     }
     pcall(function()
         if Enum.AlphaMode and Enum.AlphaMode.Overlay then
             pbr.AlphaMode = Enum.AlphaMode.Overlay
         end
     end)
-    pcall(function() pbr.ColorMap = instance.ColorMap end)
-    pcall(function() pbr.NormalMap = instance.NormalMap end)
-    pcall(function() pbr.RoughnessMap = instance.RoughnessMap end)
-    pcall(function() pbr.MetalnessMap = instance.MetalnessMap end)
-    pcall(function() pbr.AlphaMode = instance.AlphaMode end)
+    pcall(function()
+        pbr.ColorMap = instance.ColorMap
+    end)
+    pcall(function()
+        pbr.NormalMap = instance.NormalMap
+    end)
+    pcall(function()
+        pbr.RoughnessMap = instance.RoughnessMap
+    end)
+    pcall(function()
+        pbr.MetalnessMap = instance.MetalnessMap
+    end)
+    pcall(function()
+        pbr.AlphaMode = instance.AlphaMode
+    end)
     return pbr
 end
 
 -- Preload & warm assets in memory
-function AssetHandler.WarmAssets(instances: {Instance})
+function AssetHandler.WarmAssets(instances: { Instance })
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local ContentProvider = clonerefFn(game:GetService("ContentProvider"))
-        if not ContentProvider then return end
+        if not ContentProvider then
+            return
+        end
 
         local batch = {}
         for _, inst in ipairs(instances) do
-            if inst:IsA("MeshPart") or inst:IsA("Decal") or inst:IsA("Texture") or inst:IsA("SurfaceAppearance") or inst:IsA("SpecialMesh") then
+            if
+                inst:IsA("MeshPart")
+                or inst:IsA("Decal")
+                or inst:IsA("Texture")
+                or inst:IsA("SurfaceAppearance")
+                or inst:IsA("SpecialMesh")
+            then
                 table.insert(batch, inst)
                 if #batch >= 80 then
-                    pcall(function() ContentProvider:PreloadAsync(batch) end)
+                    pcall(function()
+                        ContentProvider:PreloadAsync(batch)
+                    end)
                     table.clear(batch)
                 end
             end
         end
         if #batch > 0 then
-            pcall(function() ContentProvider:PreloadAsync(batch) end)
+            pcall(function()
+                ContentProvider:PreloadAsync(batch)
+            end)
         end
     end)
 end

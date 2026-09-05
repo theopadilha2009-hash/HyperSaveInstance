@@ -10,7 +10,12 @@
     "test:sim": "node scripts/simulate_roblox_runtime.js",
     "install:plugin": "node scripts/install_plugin.js",
     "download:manifest": "node scripts/download_manifest.js",
-    "clone:universe": "node scripts/batch_universe_cloner.js"
+    "clone:universe": "node scripts/batch_universe_cloner.js",
+    "lint": "npm run lint:lua && npm run lint:js && npm run format:check",
+    "lint:lua": "selene --allow-warnings src/ plugin/ loader.luau",
+    "lint:js": "eslint scripts/ eslint.config.js",
+    "format": "stylua src/ plugin/ loader.luau",
+    "format:check": "stylua --check src/ plugin/ loader.luau"
   },
   "keywords": [
     "roblox",
@@ -31,6 +36,8 @@
     "url": "git+https://github.com/theopadilha2009-hash/HyperSaveInstance.git"
   },
   "devDependencies": {
+    "@johnnymorganz/stylua-bin": "^2.5.2",
+    "eslint": "^10.10.0",
     "fengari": "^0.1.5",
     "luaparse": "^0.3.1"
   },

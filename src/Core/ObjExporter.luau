@@ -27,7 +27,9 @@ local function getBoxGeometry(cf: any, size: any, vertOffset: number): (string, 
                 cf:PointToWorldSpace(Vector3.new(-hx, hy, hz)),
             }
         end)
-        if s and c then corners = c end
+        if s and c then
+            corners = c
+        end
     end
 
     if #corners == 0 then
@@ -83,12 +85,12 @@ function ObjExporter.GenerateObj(targetRoot: Instance?, options: table?): (strin
         "# HyperSaveInstance - Wavefront 3D OBJ Export",
         "# Exported by Theo Lorentz Padilha",
         "mtllib " .. baseName .. ".mtl",
-        ""
+        "",
     }
 
     local mtlLines = {
         "# HyperSaveInstance - Material Library (.mtl)",
-        ""
+        "",
     }
 
     local materialsSeen = {}

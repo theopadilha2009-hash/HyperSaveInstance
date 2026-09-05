@@ -79,7 +79,7 @@ function HyperSaveInstance.SaveModelToRbxm(targetInstance: Instance, customConfi
 end
 
 -- Save multiple instances into a single .rbxm package
-function HyperSaveInstance.SaveBatchToRbxm(targets: {Instance}, customConfig: table?): (boolean, string)
+function HyperSaveInstance.SaveBatchToRbxm(targets: { Instance }, customConfig: table?): (boolean, string)
     local cfg = table.clone(customConfig or {})
     cfg.Format = "rbxm"
     local engine = Engine.new(cfg)
@@ -92,7 +92,7 @@ function HyperSaveInstance.ExportObj(targetRoot: Instance?, options: table?): (b
 end
 
 -- Discover all Universe sub-places
-function HyperSaveInstance.GetUniverse(): {any}
+function HyperSaveInstance.GetUniverse(): { any }
     return UniverseTracker.GetUniversePlaces()
 end
 
@@ -214,17 +214,21 @@ end
 pcall(injectGlobals)
 
 -- Check if SilentMode or global silent override is active
-local isSilent = Defaults.SilentMode or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode)) or (_G and (_G.HyperSave_Silent or _G.SilentMode))
+local isSilent = Defaults.SilentMode
+    or (getgenv and (getgenv().HyperSave_Silent or getgenv().SilentMode))
+    or (_G and (_G.HyperSave_Silent or _G.SilentMode))
 
 -- Instant StarterGui Notification (Only in non-silent mode)
 if not isSilent and Defaults.ShowUI then
     pcall(function()
-        local clonerefFn = cloneref or function(obj) return obj end
+        local clonerefFn = cloneref or function(obj)
+            return obj
+        end
         local sg = clonerefFn(game:GetService("StarterGui"))
         sg:SetCore("SendNotification", {
             Title = "HyperSaveInstance",
             Text = "Carregado por Theo Lorentz Padilha!",
-            Duration = 4
+            Duration = 4,
         })
     end)
 end

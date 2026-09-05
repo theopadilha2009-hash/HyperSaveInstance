@@ -24,7 +24,9 @@ local function getBitOp()
 end
 
 function Base64.Encode(data: string): string
-    if not data or #data == 0 then return "" end
+    if not data or #data == 0 then
+        return ""
+    end
     local bit = getBitOp()
     local l = #data
     local result = {}
@@ -91,11 +93,15 @@ function Base64.Encode(data: string): string
 end
 
 function Base64.Decode(data: string): string
-    if not data or #data == 0 then return "" end
+    if not data or #data == 0 then
+        return ""
+    end
     local bit = getBitOp()
     local clean = string.gsub(data, "%s+", "")
     local l = #clean
-    if l % 4 ~= 0 then return "" end
+    if l % 4 ~= 0 then
+        return ""
+    end
 
     local result = {}
     local idx = 1

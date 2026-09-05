@@ -5,11 +5,17 @@
     native KeyframeSequence instances that can be published to the user's account in Studio.
 ]]
 
-local clonerefFn = cloneref or function(obj) return obj end
+local clonerefFn = cloneref or function(obj)
+    return obj
+end
 local RunService = nil
-pcall(function() RunService = clonerefFn(game:GetService("RunService")) end)
+pcall(function()
+    RunService = clonerefFn(game:GetService("RunService"))
+end)
 local Players = nil
-pcall(function() Players = clonerefFn(game:GetService("Players")) end)
+pcall(function()
+    Players = clonerefFn(game:GetService("Players"))
+end)
 
 local AnimationRecorder = {}
 AnimationRecorder.IsRecording = false
@@ -17,9 +23,16 @@ AnimationRecorder.RecordedSequences = {}
 AnimationRecorder.ActiveConnection = nil
 
 -- Record an active animation track from a Humanoid by sampling joint transforms
-function AnimationRecorder.RecordTrack(humanoid: Humanoid, trackName: string, durationSeconds: number, onComplete: (keyframeSeq: KeyframeSequence) -> ())
+function AnimationRecorder.RecordTrack(
+    humanoid: Humanoid,
+    trackName: string,
+    durationSeconds: number,
+    onComplete: (keyframeSeq: KeyframeSequence) -> ()
+)
     local character = humanoid.Parent
-    if not character then return end
+    if not character then
+        return
+    end
 
     -- Collect all Motor6D joints
     local motors = {}
@@ -29,7 +42,9 @@ function AnimationRecorder.RecordTrack(humanoid: Humanoid, trackName: string, du
         end
     end
 
-    if #motors == 0 then return end
+    if #motors == 0 then
+        return
+    end
 
     local keyframeSeq = Instance.new("KeyframeSequence")
     keyframeSeq.Name = trackName or "RecordedAnimation"
@@ -94,7 +109,9 @@ end
 
 -- Auto-hook into character animation playback
 function AnimationRecorder.StartAutoCapture()
-    if AnimationRecorder.IsRecording then return end
+    if AnimationRecorder.IsRecording then
+        return
+    end
     AnimationRecorder.IsRecording = true
 
     local function hookHumanoid(humanoid: Humanoid)
@@ -105,7 +122,7 @@ function AnimationRecorder.StartAutoCapture()
                     animName = track.Animation.Name
                 end
             end)
-            
+
             -- Prevent duplicate recordings
             if not AnimationRecorder.RecordedSequences[animName] then
                 AnimationRecorder.RecordedSequences[animName] = true
@@ -118,7 +135,9 @@ function AnimationRecorder.StartAutoCapture()
     if localPlayer then
         if localPlayer.Character then
             local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hookHumanoid(hum) end
+            if hum then
+                hookHumanoid(hum)
+            end
         end
         localPlayer.CharacterAdded:Connect(function(char)
             local hum = char:WaitForChild("Humanoid", 5)
@@ -151,7 +170,7 @@ function AnimationRecorder.ScanActiveTracks(): { { Name: string, Length: number,
                         Length = track.Length,
                         Speed = track.Speed,
                         Humanoid = hum,
-                        Track = track
+                        Track = track,
                     })
                 end
             end
@@ -161,7 +180,9 @@ function AnimationRecorder.ScanActiveTracks(): { { Name: string, Length: number,
     local localPlayer = Players and Players.LocalPlayer
     if localPlayer and localPlayer.Character then
         local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then checkHumanoid(hum) end
+        if hum then
+            checkHumanoid(hum)
+        end
     end
 
     if workspace then
@@ -206,7 +227,7 @@ function AnimationRecorder.ExportRecordedAnimations(): (boolean, string)
     local fileName = string.format("HyperSave_Animations_%s.rbxm", tostring(game.PlaceId or "0"))
     local xml = SerializerXml.Serialize(animFolder, {
         SaveTerrain = false,
-        DecompileScripts = false
+        DecompileScripts = false,
     })
 
     if Environment.HasFileSystem() then

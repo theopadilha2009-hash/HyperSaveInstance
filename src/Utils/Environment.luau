@@ -6,29 +6,55 @@
 local Environment = {}
 
 -- Service references (Safely wrapped in pcalls for all execution identities)
-local cloneref = cloneref or function(obj) return obj end
+local cloneref = cloneref or function(obj)
+    return obj
+end
 local HttpService = nil
-pcall(function() HttpService = cloneref(game:GetService("HttpService")) end)
+pcall(function()
+    HttpService = cloneref(game:GetService("HttpService"))
+end)
 local Players = nil
-pcall(function() Players = cloneref(game:GetService("Players")) end)
+pcall(function()
+    Players = cloneref(game:GetService("Players"))
+end)
 local CoreGui = nil
-pcall(function() CoreGui = cloneref(game:GetService("CoreGui")) end)
+pcall(function()
+    CoreGui = cloneref(game:GetService("CoreGui"))
+end)
 
 -- Universal Task polyfill
-local task = task or {
-    spawn = spawn or function(fn, ...) return coroutine.wrap(fn)(...) end,
-    wait = wait or function(t) return coroutine.yield(t) end,
-    delay = delay or function(t, fn) return task.spawn(function() task.wait(t); fn() end) end,
-    defer = function(fn, ...) return (spawn or task.spawn)(function(...) fn(...) end, ...) end
-}
+local task = task
+    or {
+        spawn = spawn or function(fn, ...)
+            return coroutine.wrap(fn)(...)
+        end,
+        wait = wait or function(t)
+            return coroutine.yield(t)
+        end,
+        delay = delay or function(t, fn)
+            return task.spawn(function()
+                task.wait(t)
+                fn()
+            end)
+        end,
+        defer = function(fn, ...)
+            return (spawn or task.spawn)(function(...)
+                fn(...)
+            end, ...)
+        end,
+    }
 
 -- Table & Math polyfills wrapped safely for readonly Luau environment
 pcall(function()
     if not table.clone then
         table.clone = function(t)
-            if type(t) ~= "table" then return t end
+            if type(t) ~= "table" then
+                return t
+            end
             local clone = {}
-            for k, v in pairs(t) do clone[k] = v end
+            for k, v in pairs(t) do
+                clone[k] = v
+            end
             return clone
         end
     end
@@ -36,9 +62,13 @@ end)
 pcall(function()
     if not table.find then
         table.find = function(t, val, init)
-            if type(t) ~= "table" then return nil end
+            if type(t) ~= "table" then
+                return nil
+            end
             for i = (init or 1), #t do
-                if t[i] == val then return i end
+                if t[i] == val then
+                    return i
+                end
             end
             return nil
         end
@@ -93,14 +123,23 @@ function Environment.GetPlatform(): string
     local exec = string.lower(Environment.GetExecutorName())
     if string.find(exec, "mac") or string.find(exec, "apple") or (getexecutorinfo and getexecutorinfo().platform == "macOS") then
         isMac = true
-    elseif string.find(exec, "delta") or string.find(exec, "codex") or string.find(exec, "arceus") or string.find(exec, "hydrogen mobile") then
+    elseif
+        string.find(exec, "delta")
+        or string.find(exec, "codex")
+        or string.find(exec, "arceus")
+        or string.find(exec, "hydrogen mobile")
+    then
         isMobile = true
     else
         isWindows = true
     end
 
-    if isMac then return "macOS" end
-    if isMobile then return "Mobile" end
+    if isMac then
+        return "macOS"
+    end
+    if isMobile then
+        return "Mobile"
+    end
     return "Windows / Desktop"
 end
 
@@ -111,7 +150,7 @@ local _appendfile = appendfile or (syn and syn.appendfile)
 local _makefolder = makefolder or (syn and syn.makefolder)
 local _isfolder = isfolder or (syn and syn.isfolder)
 local _isfile = isfile or (syn and syn.isfile)
-local _delfile = delfile or (syn and syn.delfile) or (delfile)
+local _delfile = delfile or (syn and syn.delfile) or delfile
 local _listfiles = listfiles or (syn and syn.listfiles)
 
 function Environment.HasFileSystem(): boolean
@@ -124,7 +163,9 @@ end
 
 -- Strictly sanitize filenames to prevent OS path crashes or corrupted file writes
 function Environment.SanitizeFileName(name: string): string
-    if not name or #name == 0 then return "Unnamed" end
+    if not name or #name == 0 then
+        return "Unnamed"
+    end
     local clean = string.gsub(name, '[<>:"/\\|?*%c%z]', "_")
     clean = string.gsub(clean, "^[%s%.]+", "")
     clean = string.gsub(clean, "[%s%.]+$", "")
@@ -132,9 +173,28 @@ function Environment.SanitizeFileName(name: string): string
     -- Guard against reserved Windows device names
     local upper = string.upper(clean)
     local reserved = {
-        CON = true, PRN = true, AUX = true, NUL = true,
-        COM1 = true, COM2 = true, COM3 = true, COM4 = true, COM5 = true, COM6 = true, COM7 = true, COM8 = true, COM9 = true,
-        LPT1 = true, LPT2 = true, LPT3 = true, LPT4 = true, LPT5 = true, LPT6 = true, LPT7 = true, LPT8 = true, LPT9 = true
+        CON = true,
+        PRN = true,
+        AUX = true,
+        NUL = true,
+        COM1 = true,
+        COM2 = true,
+        COM3 = true,
+        COM4 = true,
+        COM5 = true,
+        COM6 = true,
+        COM7 = true,
+        COM8 = true,
+        COM9 = true,
+        LPT1 = true,
+        LPT2 = true,
+        LPT3 = true,
+        LPT4 = true,
+        LPT5 = true,
+        LPT6 = true,
+        LPT7 = true,
+        LPT8 = true,
+        LPT9 = true,
     }
     if reserved[upper] then
         clean = clean .. "_file"
@@ -165,7 +225,9 @@ function Environment.AppendFile(path: string, content: string): boolean
         return success
     elseif _readfile and _writefile then
         local existing = ""
-        pcall(function() existing = _readfile(path) or "" end)
+        pcall(function()
+            existing = _readfile(path) or ""
+        end)
         return Environment.WriteFile(path, existing .. content)
     end
     return false
@@ -174,7 +236,9 @@ end
 function Environment.ReadFile(path: string): string?
     if _readfile then
         local success, result = pcall(_readfile, path)
-        if success then return result end
+        if success then
+            return result
+        end
     end
     return nil
 end
@@ -207,7 +271,7 @@ end
 function Environment.GetDecompilerFunction()
     local genv = (getgenv and getgenv()) or {}
     local renv = (getrenv and getrenv()) or {}
-    
+
     -- Check functions in order of fidelity
     local candidates = {
         genv.decompile,
@@ -220,7 +284,7 @@ function Environment.GetDecompilerFunction()
         genv.disassemble,
         disassemble,
     }
-    
+
     for _, fn in ipairs(candidates) do
         if type(fn) == "function" then
             return fn
@@ -232,7 +296,7 @@ end
 function Environment.GetBytecodeFunction()
     local genv = (getgenv and getgenv()) or {}
     local renv = (getrenv and getrenv()) or {}
-    
+
     local candidates = {
         genv.getscriptbytecode,
         getscriptbytecode,
@@ -243,7 +307,7 @@ function Environment.GetBytecodeFunction()
         genv.dumpstring,
         dumpstring,
     }
-    
+
     for _, fn in ipairs(candidates) do
         if type(fn) == "function" then
             return fn
@@ -308,8 +372,8 @@ function Environment.SetClipboard(text: string): boolean
 end
 
 -- Nil instances extraction
-function Environment.GetNilInstances(): {Instance}
-    local getnil = getnilinstances or (syn and syn.get_nil_instances) or (get_nil_instances)
+function Environment.GetNilInstances(): { Instance }
+    local getnil = getnilinstances or (syn and syn.get_nil_instances) or get_nil_instances
     if getnil then
         local success, res = pcall(getnil)
         if success and type(res) == "table" then
@@ -324,10 +388,16 @@ function Environment.GetHiddenProperties(instance: Instance, property: string): 
     local gethidden = gethiddenproperty or (syn and syn.get_hidden_property)
     if gethidden then
         local success, val = pcall(gethidden, instance, property)
-        if success then return val end
+        if success then
+            return val
+        end
     end
-    local s, v = pcall(function() return (instance :: any)[property] end)
-    if s then return v end
+    local s, v = pcall(function()
+        return (instance :: any)[property]
+    end)
+    if s then
+        return v
+    end
     return nil
 end
 

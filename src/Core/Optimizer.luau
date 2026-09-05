@@ -10,10 +10,10 @@ local Optimizer = {
         PrunedOrphans = 0,
         PrunedDuplicates = 0,
         TotalPruned = 0,
-    }
+    },
 }
 
-function Optimizer.OptimizeHierarchy(rootInstances: {Instance}, options: table): {Instance}
+function Optimizer.OptimizeHierarchy(rootInstances: { Instance }, options: table): { Instance }
     if not options.OptimizeGeometry then
         return rootInstances
     end
@@ -66,7 +66,9 @@ function Optimizer.OptimizeHierarchy(rootInstances: {Instance}, options: table):
                 if seenSounds[child.SoundId] and not child:GetAttribute("Preserve") then
                     Optimizer.Stats.PrunedDuplicates = Optimizer.Stats.PrunedDuplicates + 1
                     Optimizer.Stats.TotalPruned = Optimizer.Stats.TotalPruned + 1
-                    pcall(function() child:Destroy() end)
+                    pcall(function()
+                        child:Destroy()
+                    end)
                 else
                     seenSounds[child.SoundId] = true
                     cleanRecursive(child)
