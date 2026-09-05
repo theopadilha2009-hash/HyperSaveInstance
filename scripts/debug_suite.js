@@ -34,22 +34,32 @@ function assert(condition, testName, details = '') {
 
 // Mirrors the annotation stripping in scripts/bundle.js so Luau source can be
 // parsed by luaparse, which only understands Lua 5.1.
+//
+// Every pattern here is deliberately bounded to a single line: `\s` matches
+// newlines, so a greedy class containing it walks past the annotation and eats
+// the code that follows. That is not theoretical — the earlier version deleted
+// the body of `function LicenseManager.GetLicense(): LicenseInfo` along with the
+// annotation, and the module still loaded, just without the function.
 function stripLuauTypes(code) {
     return code
-        .replace(/^\s*(export\s+)?type\s+[^\n]*(\n\s+[^\n]*)*/gm, '')
-        .replace(/::\s*[\w.<>{}|?\s]+/g, '')
-        .replace(/\)\s*:\s*[\w.<>{}|?()\s,]+(?=\s*\n)/g, ')')
-        .replace(/(\w+)\s*:\s*[\w.<>{}|?]+(\??)(\s*[,)])/g, '$1$3');
+        // `type X = { ... }`, closed by a brace back at column 0.
+        .replace(/^[ \t]*(export[ \t]+)?type[ \t]+\w+([ \t]*<[^>]+>)?[ \t]*=[ \t]*\{[\s\S]*?^\}/gm, '')
+        // Single-line aliases: `type Tier = "Free" | "Pro"`.
+        .replace(/^[ \t]*(export[ \t]+)?type[ \t]+[\w<>,\s]*?=[^\n]*$/gm, '')
+        // `expr :: Type`
+        .replace(/::[ \t]*[\w.<>{}|?\[\], \t]+/g, '')
+        // Return type of a signature: `function f(): Type`
+        .replace(/\)[ \t]*:[ \t]*[\w.<>{}|?()\[\], \t]+(?=\r?\n)/g, ')')
+        // Parameter annotations: `(name: string, n: number?)`
+        .replace(/(\w+)[ \t]*:[ \t]*[\w.<>{}|?]+(\??)([ \t]*[,)])/g, '$1$3')
+        // `local x: Type =`
+        .replace(/(\blocal[ \t]+\w+)[ \t]*:[ \t]*[\w.<>{}|?\[\], \t]+?(?=[ \t]*=)/g, '$1');
 }
 
 function loadLuauModule(relPath) {
     const source = fs.readFileSync(path.join(ROOT_DIR, 'src', relPath), 'utf8');
-    // The bundler strips Luau type annotations the same way before shipping.
-    const stripped = source
-        .replace(/^\s*(export\s+)?type\s+[\w<>,\s]+=[^\n]*(\n\s+[^\n]*)*/gm, '')
-        .replace(/::\s*[\w.<>{}|?\s]+/g, '')
-        .replace(/:\s*[\w.<>{}|?]+(\??)\s*(?=[,)=])/g, '')
-        .replace(/\)\s*:\s*[\w.<>{}|?()\s,]+(?=\s*\n)/g, ')');
+    // One stripper, not two: this used to carry its own divergent copy.
+    const stripped = stripLuauTypes(source);
 
     const L = lauxlib.luaL_newstate();
     lualib.luaL_openlibs(L);
@@ -80,6 +90,68 @@ function loadLuauModule(relPath) {
             return Buffer.from(raw);
         }
     };
+}
+
+function testTypeStripper() {
+    console.log('\n--- 0. Testing Luau Type Stripper (regression) ---');
+
+    // Every annotation form that appears in src/, with a body after each one.
+    // The point is not that this parses: it is that nothing between the
+    // annotations disappears. A stripper that eats a function body still
+    // produces loadable Lua, which is exactly how the old one hid its bug.
+    const sample = [
+        '--!strict',
+        'local M = {}',
+        '',
+        'export type Tier = "Free" | "Pro"',
+        '',
+        'export type Info = {',
+        '    Key: string?,',
+        '    Features: { [string]: boolean },',
+        '}',
+        '',
+        'local state: Info = { Key = "k", Features = {} }',
+        '',
+        'function M.GetKey(): string',
+        '    return state.Key',
+        'end',
+        '',
+        'function M.Label(name: string, n: number?): string',
+        '    return name .. tostring(n or 0)',
+        'end',
+        '',
+        'function M.Cast(): number',
+        '    local raw = "7" :: any',
+        '    return tonumber(raw)',
+        'end',
+        '',
+        'return M',
+    ].join('\n');
+
+    const stripped = stripLuauTypes(sample);
+
+    assert(!/:\s*Info\b/.test(stripped) && !stripped.includes('export type'),
+        'Stripper removes the annotations it is there to remove');
+
+    const L = lauxlib.luaL_newstate();
+    lualib.luaL_openlibs(L);
+    const loaded = lauxlib.luaL_dostring(L, to_luastring(stripped)) === lua.LUA_OK;
+    assert(loaded, 'Stripped module loads in a Lua VM',
+        loaded ? '' : lua.lua_tojsstring(L, -1));
+    if (!loaded) return;
+
+    for (const [fn, arg, expected] of [['GetKey', null, 'k'], ['Label', 'a', 'a0'], ['Cast', null, '7']]) {
+        lua.lua_getfield(L, -1, to_luastring(fn));
+        const isFn = lua.lua_isfunction(L, -1);
+        assert(isFn, `${fn} survived stripping (body not eaten)`);
+        if (!isFn) { lua.lua_pop(L, 1); continue; }
+        let argc = 0;
+        if (arg !== null) { lua.lua_pushstring(L, Buffer.from(arg, 'binary')); argc = 1; }
+        const ok = lua.lua_pcall(L, argc, 1, 0) === lua.LUA_OK;
+        const got = ok ? lua.lua_tojsstring(L, -1) : lua.lua_tojsstring(L, -1);
+        lua.lua_pop(L, 1);
+        assert(ok && got === expected, `${fn}() still returns ${expected}`, ok ? `got ${got}` : got);
+    }
 }
 
 function testBase64Logic() {
@@ -327,6 +399,7 @@ function runAll() {
     console.log(' HYPERSAVEINSTANCE - MASTER DEBUG & AUDIT SUITE ');
     console.log('=====================================================');
 
+    testTypeStripper();
     testBase64Logic();
     testXmlEscaping();
     testReflectionCoverage();
