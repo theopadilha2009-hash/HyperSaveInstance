@@ -19,8 +19,13 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      # Full history: the pin check resolves the commit that last touched dist/
+      # with `git log`, and a shallow clone has no history for it to walk — on a
+      # pull_request it would resolve to the synthetic merge commit instead.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

@@ -61,6 +61,13 @@ if (status) {
     fail('dist/HyperSaveInstance.luau has uncommitted changes. Commit the bundle before pinning.');
 }
 
+// A shallow clone has no history to walk, so `git log -1 -- <path>` names
+// whatever single commit was fetched — on a pull_request checkout that is the
+// synthetic merge commit, which nobody can download.
+if (git('rev-parse', '--is-shallow-repository') === 'true') {
+    fail('shallow clone: fetch the full history (actions/checkout with `fetch-depth: 0`) before pinning.');
+}
+
 // The pin names the commit that last changed the bundle, not HEAD. Using HEAD
 // would be circular: committing the pinned loader advances HEAD and would
 // immediately make the pin it just wrote look stale.
